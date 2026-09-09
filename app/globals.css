@@ -19098,3 +19098,474 @@ img {
 
   font-size: 17px;
 }
+
+/* ==================================================
+   STAFF COMMON - 見やすさ改善
+================================================== */
+
+.staffRewardPage,
+.staffDashboardPage,
+.staffPortalPage {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 28px 18px 56px;
+}
+
+/* ========================================
+   STAFF HEADER
+======================================== */
+
+.staffRewardHeader,
+.staffDashboardHeader,
+.staffPortalHeader,
+.staffHistoryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  margin-bottom: 24px;
+}
+
+.staffRewardHeader h1,
+.staffDashboardHeader h1,
+.staffPortalHeader h1,
+.staffHistoryHeader h1 {
+  margin: 4px 0 0;
+
+  color: #2f2925;
+
+  font-size: 26px;
+  font-weight: 900;
+
+  line-height: 1.25;
+}
+
+.staffRewardHeader span,
+.staffDashboardHeader span,
+.staffPortalHeader span,
+.staffHistoryHeader span {
+  color: #8a1822;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+}
+
+.staffRewardHeader button,
+.staffDashboardHeader button,
+.staffPortalHeader button {
+  min-height: 38px;
+
+  padding: 9px 14px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+/* ========================================
+   STAFF CARD BASE
+======================================== */
+
+.staffScannerCard,
+.staffParticipantCard,
+.staffLoginCard,
+.staffHistoryCard,
+.staffDashboardStatCard,
+.staffDashboardRateCard,
+.staffPortalCard {
+  border:
+    1px solid
+    rgba(100, 70, 55, 0.10);
+
+  background: #ffffff;
+
+  box-shadow:
+    0 10px 28px
+    rgba(55, 35, 25, 0.08);
+}
+
+/* ========================================
+   SCANNER
+======================================== */
+
+.staffScannerCard {
+  padding: 28px 22px;
+
+  border-radius: 24px;
+}
+
+.staffScannerCard h2 {
+  margin: 8px 0;
+
+  color: #2f2925;
+
+  font-size: 22px;
+  font-weight: 900;
+
+  line-height: 1.4;
+}
+
+.staffScannerCard > p {
+  margin: 0;
+
+  color: #6f625a;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+.staffScannerButton {
+  width: 100%;
+
+  margin-top: 20px;
+
+  padding: 16px;
+
+  border: 0;
+  border-radius: 15px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* ========================================
+   PARTICIPANT CARD
+======================================== */
+
+.staffParticipantCard {
+  padding: 24px 20px;
+
+  border-radius: 24px;
+}
+
+.staffParticipantCard h2 {
+  margin: 6px 0 18px;
+
+  color: #2f2925;
+
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.staffParticipantInfo {
+  display: grid;
+  gap: 10px;
+}
+
+.staffParticipantInfo > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  padding: 13px 14px;
+
+  border-radius: 13px;
+
+  background: #f8f4ef;
+}
+
+.staffParticipantInfo span {
+  color: #786d65;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.staffParticipantInfo strong {
+  color: #2f2925;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* ========================================
+   STATUS
+======================================== */
+
+.staffExchangeStatus {
+  padding: 7px 11px;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.staffExchangeStatus.ready {
+  background: #fff0dc;
+  color: #8a1822;
+}
+
+.staffExchangeStatus.exchanged {
+  background: #e7f6eb;
+  color: #2f7a4d;
+}
+
+/* ========================================
+   CONFIRM BUTTON
+======================================== */
+
+.staffExchangeConfirm {
+  margin-top: 18px;
+
+  padding: 16px;
+
+  border-radius: 16px;
+
+  background: #fff6ea;
+}
+
+.staffExchangeConfirm p {
+  margin: 0 0 13px;
+
+  color: #62574f;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+.staffExchangeConfirm button {
+  width: 100%;
+
+  padding: 16px;
+
+  border: 0;
+  border-radius: 14px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+/* ========================================
+   DASHBOARD
+======================================== */
+
+.staffDashboardStats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+.staffDashboardStatCard {
+  padding: 20px 16px;
+
+  border-radius: 20px;
+}
+
+.staffDashboardStatCard > span {
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.staffDashboardStatCard strong {
+  color: #2f2925;
+
+  font-size: 34px;
+  font-weight: 1000;
+}
+
+.staffDashboardStatCard small {
+  color: #6f625a;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.staffDashboardStatCard p {
+  margin: 7px 0 0;
+
+  color: #7b6f67;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ========================================
+   STAFF PORTAL
+======================================== */
+
+.staffPortalHero {
+  margin-bottom: 18px;
+
+  padding: 24px 20px;
+
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #8a1822,
+      #6d1119
+    );
+
+  color: #ffffff;
+}
+
+.staffPortalHero h2 {
+  margin: 6px 0 4px;
+
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.staffPortalHero p {
+  margin: 0;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.staffPortalMenu {
+  display: grid;
+  gap: 12px;
+}
+
+.staffPortalCard {
+  display: grid;
+
+  grid-template-columns:
+    52px
+    1fr
+    auto;
+
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 17px 16px;
+
+  border-radius: 18px;
+}
+
+.staffPortalIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 52px;
+  height: 52px;
+
+  border-radius: 15px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 1000;
+}
+
+.staffPortalCard h2 {
+  margin: 3px 0;
+
+  color: #2f2925;
+
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.staffPortalCard p {
+  margin: 0;
+
+  color: #756961;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.5;
+}
+
+/* ========================================
+   HISTORY
+======================================== */
+
+.staffHistoryCard {
+  padding: 18px;
+
+  border-radius: 18px;
+}
+
+.staffHistoryParticipant h3 {
+  margin: 3px 0 13px;
+
+  color: #2f2925;
+
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.staffHistoryInfo > div {
+  padding: 10px 11px;
+}
+
+.staffHistoryInfo span {
+  font-size: 9px;
+}
+
+.staffHistoryInfo strong {
+  font-size: 11px;
+}
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 480px) {
+  .staffRewardPage,
+  .staffDashboardPage,
+  .staffPortalPage {
+    padding:
+      20px
+      14px
+      44px;
+  }
+
+  .staffRewardHeader h1,
+  .staffDashboardHeader h1,
+  .staffPortalHeader h1,
+  .staffHistoryHeader h1 {
+    font-size: 22px;
+  }
+
+  .staffDashboardStatCard strong {
+    font-size: 30px;
+  }
+
+  .staffPortalCard {
+    grid-template-columns:
+      46px
+      1fr
+      auto;
+  }
+
+  .staffPortalIcon {
+    width: 46px;
+    height: 46px;
+  }
+}
