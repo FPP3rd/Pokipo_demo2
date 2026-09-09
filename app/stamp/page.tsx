@@ -18,11 +18,58 @@ import { pokipoSpots } from "../data/pokipo-data";
 const SECRET_QR_VALUE =
   "pokipo-yuhisai-lipost-2026";
 
+/* ========================================
+   CAMPUS MAP PINS
+======================================== */
+
+const mapPins = [
+  {
+    id: "spot1",
+    number: 1,
+    label: "学生センター 1F",
+    top: "38%",
+    left: "50%",
+  },
+
+  {
+    id: "spot2",
+    number: 2,
+    label: "東棟 2F",
+    top: "54%",
+    left: "50%",
+  },
+
+  {
+    id: "spot3",
+    number: 3,
+    label: "中央棟 1F",
+    top: "52%",
+    left: "36.5%",
+  },
+
+  {
+    id: "spot4",
+    number: 4,
+    label: "西棟 3F",
+    top: "56%",
+    left: "18%",
+  },
+
+  {
+    id: "spot5",
+    number: 5,
+    label: "35周年記念館 1F",
+    top: "78%",
+    left: "62.5%",
+  },
+];
+
 export default function StampPage() {
-  const router = useRouter();
+  const router =
+    useRouter();
 
   /* ========================================
-     NORMAL STAMPS
+     STAMPS
   ======================================== */
 
   const [
@@ -50,7 +97,7 @@ export default function StampPage() {
   ] = useState("");
 
   /* ========================================
-     STAMP GET EFFECT
+     GET EFFECT
   ======================================== */
 
   const [
@@ -117,12 +164,14 @@ export default function StampPage() {
   ] = useState("");
 
   const triviaTimerRef =
-    useRef<ReturnType<
-      typeof setTimeout
-    > | null>(null);
+    useRef<
+      ReturnType<
+        typeof setTimeout
+      > | null
+    >(null);
 
   /* ========================================
-     SECRET STAMP
+     SECRET
   ======================================== */
 
   const [
@@ -165,10 +214,6 @@ export default function StampPage() {
   ======================================== */
 
   useEffect(() => {
-    /* --------------------------------
-       通常スタンプ
-    -------------------------------- */
-
     const savedScans =
       localStorage.getItem(
         "pokipo_scans"
@@ -194,10 +239,6 @@ export default function StampPage() {
         setScans([]);
       }
     }
-
-    /* --------------------------------
-       雄飛祭
-    -------------------------------- */
 
     const savedSecret =
       localStorage.getItem(
@@ -226,7 +267,7 @@ export default function StampPage() {
   }, []);
 
   /* ========================================
-     CAMERA EFFECT
+     CAMERA
   ======================================== */
 
   useEffect(() => {
@@ -302,9 +343,7 @@ export default function StampPage() {
             const qrValue =
               decodedText.trim();
 
-            /* =========================
-               SECRET QR
-            ========================= */
+            /* SECRET */
 
             if (
               qrValue ===
@@ -320,9 +359,7 @@ export default function StampPage() {
               return;
             }
 
-            /* =========================
-               NORMAL QR
-            ========================= */
+            /* NORMAL */
 
             const spotExists =
               pokipoSpots.some(
@@ -349,14 +386,11 @@ export default function StampPage() {
             );
           },
 
-          () => {
-            /*
-              QR解析途中のエラーは
-              表示しない
-            */
-          }
+          () => {}
         );
-      } catch (error) {
+      } catch (
+        error
+      ) {
         console.error(
           "QRカメラ起動エラー:",
           error
@@ -398,13 +432,14 @@ export default function StampPage() {
 
   /* ========================================
      POCKY STEP
-     獲得数で変化
   ======================================== */
 
   function getPockyStep(
     stampCount: number
   ) {
-    switch (stampCount) {
+    switch (
+      stampCount
+    ) {
       case 1:
         return {
           step:
@@ -533,7 +568,9 @@ export default function StampPage() {
       }
 
       scanner.clear();
-    } catch (error) {
+    } catch (
+      error
+    ) {
       console.error(
         "QRカメラ停止エラー:",
         error
@@ -549,7 +586,7 @@ export default function StampPage() {
   }
 
   /* ========================================
-     NORMAL STAMP
+     SCAN SPOT
   ======================================== */
 
   function scanSpot(
@@ -562,10 +599,6 @@ export default function StampPage() {
           spotId
       );
 
-    /* --------------------------------
-       INVALID
-    -------------------------------- */
-
     if (!targetSpot) {
       setMessage(
         "このQRコードはPOKIPOのQRではありません。"
@@ -576,10 +609,6 @@ export default function StampPage() {
 
       return;
     }
-
-    /* --------------------------------
-       ALREADY GET
-    -------------------------------- */
 
     if (
       scans.includes(
@@ -595,10 +624,6 @@ export default function StampPage() {
 
       return;
     }
-
-    /* ========================================
-       STAMP UPDATE
-    ======================================== */
 
     const updatedScans = [
       ...scans,
@@ -633,9 +658,7 @@ export default function StampPage() {
       nextCount
     );
 
-    /* ========================================
-       COMPLETE DATA
-    ======================================== */
+    /* COMPLETE */
 
     if (
       updatedScans.length >=
@@ -659,16 +682,28 @@ export default function StampPage() {
           `${now.getFullYear()}/` +
           `${String(
             now.getMonth() + 1
-          ).padStart(2, "0")}/` +
+          ).padStart(
+            2,
+            "0"
+          )}/` +
           `${String(
             now.getDate()
-          ).padStart(2, "0")} ` +
+          ).padStart(
+            2,
+            "0"
+          )} ` +
           `${String(
             now.getHours()
-          ).padStart(2, "0")}:` +
+          ).padStart(
+            2,
+            "0"
+          )}:` +
           `${String(
             now.getMinutes()
-          ).padStart(2, "0")}`;
+          ).padStart(
+            2,
+            "0"
+          )}`;
 
         localStorage.setItem(
           "pokipo_completed_at",
@@ -677,10 +712,7 @@ export default function StampPage() {
       }
     }
 
-    /* ========================================
-       KNOWLEDGE DATA
-       ここではまだ図鑑へ保存しない
-    ======================================== */
+    /* KNOWLEDGE */
 
     setNewKnowledge(
       targetSpot.knowledgeText
@@ -694,9 +726,7 @@ export default function StampPage() {
       targetSpot.knowledgeId
     );
 
-    /* ========================================
-       QUIZ
-    ======================================== */
+    /* QUIZ */
 
     setQuizQuestion(
       targetSpot.quizQuestion
@@ -720,9 +750,7 @@ export default function StampPage() {
       false
     );
 
-    /* ========================================
-       EFFECT
-    ======================================== */
+    /* EFFECT */
 
     setGetSpotName(
       targetSpot.spotName
@@ -770,31 +798,24 @@ export default function StampPage() {
     value: string
   ) {
     return value
-      /*
-        全角数字・英字を
-        半角へ寄せる
-      */
       .replace(
         /[！-～]/g,
-        (character) =>
+        (
+          character
+        ) =>
           String.fromCharCode(
             character.charCodeAt(
               0
-            ) - 0xfee0
+            ) -
+              0xfee0
           )
       )
 
-      /*
-        全角スペース
-      */
       .replace(
         /　/g,
         ""
       )
 
-      /*
-        半角スペース
-      */
       .replace(
         /\s+/g,
         ""
@@ -826,10 +847,6 @@ export default function StampPage() {
         quizAnswer
       );
 
-    /* ========================================
-       CORRECT
-    ======================================== */
-
     if (
       normalizedInput ===
       normalizedCorrectAnswer
@@ -842,10 +859,7 @@ export default function StampPage() {
         false
       );
 
-      /* --------------------------------
-         正解した時だけ
-         図鑑へ保存
-      -------------------------------- */
+      /* 図鑑保存 */
 
       if (
         pendingKnowledgeId
@@ -858,7 +872,9 @@ export default function StampPage() {
         let knowledgeList:
           string[] = [];
 
-        if (savedKnowledge) {
+        if (
+          savedKnowledge
+        ) {
           try {
             const parsed =
               JSON.parse(
@@ -900,10 +916,6 @@ export default function StampPage() {
       return;
     }
 
-    /* ========================================
-       WRONG
-    ======================================== */
-
     setQuizCorrect(
       false
     );
@@ -914,7 +926,7 @@ export default function StampPage() {
   }
 
   /* ========================================
-     CLOSE GET EFFECT
+     CLOSE GET
   ======================================== */
 
   function closeGetEffect() {
@@ -977,10 +989,6 @@ export default function StampPage() {
   ======================================== */
 
   function scanSecretSpot() {
-    /* --------------------------------
-       通常5個未達成
-    -------------------------------- */
-
     if (
       scans.length < 5
     ) {
@@ -994,11 +1002,9 @@ export default function StampPage() {
       return;
     }
 
-    /* --------------------------------
-       取得済み
-    -------------------------------- */
-
-    if (secretStamp) {
+    if (
+      secretStamp
+    ) {
       setMessage(
         "雄飛祭 LiPostブースのシークレットスタンプは取得済みです。"
       );
@@ -1008,10 +1014,6 @@ export default function StampPage() {
 
       return;
     }
-
-    /* --------------------------------
-       GET
-    -------------------------------- */
 
     const now =
       new Date();
@@ -1057,6 +1059,29 @@ export default function StampPage() {
   }
 
   /* ========================================
+     MAP
+  ======================================== */
+
+  function showMapSpot(
+    spotId: string
+  ) {
+    const targetSpot =
+      pokipoSpots.find(
+        (spot) =>
+          spot.id ===
+          spotId
+      );
+
+    if (!targetSpot) {
+      return;
+    }
+
+    setMessage(
+      `${targetSpot.number}番：${targetSpot.spotName}`
+    );
+  }
+
+  /* ========================================
      VIEW
   ======================================== */
 
@@ -1065,9 +1090,7 @@ export default function StampPage() {
 
       <section className="card stampPage">
 
-        {/* =========================
-            HEADER
-        ========================== */}
+        {/* HEADER */}
 
         <header className="stampHeader">
 
@@ -1101,9 +1124,7 @@ export default function StampPage() {
 
         </header>
 
-        {/* =========================
-            PROGRESS
-        ========================== */}
+        {/* PROGRESS */}
 
         <section className="stampProgressCard">
 
@@ -1143,9 +1164,7 @@ export default function StampPage() {
 
         </section>
 
-        {/* =========================
-            QR
-        ========================== */}
+        {/* QR */}
 
         <section className="qrScannerSection">
 
@@ -1228,9 +1247,98 @@ export default function StampPage() {
 
         </section>
 
-        {/* =========================
-            SPOTS
-        ========================== */}
+        {/* MAP */}
+
+        <section className="stampMapSection">
+
+          <div className="stampMapHeader">
+
+            <div>
+
+              <p className="stampMapEyebrow">
+                CAMPUS MAP
+              </p>
+
+              <h2>
+                スポットマップ
+              </h2>
+
+            </div>
+
+            <span className="stampMapNote">
+              ①〜⑤の掲示場所
+            </span>
+
+          </div>
+
+          <div className="stampMapCard">
+
+            <div className="stampMapImageWrap">
+
+              <img
+                src="/images/pokipo-campus-map.png"
+                alt="POKIPO スタンプラリーキャンパスマップ"
+                className="stampMapImage"
+              />
+
+              {mapPins.map(
+                (pin) => {
+                  const collected =
+                    scans.includes(
+                      pin.id
+                    );
+
+                  return (
+                    <button
+                      key={
+                        pin.id
+                      }
+                      type="button"
+                      className={
+                        collected
+                          ? "stampMapPin collected"
+                          : "stampMapPin"
+                      }
+                      style={{
+                        top:
+                          pin.top,
+
+                        left:
+                          pin.left,
+                      }}
+                      onClick={() =>
+                        showMapSpot(
+                          pin.id
+                        )
+                      }
+                    >
+
+                      <span className="stampMapPinNumber">
+
+                        <span>
+                          {collected
+                            ? "✓"
+                            : pin.number}
+                        </span>
+
+                      </span>
+
+                      <span className="stampMapPinLabel">
+                        {pin.label}
+                      </span>
+
+                    </button>
+                  );
+                }
+              )}
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* SPOTS */}
 
         <section className="spotList">
 
@@ -1253,12 +1361,8 @@ export default function StampPage() {
                       ? "collected"
                       : "available",
                   ]
-                    .filter(
-                      Boolean
-                    )
-                    .join(
-                      " "
-                    )}
+                    .filter(Boolean)
+                    .join(" ")}
                 >
 
                   <div className="spotTimeline">
@@ -1300,33 +1404,6 @@ export default function StampPage() {
 
                     </p>
 
-                    {/* =========================
-                        DEMO
-                    ========================== */}
-
-                    <button
-                      type="button"
-                      className={
-                        collected
-                          ? "spotScanButton"
-                          : "spotScanButton active"
-                      }
-                      disabled={
-                        collected
-                      }
-                      onClick={() =>
-                        scanSpot(
-                          spot.id
-                        )
-                      }
-                    >
-
-                      {collected
-                        ? "取得済み"
-                        : "デモでこのQRを読む"}
-
-                    </button>
-
                   </div>
 
                 </article>
@@ -1336,9 +1413,7 @@ export default function StampPage() {
 
         </section>
 
-        {/* =========================
-            RESULT
-        ========================== */}
+        {/* RESULT */}
 
         {message && (
           <section className="scanResultCard">
@@ -1350,41 +1425,7 @@ export default function StampPage() {
           </section>
         )}
 
-        {/* =========================
-            KNOWLEDGE
-            正解後のみ表示
-        ========================== */}
-
-        {quizCorrect &&
-          newKnowledge && (
-            <section className="knowledgeUnlockCard">
-
-              <div className="knowledgeUnlockIcon">
-                !
-              </div>
-
-              <div>
-
-                <p>
-                  NEW KNOWLEDGE
-                </p>
-
-                <h2>
-                  {newKnowledgeTitle}
-                </h2>
-
-                <span>
-                  {newKnowledge}
-                </span>
-
-              </div>
-
-            </section>
-          )}
-
-        {/* =========================
-            COMPLETE
-        ========================== */}
+        {/* COMPLETE */}
 
         {completed && (
           <button
@@ -1418,9 +1459,7 @@ export default function StampPage() {
 
       </section>
 
-      {/* =====================================
-          NORMAL GET OVERLAY
-      ===================================== */}
+      {/* NORMAL GET */}
 
       {showGetEffect && (
         <div className="stampGetOverlay">
@@ -1443,10 +1482,6 @@ export default function StampPage() {
 
           <section className="stampGetModal">
 
-            {/* =========================
-                GET
-            ========================== */}
-
             <div className="stampGetCircle">
               ✓
             </div>
@@ -1462,10 +1497,6 @@ export default function StampPage() {
             <p className="stampGetPlace">
               {getSpotName}
             </p>
-
-            {/* =========================
-                PROGRESS
-            ========================== */}
 
             <div className="stampGetProgress">
 
@@ -1491,10 +1522,7 @@ export default function StampPage() {
 
             </div>
 
-            {/* =========================
-                POCKY STEP
-                配置はそのまま
-            ========================== */}
+            {/* POCKY STEP */}
 
             <div className="stampGetStep">
 
@@ -1516,10 +1544,7 @@ export default function StampPage() {
 
             </div>
 
-            {/* =========================
-                TRIVIA CHALLENGE
-                ここだけ新仕様
-            ========================== */}
+            {/* TRIVIA */}
 
             <div
               className={
@@ -1539,10 +1564,6 @@ export default function StampPage() {
                   TRIVIA CHALLENGE
                 </span>
 
-                {/* =========================
-                    LOADING
-                ========================== */}
-
                 {!triviaReady ? (
                   <div className="triviaLoading">
 
@@ -1557,10 +1578,6 @@ export default function StampPage() {
                   </div>
                 ) : !quizCorrect ? (
                   <>
-
-                    {/* =========================
-                        QUESTION
-                    ========================== */}
 
                     <h3>
                       QRの下の説明から
@@ -1579,17 +1596,9 @@ export default function StampPage() {
 
                     </div>
 
-                    {/* =========================
-                        HINT
-                    ========================== */}
-
                     <p className="triviaQuizHint">
                       🔍 {quizHint}
                     </p>
-
-                    {/* =========================
-                        INPUT
-                    ========================== */}
 
                     <div className="triviaQuizInputRow">
 
@@ -1642,10 +1651,6 @@ export default function StampPage() {
 
                     </div>
 
-                    {/* =========================
-                        WRONG
-                    ========================== */}
-
                     {quizError && (
                       <div className="triviaQuizWrong">
 
@@ -1664,10 +1669,6 @@ export default function StampPage() {
                   </>
                 ) : (
                   <>
-
-                    {/* =========================
-                        CORRECT
-                    ========================== */}
 
                     <div className="triviaQuizCorrect">
 
@@ -1688,10 +1689,6 @@ export default function StampPage() {
                       </div>
 
                     </div>
-
-                    {/* =========================
-                        FULL KNOWLEDGE
-                    ========================== */}
 
                     <div className="triviaUnlockedContent">
 
@@ -1716,11 +1713,6 @@ export default function StampPage() {
 
             </div>
 
-            {/* =========================
-                NEXT
-                正解者のみ
-            ========================== */}
-
             {triviaReady &&
               quizCorrect && (
                 <button
@@ -1744,9 +1736,7 @@ export default function StampPage() {
         </div>
       )}
 
-      {/* =====================================
-          SECRET GET EFFECT
-      ===================================== */}
+      {/* SECRET GET */}
 
       {secretGetEffect && (
         <div className="stampGetOverlay">

@@ -10,50 +10,69 @@ import { useRouter } from "next/navigation";
 import { toPng } from "html-to-image";
 
 /* ========================================
-   DEMO
-======================================== */
-
-const DEMO_MODE = true;
-
-/* ========================================
    KNOWLEDGE
 ======================================== */
 
 const knowledgeItems = [
   {
-    id: "knowledge1",
-    number: 1,
+    id:
+      "knowledge1",
+
+    number:
+      1,
+
     title:
       "10年ぶりの大改良！素材から見直した「究極の品質」",
   },
+
   {
-    id: "knowledge2",
-    number: 2,
+    id:
+      "knowledge2",
+
+    number:
+      2,
+
     title:
       "「ショートニング不使用」への挑戦と安心",
   },
+
   {
-    id: "knowledge3",
-    number: 3,
+    id:
+      "knowledge3",
+
+    number:
+      3,
+
     title:
       "心の距離をぐっと縮める「コミュニケーションツール」",
   },
+
   {
-    id: "knowledge4",
-    number: 4,
+    id:
+      "knowledge4",
+
+    number:
+      4,
+
     title:
       "誰も取り残さない「シェアハピネス」の精神",
   },
+
   {
-    id: "knowledge5",
-    number: 5,
+    id:
+      "knowledge5",
+
+    number:
+      5,
+
     title:
       "獨協生の誇り！5年連続日本一を支える「圧倒的な団結力」",
   },
 ];
 
 export default function RewardPage() {
-  const router = useRouter();
+  const router =
+    useRouter();
 
   const certificateRef =
     useRef<HTMLDivElement | null>(
@@ -260,10 +279,11 @@ export default function RewardPage() {
       (item) =>
         item.id ===
         selectedKnowledgeId
-    ) ?? knowledgeItems[0];
+    ) ??
+    knowledgeItems[0];
 
   /* ========================================
-     PROFILE SELECT
+     PROFILE
   ======================================== */
 
   function toggleProfile(
@@ -351,16 +371,28 @@ export default function RewardPage() {
       `${now.getFullYear()}/` +
       `${String(
         now.getMonth() + 1
-      ).padStart(2, "0")}/` +
+      ).padStart(
+        2,
+        "0"
+      )}/` +
       `${String(
         now.getDate()
-      ).padStart(2, "0")} ` +
+      ).padStart(
+        2,
+        "0"
+      )} ` +
       `${String(
         now.getHours()
-      ).padStart(2, "0")}:` +
+      ).padStart(
+        2,
+        "0"
+      )}:` +
       `${String(
         now.getMinutes()
-      ).padStart(2, "0")}`;
+      ).padStart(
+        2,
+        "0"
+      )}`;
 
     localStorage.setItem(
       "pokipo_reward_exchanged",
@@ -404,7 +436,9 @@ export default function RewardPage() {
     }
 
     try {
-      setCreatingImage(true);
+      setCreatingImage(
+        true
+      );
 
       return await toPng(
         certificateRef.current,
@@ -419,7 +453,9 @@ export default function RewardPage() {
             "#fff8eb",
         }
       );
-    } catch (error) {
+    } catch (
+      error
+    ) {
       console.error(
         "達成証生成エラー:",
         error
@@ -427,7 +463,9 @@ export default function RewardPage() {
 
       return null;
     } finally {
-      setCreatingImage(false);
+      setCreatingImage(
+        false
+      );
     }
   }
 
@@ -480,7 +518,9 @@ export default function RewardPage() {
 
       const file =
         new File(
-          [blob],
+          [
+            blob,
+          ],
           "POKIPO_certificate.png",
           {
             type:
@@ -514,157 +554,14 @@ export default function RewardPage() {
       setMessage(
         "この端末では直接共有できません。画像を保存してLINE・X・Instagramから投稿してください。"
       );
-    } catch (error) {
+    } catch (
+      error
+    ) {
       console.error(
         "共有エラー:",
         error
       );
     }
-  }
-
-  /* ========================================
-     DEMO COMPLETE
-  ======================================== */
-
-  function demoCompleteReward() {
-    const now =
-      new Date();
-
-    const formatted =
-      `${now.getFullYear()}/` +
-      `${String(
-        now.getMonth() + 1
-      ).padStart(2, "0")}/` +
-      `${String(
-        now.getDate()
-      ).padStart(2, "0")} ` +
-      `${String(
-        now.getHours()
-      ).padStart(2, "0")}:` +
-      `${String(
-        now.getMinutes()
-      ).padStart(2, "0")}`;
-
-    localStorage.setItem(
-      "pokipo_progress",
-      "5"
-    );
-
-    localStorage.setItem(
-      "pokipo_reward_exchanged",
-      "true"
-    );
-
-    localStorage.setItem(
-      "pokipo_completed_at",
-      formatted
-    );
-
-    localStorage.setItem(
-      "pokipo_achievement_rank",
-      "128"
-    );
-
-    setProgress(5);
-
-    setRewardExchanged(
-      true
-    );
-
-    setCompletedAt(
-      formatted
-    );
-
-    setAchievementRank(
-      128
-    );
-
-    setMessage(
-      "デモ：景品交換完了状態にしました。"
-    );
-  }
-
-  /* ========================================
-     DEMO RESET REWARD
-  ======================================== */
-
-  function demoResetReward() {
-    localStorage.removeItem(
-      "pokipo_reward_exchanged"
-    );
-
-    localStorage.removeItem(
-      "pokipo_completed_at"
-    );
-
-    localStorage.removeItem(
-      "pokipo_achievement_rank"
-    );
-
-    setRewardExchanged(
-      false
-    );
-
-    setCompletedAt("");
-
-    setAchievementRank(
-      128
-    );
-
-    setMessage(
-      "デモ：景品交換状態をリセットしました。"
-    );
-  }
-
-  /* ========================================
-     DEMO RESET STAMPS
-  ======================================== */
-
-  function demoResetStamps() {
-    localStorage.removeItem(
-      "pokipo_scans"
-    );
-
-    localStorage.removeItem(
-      "pokipo_knowledge"
-    );
-
-    localStorage.setItem(
-      "pokipo_progress",
-      "0"
-    );
-
-    setProgress(0);
-
-    setMessage(
-      "デモ：通常スタンプをリセットしました。"
-    );
-  }
-
-  /* ========================================
-     DEMO RESET SECRET
-  ======================================== */
-
-  function demoResetSecretStamp() {
-    localStorage.removeItem(
-      "pokipo_secret_yuhisai"
-    );
-
-    localStorage.removeItem(
-      "pokipo_secret_yuhisai_at"
-    );
-
-    localStorage.removeItem(
-      "pokipo_yuhisai_pocky_skin"
-    );
-
-    setSecretStamp(
-      false
-    );
-
-    setMessage(
-      "デモ：雄飛祭スタンプを削除しました。"
-    );
   }
 
   /* ========================================
@@ -676,9 +573,7 @@ export default function RewardPage() {
 
       <section className="rewardPage">
 
-        {/* ==================================
-            HEADER
-        ================================== */}
+        {/* HEADER */}
 
         <header className="rewardHeader">
 
@@ -708,9 +603,7 @@ export default function RewardPage() {
 
         </header>
 
-        {/* ==================================
-            HERO
-        ================================== */}
+        {/* HERO */}
 
         <section
           className={
@@ -749,9 +642,7 @@ export default function RewardPage() {
 
         </section>
 
-        {/* ==================================
-            SPECIAL
-        ================================== */}
+        {/* SPECIAL */}
 
         <section className="rewardSpecialSection">
 
@@ -857,9 +748,7 @@ export default function RewardPage() {
 
         </section>
 
-        {/* ==================================
-            EXCHANGE
-        ================================== */}
+        {/* EXCHANGE */}
 
         <section className="rewardExchangeSection">
 
@@ -940,9 +829,7 @@ export default function RewardPage() {
 
         </section>
 
-        {/* ==================================
-            CERTIFICATE
-        ================================== */}
+        {/* CERTIFICATE */}
 
         {rewardExchanged && (
           <section className="certificateSection">
@@ -964,9 +851,7 @@ export default function RewardPage() {
               ニックネーム・学年・学科から最低1つ選んでください。
             </p>
 
-            {/* =================================
-                PROFILE SETTING
-            ================================= */}
+            {/* PROFILE */}
 
             <div className="certificateSettingCard">
 
@@ -997,12 +882,6 @@ export default function RewardPage() {
                     )
                   }
                 >
-                  <span>
-                    {showNickname
-                      ? "✓"
-                      : ""}
-                  </span>
-
                   ニックネーム
                 </button>
 
@@ -1019,12 +898,6 @@ export default function RewardPage() {
                     )
                   }
                 >
-                  <span>
-                    {showGrade
-                      ? "✓"
-                      : ""}
-                  </span>
-
                   学年
                 </button>
 
@@ -1041,12 +914,6 @@ export default function RewardPage() {
                     )
                   }
                 >
-                  <span>
-                    {showDepartment
-                      ? "✓"
-                      : ""}
-                  </span>
-
                   学科
                 </button>
 
@@ -1054,9 +921,7 @@ export default function RewardPage() {
 
             </div>
 
-            {/* =================================
-                KNOWLEDGE
-            ================================= */}
+            {/* KNOWLEDGE */}
 
             <div className="certificateSettingCard">
 
@@ -1075,49 +940,42 @@ export default function RewardPage() {
               <div className="certificateKnowledgeSelect">
 
                 {knowledgeItems.map(
-                  (item) => {
-                    const active =
-                      item.id ===
-                      selectedKnowledgeId;
-
-                    return (
-                      <button
-                        key={
+                  (item) => (
+                    <button
+                      key={
+                        item.id
+                      }
+                      type="button"
+                      className={
+                        item.id ===
+                        selectedKnowledgeId
+                          ? "active"
+                          : ""
+                      }
+                      onClick={() =>
+                        selectKnowledge(
                           item.id
-                        }
-                        type="button"
-                        className={
-                          active
-                            ? "active"
-                            : ""
-                        }
-                        onClick={() =>
-                          selectKnowledge(
-                            item.id
-                          )
-                        }
-                      >
+                        )
+                      }
+                    >
 
-                        <span>
-                          {item.number}
-                        </span>
+                      <span>
+                        {item.number}
+                      </span>
 
-                        <strong>
-                          {item.title}
-                        </strong>
+                      <strong>
+                        {item.title}
+                      </strong>
 
-                      </button>
-                    );
-                  }
+                    </button>
+                  )
                 )}
 
               </div>
 
             </div>
 
-            {/* =================================
-                CERTIFICATE CARD
-            ================================= */}
+            {/* CERTIFICATE CARD */}
 
             <div
               ref={
@@ -1125,29 +983,6 @@ export default function RewardPage() {
               }
               className="certificateCard"
             >
-
-              {/* 背景 */}
-
-              <div className="certificateBuilding">
-
-                <div className="certificateBuildingRoof" />
-
-                <div className="certificateBuildingBody">
-
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-
-                </div>
-
-              </div>
-
-              <div className="certificateOverlay" />
-
-              {/* TOP */}
 
               <div className="certificateTop">
 
@@ -1168,8 +1003,6 @@ export default function RewardPage() {
                 </p>
 
               </div>
-
-              {/* POCKY */}
 
               <div className="certificatePockyVisual">
 
@@ -1199,19 +1032,13 @@ export default function RewardPage() {
 
               </div>
 
-              {/* MUST INFO */}
-
               <div className="certificateStats">
 
                 <div className="certificateStatCard">
 
-                  <span className="certificateStatLabel">
+                  <span>
                     ACHIEVED AT
                   </span>
-
-                  <small>
-                    達成時間
-                  </small>
 
                   <strong>
                     {completedAt ||
@@ -1222,13 +1049,9 @@ export default function RewardPage() {
 
                 <div className="certificateStatCard rank">
 
-                  <span className="certificateStatLabel">
+                  <span>
                     RANK
                   </span>
-
-                  <small>
-                    達成順位
-                  </small>
 
                   <div className="certificateRankNumber">
 
@@ -1242,112 +1065,70 @@ export default function RewardPage() {
 
                   </div>
 
-                  <p>
-                    に達成！
-                  </p>
-
                 </div>
 
               </div>
-
-              {/* PARTICIPANT */}
 
               <div className="certificateProfileBlock">
 
-                <div className="certificateProfileTitle">
+                {showNickname && (
+                  <div className="certificateProfileItem">
 
-                  <span>
-                    PARTICIPANT
-                  </span>
+                    <span>
+                      NICKNAME
+                    </span>
 
-                  <strong>
-                    達成者
-                  </strong>
+                    <strong>
+                      {nickname ||
+                        "未設定"}
+                    </strong>
 
-                </div>
+                  </div>
+                )}
 
-                <div className="certificateProfileItems">
+                {showGrade && (
+                  <div className="certificateProfileItem">
 
-                  {showNickname && (
-                    <div className="certificateProfileItem">
+                    <span>
+                      GRADE
+                    </span>
 
-                      <span>
-                        NICKNAME
-                      </span>
+                    <strong>
+                      {grade ||
+                        "未設定"}
+                    </strong>
 
-                      <strong>
-                        {nickname ||
-                          "未設定"}
-                      </strong>
+                  </div>
+                )}
 
-                    </div>
-                  )}
+                {showDepartment && (
+                  <div className="certificateProfileItem">
 
-                  {showGrade && (
-                    <div className="certificateProfileItem">
+                    <span>
+                      DEPARTMENT
+                    </span>
 
-                      <span>
-                        GRADE
-                      </span>
+                    <strong>
+                      {department ||
+                        "未設定"}
+                    </strong>
 
-                      <strong>
-                        {grade ||
-                          "未設定"}
-                      </strong>
-
-                    </div>
-                  )}
-
-                  {showDepartment && (
-                    <div className="certificateProfileItem">
-
-                      <span>
-                        DEPARTMENT
-                      </span>
-
-                      <strong>
-                        {department ||
-                          "未設定"}
-                      </strong>
-
-                    </div>
-                  )}
-
-                </div>
+                  </div>
+                )}
 
               </div>
-
-              {/* KNOWLEDGE */}
 
               <div className="certificateKnowledgeBlock">
 
-                <div className="certificateKnowledgeTitle">
+                <span>
+                  FAVORITE KNOWLEDGE
+                </span>
 
-                  <span>
-                    FAVORITE KNOWLEDGE
-                  </span>
-
-                  <strong>
-                    一番「へぇ！」となった豆知識
-                  </strong>
-
-                </div>
-
-                <div className="certificateKnowledgeContent">
-
-                  <span className="certificateKnowledgeNumber">
-                    {selectedKnowledge.number}
-                  </span>
-
-                  <strong>
-                    {selectedKnowledge.title}
-                  </strong>
-
-                </div>
+                <strong>
+                  {selectedKnowledge.title}
+                </strong>
 
               </div>
-
-              {/* FOOTER */}
 
               <div className="certificateFooter">
 
@@ -1363,9 +1144,7 @@ export default function RewardPage() {
 
             </div>
 
-            {/* =================================
-                ACTION
-            ================================= */}
+            {/* ACTION */}
 
             <div className="certificateActions">
 
@@ -1378,9 +1157,7 @@ export default function RewardPage() {
                   creatingImage
                 }
               >
-                {creatingImage
-                  ? "画像を作成中..."
-                  : "達成証を保存"}
+                達成証を保存
               </button>
 
               <button
@@ -1401,9 +1178,7 @@ export default function RewardPage() {
           </section>
         )}
 
-        {/* ==================================
-            SECRET MODE
-        ================================== */}
+        {/* SECRET */}
 
         {secretStamp && (
           <section className="rewardSecretUnlocked">
@@ -1435,9 +1210,7 @@ export default function RewardPage() {
           </section>
         )}
 
-        {/* ==================================
-            MESSAGE
-        ================================== */}
+        {/* MESSAGE */}
 
         {message && (
           <p className="rewardMessage">
@@ -1445,67 +1218,7 @@ export default function RewardPage() {
           </p>
         )}
 
-        {/* ==================================
-            DEMO ONLY
-        ================================== */}
-
-        {DEMO_MODE && (
-          <section className="rewardDemoSection">
-
-            <span>
-              DEMO ONLY
-            </span>
-
-            <h2>
-              デモ操作
-            </h2>
-
-            <div className="rewardDemoButtons">
-
-              <button
-                type="button"
-                onClick={
-                  demoCompleteReward
-                }
-              >
-                デモ：景品交換完了
-              </button>
-
-              <button
-                type="button"
-                onClick={
-                  demoResetReward
-                }
-              >
-                デモ：景品交換状態をリセット
-              </button>
-
-              <button
-                type="button"
-                onClick={
-                  demoResetStamps
-                }
-              >
-                デモ：通常スタンプをリセット
-              </button>
-
-              <button
-                type="button"
-                onClick={
-                  demoResetSecretStamp
-                }
-              >
-                デモ：雄飛祭スタンプを削除
-              </button>
-
-            </div>
-
-          </section>
-        )}
-
-        {/* ==================================
-            HOME
-        ================================== */}
+        {/* HOME */}
 
         <button
           type="button"

@@ -63,78 +63,6 @@ export default function HomePage() {
   const totalParticipants =
     128;
 
-  const gradeStats = [
-    {
-      label: "1年生",
-      count: 42,
-    },
-    {
-      label: "2年生",
-      count: 31,
-    },
-    {
-      label: "3年生",
-      count: 29,
-    },
-    {
-      label: "4年生",
-      count: 26,
-    },
-  ];
-
-  const departmentStats = [
-    {
-      label:
-        "ドイツ語学科",
-      count: 15,
-    },
-    {
-      label:
-        "英語学科",
-      count: 20,
-    },
-    {
-      label:
-        "フランス語学科",
-      count: 10,
-    },
-    {
-      label:
-        "交流文化学科",
-      count: 18,
-    },
-    {
-      label:
-        "法律学科",
-      count: 15,
-    },
-    {
-      label:
-        "国際関係法学科",
-      count: 10,
-    },
-    {
-      label:
-        "総合政策学科",
-      count: 8,
-    },
-    {
-      label:
-        "経済学科",
-      count: 10,
-    },
-    {
-      label:
-        "経営学科",
-      count: 12,
-    },
-    {
-      label:
-        "国際環境経済学科",
-      count: 10,
-    },
-  ];
-
   /* ========================================
      LOAD
   ======================================== */
@@ -218,16 +146,7 @@ export default function HomePage() {
       }
     }
 
-    /*
-      初回
-    */
-
     loadHomeData();
-
-    /*
-      別画面から戻った時にも
-      着せ替え状態を再読込
-    */
 
     function handleFocus() {
       loadHomeData();
@@ -445,10 +364,6 @@ export default function HomePage() {
           <div className="visualHeroDecoration visualDecoOne" />
           <div className="visualHeroDecoration visualDecoTwo" />
 
-          {/* =================================
-              雄飛祭装飾
-          ================================= */}
-
           {yuhisaiMode && (
             <>
 
@@ -493,8 +408,6 @@ export default function HomePage() {
               ✦
             </span>
 
-            {/* メイン */}
-
             <div
               className={
                 yuhisaiMode
@@ -508,8 +421,6 @@ export default function HomePage() {
               <div className="visualPockyBiscuit" />
 
             </div>
-
-            {/* 完成後 2本目 */}
 
             {completed && (
               <>
@@ -527,8 +438,6 @@ export default function HomePage() {
                   <div className="visualPockyBiscuit" />
 
                 </div>
-
-                {/* 3本目 */}
 
                 <div
                   className={
@@ -644,10 +553,6 @@ export default function HomePage() {
 
           </div>
 
-          {/* =================================
-              SECRET STAMP
-          ================================= */}
-
           {yuhisaiMode && (
             <div className="homeSecretStamp">
 
@@ -673,42 +578,8 @@ export default function HomePage() {
         </section>
 
         {/* ==================================
-            SPOT RALLY
+            完成時だけ特典導線
         ================================== */}
-
-        {!completed && (
-          <button
-            type="button"
-            className="visualNextSpot"
-            onClick={() =>
-              router.push(
-                "/stamp"
-              )
-            }
-          >
-
-            <div className="visualNextIcon">
-              QR
-            </div>
-
-            <div className="visualNextText">
-
-              <span>
-                SPOT RALLY
-              </span>
-
-              <strong>
-                好きなスポットへ行こう
-              </strong>
-
-            </div>
-
-            <div className="visualNextArrow">
-              →
-            </div>
-
-          </button>
-        )}
 
         {completed && (
           <button
@@ -746,6 +617,7 @@ export default function HomePage() {
 
         {/* ==================================
             QR BUTTON
+            通常のスタンプ導線はこれだけ
         ================================== */}
 
         <button
@@ -798,12 +670,12 @@ export default function HomePage() {
               </span>
 
               <strong>
-                着せ替え＆限定カード
+                着せ替え＆限定フォト
               </strong>
 
               <p>
                 自分だけのPOKIPOで
-                SNSカードを作ろう
+                雄飛祭限定フォトを作ろう
               </p>
 
             </div>
@@ -820,8 +692,6 @@ export default function HomePage() {
         ================================== */}
 
         <section className="visualMenuGrid">
-
-          {/* 豆知識 */}
 
           <button
             type="button"
@@ -847,8 +717,6 @@ export default function HomePage() {
 
           </button>
 
-          {/* 進捗 */}
-
           <button
             type="button"
             className="visualMenuCard"
@@ -872,8 +740,6 @@ export default function HomePage() {
             </span>
 
           </button>
-
-          {/* 特典 */}
 
           <button
             type="button"
@@ -920,6 +786,7 @@ export default function HomePage() {
 
         {/* ==================================
             PARTICIPANTS
+            合計参加者数だけ表示
         ================================== */}
 
         <section className="participantStatsSection">
@@ -948,8 +815,6 @@ export default function HomePage() {
 
           </div>
 
-          {/* 全体 */}
-
           <div className="participantTotalCard">
 
             <span className="participantTotalLabel">
@@ -971,133 +836,6 @@ export default function HomePage() {
             <p>
               POKIPOに参加している学生
             </p>
-
-          </div>
-
-          {/* 学年別 */}
-
-          <div className="participantBreakdownCard">
-
-            <div className="participantBreakdownHeader">
-
-              <span>
-                GRADE
-              </span>
-
-              <strong>
-                学年別
-              </strong>
-
-            </div>
-
-            <div className="participantGradeGrid">
-
-              {gradeStats.map(
-                (grade) => (
-                  <div
-                    key={
-                      grade.label
-                    }
-                    className="participantGradeItem"
-                  >
-
-                    <span>
-                      {grade.label}
-                    </span>
-
-                    <strong>
-                      {grade.count}
-
-                      <small>
-                        人
-                      </small>
-                    </strong>
-
-                  </div>
-                )
-              )}
-
-            </div>
-
-          </div>
-
-          {/* 学科別 */}
-
-          <div className="participantBreakdownCard">
-
-            <div className="participantBreakdownHeader">
-
-              <span>
-                DEPARTMENT
-              </span>
-
-              <strong>
-                学科別
-              </strong>
-
-            </div>
-
-            <div className="participantDepartmentList">
-
-              {departmentStats.map(
-                (
-                  department
-                ) => {
-                  const percentage =
-                    totalParticipants >
-                    0
-                      ? Math.round(
-                          (
-                            department.count /
-                            totalParticipants
-                          ) *
-                            100
-                        )
-                      : 0;
-
-                  return (
-                    <div
-                      key={
-                        department.label
-                      }
-                      className="participantDepartmentItem"
-                    >
-
-                      <div className="participantDepartmentTop">
-
-                        <span>
-                          {department.label}
-                        </span>
-
-                        <strong>
-                          {department.count}
-
-                          <small>
-                            人
-                          </small>
-
-                        </strong>
-
-                      </div>
-
-                      <div className="participantDepartmentBar">
-
-                        <div
-                          className="participantDepartmentBarFill"
-                          style={{
-                            width:
-                              `${percentage}%`,
-                          }}
-                        />
-
-                      </div>
-
-                    </div>
-                  );
-                }
-              )}
-
-            </div>
 
           </div>
 
