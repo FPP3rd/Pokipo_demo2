@@ -7,6 +7,10 @@ import {
 } from "react";
 
 import {
+  useRouter,
+} from "next/navigation";
+
+import {
   Html5Qrcode,
 } from "html5-qrcode";
 
@@ -56,7 +60,14 @@ type Participant = {
   created_at: string;
 };
 
+/* ========================================
+   PAGE
+======================================== */
+
 export default function StaffRewardPage() {
+  const router =
+    useRouter();
+
   /* ========================================
      AUTH
   ======================================== */
@@ -152,23 +163,41 @@ export default function StaffRewardPage() {
 
   useEffect(() => {
     async function checkSession() {
-      const {
-        data,
-      } =
-        await supabase.auth.getSession();
+      try {
+        const {
+          data,
+          error,
+        } =
+          await supabase.auth.getSession();
 
-      setAuthenticated(
-        Boolean(
-          data.session
-        )
-      );
+        if (
+          error
+        ) {
+          console.error(
+            "スタッフ認証確認エラー:",
+            error
+          );
 
-      setAuthLoading(
-        false
-      );
+          setAuthenticated(
+            false
+          );
+
+          return;
+        }
+
+        setAuthenticated(
+          Boolean(
+            data.session
+          )
+        );
+      } finally {
+        setAuthLoading(
+          false
+        );
+      }
     }
 
-    checkSession();
+    void checkSession();
 
     const {
       data:
@@ -197,8 +226,11 @@ export default function StaffRewardPage() {
   ======================================== */
 
   async function loginStaff() {
+    const normalizedEmail =
+      email.trim();
+
     if (
-      !email.trim() ||
+      !normalizedEmail ||
       !password
     ) {
       setMessage(
@@ -214,40 +246,61 @@ export default function StaffRewardPage() {
 
     setMessage("");
 
-    const {
-      error,
-    } =
-      await supabase.auth.signInWithPassword({
-        email:
-          email.trim(),
+    try {
+      const {
+        error,
+      } =
+        await supabase.auth.signInWithPassword({
+          email:
+            normalizedEmail,
 
-        password,
-      });
+          password,
+        });
 
-    setLoginLoading(
-      false
-    );
+      if (
+        error
+      ) {
+        console.error(
+          "スタッフログインエラー:",
+          error
+        );
 
-    if (
+        setMessage(
+          "ログインできませんでした。メールアドレスとパスワードを確認してください。"
+        );
+
+        return;
+      }
+
+      setAuthenticated(
+        true
+      );
+
+      setPassword("");
+
+      /* =================================
+         ログイン後はスタッフメニューへ
+      ================================= */
+
+      router.replace(
+        "/staff"
+      );
+    } catch (
       error
     ) {
       console.error(
-        "スタッフログインエラー:",
+        "スタッフログイン通信エラー:",
         error
       );
 
       setMessage(
-        "ログインできませんでした。メールアドレスとパスワードを確認してください。"
+        "通信中にエラーが発生しました。"
       );
-
-      return;
+    } finally {
+      setLoginLoading(
+        false
+      );
     }
-
-    setAuthenticated(
-      true
-    );
-
-    setPassword("");
   }
 
   /* ========================================
@@ -272,6 +325,10 @@ export default function StaffRewardPage() {
     );
 
     setMessage("");
+
+    router.replace(
+      "/staff/reward"
+    );
   }
 
   /* ========================================
@@ -298,6 +355,14 @@ export default function StaffRewardPage() {
       if (
         !readerElement
       ) {
+        setCameraError(
+          "QR読み取りエリアを表示できませんでした。"
+        );
+
+        setCameraOpen(
+          false
+        );
+
         return;
       }
 
@@ -392,7 +457,7 @@ export default function StaffRewardPage() {
       }
     }
 
-    startCamera();
+    void startCamera();
 
     return () => {
       cancelled =
@@ -525,7 +590,7 @@ export default function StaffRewardPage() {
 
     try {
       /* =================================
-         EXCHANGE
+         EXCHANGE DATA
       ================================= */
 
       const {
@@ -673,6 +738,9 @@ export default function StaffRewardPage() {
         new Date().toISOString();
 
       const {
+        data:
+          updatedData,
+
         error,
       } =
         await supabase
@@ -696,6 +764,9 @@ export default function StaffRewardPage() {
           .eq(
             "status",
             "issued"
+          )
+          .select(
+            "id"
           );
 
       if (
@@ -709,6 +780,28 @@ export default function StaffRewardPage() {
         setMessage(
           "景品交換を記録できませんでした。"
         );
+
+        return;
+      }
+
+      /*
+        同時に他スタッフが交換処理した場合
+      */
+
+      if (
+        !updatedData ||
+        updatedData.length ===
+          0
+      ) {
+        setMessage(
+          "このQRはすでに交換処理されています。"
+        );
+
+        setReward({
+          ...reward,
+          status:
+            "exchanged",
+        });
 
         return;
       }
@@ -748,7 +841,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     RESET VIEW
+     RESET
   ======================================== */
 
   function resetScanner() {
@@ -766,7 +859,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     LOADING
+     AUTH LOADING
   ======================================== */
 
   if (
@@ -778,7 +871,7 @@ export default function StaffRewardPage() {
         <section className="staffRewardPage">
 
           <div className="staffLoadingCard">
-            スタッフ画面を読み込み中...
+            スタッフ情報を確認中...
           </div>
 
         </section>
@@ -810,8 +903,13 @@ export default function StaffRewardPage() {
             </h1>
 
             <p>
-              景品交換担当スタッフ専用ページです。
+              POKIPO運営スタッフ専用ページです。
+              ログイン後、スタッフメニューへ移動します。
             </p>
+
+            {/* =========================
+                EMAIL
+            ========================= */}
 
             <div className="staffLoginField">
 
@@ -833,9 +931,14 @@ export default function StaffRewardPage() {
                   )
                 }
                 autoComplete="username"
+                placeholder="staff@example.com"
               />
 
             </div>
+
+            {/* =========================
+                PASSWORD
+            ========================= */}
 
             <div className="staffLoginField">
 
@@ -864,12 +967,16 @@ export default function StaffRewardPage() {
                     event.key ===
                     "Enter"
                   ) {
-                    loginStaff();
+                    void loginStaff();
                   }
                 }}
               />
 
             </div>
+
+            {/* =========================
+                LOGIN
+            ========================= */}
 
             <button
               type="button"
@@ -884,7 +991,7 @@ export default function StaffRewardPage() {
 
               {loginLoading
                 ? "ログイン中..."
-                : "ログイン"}
+                : "スタッフログイン"}
 
             </button>
 
@@ -929,23 +1036,73 @@ export default function StaffRewardPage() {
 
           </div>
 
-          <button
-            type="button"
-            onClick={
-              logoutStaff
-            }
-          >
-            ログアウト
-          </button>
+          <div className="staffRewardHeaderActions">
 
-          <a
-         href="/staff/reward/history"
-         className="staffHistoryLink"
-          >
-        交換履歴
-         </a>
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  "/staff"
+                )
+              }
+            >
+              メニュー
+            </button>
+
+            <button
+              type="button"
+              onClick={
+                logoutStaff
+              }
+            >
+              ログアウト
+            </button>
+
+          </div>
 
         </header>
+
+        {/* =================================
+            SUB NAVIGATION
+        ================================= */}
+
+        <section className="staffRewardQuickNav">
+
+          <button
+            type="button"
+            onClick={() =>
+              router.push(
+                "/staff/dashboard"
+              )
+            }
+          >
+            <span>
+              LIVE
+            </span>
+
+            <strong>
+              管理ダッシュボード
+            </strong>
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              router.push(
+                "/staff/reward/history"
+              )
+            }
+          >
+            <span>
+              LOG
+            </span>
+
+            <strong>
+              交換履歴
+            </strong>
+          </button>
+
+        </section>
 
         {/* =================================
             SCANNER
@@ -1055,7 +1212,7 @@ export default function StaffRewardPage() {
 
               {/* =========================
                   INFORMATION
-              ========================== */}
+              ========================= */}
 
               <div className="staffParticipantInfo">
 
@@ -1100,8 +1257,8 @@ export default function StaffRewardPage() {
               </div>
 
               {/* =========================
-                  ALREADY EXCHANGED
-              ========================== */}
+                  EXCHANGED
+              ========================= */}
 
               {reward.status ===
               "exchanged" ? (
@@ -1125,7 +1282,11 @@ export default function StaffRewardPage() {
                       {new Date(
                         reward.exchanged_at
                       ).toLocaleString(
-                        "ja-JP"
+                        "ja-JP",
+                        {
+                          timeZone:
+                            "Asia/Tokyo",
+                        }
                       )}
                     </p>
                   )}
@@ -1134,13 +1295,13 @@ export default function StaffRewardPage() {
               ) : (
                 /* =========================
                     CONFIRM
-                ========================== */
+                ========================= */
 
                 <div className="staffExchangeConfirm">
 
                   <p>
-                    学籍番号と参加者名を確認して、
-                    景品を渡してから確定してください。
+                    学籍番号と参加者名を確認し、
+                    景品を渡してから交換を確定してください。
                   </p>
 
                   <button
@@ -1161,6 +1322,10 @@ export default function StaffRewardPage() {
 
                 </div>
               )}
+
+              {/* =========================
+                  NEXT
+              ========================= */}
 
               <button
                 type="button"

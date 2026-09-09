@@ -120,26 +120,6 @@ export default function StaffPage() {
         </header>
 
         {/* =================================
-            HERO
-        ================================= */}
-
-        <section className="staffPortalHero">
-
-          <span>
-            STAFF CONTROL
-          </span>
-
-          <h2>
-            POKIPO運営メニュー
-          </h2>
-
-          <p>
-            利用したい機能を選択してください。
-          </p>
-
-        </section>
-
-        {/* =================================
             MENU
         ================================= */}
 
