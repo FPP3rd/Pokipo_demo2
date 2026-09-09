@@ -7,6 +7,10 @@ import {
 
 import { useRouter } from "next/navigation";
 
+import {
+  supabase,
+} from "../../lib/supabase-client";
+
 /* ========================================
    雄飛祭ポッキースキン
 ======================================== */
@@ -18,7 +22,8 @@ type PockySkin =
   | "white";
 
 export default function HomePage() {
-  const router = useRouter();
+  const router =
+    useRouter();
 
   /* ========================================
      BASIC
@@ -40,6 +45,18 @@ export default function HomePage() {
   ] = useState(false);
 
   /* ========================================
+     PARTICIPANTS
+     Supabase実人数
+  ======================================== */
+
+  const [
+    totalParticipants,
+    setTotalParticipants,
+  ] = useState<number | null>(
+    null
+  );
+
+  /* ========================================
      雄飛祭 MODE
   ======================================== */
 
@@ -56,18 +73,14 @@ export default function HomePage() {
   );
 
   /* ========================================
-     参加状況
-     現在はデモ
-  ======================================== */
-
-  const totalParticipants =
-    128;
-
-  /* ========================================
      LOAD
   ======================================== */
 
   useEffect(() => {
+    /* --------------------------------
+       localStorage
+    -------------------------------- */
+
     function loadHomeData() {
       const savedNickname =
         localStorage.getItem(
@@ -99,8 +112,17 @@ export default function HomePage() {
           "chocolate"
         ) as PockySkin;
 
-      if (!savedNickname) {
-        router.replace("/");
+      /* --------------------------------
+         未登録ならスタートへ
+      -------------------------------- */
+
+      if (
+        !savedNickname
+      ) {
+        router.replace(
+          "/"
+        );
+
         return;
       }
 
@@ -146,11 +168,93 @@ export default function HomePage() {
       }
     }
 
+    /* --------------------------------
+       参加者数取得
+    -------------------------------- */
+
+    async function loadParticipantCount() {
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "get_participant_count"
+        );
+
+      if (
+        error
+      ) {
+        console.error(
+          "参加者数取得エラー:",
+          error
+        );
+
+        return;
+      }
+
+      setTotalParticipants(
+        Number(
+          data ?? 0
+        )
+      );
+    }
+
+    /* --------------------------------
+       初回読み込み
+    -------------------------------- */
+
     loadHomeData();
+
+    loadParticipantCount();
+
+    /* ========================================
+       REALTIME
+       participantsへのINSERTを監視
+    ======================================== */
+
+    const participantChannel =
+      supabase
+        .channel(
+          "participants-live-count"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event:
+              "INSERT",
+
+            schema:
+              "public",
+
+            table:
+              "participants",
+          },
+          () => {
+            loadParticipantCount();
+          }
+        )
+        .subscribe(
+          (status) => {
+            console.log(
+              "参加者Realtime状態:",
+              status
+            );
+          }
+        );
+
+    /* --------------------------------
+       フォーカス復帰
+    -------------------------------- */
 
     function handleFocus() {
       loadHomeData();
+
+      loadParticipantCount();
     }
+
+    /* --------------------------------
+       タブ復帰
+    -------------------------------- */
 
     function handleVisibility() {
       if (
@@ -158,6 +262,8 @@ export default function HomePage() {
         "visible"
       ) {
         loadHomeData();
+
+        loadParticipantCount();
       }
     }
 
@@ -171,6 +277,10 @@ export default function HomePage() {
       handleVisibility
     );
 
+    /* ========================================
+       CLEANUP
+    ======================================== */
+
     return () => {
       window.removeEventListener(
         "focus",
@@ -180,6 +290,10 @@ export default function HomePage() {
       document.removeEventListener(
         "visibilitychange",
         handleVisibility
+      );
+
+      supabase.removeChannel(
+        participantChannel
       );
     };
   }, [router]);
@@ -202,7 +316,9 @@ export default function HomePage() {
   ======================================== */
 
   function getProcessName() {
-    switch (progress) {
+    switch (
+      progress
+    ) {
       case 0:
         return "これからポッキーづくりスタート";
 
@@ -362,6 +478,7 @@ export default function HomePage() {
         >
 
           <div className="visualHeroDecoration visualDecoOne" />
+
           <div className="visualHeroDecoration visualDecoTwo" />
 
           {yuhisaiMode && (
@@ -578,7 +695,7 @@ export default function HomePage() {
         </section>
 
         {/* ==================================
-            完成時だけ特典導線
+            COMPLETE REWARD
         ================================== */}
 
         {completed && (
@@ -616,8 +733,7 @@ export default function HomePage() {
         )}
 
         {/* ==================================
-            QR BUTTON
-            通常のスタンプ導線はこれだけ
+            QR
         ================================== */}
 
         <button
@@ -645,7 +761,7 @@ export default function HomePage() {
         </button>
 
         {/* ==================================
-            雄飛祭限定コンテンツ
+            雄飛祭
         ================================== */}
 
         {yuhisaiMode && (
@@ -786,7 +902,7 @@ export default function HomePage() {
 
         {/* ==================================
             PARTICIPANTS
-            合計参加者数だけ表示
+            Supabase REALTIME
         ================================== */}
 
         <section className="participantStatsSection">
@@ -824,7 +940,12 @@ export default function HomePage() {
             <div className="participantTotalNumber">
 
               <strong>
-                {totalParticipants}
+
+                {totalParticipants ===
+                null
+                  ? "—"
+                  : totalParticipants}
+
               </strong>
 
               <span>
@@ -834,7 +955,12 @@ export default function HomePage() {
             </div>
 
             <p>
-              POKIPOに参加している学生
+
+              {totalParticipants ===
+              null
+                ? "参加状況を読み込み中..."
+                : "POKIPOに参加している学生"}
+
             </p>
 
           </div>

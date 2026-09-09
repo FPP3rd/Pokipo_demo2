@@ -8,24 +8,46 @@ import {
 
 import { useRouter } from "next/navigation";
 
+import {
+  supabase,
+} from "../lib/supabase-client";
+
 export default function StartPage() {
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const [nickname, setNickname] =
-    useState("");
+  const [
+    nickname,
+    setNickname,
+  ] = useState("");
 
-  const [grade, setGrade] =
-    useState("");
+  const [
+    grade,
+    setGrade,
+  ] = useState("");
 
-  const [department, setDepartment] =
-    useState("");
+  const [
+    department,
+    setDepartment,
+  ] = useState("");
 
-  const [message, setMessage] =
-    useState("");
+  const [
+    message,
+    setMessage,
+  ] = useState("");
 
-  // =====================================
-  // 登録済みならホームへ
-  // =====================================
+  /* ========================================
+     登録処理中
+  ======================================== */
+
+  const [
+    submitting,
+    setSubmitting,
+  ] = useState(false);
+
+  /* ========================================
+     登録済みならホームへ
+  ======================================== */
 
   useEffect(() => {
     const savedNickname =
@@ -33,24 +55,39 @@ export default function StartPage() {
         "pokipo_nickname"
       );
 
-    if (savedNickname) {
-      router.replace("/home");
+    if (
+      savedNickname
+    ) {
+      router.replace(
+        "/home"
+      );
     }
   }, [router]);
 
-  // =====================================
-  // 初回登録
-  // =====================================
+  /* ========================================
+     初回登録
+  ======================================== */
 
-  function submit(
+  async function submit(
     e: FormEvent<HTMLFormElement>
   ) {
     e.preventDefault();
 
+    /* 二重送信防止 */
+
+    if (
+      submitting
+    ) {
+      return;
+    }
+
     const name =
       nickname.trim();
 
-    // ニックネーム確認
+    /* =================================
+       ニックネーム確認
+    ================================= */
+
     if (
       name.length < 2 ||
       name.length > 20
@@ -62,7 +99,10 @@ export default function StartPage() {
       return;
     }
 
-    // 学年確認
+    /* =================================
+       学年確認
+    ================================= */
+
     if (!grade) {
       setMessage(
         "学年を選択してください。"
@@ -71,8 +111,13 @@ export default function StartPage() {
       return;
     }
 
-    // 学科確認
-    if (!department) {
+    /* =================================
+       学科確認
+    ================================= */
+
+    if (
+      !department
+    ) {
       setMessage(
         "学科を選択してください。"
       );
@@ -80,91 +125,187 @@ export default function StartPage() {
       return;
     }
 
-    // =================================
-    // ユーザー情報保存
-    // =================================
+    setMessage("");
 
-    localStorage.setItem(
-      "pokipo_nickname",
-      name
+    setSubmitting(
+      true
     );
 
-    localStorage.setItem(
-      "pokipo_grade",
-      grade
-    );
+    /* =================================
+       参加者IDを発行
 
-    localStorage.setItem(
-      "pokipo_department",
-      department
-    );
+       将来、
+       ・特典交換QR
+       ・スタッフ確認
+       ・スタンプ同期
 
-    // =================================
-    // スタンプ初期化
-    // =================================
+       に利用する
+    ================================= */
 
-    localStorage.setItem(
-      "pokipo_scans",
-      JSON.stringify([])
-    );
-
-    // =================================
-    // 豆知識初期化
-    // =================================
-
-    localStorage.setItem(
-      "pokipo_knowledge",
-      JSON.stringify([])
-    );
-
-    // =================================
-    // ポッキー進捗
-    // =================================
-
-    localStorage.setItem(
-      "pokipo_progress",
-      "0"
-    );
-
-    // =================================
-    // コンプリート状態
-    // =================================
-
-    localStorage.setItem(
-      "pokipo_completed",
-      "false"
-    );
-
-    // =================================
-    // 特典交換状態
-    // =================================
-
-    localStorage.setItem(
-      "pokipo_reward_exchanged",
-      "false"
-    );
-
-    // =================================
-    // ユーザーID
-    // =================================
-
-    const userId =
+    const participantId =
       crypto.randomUUID();
 
-    localStorage.setItem(
-      "pokipo_user_id",
-      userId
-    );
+    try {
+      /* =================================
+         SUPABASEへ参加者登録
+      ================================= */
 
-    // =================================
-    // ホームへ
-    // =================================
+      const {
+        error,
+      } =
+        await supabase
+          .from(
+            "participants"
+          )
+          .insert({
+            id:
+              participantId,
 
-    router.push("/home");
+            nickname:
+              name,
+
+            grade:
+              grade,
+
+            department:
+              department,
+          });
+
+      /* =================================
+         登録失敗
+      ================================= */
+
+      if (
+        error
+      ) {
+        console.error(
+          "Supabase参加者登録エラー:",
+          error
+        );
+
+        setMessage(
+          "参加者情報を登録できませんでした。通信環境を確認して、もう一度お試しください。"
+        );
+
+        return;
+      }
+
+      /* =================================
+         Supabase登録成功後に
+         localStorageへ保存
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_nickname",
+        name
+      );
+
+      localStorage.setItem(
+        "pokipo_grade",
+        grade
+      );
+
+      localStorage.setItem(
+        "pokipo_department",
+        department
+      );
+
+      /* =================================
+         参加者ID
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_participant_id",
+        participantId
+      );
+
+      /*
+        以前のコードとの互換性のため
+        pokipo_user_idにも同じIDを保存
+      */
+
+      localStorage.setItem(
+        "pokipo_user_id",
+        participantId
+      );
+
+      /* =================================
+         スタンプ初期化
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_scans",
+        JSON.stringify([])
+      );
+
+      /* =================================
+         豆知識初期化
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_knowledge",
+        JSON.stringify([])
+      );
+
+      /* =================================
+         ポッキー進捗
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_progress",
+        "0"
+      );
+
+      /* =================================
+         コンプリート状態
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_completed",
+        "false"
+      );
+
+      /* =================================
+         特典交換状態
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_reward_exchanged",
+        "false"
+      );
+
+      /* =================================
+         ホームへ
+      ================================= */
+
+      router.push(
+        "/home"
+      );
+    } catch (
+      error
+    ) {
+      console.error(
+        "参加者登録エラー:",
+        error
+      );
+
+      setMessage(
+        "通信中にエラーが発生しました。もう一度お試しください。"
+      );
+    } finally {
+      setSubmitting(
+        false
+      );
+    }
   }
+
+  /* ========================================
+     VIEW
+  ======================================== */
 
   return (
     <main className="shell">
+
       <section className="card startPage">
 
         {/* =========================
@@ -192,18 +333,27 @@ export default function StartPage() {
           <div className="startVisual">
 
             <div className="startPocky pockyOne">
+
               <div className="startChocolate" />
+
               <div className="startBiscuit" />
+
             </div>
 
             <div className="startPocky pockyTwo">
+
               <div className="startChocolate" />
+
               <div className="startBiscuit" />
+
             </div>
 
             <div className="startPocky pockyThree">
+
               <div className="startChocolate" />
+
               <div className="startBiscuit" />
+
             </div>
 
           </div>
@@ -221,6 +371,7 @@ export default function StartPage() {
           </div>
 
           <div>
+
             <p>
               POKIPO STAMP RALLY
             </p>
@@ -232,6 +383,7 @@ export default function StartPage() {
             <span>
               学内に散りばめられたQRコードを読み取って、スタンプと豆知識を集めよう。
             </span>
+
           </div>
 
         </section>
@@ -242,10 +394,13 @@ export default function StartPage() {
 
         <form
           className="startForm"
-          onSubmit={submit}
+          onSubmit={
+            submit
+          }
         >
 
           <div className="startFormTitle">
+
             <p>
               PLAYER PROFILE
             </p>
@@ -253,11 +408,15 @@ export default function StartPage() {
             <h2>
               プロフィールを登録
             </h2>
+
           </div>
 
-          {/* ニックネーム */}
+          {/* =========================
+              ニックネーム
+          ========================== */}
 
           <div className="field">
+
             <label htmlFor="nickname">
               ニックネーム
             </label>
@@ -265,33 +424,54 @@ export default function StartPage() {
             <input
               id="nickname"
               type="text"
-              value={nickname}
-              onChange={(e) =>
+              value={
+                nickname
+              }
+              onChange={(
+                e
+              ) =>
                 setNickname(
                   e.target.value
                 )
               }
               placeholder="例：ぽっきー"
-              maxLength={20}
+              maxLength={
+                20
+              }
+              disabled={
+                submitting
+              }
             />
+
           </div>
 
-          {/* 学年 */}
+          {/* =========================
+              学年
+          ========================== */}
 
           <div className="field">
+
             <label htmlFor="grade">
               学年
             </label>
 
             <select
               id="grade"
-              value={grade}
-              onChange={(e) =>
+              value={
+                grade
+              }
+              onChange={(
+                e
+              ) =>
                 setGrade(
                   e.target.value
                 )
               }
+              disabled={
+                submitting
+              }
             >
+
               <option value="">
                 選択してください
               </option>
@@ -315,25 +495,38 @@ export default function StartPage() {
               <option value="その他">
                 その他
               </option>
+
             </select>
+
           </div>
 
-          {/* 学科 */}
+          {/* =========================
+              学科
+          ========================== */}
 
           <div className="field">
+
             <label htmlFor="department">
               学科
             </label>
 
             <select
               id="department"
-              value={department}
-              onChange={(e) =>
+              value={
+                department
+              }
+              onChange={(
+                e
+              ) =>
                 setDepartment(
                   e.target.value
                 )
               }
+              disabled={
+                submitting
+              }
             >
+
               <option value="">
                 選択してください
               </option>
@@ -399,9 +592,12 @@ export default function StartPage() {
               </optgroup>
 
             </select>
+
           </div>
 
-          {/* エラー */}
+          {/* =========================
+              エラー
+          ========================== */}
 
           {message && (
             <p className="error">
@@ -418,7 +614,7 @@ export default function StartPage() {
             <div className="dataWarningText">
 
               <strong>
-              始める前にチェック！
+                始める前にチェック！
               </strong>
 
               <p>
@@ -430,7 +626,7 @@ export default function StartPage() {
               </p>
 
               <p>
-                削除すると、 集めたスタンプや進捗が消える場合があります。
+                削除すると、集めたスタンプや進捗が消える場合があります。
               </p>
 
               <p className="dataWarningImportant">
@@ -448,14 +644,23 @@ export default function StartPage() {
           <button
             type="submit"
             className="primaryButton startButton"
+            disabled={
+              submitting
+            }
           >
+
             <span>
-              POKIPOをはじめる
+              {submitting
+                ? "登録中..."
+                : "POKIPOをはじめる"}
             </span>
 
             <span>
-              →
+              {submitting
+                ? "…"
+                : "→"}
             </span>
+
           </button>
 
         </form>
@@ -470,6 +675,7 @@ export default function StartPage() {
         </p>
 
       </section>
+
     </main>
   );
 }
