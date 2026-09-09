@@ -1488,6 +1488,23 @@ export default function RewardPage() {
             REWARD EXCHANGE
         ================================= */}
 
+        <section className="rewardExchangeDateNotice">
+
+         <span>
+        REWARD EXCHANGE DAY
+         </span>
+
+         <h2>
+        特典交換日は10月27日（火）です
+         </h2>
+
+         <p>
+         特典交換は10月27日（火）に実施します。
+         当日はこの画面に表示される交換用QRをスタッフに提示してください。
+         </p>
+
+         </section>
+        
         <section className="rewardExchangeSection">
 
           <div className="rewardSectionTitle">

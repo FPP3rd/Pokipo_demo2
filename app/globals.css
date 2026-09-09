@@ -20258,3 +20258,69 @@ img {
 .staffDashboardHeader > button {
   margin-top: 14px;
 }
+
+/* ========================================
+   REWARD EXCHANGE DATE NOTICE
+======================================== */
+
+.rewardExchangeDateNotice {
+  margin-top: 18px;
+  margin-bottom: 18px;
+
+  padding: 18px 16px;
+
+  border:
+    1px solid
+    rgba(138, 24, 34, 0.12);
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff8e8,
+      #fce9d2
+    );
+
+  box-shadow:
+    0 8px 20px
+    rgba(70, 45, 30, 0.07);
+}
+
+.rewardExchangeDateNotice > span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.rewardExchangeDateNotice h2 {
+  margin: 0;
+
+  color: #8a1822;
+
+  font-size: 18px;
+  font-weight: 900;
+
+  line-height: 1.45;
+}
+
+.rewardExchangeDateNotice p {
+  margin:
+    8px
+    0
+    0;
+
+  color: #62574f;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
