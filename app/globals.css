@@ -16910,3 +16910,805 @@ img {
   }
 
 }
+
+/* ========================================
+   REWARD QR EXTRA
+======================================== */
+
+.rewardStudentNumberCount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-top: 7px;
+}
+
+.rewardStudentNumberCount span {
+  color: #8b8179;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.rewardStudentNumberCount strong {
+  color: #a89c93;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.rewardStudentNumberCount strong.complete {
+  color: #338050;
+}
+
+
+/* 発行注意 */
+
+.rewardQrIssueNotice {
+  margin:
+    9px
+    0
+    0;
+
+  color: #8b8179;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  line-height: 1.65;
+
+  text-align: center;
+}
+
+
+/* QR READY */
+
+.rewardQrStatus {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin-bottom: 8px;
+
+  padding:
+    5px
+    9px;
+
+  border-radius: 999px;
+
+  background: #edf8ef;
+
+  color: #2f7a4d;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+.rewardQrStatusDot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #3e9a5e;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(62, 154, 94, 0.12);
+}
+
+
+/* QR手順 */
+
+.rewardQrInstruction {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  margin-top: 7px;
+
+  padding:
+    8px
+    10px;
+
+  border-radius: 12px;
+
+  background:
+    rgba(138, 24, 34, 0.04);
+
+  text-align: left;
+}
+
+.rewardQrInstruction > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 22px;
+  height: 22px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.rewardQrInstruction p {
+  margin: 0;
+
+  color: #5d534c;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+/* ==================================================
+   POKIPO STAFF REWARD
+================================================== */
+
+.staffRewardPage {
+  width: 100%;
+  max-width: 520px;
+
+  margin: 0 auto;
+
+  padding:
+    22px
+    16px
+    40px;
+}
+
+
+/* ========================================
+   LOGIN
+======================================== */
+
+.staffLoginCard {
+  margin-top: 50px;
+
+  padding: 28px 22px;
+
+  border-radius: 26px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf2,
+      #f8ead8
+    );
+
+  border:
+    1px solid
+    rgba(138, 24, 34, 0.08);
+
+  box-shadow:
+    0 14px 34px
+    rgba(65, 40, 28, 0.12);
+}
+
+.staffLoginCard > span {
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 0.14em;
+}
+
+.staffLoginCard h1 {
+  margin:
+    6px
+    0
+    5px;
+
+  color: #2e2925;
+
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.staffLoginCard > p {
+  margin:
+    0
+    0
+    22px;
+
+  color: #7d7168;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.staffLoginField {
+  margin-top: 14px;
+}
+
+.staffLoginField label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #4b423d;
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.staffLoginField input {
+  width: 100%;
+
+  padding: 13px 14px;
+
+  border:
+    1px solid
+    #ddd1c7;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  color: #302a26;
+
+  font-size: 14px;
+
+  outline: none;
+}
+
+.staffLoginField input:focus {
+  border-color: #8a1822;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(138, 24, 34, 0.08);
+}
+
+.staffLoginButton {
+  width: 100%;
+
+  margin-top: 20px;
+
+  padding: 14px;
+
+  border: 0;
+
+  border-radius: 14px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #a3222c,
+      #79151f
+    );
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.staffRewardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  margin-bottom: 18px;
+}
+
+.staffRewardHeader span {
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.14em;
+}
+
+.staffRewardHeader h1 {
+  margin: 2px 0 0;
+
+  color: #2d2926;
+
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.staffRewardHeader button {
+  padding:
+    7px
+    10px;
+
+  border:
+    1px solid
+    #dfd5ce;
+
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  color: #72665f;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   SCANNER
+======================================== */
+
+.staffScannerCard {
+  padding: 24px 18px;
+
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf1,
+      #f7e8d4
+    );
+
+  text-align: center;
+
+  box-shadow:
+    0 12px 28px
+    rgba(65, 42, 28, 0.1);
+}
+
+.staffScannerIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 52px;
+  height: 52px;
+
+  margin:
+    0
+    auto
+    12px;
+
+  border-radius: 17px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.staffScannerCard > span {
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+}
+
+.staffScannerCard h2 {
+  margin: 5px 0;
+
+  color: #302b27;
+
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.staffScannerCard > p {
+  color: #776b63;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.staffScannerButton {
+  width: 100%;
+
+  margin-top: 14px;
+
+  padding: 14px;
+
+  border: 0;
+
+  border-radius: 14px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.staffQrReader {
+  overflow: hidden;
+
+  margin-top: 16px;
+
+  border-radius: 18px;
+
+  background: #111111;
+}
+
+.staffScannerCancel {
+  margin-top: 10px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   PARTICIPANT
+======================================== */
+
+.staffParticipantCard {
+  position: relative;
+
+  padding: 22px 18px;
+
+  border-radius: 24px;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    rgba(138, 24, 34, 0.07);
+
+  box-shadow:
+    0 12px 30px
+    rgba(60, 40, 30, 0.1);
+}
+
+.staffExchangeStatus {
+  position: absolute;
+
+  top: 16px;
+  right: 16px;
+
+  padding:
+    6px
+    9px;
+
+  border-radius: 999px;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.staffExchangeStatus.ready {
+  background: #fff1dc;
+  color: #8a1822;
+}
+
+.staffExchangeStatus.exchanged {
+  background: #e8f6ec;
+  color: #2f7a4d;
+}
+
+.staffParticipantEyebrow {
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+}
+
+.staffParticipantCard h2 {
+  margin: 4px 0 16px;
+
+  color: #302b27;
+
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.staffParticipantCard h2 small {
+  margin-left: 3px;
+
+  font-size: 12px;
+}
+
+.staffParticipantInfo {
+  display: grid;
+
+  gap: 8px;
+}
+
+.staffParticipantInfo > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 10px 12px;
+
+  border-radius: 12px;
+
+  background: #faf6f0;
+}
+
+.staffParticipantInfo span {
+  color: #8b8077;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.staffParticipantInfo strong {
+  color: #342e2a;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   CONFIRM
+======================================== */
+
+.staffExchangeConfirm {
+  margin-top: 16px;
+
+  padding: 14px;
+
+  border-radius: 16px;
+
+  background: #fff5e9;
+}
+
+.staffExchangeConfirm p {
+  margin:
+    0
+    0
+    12px;
+
+  color: #6e6159;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.staffExchangeConfirm button {
+  width: 100%;
+
+  padding: 14px;
+
+  border: 0;
+
+  border-radius: 13px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #a3222c,
+      #7d1520
+    );
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   EXCHANGED
+======================================== */
+
+.staffAlreadyExchanged {
+  margin-top: 16px;
+
+  padding: 18px;
+
+  border-radius: 17px;
+
+  background: #ebf7ee;
+
+  text-align: center;
+}
+
+.staffAlreadyExchanged > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  margin:
+    0
+    auto
+    8px;
+
+  border-radius: 50%;
+
+  background: #35854e;
+
+  color: #ffffff;
+
+  font-weight: 900;
+}
+
+.staffAlreadyExchanged span {
+  color: #35854e;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.staffAlreadyExchanged h3 {
+  margin: 4px 0;
+
+  color: #285e39;
+
+  font-size: 14px;
+}
+
+.staffAlreadyExchanged p {
+  margin: 0;
+
+  color: #60816b;
+
+  font-size: 8px;
+}
+
+
+/* ========================================
+   NEXT SCAN
+======================================== */
+
+.staffNextScanButton {
+  width: 100%;
+
+  margin-top: 14px;
+
+  padding: 12px;
+
+  border:
+    1px solid
+    #dfd3ca;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  color: #6b5f58;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   MESSAGE
+======================================== */
+
+.staffMessage,
+.staffError {
+  margin-top: 12px;
+
+  padding: 10px 12px;
+
+  border-radius: 12px;
+
+  background: #fff0ed;
+
+  color: #9a2931;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  line-height: 1.6;
+}
+
+.staffLoadingCard,
+.staffLoadingText {
+  text-align: center;
+
+  color: #746961;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+/* ========================================
+   REWARD REALTIME ADDITION
+======================================== */
+
+.rewardQrWaitingText {
+  margin:
+    13px
+    0
+    0;
+
+  padding:
+    10px
+    12px;
+
+  border-radius: 12px;
+
+  background:
+    rgba(138, 24, 34, 0.05);
+
+  color: #776a62;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  line-height: 1.7;
+
+  text-align: center;
+}
+
+.rewardExchangeTime {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 3px;
+
+  margin-top: 12px;
+
+  padding:
+    8px
+    13px;
+
+  border-radius: 13px;
+
+  background:
+    rgba(255, 255, 255, 0.65);
+}
+
+.rewardExchangeTime span {
+  color: #4a865c;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.rewardExchangeTime strong {
+  color: #285d39;
+
+  font-size: 11px;
+  font-weight: 900;
+}
