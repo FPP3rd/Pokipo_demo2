@@ -17,6 +17,10 @@ export default function StaffPage() {
   const router =
     useRouter();
 
+  /* ========================================
+     AUTH
+  ======================================== */
+
   const [
     authenticated,
     setAuthenticated,
@@ -27,42 +31,135 @@ export default function StaffPage() {
     setLoading,
   ] = useState(true);
 
+  /* ========================================
+     AUTH CHECK
+  ======================================== */
+
   useEffect(() => {
     async function checkAuth() {
-      const {
-        data,
-      } =
-        await supabase.auth.getSession();
+      try {
+        const {
+          data,
+          error,
+        } =
+          await supabase.auth.getSession();
 
-      if (
-        !data.session
+        if (
+          error
+        ) {
+          console.error(
+            "スタッフ認証確認エラー:",
+            error
+          );
+
+          router.replace(
+            "/staff/reward"
+          );
+
+          return;
+        }
+
+        if (
+          !data.session
+        ) {
+          router.replace(
+            "/staff/reward"
+          );
+
+          return;
+        }
+
+        setAuthenticated(
+          true
+        );
+      } catch (
+        error
       ) {
+        console.error(
+          "スタッフ認証通信エラー:",
+          error
+        );
+
         router.replace(
           "/staff/reward"
         );
-
-        return;
+      } finally {
+        setLoading(
+          false
+        );
       }
-
-      setAuthenticated(
-        true
-      );
-
-      setLoading(
-        false
-      );
     }
 
-    checkAuth();
-  }, [router]);
+    void checkAuth();
+
+    /* ========================================
+       AUTH CHANGE
+    ======================================== */
+
+    const {
+      data:
+        authListener,
+    } =
+      supabase.auth.onAuthStateChange(
+        (
+          _event,
+          session
+        ) => {
+          if (
+            !session
+          ) {
+            setAuthenticated(
+              false
+            );
+
+            router.replace(
+              "/staff/reward"
+            );
+
+            return;
+          }
+
+          setAuthenticated(
+            true
+          );
+        }
+      );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [
+    router,
+  ]);
+
+  /* ========================================
+     LOGOUT
+  ======================================== */
 
   async function logout() {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
 
-    router.replace(
-      "/staff/reward"
-    );
+      setAuthenticated(
+        false
+      );
+
+      router.replace(
+        "/staff/reward"
+      );
+    } catch (
+      error
+    ) {
+      console.error(
+        "スタッフログアウトエラー:",
+        error
+      );
+    }
   }
+
+  /* ========================================
+     LOADING
+  ======================================== */
 
   if (
     loading ||
@@ -70,6 +167,7 @@ export default function StaffPage() {
   ) {
     return (
       <main className="shell">
+
         <section className="staffPortalPage">
 
           <div className="staffLoadingCard">
@@ -77,9 +175,14 @@ export default function StaffPage() {
           </div>
 
         </section>
+
       </main>
     );
   }
+
+  /* ========================================
+     VIEW
+  ======================================== */
 
   return (
     <main className="shell">
@@ -125,7 +228,9 @@ export default function StaffPage() {
 
         <section className="staffPortalMenu">
 
-          {/* DASHBOARD */}
+          {/* =================================
+              DASHBOARD
+          ================================= */}
 
           <button
             type="button"
@@ -163,7 +268,9 @@ export default function StaffPage() {
 
           </button>
 
-          {/* REWARD */}
+          {/* =================================
+              REWARD
+          ================================= */}
 
           <button
             type="button"
@@ -201,7 +308,9 @@ export default function StaffPage() {
 
           </button>
 
-          {/* HISTORY */}
+          {/* =================================
+              HISTORY
+          ================================= */}
 
           <button
             type="button"
@@ -229,6 +338,46 @@ export default function StaffPage() {
 
               <p>
                 これまでの景品交換を確認
+              </p>
+
+            </div>
+
+            <strong>
+              →
+            </strong>
+
+          </button>
+
+          {/* =================================
+              ANNOUNCEMENTS
+          ================================= */}
+
+          <button
+            type="button"
+            className="staffPortalCard"
+            onClick={() =>
+              router.push(
+                "/staff/announcements"
+              )
+            }
+          >
+
+            <div className="staffPortalIcon">
+              NEWS
+            </div>
+
+            <div>
+
+              <span>
+                LiPost NEWS
+              </span>
+
+              <h2>
+                お知らせ管理
+              </h2>
+
+              <p>
+                参加者ホームのお知らせを投稿・編集
               </p>
 
             </div>

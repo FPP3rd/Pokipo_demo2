@@ -23,6 +23,24 @@ type PockySkin =
   | "matcha"
   | "white";
 
+/* ========================================
+   ANNOUNCEMENT
+======================================== */
+
+type Announcement = {
+  id: string;
+
+  title: string;
+
+  body: string;
+
+  published_at: string;
+};
+
+/* ========================================
+   HOME PAGE
+======================================== */
+
 export default function HomePage() {
   const router =
     useRouter();
@@ -55,6 +73,17 @@ export default function HomePage() {
     setTotalParticipants,
   ] = useState<number | null>(
     null
+  );
+
+  /* ========================================
+     ANNOUNCEMENTS
+  ======================================== */
+
+  const [
+    announcements,
+    setAnnouncements,
+  ] = useState<Announcement[]>(
+    []
   );
 
   /* ========================================
@@ -193,6 +222,11 @@ export default function HomePage() {
           "pokipo_user_id"
         );
 
+      /* =========================
+         IDなし
+         localStorage使用
+      ========================= */
+
       if (
         !participantId
       ) {
@@ -216,6 +250,10 @@ export default function HomePage() {
         return;
       }
 
+      /* =========================
+         SUPABASE
+      ========================= */
+
       const {
         data,
         error,
@@ -227,6 +265,11 @@ export default function HomePage() {
               participantId,
           }
         );
+
+      /* =========================
+         ERROR
+         localStorageへ
+      ========================= */
 
       if (
         error
@@ -256,6 +299,10 @@ export default function HomePage() {
         return;
       }
 
+      /* =========================
+         STAMP COUNT
+      ========================= */
+
       const stampCount =
         Math.min(
           Array.isArray(
@@ -270,6 +317,10 @@ export default function HomePage() {
         stampCount
       );
 
+      /* =========================
+         localStorage同期
+      ========================= */
+
       localStorage.setItem(
         "pokipo_progress",
         String(
@@ -278,8 +329,7 @@ export default function HomePage() {
       );
 
       if (
-        stampCount >=
-        5
+        stampCount >= 5
       ) {
         localStorage.setItem(
           "pokipo_completed",
@@ -298,8 +348,7 @@ export default function HomePage() {
         ).map(
           (
             item: {
-              spot_id:
-                string;
+              spot_id: string;
             }
           ) =>
             item.spot_id
@@ -314,17 +363,68 @@ export default function HomePage() {
     }
 
     /* --------------------------------
-       初回読み込み
+       LiPost お知らせ取得
     -------------------------------- */
+
+    async function loadAnnouncements() {
+      const {
+        data,
+        error,
+      } =
+        await supabase
+          .from(
+            "lipost_announcements"
+          )
+          .select(
+            "id, title, body, published_at"
+          )
+          .eq(
+            "is_published",
+            true
+          )
+          .order(
+            "published_at",
+            {
+              ascending:
+                false,
+            }
+          )
+          .limit(
+            3
+          );
+
+      if (
+        error
+      ) {
+        console.error(
+          "お知らせ取得エラー:",
+          error
+        );
+
+        return;
+      }
+
+      setAnnouncements(
+        (
+          data ?? []
+        ) as Announcement[]
+      );
+    }
+
+    /* ========================================
+       INITIAL LOAD
+    ======================================== */
 
     loadLocalData();
 
-    loadParticipantCount();
+    void loadParticipantCount();
 
-    loadStampProgress();
+    void loadStampProgress();
+
+    void loadAnnouncements();
 
     /* ========================================
-       参加者数 REALTIME
+       PARTICIPANTS REALTIME
     ======================================== */
 
     const participantChannel =
@@ -345,13 +445,13 @@ export default function HomePage() {
               "participants",
           },
           () => {
-            loadParticipantCount();
+            void loadParticipantCount();
           }
         )
         .subscribe();
 
     /* ========================================
-       スタンプ REALTIME
+       STAMP REALTIME
     ======================================== */
 
     const currentParticipantId =
@@ -392,27 +492,56 @@ export default function HomePage() {
                 `participant_id=eq.${currentParticipantId}`,
             },
             () => {
-              loadStampProgress();
+              void loadStampProgress();
             }
           )
           .subscribe();
     }
 
-    /* --------------------------------
-       フォーカス復帰
-    -------------------------------- */
+    /* ========================================
+       ANNOUNCEMENT REALTIME
+    ======================================== */
+
+    const announcementChannel =
+      supabase
+        .channel(
+          "lipost-announcements-live"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event:
+              "*",
+
+            schema:
+              "public",
+
+            table:
+              "lipost_announcements",
+          },
+          () => {
+            void loadAnnouncements();
+          }
+        )
+        .subscribe();
+
+    /* ========================================
+       WINDOW FOCUS
+    ======================================== */
 
     function handleFocus() {
       loadLocalData();
 
-      loadParticipantCount();
+      void loadParticipantCount();
 
-      loadStampProgress();
+      void loadStampProgress();
+
+      void loadAnnouncements();
     }
 
-    /* --------------------------------
-       タブ復帰
-    -------------------------------- */
+    /* ========================================
+       TAB VISIBILITY
+    ======================================== */
 
     function handleVisibility() {
       if (
@@ -421,9 +550,11 @@ export default function HomePage() {
       ) {
         loadLocalData();
 
-        loadParticipantCount();
+        void loadParticipantCount();
 
-        loadStampProgress();
+        void loadStampProgress();
+
+        void loadAnnouncements();
       }
     }
 
@@ -463,8 +594,14 @@ export default function HomePage() {
           stampChannel
         );
       }
+
+      supabase.removeChannel(
+        announcementChannel
+      );
     };
-  }, [router]);
+  }, [
+    router,
+  ]);
 
   /* ========================================
      STATUS
@@ -527,6 +664,30 @@ export default function HomePage() {
       default:
         return "チョコ";
     }
+  }
+
+  /* ========================================
+     ANNOUNCEMENT DATE
+  ======================================== */
+
+  function formatAnnouncementDate(
+    value: string
+  ) {
+    return new Date(
+      value
+    ).toLocaleDateString(
+      "ja-JP",
+      {
+        timeZone:
+          "Asia/Tokyo",
+
+        month:
+          "numeric",
+
+        day:
+          "numeric",
+      }
+    );
   }
 
   /* ========================================
@@ -810,7 +971,9 @@ export default function HomePage() {
           <div className="visualStampTrack">
 
             {[1, 2, 3, 4, 5].map(
-              (number) => {
+              (
+                number
+              ) => {
                 const active =
                   number <=
                   progress;
@@ -1131,6 +1294,84 @@ export default function HomePage() {
             </p>
 
           </div>
+
+        </section>
+
+        {/* ==================================
+            LiPost ANNOUNCEMENTS
+        ================================== */}
+
+        <section className="homeAnnouncementSection">
+
+          <div className="homeAnnouncementHeader">
+
+            <div>
+
+              <span>
+                LiPost NEWS
+              </span>
+
+              <h2>
+                LiPostからのお知らせ
+              </h2>
+
+            </div>
+
+            <div className="homeAnnouncementMark">
+              i
+            </div>
+
+          </div>
+
+          {announcements.length ===
+          0 ? (
+            <div className="homeAnnouncementEmpty">
+
+              <p>
+                現在お知らせはありません。
+              </p>
+
+            </div>
+          ) : (
+            <div className="homeAnnouncementList">
+
+              {announcements.map(
+                (
+                  announcement
+                ) => (
+                  <article
+                    key={
+                      announcement.id
+                    }
+                    className="homeAnnouncementCard"
+                  >
+
+                    <div className="homeAnnouncementDate">
+
+                      {formatAnnouncementDate(
+                        announcement.published_at
+                      )}
+
+                    </div>
+
+                    <div className="homeAnnouncementContent">
+
+                      <h3>
+                        {announcement.title}
+                      </h3>
+
+                      <p>
+                        {announcement.body}
+                      </p>
+
+                    </div>
+
+                  </article>
+                )
+              )}
+
+            </div>
+          )}
 
         </section>
 
