@@ -17712,3 +17712,1389 @@ img {
   font-size: 11px;
   font-weight: 900;
 }
+
+/* ==================================================
+   STAFF REWARD HISTORY
+================================================== */
+
+.staffHistoryHeader {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+.staffHistoryBack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  border:
+    1px solid
+    #e1d7cf;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #8a1822;
+
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.staffHistoryHeader > div > span {
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.14em;
+}
+
+.staffHistoryHeader h1 {
+  margin: 2px 0 0;
+
+  color: #2e2925;
+
+  font-size: 23px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   STATS
+======================================== */
+
+.staffHistoryStats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 10px;
+
+  margin-bottom: 22px;
+}
+
+.staffHistoryStatCard {
+  padding:
+    17px
+    14px;
+
+  border-radius: 19px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf2,
+      #f7ead8
+    );
+
+  border:
+    1px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.06
+    );
+
+  text-align: center;
+
+  box-shadow:
+    0
+    8px
+    20px
+    rgba(
+      60,
+      40,
+      28,
+      0.07
+    );
+}
+
+.staffHistoryStatCard > span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+}
+
+.staffHistoryStatCard > strong {
+  display: block;
+
+  margin:
+    3px
+    0;
+
+  color: #302a26;
+
+  font-size: 28px;
+  font-weight: 1000;
+}
+
+.staffHistoryStatCard small {
+  color: #81756d;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+
+/* ========================================
+   TITLE
+======================================== */
+
+.staffHistoryTitle {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  margin-bottom: 10px;
+}
+
+.staffHistoryTitle span {
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+}
+
+.staffHistoryTitle h2 {
+  margin: 2px 0 0;
+
+  color: #302b27;
+
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.staffHistoryTitle > strong {
+  padding:
+    5px
+    9px;
+
+  border-radius: 999px;
+
+  background: #fff0dc;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   HISTORY LIST
+======================================== */
+
+.staffHistoryList {
+  display: grid;
+
+  gap: 10px;
+}
+
+.staffHistoryCard {
+  position: relative;
+
+  padding: 17px;
+
+  border-radius: 19px;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.07
+    );
+
+  box-shadow:
+    0
+    8px
+    22px
+    rgba(
+      58,
+      39,
+      29,
+      0.07
+    );
+}
+
+.staffHistoryNumber {
+  position: absolute;
+
+  top: 15px;
+  right: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 26px;
+  height: 26px;
+
+  border-radius: 50%;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   PARTICIPANT
+======================================== */
+
+.staffHistoryParticipant > span {
+  color: #9b8e84;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.staffHistoryParticipant h3 {
+  margin:
+    2px
+    0
+    12px;
+
+  color: #302b27;
+
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.staffHistoryParticipant h3 small {
+  margin-left: 2px;
+
+  font-size: 9px;
+}
+
+
+/* ========================================
+   INFO
+======================================== */
+
+.staffHistoryInfo {
+  display: grid;
+
+  gap: 6px;
+}
+
+.staffHistoryInfo > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding:
+    7px
+    9px;
+
+  border-radius: 10px;
+
+  background: #faf7f3;
+}
+
+.staffHistoryInfo span {
+  color: #8b8078;
+
+  font-size: 7px;
+  font-weight: 800;
+}
+
+.staffHistoryInfo strong {
+  color: #3b342f;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   TIME
+======================================== */
+
+.staffHistoryTime {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-top: 9px;
+
+  padding-top: 9px;
+
+  border-top:
+    1px solid
+    #eee6df;
+}
+
+.staffHistoryTime span {
+  color: #9c8f85;
+
+  font-size: 6px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.staffHistoryTime strong {
+  color: #2f7549;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   STAFF
+======================================== */
+
+.staffHistoryStaff {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 6px;
+
+  margin-top: 5px;
+}
+
+.staffHistoryStaff span {
+  color: #aaa097;
+
+  font-size: 6px;
+  font-weight: 800;
+}
+
+.staffHistoryStaff strong {
+  color: #80746c;
+
+  font-size: 7px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   EMPTY
+======================================== */
+
+.staffHistoryEmpty {
+  padding:
+    30px
+    18px;
+
+  border-radius: 18px;
+
+  background: #faf7f2;
+
+  color: #81756d;
+
+  text-align: center;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.staffHistoryEmpty > div {
+  margin-bottom: 6px;
+
+  font-size: 25px;
+}
+
+.staffHistoryEmpty strong {
+  display: block;
+
+  color: #4d443e;
+
+  font-size: 12px;
+}
+
+.staffHistoryEmpty p {
+  margin:
+    5px
+    0
+    0;
+
+  font-size: 8px;
+  line-height: 1.7;
+}
+
+.staffHistoryLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding:
+    7px
+    10px;
+
+  border-radius: 999px;
+
+  background: #fff1dc;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  text-decoration: none;
+}
+
+/* ========================================
+   REWARD COMPLETION RECORD
+======================================== */
+
+.rewardCompletionInfo {
+  margin-top: 18px;
+}
+
+.rewardCompletionStats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  gap: 9px;
+}
+
+.rewardCompletionStats > div {
+  padding:
+    15px
+    10px;
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf2,
+      #f7ead8
+    );
+
+  border:
+    1px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.06
+    );
+
+  text-align: center;
+
+  box-shadow:
+    0
+    8px
+    18px
+    rgba(
+      60,
+      40,
+      28,
+      0.06
+    );
+}
+
+.rewardCompletionStats span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.rewardCompletionStats strong {
+  color: #352e29;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  line-height: 1.5;
+}
+
+/* ==================================================
+   STAFF DASHBOARD
+================================================== */
+
+.staffDashboardPage {
+  width: 100%;
+  max-width: 560px;
+
+  margin: 0 auto;
+
+  padding:
+    22px
+    16px
+    45px;
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.staffDashboardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 15px;
+
+  margin-bottom: 10px;
+}
+
+.staffDashboardHeader > div > span {
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.14em;
+}
+
+.staffDashboardHeader h1 {
+  margin:
+    2px
+    0
+    2px;
+
+  color: #2e2925;
+
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.staffDashboardHeader p {
+  margin: 0;
+
+  color: #897d74;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.staffDashboardHeader > button {
+  flex-shrink: 0;
+
+  padding:
+    8px
+    11px;
+
+  border: 0;
+
+  border-radius: 999px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   LIVE
+======================================== */
+
+.staffDashboardLive {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin-bottom: 14px;
+
+  padding:
+    5px
+    9px;
+
+  border-radius: 999px;
+
+  background: #eef8f1;
+
+  color: #347b4e;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.staffDashboardLiveDot {
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #40a060;
+
+  box-shadow:
+    0
+    0
+    0
+    3px
+    rgba(
+      64,
+      160,
+      96,
+      0.12
+    );
+}
+
+
+/* ========================================
+   STATS
+======================================== */
+
+.staffDashboardStats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 10px;
+}
+
+.staffDashboardStatCard {
+  padding:
+    16px
+    14px;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf2,
+      #f7ead8
+    );
+
+  border:
+    1px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.06
+    );
+
+  box-shadow:
+    0
+    8px
+    20px
+    rgba(
+      61,
+      40,
+      28,
+      0.07
+    );
+}
+
+.staffDashboardStatCard.today {
+  background:
+    linear-gradient(
+      145deg,
+      #8f1c26,
+      #6f111b
+    );
+}
+
+.staffDashboardStatCard > span {
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.staffDashboardStatCard.today > span {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.75
+    );
+}
+
+.staffDashboardStatCard > div {
+  display: flex;
+  align-items: baseline;
+
+  gap: 3px;
+
+  margin-top: 4px;
+}
+
+.staffDashboardStatCard strong {
+  color: #312b27;
+
+  font-size: 29px;
+  font-weight: 1000;
+
+  line-height: 1;
+}
+
+.staffDashboardStatCard small {
+  color: #756960;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.staffDashboardStatCard p {
+  margin:
+    5px
+    0
+    0;
+
+  color: #80746c;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.staffDashboardStatCard.today strong,
+.staffDashboardStatCard.today small,
+.staffDashboardStatCard.today p {
+  color: #ffffff;
+}
+
+
+/* ========================================
+   RATE
+======================================== */
+
+.staffDashboardRates {
+  display: grid;
+
+  gap: 9px;
+
+  margin-top: 16px;
+}
+
+.staffDashboardRateCard {
+  padding:
+    14px;
+
+  border-radius: 17px;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    #eee5de;
+}
+
+.staffDashboardRateCard > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.staffDashboardRateCard span {
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.09em;
+}
+
+.staffDashboardRateCard strong {
+  color: #352f2b;
+
+  font-size: 14px;
+  font-weight: 1000;
+}
+
+.staffDashboardRateBar {
+  overflow: hidden;
+
+  height: 7px;
+
+  margin-top: 8px;
+
+  border-radius: 999px;
+
+  background: #eee8e2;
+}
+
+.staffDashboardRateBar > div {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #8a1822;
+
+  transition:
+    width
+    0.35s
+    ease;
+}
+
+.staffDashboardRateCard p {
+  margin:
+    6px
+    0
+    0;
+
+  color: #91857c;
+
+  font-size: 7px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   ACTIONS
+======================================== */
+
+.staffDashboardActions {
+  display: grid;
+
+  gap: 8px;
+
+  margin-top: 17px;
+}
+
+.staffDashboardActions button {
+  display: grid;
+
+  grid-template-columns:
+    42px
+    1fr
+    auto;
+
+  align-items: center;
+
+  gap: 10px;
+
+  width: 100%;
+
+  padding: 12px;
+
+  border:
+    1px solid
+    #eee3db;
+
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  text-align: left;
+}
+
+.staffDashboardActions button > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  border-radius: 13px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 8px;
+  font-weight: 1000;
+}
+
+.staffDashboardActions strong {
+  display: block;
+
+  color: #3b342f;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.staffDashboardActions small {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #978a81;
+
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.staffDashboardActions b {
+  color: #8a1822;
+
+  font-size: 15px;
+}
+
+
+/* ========================================
+   HISTORY
+======================================== */
+
+.staffDashboardHistory {
+  margin-top: 22px;
+}
+
+.staffDashboardSectionTitle {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  margin-bottom: 9px;
+}
+
+.staffDashboardSectionTitle span {
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.staffDashboardSectionTitle h2 {
+  margin: 2px 0 0;
+
+  color: #302a26;
+
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.staffDashboardSectionTitle button {
+  border: 0;
+
+  background: transparent;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.staffDashboardHistoryList {
+  display: grid;
+
+  gap: 7px;
+}
+
+.staffDashboardHistoryList article {
+  display: grid;
+
+  grid-template-columns:
+    38px
+    1fr
+    auto;
+
+  align-items: center;
+
+  gap: 9px;
+
+  padding:
+    10px
+    11px;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  border:
+    1px solid
+    #eee6df;
+}
+
+.staffDashboardHistoryAvatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 50%;
+
+  background:
+    #f6e6d4;
+
+  color: #8a1822;
+
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.staffDashboardHistoryUser strong {
+  display: block;
+
+  color: #3a332f;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.staffDashboardHistoryUser span {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #92867d;
+
+  font-size: 7px;
+  font-weight: 700;
+}
+
+.staffDashboardHistoryList time {
+  color: #4c835d;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  white-space: nowrap;
+}
+
+
+/* ========================================
+   EMPTY
+======================================== */
+
+.staffDashboardEmpty {
+  padding:
+    24px
+    16px;
+
+  border-radius: 16px;
+
+  background: #faf7f3;
+
+  color: #877b73;
+
+  text-align: center;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.staffDashboardEmpty strong {
+  display: block;
+
+  color: #4d443e;
+
+  font-size: 11px;
+}
+
+.staffDashboardEmpty p {
+  margin:
+    4px
+    0
+    0;
+
+  font-size: 8px;
+  line-height: 1.6;
+}
+
+/* ==================================================
+   STAFF PORTAL
+================================================== */
+
+.staffPortalPage {
+  width: 100%;
+  max-width: 540px;
+
+  margin: 0 auto;
+
+  padding:
+    22px
+    16px
+    45px;
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.staffPortalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  margin-bottom: 18px;
+}
+
+.staffPortalHeader span {
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.14em;
+}
+
+.staffPortalHeader h1 {
+  margin:
+    2px
+    0
+    2px;
+
+  color: #2e2925;
+
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.staffPortalHeader p {
+  margin: 0;
+
+  color: #8a7e75;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.staffPortalHeader button {
+  flex-shrink: 0;
+
+  padding:
+    7px
+    10px;
+
+  border:
+    1px solid
+    #e3d8d0;
+
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  color: #766a62;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   HERO
+======================================== */
+
+.staffPortalHero {
+  margin-bottom: 16px;
+
+  padding:
+    22px
+    18px;
+
+  border-radius: 23px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #8e1c27,
+      #681018
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0
+    12px
+    28px
+    rgba(
+      90,
+      18,
+      26,
+      0.18
+    );
+}
+
+.staffPortalHero span {
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+
+  opacity: 0.76;
+}
+
+.staffPortalHero h2 {
+  margin:
+    5px
+    0
+    3px;
+
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.staffPortalHero p {
+  margin: 0;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  opacity: 0.82;
+}
+
+
+/* ========================================
+   MENU
+======================================== */
+
+.staffPortalMenu {
+  display: grid;
+
+  gap: 10px;
+}
+
+.staffPortalCard {
+  display: grid;
+
+  grid-template-columns:
+    48px
+    1fr
+    auto;
+
+  align-items: center;
+
+  gap: 12px;
+
+  width: 100%;
+
+  padding:
+    15px
+    14px;
+
+  border:
+    1px solid
+    #eee3db;
+
+  border-radius: 19px;
+
+  background: #ffffff;
+
+  text-align: left;
+
+  box-shadow:
+    0
+    8px
+    20px
+    rgba(
+      58,
+      39,
+      29,
+      0.06
+    );
+}
+
+.staffPortalCard.reward {
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf1,
+      #f9ead8
+    );
+}
+
+.staffPortalIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  border-radius: 15px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 8px;
+  font-weight: 1000;
+}
+
+.staffPortalCard span {
+  color: #9b8e84;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+.staffPortalCard h2 {
+  margin:
+    2px
+    0
+    2px;
+
+  color: #352f2b;
+
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.staffPortalCard p {
+  margin: 0;
+
+  color: #8c8077;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.staffPortalCard > strong {
+  color: #8a1822;
+
+  font-size: 17px;
+}

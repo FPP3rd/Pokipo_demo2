@@ -6,9 +6,17 @@ import {
   useState,
 } from "react";
 
-import { useRouter } from "next/navigation";
-import { toPng } from "html-to-image";
-import { QRCodeSVG } from "qrcode.react";
+import {
+  useRouter,
+} from "next/navigation";
+
+import {
+  toPng,
+} from "html-to-image";
+
+import {
+  QRCodeSVG,
+} from "qrcode.react";
 
 import {
   supabase,
@@ -20,50 +28,94 @@ import {
 
 const knowledgeItems = [
   {
-    id: "knowledge1",
-    number: 1,
+    id:
+      "knowledge1",
+
+    number:
+      1,
+
     title:
       "10年ぶりの大改良！素材から見直した「究極の品質」",
   },
+
   {
-    id: "knowledge2",
-    number: 2,
+    id:
+      "knowledge2",
+
+    number:
+      2,
+
     title:
       "「ショートニング不使用」への挑戦と安心",
   },
+
   {
-    id: "knowledge3",
-    number: 3,
+    id:
+      "knowledge3",
+
+    number:
+      3,
+
     title:
       "心の距離をぐっと縮める「コミュニケーションツール」",
   },
+
   {
-    id: "knowledge4",
-    number: 4,
+    id:
+      "knowledge4",
+
+    number:
+      4,
+
     title:
       "誰も取り残さない「シェアハピネス」の精神",
   },
+
   {
-    id: "knowledge5",
-    number: 5,
+    id:
+      "knowledge5",
+
+    number:
+      5,
+
     title:
       "獨協生の誇り！5年連続日本一を支える「圧倒的な団結力」",
   },
 ];
 
 /* ========================================
-   REWARD TYPE
+   TYPES
 ======================================== */
 
 type RewardExchangeRow = {
   id: string;
+
   participant_id: string;
+
   student_number: string;
+
   exchange_token: string;
+
   status: string;
+
   created_at: string;
-  exchanged_at: string | null;
+
+  exchanged_at:
+    | string
+    | null;
 };
+
+type CompletionRow = {
+  completed_at: string;
+
+  achievement_rank:
+    | number
+    | null;
+};
+
+/* ========================================
+   REWARD PAGE
+======================================== */
 
 export default function RewardPage() {
   const router =
@@ -142,11 +194,6 @@ export default function RewardPage() {
   ] = useState(false);
 
   const [
-    rewardExchangeId,
-    setRewardExchangeId,
-  ] = useState("");
-
-  const [
     issuingRewardQr,
     setIssuingRewardQr,
   ] = useState(false);
@@ -157,7 +204,7 @@ export default function RewardPage() {
   ] = useState(true);
 
   /* ========================================
-     CERTIFICATE
+     COMPLETION
   ======================================== */
 
   const [
@@ -168,7 +215,18 @@ export default function RewardPage() {
   const [
     achievementRank,
     setAchievementRank,
-  ] = useState(128);
+  ] = useState<number | null>(
+    null
+  );
+
+  const [
+    loadingCompletion,
+    setLoadingCompletion,
+  ] = useState(true);
+
+  /* ========================================
+     CERTIFICATE
+  ======================================== */
 
   const [
     showNickname,
@@ -216,16 +274,28 @@ export default function RewardPage() {
       `${date.getFullYear()}/` +
       `${String(
         date.getMonth() + 1
-      ).padStart(2, "0")}/` +
+      ).padStart(
+        2,
+        "0"
+      )}/` +
       `${String(
         date.getDate()
-      ).padStart(2, "0")} ` +
+      ).padStart(
+        2,
+        "0"
+      )} ` +
       `${String(
         date.getHours()
-      ).padStart(2, "0")}:` +
+      ).padStart(
+        2,
+        "0"
+      )}:` +
       `${String(
         date.getMinutes()
-      ).padStart(2, "0")}`
+      ).padStart(
+        2,
+        "0"
+      )}`
     );
   }
 
@@ -270,21 +340,19 @@ export default function RewardPage() {
         "pokipo_reward_exchanged"
       ) === "true";
 
-    const savedCompletedAt =
-      localStorage.getItem(
-        "pokipo_completed_at"
-      ) ?? "";
-
     const savedRewardExchangedAt =
       localStorage.getItem(
         "pokipo_reward_exchanged_at"
       ) ?? "";
 
+    const savedCompletedAt =
+      localStorage.getItem(
+        "pokipo_completed_at"
+      ) ?? "";
+
     const savedRank =
-      Number(
-        localStorage.getItem(
-          "pokipo_achievement_rank"
-        ) ?? "128"
+      localStorage.getItem(
+        "pokipo_achievement_rank"
       );
 
     const savedSecret =
@@ -296,6 +364,10 @@ export default function RewardPage() {
       localStorage.getItem(
         "pokipo_certificate_knowledge"
       );
+
+    /* --------------------------------
+       SET
+    -------------------------------- */
 
     setNickname(
       savedNickname
@@ -321,21 +393,33 @@ export default function RewardPage() {
       savedReward
     );
 
-    setCompletedAt(
-      savedCompletedAt
-    );
-
     setRewardExchangedAt(
       savedRewardExchangedAt
     );
 
-    setAchievementRank(
-      Number.isFinite(
-        savedRank
-      )
-        ? savedRank
-        : 128
+    setCompletedAt(
+      savedCompletedAt
     );
+
+    if (
+      savedRank !==
+      null
+    ) {
+      const parsedRank =
+        Number(
+          savedRank
+        );
+
+      if (
+        Number.isFinite(
+          parsedRank
+        )
+      ) {
+        setAchievementRank(
+          parsedRank
+        );
+      }
+    }
 
     setSecretStamp(
       savedSecret
@@ -344,7 +428,9 @@ export default function RewardPage() {
     if (
       savedKnowledge &&
       knowledgeItems.some(
-        (item) =>
+        (
+          item
+        ) =>
           item.id ===
           savedKnowledge
       )
@@ -356,7 +442,8 @@ export default function RewardPage() {
   }, []);
 
   /* ========================================
-     LOAD REWARD FROM SUPABASE
+     LOAD STAMP PROGRESS
+     Supabase優先
   ======================================== */
 
   useEffect(() => {
@@ -366,8 +453,212 @@ export default function RewardPage() {
       ) ??
       localStorage.getItem(
         "pokipo_user_id"
+      );
+
+    if (
+      !currentParticipantId
+    ) {
+      return;
+    }
+
+    async function loadProgress() {
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "get_pokipo_stamps",
+          {
+            p_participant_id:
+              currentParticipantId,
+          }
+        );
+
+      if (
+        error
+      ) {
+        console.error(
+          "特典画面スタンプ進捗取得エラー:",
+          error
+        );
+
+        return;
+      }
+
+      const stampCount =
+        Math.min(
+          Array.isArray(
+            data
+          )
+            ? data.length
+            : 0,
+          5
+        );
+
+      setProgress(
+        stampCount
+      );
+
+      localStorage.setItem(
+        "pokipo_progress",
+        String(
+          stampCount
+        )
+      );
+
+      if (
+        stampCount >=
+        5
+      ) {
+        localStorage.setItem(
+          "pokipo_completed",
+          "true"
+        );
+      }
+    }
+
+    loadProgress();
+  }, []);
+
+  /* ========================================
+     LOAD COMPLETION
+     Supabase優先
+  ======================================== */
+
+  useEffect(() => {
+    const currentParticipantId =
+      localStorage.getItem(
+        "pokipo_participant_id"
       ) ??
-      "";
+      localStorage.getItem(
+        "pokipo_user_id"
+      );
+
+    if (
+      !currentParticipantId
+    ) {
+      setLoadingCompletion(
+        false
+      );
+
+      return;
+    }
+
+    async function loadCompletion() {
+      setLoadingCompletion(
+        true
+      );
+
+      try {
+        const {
+          data,
+          error,
+        } =
+          await supabase.rpc(
+            "get_pokipo_completion",
+            {
+              p_participant_id:
+                currentParticipantId,
+            }
+          );
+
+        if (
+          error
+        ) {
+          console.error(
+            "完走情報取得エラー:",
+            error
+          );
+
+          return;
+        }
+
+        if (
+          data &&
+          data.length >
+            0
+        ) {
+          const completion =
+            data[0] as CompletionRow;
+
+          /* =========================
+             COMPLETED AT
+          ========================= */
+
+          if (
+            completion.completed_at
+          ) {
+            const formatted =
+              formatDateTime(
+                completion.completed_at
+              );
+
+            setCompletedAt(
+              formatted
+            );
+
+            localStorage.setItem(
+              "pokipo_completed_at",
+              formatted
+            );
+          }
+
+          /* =========================
+             RANK
+          ========================= */
+
+          if (
+            completion.achievement_rank !==
+              null &&
+            completion.achievement_rank !==
+              undefined
+          ) {
+            const rank =
+              Number(
+                completion.achievement_rank
+              );
+
+            setAchievementRank(
+              rank
+            );
+
+            localStorage.setItem(
+              "pokipo_achievement_rank",
+              String(
+                rank
+              )
+            );
+          }
+        }
+      } catch (
+        error
+      ) {
+        console.error(
+          "完走情報通信エラー:",
+          error
+        );
+      } finally {
+        setLoadingCompletion(
+          false
+        );
+      }
+    }
+
+    loadCompletion();
+  }, []);
+
+  /* ========================================
+     LOAD REWARD EXCHANGE
+  ======================================== */
+
+  useEffect(() => {
+    const currentParticipantId =
+      localStorage.getItem(
+        "pokipo_participant_id"
+      ) ??
+      localStorage.getItem(
+        "pokipo_user_id"
+      );
 
     if (
       !currentParticipantId
@@ -384,103 +675,104 @@ export default function RewardPage() {
         true
       );
 
-      const {
-        data,
-        error,
-      } =
-        await supabase
-          .from(
-            "reward_exchanges"
-          )
-          .select(
-            "id, participant_id, student_number, exchange_token, status, created_at, exchanged_at"
-          )
-          .eq(
-            "participant_id",
-            currentParticipantId
-          )
-          .maybeSingle();
-
-      if (
-        error
-      ) {
-        console.error(
-          "特典交換状態取得エラー:",
-          error
-        );
-
-        setLoadingRewardStatus(
-          false
-        );
-
-        return;
-      }
-
-      if (
-        data
-      ) {
-        const rewardData =
-          data as RewardExchangeRow;
-
-        setRewardExchangeId(
-          rewardData.id
-        );
-
-        setStudentNumber(
-          rewardData.student_number
-        );
-
-        setRewardToken(
-          rewardData.exchange_token
-        );
-
-        setRewardQrIssued(
-          true
-        );
+      try {
+        const {
+          data,
+          error,
+        } =
+          await supabase
+            .from(
+              "reward_exchanges"
+            )
+            .select(
+              "id, participant_id, student_number, exchange_token, status, created_at, exchanged_at"
+            )
+            .eq(
+              "participant_id",
+              currentParticipantId
+            )
+            .maybeSingle();
 
         if (
-          rewardData.status ===
-          "exchanged"
+          error
         ) {
-          setRewardExchanged(
+          console.error(
+            "特典交換状態取得エラー:",
+            error
+          );
+
+          return;
+        }
+
+        if (
+          data
+        ) {
+          const rewardData =
+            data as RewardExchangeRow;
+
+          setStudentNumber(
+            rewardData.student_number
+          );
+
+          setRewardToken(
+            rewardData.exchange_token
+          );
+
+          setRewardQrIssued(
             true
           );
 
-          localStorage.setItem(
-            "pokipo_reward_exchanged",
-            "true"
-          );
-
           if (
-            rewardData.exchanged_at
+            rewardData.status ===
+            "exchanged"
           ) {
-            const formatted =
-              formatDateTime(
-                rewardData.exchanged_at
-              );
-
-            setRewardExchangedAt(
-              formatted
+            setRewardExchanged(
+              true
             );
 
             localStorage.setItem(
-              "pokipo_reward_exchanged_at",
-              formatted
+              "pokipo_reward_exchanged",
+              "true"
             );
+
+            if (
+              rewardData.exchanged_at
+            ) {
+              const formatted =
+                formatDateTime(
+                  rewardData.exchanged_at
+                );
+
+              setRewardExchangedAt(
+                formatted
+              );
+
+              localStorage.setItem(
+                "pokipo_reward_exchanged_at",
+                formatted
+              );
+            }
           }
         }
+      } catch (
+        error
+      ) {
+        console.error(
+          "特典交換状態通信エラー:",
+          error
+        );
+      } finally {
+        setLoadingRewardStatus(
+          false
+        );
       }
-
-      setLoadingRewardStatus(
-        false
-      );
     }
 
     loadRewardStatus();
   }, []);
 
   /* ========================================
-     REALTIME
+     REALTIME REWARD
   ======================================== */
 
   useEffect(() => {
@@ -490,8 +782,7 @@ export default function RewardPage() {
       ) ??
       localStorage.getItem(
         "pokipo_user_id"
-      ) ??
-      "";
+      );
 
     if (
       !currentParticipantId
@@ -580,7 +871,9 @@ export default function RewardPage() {
 
   const selectedKnowledge =
     knowledgeItems.find(
-      (item) =>
+      (
+        item
+      ) =>
         item.id ===
         selectedKnowledgeId
     ) ??
@@ -614,7 +907,7 @@ export default function RewardPage() {
   }
 
   /* ========================================
-     ISSUE REWARD QR
+     ISSUE QR
   ======================================== */
 
   async function issueRewardQr() {
@@ -723,10 +1016,6 @@ export default function RewardPage() {
         return;
       }
 
-      setRewardExchangeId(
-        data.id
-      );
-
       setRewardToken(
         data.exchange_token
       );
@@ -748,7 +1037,7 @@ export default function RewardPage() {
       error
     ) {
       console.error(
-        "特典QR発行エラー:",
+        "特典QR発行通信エラー:",
         error
       );
 
@@ -773,17 +1062,20 @@ export default function RewardPage() {
       | "department"
   ) {
     const nextNickname =
-      type === "nickname"
+      type ===
+      "nickname"
         ? !showNickname
         : showNickname;
 
     const nextGrade =
-      type === "grade"
+      type ===
+      "grade"
         ? !showGrade
         : showGrade;
 
     const nextDepartment =
-      type === "department"
+      type ===
+      "department"
         ? !showDepartment
         : showDepartment;
 
@@ -876,6 +1168,10 @@ export default function RewardPage() {
     }
   }
 
+  /* ========================================
+     DOWNLOAD
+  ======================================== */
+
   async function downloadCertificate() {
     const dataUrl =
       await createCertificateImage();
@@ -904,6 +1200,10 @@ export default function RewardPage() {
     link.click();
   }
 
+  /* ========================================
+     SHARE
+  ======================================== */
+
   async function shareCertificate() {
     const dataUrl =
       await createCertificateImage();
@@ -929,7 +1229,9 @@ export default function RewardPage() {
 
       const file =
         new File(
-          [blob],
+          [
+            blob,
+          ],
           "POKIPO_certificate.png",
           {
             type:
@@ -940,7 +1242,9 @@ export default function RewardPage() {
       if (
         navigator.share &&
         navigator.canShare?.({
-          files: [file],
+          files: [
+            file,
+          ],
         })
       ) {
         await navigator.share({
@@ -1162,6 +1466,68 @@ export default function RewardPage() {
         </section>
 
         {/* =================================
+            COMPLETION STATUS
+        ================================= */}
+
+        {completed && (
+          <section className="rewardCompletionInfo">
+
+            <div className="rewardSectionTitle">
+
+              <span>
+                COMPLETION RECORD
+              </span>
+
+              <h2>
+                達成記録
+              </h2>
+
+            </div>
+
+            <div className="rewardCompletionStats">
+
+              <div>
+
+                <span>
+                  COMPLETED AT
+                </span>
+
+                <strong>
+
+                  {loadingCompletion
+                    ? "読み込み中..."
+                    : completedAt ||
+                      "記録確認中"}
+
+                </strong>
+
+              </div>
+
+              <div>
+
+                <span>
+                  RANK
+                </span>
+
+                <strong>
+
+                  {loadingCompletion
+                    ? "—"
+                    : achievementRank !==
+                      null
+                    ? `${achievementRank}番目`
+                    : "—"}
+
+                </strong>
+
+              </div>
+
+            </div>
+
+          </section>
+        )}
+
+        {/* =================================
             REWARD EXCHANGE
         ================================= */}
 
@@ -1231,7 +1597,7 @@ export default function RewardPage() {
             </div>
           ) : !rewardQrIssued ? (
             /* ===============================
-               STUDENT NUMBER
+               QR ISSUE
             ================================ */
 
             <div className="rewardExchangeCard">
@@ -1274,7 +1640,9 @@ export default function RewardPage() {
                       type="text"
                       inputMode="numeric"
                       autoComplete="off"
-                      maxLength={8}
+                      maxLength={
+                        8
+                      }
                       value={
                         studentNumber
                       }
@@ -1372,7 +1740,9 @@ export default function RewardPage() {
 
                 <QRCodeSVG
                   value={`POKIPO_REWARD:${rewardToken}`}
-                  size={190}
+                  size={
+                    190
+                  }
                   level="H"
                   includeMargin
                 />
@@ -1464,6 +1834,8 @@ export default function RewardPage() {
               ニックネーム・学年・学科から最低1つ選んでください。
             </p>
 
+            {/* PROFILE */}
+
             <div className="certificateSettingCard">
 
               <div className="certificateSettingTitle">
@@ -1532,6 +1904,8 @@ export default function RewardPage() {
 
             </div>
 
+            {/* KNOWLEDGE */}
+
             <div className="certificateSettingCard">
 
               <div className="certificateSettingTitle">
@@ -1549,7 +1923,9 @@ export default function RewardPage() {
               <div className="certificateKnowledgeSelect">
 
                 {knowledgeItems.map(
-                  (item) => (
+                  (
+                    item
+                  ) => (
                     <button
                       key={
                         item.id
@@ -1584,7 +1960,7 @@ export default function RewardPage() {
 
             </div>
 
-            {/* CERTIFICATE */}
+            {/* CERTIFICATE CARD */}
 
             <div
               ref={
@@ -1613,24 +1989,37 @@ export default function RewardPage() {
 
               </div>
 
+              {/* POCKY */}
+
               <div className="certificatePockyVisual">
 
                 <div className="certificatePocky certificatePockyLeft">
+
                   <div className="certificatePockyCoating" />
+
                   <div className="certificatePockyBiscuit" />
+
                 </div>
 
                 <div className="certificatePocky certificatePockyCenter">
+
                   <div className="certificatePockyCoating" />
+
                   <div className="certificatePockyBiscuit" />
+
                 </div>
 
                 <div className="certificatePocky certificatePockyRight">
+
                   <div className="certificatePockyCoating" />
+
                   <div className="certificatePockyBiscuit" />
+
                 </div>
 
               </div>
+
+              {/* STATS */}
 
               <div className="certificateStats">
 
@@ -1656,7 +2045,12 @@ export default function RewardPage() {
                   <div className="certificateRankNumber">
 
                     <strong>
-                      {achievementRank}
+
+                      {achievementRank !==
+                      null
+                        ? achievementRank
+                        : "—"}
+
                     </strong>
 
                     <span>
@@ -1668,6 +2062,8 @@ export default function RewardPage() {
                 </div>
 
               </div>
+
+              {/* PROFILE */}
 
               <div className="certificateProfileBlock">
 
@@ -1718,6 +2114,8 @@ export default function RewardPage() {
 
               </div>
 
+              {/* KNOWLEDGE */}
+
               <div className="certificateKnowledgeBlock">
 
                 <span>
@@ -1729,6 +2127,8 @@ export default function RewardPage() {
                 </strong>
 
               </div>
+
+              {/* FOOTER */}
 
               <div className="certificateFooter">
 
@@ -1743,6 +2143,8 @@ export default function RewardPage() {
               </div>
 
             </div>
+
+            {/* ACTION */}
 
             <div className="certificateActions">
 

@@ -938,6 +938,13 @@ export default function StaffRewardPage() {
             ログアウト
           </button>
 
+          <a
+         href="/staff/reward/history"
+         className="staffHistoryLink"
+          >
+        交換履歴
+         </a>
+
         </header>
 
         {/* =================================

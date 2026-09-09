@@ -5,7 +5,9 @@ import {
   useState,
 } from "react";
 
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+} from "next/navigation";
 
 import {
   supabase,
@@ -46,7 +48,6 @@ export default function HomePage() {
 
   /* ========================================
      PARTICIPANTS
-     Supabase実人数
   ======================================== */
 
   const [
@@ -78,20 +79,13 @@ export default function HomePage() {
 
   useEffect(() => {
     /* --------------------------------
-       localStorage
+       LOCAL DATA
     -------------------------------- */
 
-    function loadHomeData() {
+    function loadLocalData() {
       const savedNickname =
         localStorage.getItem(
           "pokipo_nickname"
-        );
-
-      const savedProgress =
-        Number(
-          localStorage.getItem(
-            "pokipo_progress"
-          ) ?? "0"
         );
 
       const savedReward =
@@ -112,10 +106,6 @@ export default function HomePage() {
           "chocolate"
         ) as PockySkin;
 
-      /* --------------------------------
-         未登録ならスタートへ
-      -------------------------------- */
-
       if (
         !savedNickname
       ) {
@@ -128,16 +118,6 @@ export default function HomePage() {
 
       setNickname(
         savedNickname
-      );
-
-      setProgress(
-        Math.min(
-          Math.max(
-            savedProgress,
-            0
-          ),
-          5
-        )
       );
 
       setRewardExchanged(
@@ -200,16 +180,151 @@ export default function HomePage() {
     }
 
     /* --------------------------------
+       スタンプ進捗取得
+       Supabase優先
+    -------------------------------- */
+
+    async function loadStampProgress() {
+      const participantId =
+        localStorage.getItem(
+          "pokipo_participant_id"
+        ) ??
+        localStorage.getItem(
+          "pokipo_user_id"
+        );
+
+      if (
+        !participantId
+      ) {
+        const localProgress =
+          Number(
+            localStorage.getItem(
+              "pokipo_progress"
+            ) ?? "0"
+          );
+
+        setProgress(
+          Math.min(
+            Math.max(
+              localProgress,
+              0
+            ),
+            5
+          )
+        );
+
+        return;
+      }
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "get_pokipo_stamps",
+          {
+            p_participant_id:
+              participantId,
+          }
+        );
+
+      if (
+        error
+      ) {
+        console.error(
+          "スタンプ進捗取得エラー:",
+          error
+        );
+
+        const localProgress =
+          Number(
+            localStorage.getItem(
+              "pokipo_progress"
+            ) ?? "0"
+          );
+
+        setProgress(
+          Math.min(
+            Math.max(
+              localProgress,
+              0
+            ),
+            5
+          )
+        );
+
+        return;
+      }
+
+      const stampCount =
+        Math.min(
+          Array.isArray(
+            data
+          )
+            ? data.length
+            : 0,
+          5
+        );
+
+      setProgress(
+        stampCount
+      );
+
+      localStorage.setItem(
+        "pokipo_progress",
+        String(
+          stampCount
+        )
+      );
+
+      if (
+        stampCount >=
+        5
+      ) {
+        localStorage.setItem(
+          "pokipo_completed",
+          "true"
+        );
+      } else {
+        localStorage.setItem(
+          "pokipo_completed",
+          "false"
+        );
+      }
+
+      const serverScans =
+        (
+          data ?? []
+        ).map(
+          (
+            item: {
+              spot_id:
+                string;
+            }
+          ) =>
+            item.spot_id
+        );
+
+      localStorage.setItem(
+        "pokipo_scans",
+        JSON.stringify(
+          serverScans
+        )
+      );
+    }
+
+    /* --------------------------------
        初回読み込み
     -------------------------------- */
 
-    loadHomeData();
+    loadLocalData();
 
     loadParticipantCount();
 
+    loadStampProgress();
+
     /* ========================================
-       REALTIME
-       participantsへのINSERTを監視
+       参加者数 REALTIME
     ======================================== */
 
     const participantChannel =
@@ -233,23 +348,66 @@ export default function HomePage() {
             loadParticipantCount();
           }
         )
-        .subscribe(
-          (status) => {
-            console.log(
-              "参加者Realtime状態:",
-              status
-            );
-          }
-        );
+        .subscribe();
+
+    /* ========================================
+       スタンプ REALTIME
+    ======================================== */
+
+    const currentParticipantId =
+      localStorage.getItem(
+        "pokipo_participant_id"
+      ) ??
+      localStorage.getItem(
+        "pokipo_user_id"
+      );
+
+    let stampChannel:
+      ReturnType<
+        typeof supabase.channel
+      > | null =
+      null;
+
+    if (
+      currentParticipantId
+    ) {
+      stampChannel =
+        supabase
+          .channel(
+            `participant-stamps-${currentParticipantId}`
+          )
+          .on(
+            "postgres_changes",
+            {
+              event:
+                "INSERT",
+
+              schema:
+                "public",
+
+              table:
+                "participant_stamps",
+
+              filter:
+                `participant_id=eq.${currentParticipantId}`,
+            },
+            () => {
+              loadStampProgress();
+            }
+          )
+          .subscribe();
+    }
 
     /* --------------------------------
        フォーカス復帰
     -------------------------------- */
 
     function handleFocus() {
-      loadHomeData();
+      loadLocalData();
 
       loadParticipantCount();
+
+      loadStampProgress();
     }
 
     /* --------------------------------
@@ -261,9 +419,11 @@ export default function HomePage() {
         document.visibilityState ===
         "visible"
       ) {
-        loadHomeData();
+        loadLocalData();
 
         loadParticipantCount();
+
+        loadStampProgress();
       }
     }
 
@@ -295,6 +455,14 @@ export default function HomePage() {
       supabase.removeChannel(
         participantChannel
       );
+
+      if (
+        stampChannel
+      ) {
+        supabase.removeChannel(
+          stampChannel
+        );
+      }
     };
   }, [router]);
 
@@ -902,7 +1070,6 @@ export default function HomePage() {
 
         {/* ==================================
             PARTICIPANTS
-            Supabase REALTIME
         ================================== */}
 
         <section className="participantStatsSection">

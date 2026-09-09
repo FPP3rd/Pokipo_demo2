@@ -1,49 +1,310 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { pokipoSpots } from "../data/pokipo-data";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  useRouter,
+} from "next/navigation";
+
+import {
+  supabase,
+} from "../../lib/supabase-client";
+
+/* ========================================
+   KNOWLEDGE DATA
+======================================== */
+
+const knowledgeItems = [
+  {
+    id:
+      "knowledge1",
+
+    number:
+      1,
+
+    title:
+      "10年ぶりの大改良！素材から見直した「究極の品質」",
+
+    text:
+      "ポッキーは長年愛されている商品ですが、よりおいしく楽しんでもらうために、プレッツェルやチョコレートなど細かな部分まで見直しながら進化しています。",
+  },
+
+  {
+    id:
+      "knowledge2",
+
+    number:
+      2,
+
+    title:
+      "「ショートニング不使用」への挑戦と安心",
+
+    text:
+      "毎日のおやつとして安心して楽しんでもらえるように、原材料や製法も時代に合わせて見直されています。おいしさだけでなく、品質へのこだわりもポッキーの魅力です。",
+  },
+
+  {
+    id:
+      "knowledge3",
+
+    number:
+      3,
+
+    title:
+      "心の距離をぐっと縮める「コミュニケーションツール」",
+
+    text:
+      "ポッキーは1本ずつ手に取りやすく、みんなで分けやすい形をしています。そのため、お菓子としてだけでなく、人と人の会話を生むきっかけにもなっています。",
+  },
+
+  {
+    id:
+      "knowledge4",
+
+    number:
+      4,
+
+    title:
+      "誰も取り残さない「シェアハピネス」の精神",
+
+    text:
+      "ポッキーには、みんなで分け合って楽しむ『Share happiness!』という考え方があります。おいしさを共有することで、楽しい時間そのものを届けることを大切にしています。",
+  },
+
+  {
+    id:
+      "knowledge5",
+
+    number:
+      5,
+
+    title:
+      "獨協生の誇り！5年連続日本一を支える「圧倒的な団結力」",
+
+    text:
+      "ポッキーを囲んで一緒に楽しむことは、仲間同士の一体感にもつながります。POKIPOでは、獨協大学の学生同士がキャンパスを巡りながら楽しめる体験を目指しています。",
+  },
+];
+
+/* ========================================
+   KNOWLEDGE PAGE
+======================================== */
 
 export default function KnowledgePage() {
-  const router = useRouter();
+  const router =
+    useRouter();
 
-  const [unlockedKnowledge, setUnlockedKnowledge] =
-    useState<string[]>([]);
+  /* ========================================
+     UNLOCKED KNOWLEDGE
+  ======================================== */
+
+  const [
+    unlockedKnowledge,
+    setUnlockedKnowledge,
+  ] = useState<string[]>([]);
+
+  /* ========================================
+     LOADING
+  ======================================== */
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  /* ========================================
+     MESSAGE
+  ======================================== */
+
+  const [
+    message,
+    setMessage,
+  ] = useState("");
+
+  /* ========================================
+     LOAD
+  ======================================== */
 
   useEffect(() => {
-    const savedKnowledge =
-      localStorage.getItem("pokipo_knowledge");
+    async function loadKnowledge() {
+      const participantId =
+        localStorage.getItem(
+          "pokipo_participant_id"
+        ) ??
+        localStorage.getItem(
+          "pokipo_user_id"
+        );
 
-    if (savedKnowledge) {
+      /* =================================
+         participant IDなし
+         localStorageのみ
+      ================================= */
+
+      if (
+        !participantId
+      ) {
+        loadFromLocalStorage();
+
+        setLoading(
+          false
+        );
+
+        return;
+      }
+
+      /* =================================
+         SUPABASE
+      ================================= */
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "get_pokipo_knowledge",
+          {
+            p_participant_id:
+              participantId,
+          }
+        );
+
+      /* =================================
+         ERROR
+         localStorageへフォールバック
+      ================================= */
+
+      if (
+        error
+      ) {
+        console.error(
+          "豆知識取得エラー:",
+          error
+        );
+
+        loadFromLocalStorage();
+
+        setMessage(
+          "通信状況により端末内の豆知識情報を表示しています。"
+        );
+
+        setLoading(
+          false
+        );
+
+        return;
+      }
+
+      /* =================================
+         SERVER DATA
+      ================================= */
+
+      const serverKnowledge =
+        (
+          data ?? []
+        ).map(
+          (
+            item: {
+              knowledge_id:
+                string;
+            }
+          ) =>
+            item.knowledge_id
+        );
+
+      setUnlockedKnowledge(
+        serverKnowledge
+      );
+
+      /* =================================
+         localStorageへ同期
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_knowledge",
+        JSON.stringify(
+          serverKnowledge
+        )
+      );
+
+      setLoading(
+        false
+      );
+    }
+
+    /* ========================================
+       LOCAL STORAGE
+    ======================================== */
+
+    function loadFromLocalStorage() {
+      const savedKnowledge =
+        localStorage.getItem(
+          "pokipo_knowledge"
+        );
+
+      if (
+        !savedKnowledge
+      ) {
+        setUnlockedKnowledge(
+          []
+        );
+
+        return;
+      }
+
       try {
-        const parsedKnowledge =
-          JSON.parse(savedKnowledge);
+        const parsed =
+          JSON.parse(
+            savedKnowledge
+          );
 
-        if (Array.isArray(parsedKnowledge)) {
+        if (
+          Array.isArray(
+            parsed
+          )
+        ) {
           setUnlockedKnowledge(
-            parsedKnowledge
+            parsed
+          );
+        } else {
+          setUnlockedKnowledge(
+            []
           );
         }
       } catch {
-        setUnlockedKnowledge([]);
+        setUnlockedKnowledge(
+          []
+        );
       }
     }
+
+    loadKnowledge();
   }, []);
+
+  /* ========================================
+     STATUS
+  ======================================== */
 
   const unlockedCount =
     unlockedKnowledge.length;
 
-  const percentage =
-    Math.min(unlockedCount * 20, 100);
+  const complete =
+    unlockedCount >= 5;
+
+  /* ========================================
+     VIEW
+  ======================================== */
 
   return (
     <main className="shell">
 
-      <section className="knowledgePage">
+      <section className="card knowledgePage">
 
-        {/* =========================
+        {/* =================================
             HEADER
-        ========================== */}
+        ================================= */}
 
         <header className="knowledgeHeader">
 
@@ -51,7 +312,9 @@ export default function KnowledgePage() {
             type="button"
             className="backButton"
             onClick={() =>
-              router.push("/home")
+              router.push(
+                "/home"
+              )
             }
           >
             ←
@@ -60,58 +323,88 @@ export default function KnowledgePage() {
           <div>
 
             <p className="knowledgeEyebrow">
-              POCKY COLLECTION
+              POCKY KNOWLEDGE
             </p>
 
             <h1>
-              ポッキー豆知識図鑑
+              ポッキー豆知識
             </h1>
 
           </div>
 
+          <div className="knowledgeCountBadge">
+            {unlockedCount}/5
+          </div>
+
         </header>
 
-        {/* =========================
-            INTRO
-        ========================== */}
+        {/* =================================
+            HERO
+        ================================= */}
 
-        <p className="knowledgeIntro">
-          スタンプラリーで見つけた豆知識を、
-          ここでいつでも見返せます。
-        </p>
+        <section
+          className={
+            complete
+              ? "knowledgeHero complete"
+              : "knowledgeHero"
+          }
+        >
 
-        {/* =========================
-            COLLECTION PROGRESS
-        ========================== */}
+          <span className="knowledgeHeroMini">
+            KNOWLEDGE COLLECTION
+          </span>
+
+          <div className="knowledgeHeroIcon">
+            ?
+          </div>
+
+          <h2>
+
+            {complete
+              ? "豆知識コンプリート！"
+              : "集めた豆知識を見てみよう"}
+
+          </h2>
+
+          <p>
+
+            {complete
+              ? "5つすべての豆知識を集めました！"
+              : `現在 ${unlockedCount}/5。スタンプラリーを進めて豆知識を集めよう。`}
+
+          </p>
+
+        </section>
+
+        {/* =================================
+            PROGRESS
+        ================================= */}
 
         <section className="knowledgeProgressCard">
 
           <div className="knowledgeProgressTop">
 
-            <div>
-
-              <p>
-                COLLECTION
-              </p>
-
-              <h2>
-                {unlockedCount} / 5 解放
-              </h2>
-
-            </div>
+            <span>
+              COLLECTION
+            </span>
 
             <strong>
-              {percentage}%
+              {unlockedCount}/5
             </strong>
 
           </div>
 
-          <div className="progressBar">
+          <div className="knowledgeProgressBar">
 
             <div
-              className="progressBarFill"
+              className="knowledgeProgressFill"
               style={{
-                width: `${percentage}%`,
+                width:
+                  `${Math.min(
+                    unlockedCount *
+                      20,
+                    100
+                  )}%`,
               }}
             />
 
@@ -119,118 +412,181 @@ export default function KnowledgePage() {
 
         </section>
 
-        {/* =========================
-            KNOWLEDGE COLLECTION
-        ========================== */}
+        {/* =================================
+            LOADING
+        ================================= */}
 
-        <section className="knowledgeGrid">
+        {loading && (
+          <section className="knowledgeLoadingCard">
 
-          {pokipoSpots.map((item) => {
-            const unlocked =
-              unlockedKnowledge.includes(
-                item.knowledgeId
-              );
+            <span>
+              読み込み中...
+            </span>
 
-            return (
-              <article
-                key={item.knowledgeId}
-                className={
-                  unlocked
-                    ? "knowledgeCard unlocked"
-                    : "knowledgeCard locked"
-                }
-              >
+          </section>
+        )}
 
-                {/* 上部 */}
+        {/* =================================
+            KNOWLEDGE LIST
+        ================================= */}
 
-                <div className="knowledgeCardTop">
+        {!loading && (
+          <section className="knowledgeList">
 
-                  <div className="knowledgeNumber">
-                    {item.number}
-                  </div>
+            {knowledgeItems.map(
+              (
+                item
+              ) => {
+                const unlocked =
+                  unlockedKnowledge.includes(
+                    item.id
+                  );
 
-                  <span className="knowledgeState">
-                    {unlocked
-                      ? "UNLOCKED"
-                      : "LOCKED"}
-                  </span>
+                return (
+                  <article
+                    key={
+                      item.id
+                    }
+                    className={
+                      unlocked
+                        ? "knowledgeCard unlocked"
+                        : "knowledgeCard locked"
+                    }
+                  >
 
-                </div>
+                    {/* =========================
+                        NUMBER
+                    ========================== */}
 
-                {/* アイコン */}
+                    <div className="knowledgeNumber">
 
-                <div
-                  className={
-                    unlocked
-                      ? "knowledgeVisual unlocked"
-                      : "knowledgeVisual"
-                  }
-                >
-                  {unlocked
-                    ? "!"
-                    : "?"}
-                </div>
+                      {unlocked
+                        ? item.number
+                        : "?"}
 
-                {/* 内容 */}
+                    </div>
 
-                {unlocked ? (
-                  <>
+                    {/* =========================
+                        CONTENT
+                    ========================== */}
 
-                    <h2>
-                      {item.knowledgeTitle}
-                    </h2>
+                    <div className="knowledgeContent">
 
-                    <p>
-                      {item.knowledgeText}
-                    </p>
+                      <span className="knowledgeStatus">
 
-                  </>
-                ) : (
-                  <>
+                        {unlocked
+                          ? "UNLOCKED"
+                          : "LOCKED"}
 
-                    <h2>
-                      ？？？
-                    </h2>
+                      </span>
 
-                    <p>
-                      スタンプラリーを進めると、
-                      新しい豆知識が解放されます。
-                    </p>
+                      {unlocked ? (
+                        <>
 
-                  </>
-                )}
+                          <h2>
+                            {item.title}
+                          </h2>
 
-              </article>
-            );
-          })}
+                          <p>
+                            {item.text}
+                          </p>
 
-        </section>
+                        </>
+                      ) : (
+                        <>
 
-        {/* =========================
+                          <h2>
+                            まだ解放されていません
+                          </h2>
+
+                          <p>
+                            QRコードを読み取って、
+                            トリビアに正解すると
+                            この豆知識が解放されます。
+                          </p>
+
+                        </>
+                      )}
+
+                    </div>
+
+                    {/* =========================
+                        ICON
+                    ========================== */}
+
+                    <div
+                      className={
+                        unlocked
+                          ? "knowledgeLockIcon unlocked"
+                          : "knowledgeLockIcon"
+                      }
+                    >
+
+                      {unlocked
+                        ? "✓"
+                        : "🔒"}
+
+                    </div>
+
+                  </article>
+                );
+              }
+            )}
+
+          </section>
+        )}
+
+        {/* =================================
             COMPLETE
-        ========================== */}
+        ================================= */}
 
-        {unlockedCount === 5 && (
+        {complete && (
           <section className="knowledgeCompleteCard">
 
             <div>
               ★
             </div>
 
-            <div>
+            <span>
+              COMPLETE!
+            </span>
 
-              <p>
-                COLLECTION COMPLETE
-              </p>
+            <h2>
+              全豆知識コンプリート！
+            </h2>
 
-              <h2>
-                豆知識をすべて集めました！
-              </h2>
-
-            </div>
+            <p>
+              5つすべてのポッキー豆知識を集めました。
+            </p>
 
           </section>
         )}
+
+        {/* =================================
+            MESSAGE
+        ================================= */}
+
+        {message && (
+          <p className="knowledgeMessage">
+            {message}
+          </p>
+        )}
+
+        {/* =================================
+            HOME BUTTON
+        ================================= */}
+
+        <button
+          type="button"
+          className="knowledgeHomeButton"
+          onClick={() =>
+            router.push(
+              "/home"
+            )
+          }
+        >
+          トップへ戻る
+        </button>
 
       </section>
 
