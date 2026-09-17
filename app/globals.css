@@ -22507,3 +22507,501 @@ img {
     grid-template-columns: 72px minmax(0, 1fr) 34px;
   }
 }
+
+
+.surveyComparisonIntro {
+  margin-top: 24px;
+
+  padding:
+    20px
+    17px;
+
+  border-radius: 19px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #8d1c26,
+      #6c1119
+    );
+
+  color: #ffffff;
+}
+
+.surveyComparisonIntro > span {
+  display: block;
+
+  color:
+    rgba(255, 255, 255, 0.74);
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+}
+
+.surveyComparisonIntro h2 {
+  margin:
+    5px
+    0;
+
+  color: #ffffff;
+
+  font-size: 18px;
+  font-weight: 900;
+
+  line-height: 1.5;
+}
+
+.surveyComparisonIntro p {
+  margin: 0;
+
+  color:
+    rgba(255, 255, 255, 0.88);
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+/* ========================================
+   SURVEY QUESTION CARD
+======================================== */
+
+.surveyQuestionCard {
+  position: relative;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  margin-top: 12px;
+
+  padding:
+    20px
+    16px;
+
+  border:
+    1px solid
+    #ece2da;
+
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0
+    8px
+    22px
+    rgba(
+      55,
+      35,
+      25,
+      0.06
+    );
+
+  overflow: hidden;
+}
+
+
+/* ========================================
+   QUESTION NUMBER
+======================================== */
+
+.surveyQuestionNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 35px;
+  height: 25px;
+
+  margin-bottom: 9px;
+
+  padding:
+    0
+    8px;
+
+  border-radius: 999px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  letter-spacing: 0.05em;
+
+  white-space: nowrap;
+}
+
+
+/* ========================================
+   QUESTION TITLE
+======================================== */
+
+.surveyQuestionCard h2 {
+  width: 100%;
+
+  max-width: 100%;
+
+  box-sizing: border-box;
+
+  margin:
+    0
+    0
+    14px;
+
+  color: #352f2b;
+
+  font-size:
+    clamp(
+      13px,
+      3.7vw,
+      15px
+    );
+
+  font-weight: 900;
+
+  line-height: 1.6;
+
+  white-space: normal;
+
+  word-break: normal;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ========================================
+   CHOICE GRID
+======================================== */
+
+.surveyChoiceGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+
+  gap: 8px;
+
+  width: 100%;
+}
+
+
+/* 2択用 */
+
+.surveyChoiceGrid.two {
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+}
+
+
+/* ========================================
+   CHOICE LIST
+======================================== */
+
+.surveyChoiceList {
+  display: grid;
+
+  gap: 8px;
+
+  width: 100%;
+}
+
+
+/* ========================================
+   CHOICE BUTTON
+======================================== */
+
+.surveyChoice {
+  width: 100%;
+
+  min-width: 0;
+
+  min-height: 46px;
+
+  box-sizing: border-box;
+
+  padding:
+    10px
+    9px;
+
+  border:
+    1px solid
+    #ddd3cb;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  color: #5f554e;
+
+  font-size:
+    clamp(
+      10px,
+      3vw,
+      11px
+    );
+
+  font-weight: 800;
+
+  line-height: 1.5;
+
+  white-space: normal;
+
+  word-break: normal;
+
+  overflow-wrap: anywhere;
+
+  text-align: center;
+}
+
+.surveyChoice.active {
+  border-color: #8a1822;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  box-shadow:
+    0
+    5px
+    14px
+    rgba(
+      138,
+      24,
+      34,
+      0.16
+    );
+}
+
+
+/* ========================================
+   SCORE OPTIONS
+======================================== */
+
+.surveyScoreOptions {
+  display: grid;
+
+  gap: 8px;
+
+  width: 100%;
+}
+
+.surveyScoreOption {
+  display: grid;
+
+  grid-template-columns:
+    36px
+    minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 10px;
+
+  width: 100%;
+
+  min-width: 0;
+
+  min-height: 49px;
+
+  box-sizing: border-box;
+
+  padding:
+    7px
+    11px;
+
+  border:
+    1px solid
+    #dfd5cd;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  text-align: left;
+}
+
+.surveyScoreOption > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 31px;
+  height: 31px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #f4ece6;
+
+  color: #8a1822;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.surveyScoreOption > strong {
+  min-width: 0;
+
+  color: #554b45;
+
+  font-size:
+    clamp(
+      10px,
+      3vw,
+      11px
+    );
+
+  font-weight: 800;
+
+  line-height: 1.5;
+
+  white-space: normal;
+
+  word-break: normal;
+
+  overflow-wrap: anywhere;
+}
+
+.surveyScoreOption.active {
+  border-color: #8a1822;
+
+  background: #fff2e2;
+}
+
+.surveyScoreOption.active > span {
+  background: #8a1822;
+
+  color: #ffffff;
+}
+
+.surveyScoreOption.active > strong {
+  color: #8a1822;
+}
+
+
+/* ========================================
+   SMALL SCREEN
+======================================== */
+
+@media (max-width: 480px) {
+
+  .surveyQuestionCard {
+    padding:
+      18px
+      14px;
+  }
+
+  .surveyQuestionCard h2 {
+    font-size:
+      clamp(
+        12.5px,
+        4vw,
+        14px
+      );
+
+    line-height: 1.55;
+  }
+
+  .surveyChoiceGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .surveyChoiceGrid.two {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .surveyChoice {
+    font-size:
+      clamp(
+        10px,
+        3.5vw,
+        11px
+      );
+  }
+
+  .surveyScoreOption {
+    grid-template-columns:
+      34px
+      minmax(0, 1fr);
+
+    gap: 9px;
+
+    padding:
+      8px
+      10px;
+  }
+
+  .surveyScoreOption > span {
+    width: 29px;
+    height: 29px;
+
+    font-size: 10px;
+  }
+
+  .surveyScoreOption > strong {
+    font-size:
+      clamp(
+        10px,
+        3.5vw,
+        11px
+      );
+  }
+}
+
+
+/* ========================================
+   EXTRA SMALL SCREEN
+======================================== */
+
+@media (max-width: 360px) {
+
+  .surveyQuestionCard {
+    padding:
+      16px
+      12px;
+  }
+
+  .surveyQuestionCard h2 {
+    font-size: 12.5px;
+
+    line-height: 1.5;
+  }
+
+  .surveyChoiceGrid.two {
+    grid-template-columns:
+      1fr;
+  }
+
+  .surveyChoice {
+    min-height: 44px;
+
+    font-size: 10px;
+  }
+
+  .surveyScoreOption {
+    grid-template-columns:
+      32px
+      minmax(0, 1fr);
+  }
+
+  .surveyScoreOption > strong {
+    font-size: 10px;
+  }
+}
