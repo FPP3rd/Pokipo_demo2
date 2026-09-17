@@ -124,6 +124,20 @@ export default function RewardPage() {
   ] = useState(0);
 
   /* ========================================
+     SURVEY
+  ======================================== */
+
+  const [
+    postSurveyCompleted,
+    setPostSurveyCompleted,
+  ] = useState(false);
+
+  const [
+    loadingPostSurvey,
+    setLoadingPostSurvey,
+  ] = useState(true);
+
+  /* ========================================
      REWARD
   ======================================== */
 
@@ -331,6 +345,11 @@ export default function RewardPage() {
         "pokipo_certificate_knowledge"
       );
 
+    const savedPostSurvey =
+      localStorage.getItem(
+        "pokipo_post_survey_completed"
+      ) === "true";
+
     setNickname(
       savedNickname
     );
@@ -373,9 +392,12 @@ export default function RewardPage() {
       savedSecret
     );
 
+    setPostSurveyCompleted(
+      savedPostSurvey
+    );
+
     if (
-      savedRank !==
-      null
+      savedRank !== null
     ) {
       const parsedRank =
         Number(
@@ -479,6 +501,92 @@ export default function RewardPage() {
     }
 
     void loadProgress();
+  }, []);
+
+  /* ========================================
+     LOAD POST SURVEY STATUS
+  ======================================== */
+
+  useEffect(() => {
+    const currentParticipantId =
+      getCurrentParticipantId();
+
+    if (
+      !currentParticipantId
+    ) {
+      setLoadingPostSurvey(
+        false
+      );
+
+      return;
+    }
+
+    async function loadPostSurveyStatus() {
+      setLoadingPostSurvey(
+        true
+      );
+
+      try {
+        const {
+          data,
+          error,
+        } =
+          await supabase.rpc(
+            "has_completed_pokipo_post_survey",
+            {
+              p_participant_id:
+                currentParticipantId,
+            }
+          );
+
+        if (
+          error
+        ) {
+          console.error(
+            "参加後アンケート確認エラー:",
+            error
+          );
+
+          return;
+        }
+
+        const completedSurvey =
+          data === true;
+
+        setPostSurveyCompleted(
+          completedSurvey
+        );
+
+        localStorage.setItem(
+          "pokipo_post_survey_completed",
+          completedSurvey
+            ? "true"
+            : "false"
+        );
+      } finally {
+        setLoadingPostSurvey(
+          false
+        );
+      }
+    }
+
+    void loadPostSurveyStatus();
+
+    function handleFocus() {
+      void loadPostSurveyStatus();
+    }
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    return () => {
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+    };
   }, []);
 
   /* ========================================
@@ -596,7 +704,6 @@ export default function RewardPage() {
 
   /* ========================================
      CHECK REWARD STATUS
-     RPCなのでテーブルSELECT不要
   ======================================== */
 
   async function checkRewardStatus(
@@ -645,16 +752,7 @@ export default function RewardPage() {
       ) {
         console.error(
           "特典交換状態取得エラー:",
-          {
-            message:
-              error.message,
-            details:
-              error.details,
-            hint:
-              error.hint,
-            code:
-              error.code,
-          }
+          error
         );
 
         return;
@@ -735,13 +833,6 @@ export default function RewardPage() {
           );
         }
       }
-    } catch (
-      error
-    ) {
-      console.error(
-        "特典交換状態通信エラー:",
-        error
-      );
     } finally {
       if (
         showLoading
@@ -753,20 +844,11 @@ export default function RewardPage() {
     }
   }
 
-  /* ========================================
-     INITIAL REWARD LOAD
-  ======================================== */
-
   useEffect(() => {
     void checkRewardStatus(
       true
     );
   }, []);
-
-  /* ========================================
-     AUTO CHECK
-     スタッフ確定後 約2.5秒以内に反映
-  ======================================== */
 
   useEffect(() => {
     const currentParticipantId =
@@ -855,7 +937,6 @@ export default function RewardPage() {
 
   /* ========================================
      ISSUE REWARD QR
-     RPC版
   ======================================== */
 
   async function issueRewardQr() {
@@ -864,6 +945,16 @@ export default function RewardPage() {
     ) {
       setMessage(
         "5つのスタンプをすべて集めると交換できます。"
+      );
+
+      return;
+    }
+
+    if (
+      !postSurveyCompleted
+    ) {
+      setMessage(
+        "参加後アンケートに回答してから交換用QRを発行してください。"
       );
 
       return;
@@ -924,40 +1015,13 @@ export default function RewardPage() {
         error
       ) {
         console.error(
-          "特典QR発行エラー詳細:",
-          {
-            message:
-              error.message,
-            details:
-              error.details,
-            hint:
-              error.hint,
-            code:
-              error.code,
-          }
+          "特典QR発行エラー:",
+          error
         );
 
-        if (
-          error.message.includes(
-            "has not completed"
-          )
-        ) {
-          setMessage(
-            "5つのスタンプ完走情報を確認できませんでした。スタンプ画面を一度開いてからお試しください。"
-          );
-        } else if (
-          error.message.includes(
-            "participant not found"
-          )
-        ) {
-          setMessage(
-            "参加者情報を確認できませんでした。"
-          );
-        } else {
-          setMessage(
-            `交換用QRを発行できませんでした。${error.message}`
-          );
-        }
+        setMessage(
+          `交換用QRを発行できませんでした。${error.message}`
+        );
 
         return;
       }
@@ -996,19 +1060,6 @@ export default function RewardPage() {
         "pokipo_reward_token",
         issuedToken
       );
-
-      setMessage("");
-    } catch (
-      error
-    ) {
-      console.error(
-        "特典QR発行通信エラー:",
-        error
-      );
-
-      setMessage(
-        "通信中にエラーが発生しました。"
-      );
     } finally {
       setIssuingRewardQr(
         false
@@ -1017,7 +1068,7 @@ export default function RewardPage() {
   }
 
   /* ========================================
-     CERTIFICATE PROFILE
+     CERTIFICATE
   ======================================== */
 
   function toggleProfile(
@@ -1056,8 +1107,6 @@ export default function RewardPage() {
       return;
     }
 
-    setMessage("");
-
     setShowNickname(
       nextNickname
     );
@@ -1071,10 +1120,6 @@ export default function RewardPage() {
     );
   }
 
-  /* ========================================
-     KNOWLEDGE SELECT
-  ======================================== */
-
   function selectKnowledge(
     id: string
   ) {
@@ -1087,10 +1132,6 @@ export default function RewardPage() {
       id
     );
   }
-
-  /* ========================================
-     CERTIFICATE IMAGE
-  ======================================== */
 
   async function createCertificateImage() {
     if (
@@ -1117,25 +1158,12 @@ export default function RewardPage() {
             "#fff8eb",
         }
       );
-    } catch (
-      error
-    ) {
-      console.error(
-        "達成証生成エラー:",
-        error
-      );
-
-      return null;
     } finally {
       setCreatingImage(
         false
       );
     }
   }
-
-  /* ========================================
-     DOWNLOAD
-  ======================================== */
 
   async function downloadCertificate() {
     const dataUrl =
@@ -1144,10 +1172,6 @@ export default function RewardPage() {
     if (
       !dataUrl
     ) {
-      setMessage(
-        "達成証画像を作成できませんでした。"
-      );
-
       return;
     }
 
@@ -1165,10 +1189,6 @@ export default function RewardPage() {
     link.click();
   }
 
-  /* ========================================
-     SHARE
-  ======================================== */
-
   async function shareCertificate() {
     const dataUrl =
       await createCertificateImage();
@@ -1176,62 +1196,45 @@ export default function RewardPage() {
     if (
       !dataUrl
     ) {
-      setMessage(
-        "共有画像を作成できませんでした。"
-      );
-
       return;
     }
 
-    try {
-      const response =
-        await fetch(
-          dataUrl
-        );
-
-      const blob =
-        await response.blob();
-
-      const file =
-        new File(
-          [blob],
-          "POKIPO_certificate.png",
-          {
-            type:
-              "image/png",
-          }
-        );
-
-      if (
-        navigator.share &&
-        navigator.canShare?.({
-          files: [file],
-        })
-      ) {
-        await navigator.share({
-          title:
-            "POKIPO 達成証",
-
-          text:
-            "POKIPOスタンプラリーをコンプリートしました！",
-
-          files: [
-            file,
-          ],
-        });
-
-        return;
-      }
-
-      setMessage(
-        "この端末では直接共有できません。画像を保存してLINE・X・Instagramから投稿してください。"
+    const response =
+      await fetch(
+        dataUrl
       );
-    } catch (
-      error
+
+    const blob =
+      await response.blob();
+
+    const file =
+      new File(
+        [blob],
+        "POKIPO_certificate.png",
+        {
+          type:
+            "image/png",
+        }
+      );
+
+    if (
+      navigator.share &&
+      navigator.canShare?.({
+        files: [file],
+      })
     ) {
-      console.error(
-        "共有エラー:",
-        error
+      await navigator.share({
+        title:
+          "POKIPO 達成証",
+
+        text:
+          "POKIPOスタンプラリーをコンプリートしました！",
+
+        files: [file],
+      });
+    } else {
+      setMessage(
+        "この端末では直接共有できません。画像を保存してSNSから投稿してください。"
       );
     }
   }
@@ -1244,10 +1247,6 @@ export default function RewardPage() {
     <main className="shell">
 
       <section className="rewardPage">
-
-        {/* =================================
-            HEADER
-        ================================= */}
 
         <header className="rewardHeader">
 
@@ -1277,10 +1276,6 @@ export default function RewardPage() {
 
         </header>
 
-        {/* =================================
-            HERO
-        ================================= */}
-
         <section
           className={
             completed
@@ -1308,7 +1303,7 @@ export default function RewardPage() {
           <p>
 
             {completed
-              ? "5つすべてのスタンプを集めました。コンプリート特典をチェックしよう！"
+              ? "5つすべてのスタンプを集めました。"
               : `現在 ${progress}/5。あと${Math.max(
                   0,
                   5 - progress
@@ -1319,111 +1314,7 @@ export default function RewardPage() {
         </section>
 
         {/* =================================
-            SPECIAL
-        ================================= */}
-
-        <section className="rewardSpecialSection">
-
-          <div className="rewardSectionTitle">
-
-            <span>
-              COMPLETE BONUS
-            </span>
-
-            <h2>
-              コンプリート特典
-            </h2>
-
-          </div>
-
-          <article className="rewardSpecialCard rewardSpecial01">
-
-            <div className="rewardSpecialTop">
-
-              <span className="rewardSpecialNumber">
-                SPECIAL 01
-              </span>
-
-              <span className="rewardSpecialMark">
-                ★
-              </span>
-
-            </div>
-
-            <div className="rewardSpecialBody">
-
-              <div className="rewardSpecialIcon">
-                🎁
-              </div>
-
-              <div>
-
-                <h3>
-                  コンプリート特典
-                </h3>
-
-                <p>
-                  5つすべてのスタンプを集めた人限定の
-                  POKIPOコンプリート特典です。
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="rewardSpecialFooter">
-              全5スタンプ達成者限定
-            </div>
-
-          </article>
-
-          <article className="rewardSpecialCard rewardSpecial02">
-
-            <div className="rewardSpecialTop">
-
-              <span className="rewardSpecialNumber">
-                SPECIAL 02
-              </span>
-
-              <span className="rewardSpecialMark">
-                ✦
-              </span>
-
-            </div>
-
-            <div className="rewardSpecialBody">
-
-              <div className="rewardSpecialIcon">
-                🎆
-              </div>
-
-              <div>
-
-                <h3>
-                  雄飛祭サプライズ演出
-                </h3>
-
-                <p>
-                  11/7・8の雄飛祭で、
-                  高安ゼミ LiPostの販売ブースにある
-                  QRコードを読み込むと
-                  POKIPOが変化するかも・・・。
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="rewardSpecialFooter">
-              5スタンプ達成者限定シークレット
-            </div>
-
-          </article>
-
-        </section>
-
-        {/* =================================
-            COMPLETION
+            COMPLETION RECORD
         ================================= */}
 
         {completed && (
@@ -1450,12 +1341,10 @@ export default function RewardPage() {
                 </span>
 
                 <strong>
-
                   {loadingCompletion
                     ? "読み込み中..."
                     : completedAt ||
                       "記録確認中"}
-
                 </strong>
 
               </div>
@@ -1467,14 +1356,12 @@ export default function RewardPage() {
                 </span>
 
                 <strong>
-
                   {loadingCompletion
                     ? "—"
                     : achievementRank !==
                       null
                     ? `${achievementRank}番目`
                     : "—"}
-
                 </strong>
 
               </div>
@@ -1485,26 +1372,106 @@ export default function RewardPage() {
         )}
 
         {/* =================================
+            EXCHANGE DATE
+        ================================= */}
+
+        {completed && (
+          <section className="rewardExchangeDateNotice">
+
+            <span>
+              REWARD EXCHANGE DAY
+            </span>
+
+            <h2>
+              特典交換日は10月27日（火）です
+            </h2>
+
+            <p>
+              当日はこの画面に表示される交換用QRをスタッフに提示してください。
+            </p>
+
+          </section>
+        )}
+
+        {/* =================================
+            POST SURVEY
+        ================================= */}
+
+        {completed &&
+          !rewardExchanged && (
+          <section
+            className={
+              postSurveyCompleted
+                ? "rewardSurveyGate completed"
+                : "rewardSurveyGate"
+            }
+          >
+
+            <span>
+              AFTER SURVEY
+            </span>
+
+            {loadingPostSurvey ? (
+              <>
+
+                <h2>
+                  アンケート回答状況を確認中...
+                </h2>
+
+              </>
+            ) : postSurveyCompleted ? (
+              <>
+
+                <div className="rewardSurveyCheck">
+                  ✓
+                </div>
+
+                <h2>
+                  参加後アンケート回答済み
+                </h2>
+
+                <p>
+                  ご協力ありがとうございます。
+                  特典交換用QRを発行できます。
+                </p>
+
+              </>
+            ) : (
+              <>
+
+                <h2>
+                  特典交換まであと1ステップ！
+                </h2>
+
+                <p>
+                  POKIPO参加前後の変化を確認するため、
+                  参加後アンケートへの回答をお願いします。
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    router.push(
+                      "/survey/after"
+                    )
+                  }
+                >
+                  参加後アンケートに回答する
+                  <strong>
+                    →
+                  </strong>
+                </button>
+
+              </>
+            )}
+
+          </section>
+        )}
+
+        {/* =================================
             REWARD EXCHANGE
         ================================= */}
 
-        <section className="rewardExchangeDateNotice">
-
-         <span>
-        REWARD EXCHANGE DAY
-         </span>
-
-         <h2>
-        特典交換日は10月27日（火）です
-         </h2>
-
-         <p>
-         特典交換は10月27日（火）に実施します。
-         当日はこの画面に表示される交換用QRをスタッフに提示してください。
-         </p>
-
-         </section>
-        
         <section className="rewardExchangeSection">
 
           <div className="rewardSectionTitle">
@@ -1522,20 +1489,12 @@ export default function RewardPage() {
           {loadingRewardStatus ? (
             <div className="rewardExchangeCard">
 
-              <span>
-                REWARD STATUS
-              </span>
-
               <h3>
                 交換情報を確認中...
               </h3>
 
             </div>
           ) : rewardExchanged ? (
-            /* =========================
-               EXCHANGED
-            ========================= */
-
             <div className="rewardExchangeComplete">
 
               <div className="rewardCompleteCheck">
@@ -1550,30 +1509,47 @@ export default function RewardPage() {
                 景品交換完了！
               </h3>
 
-              <p>
-                POKIPOコンプリートおめでとうございます！
-              </p>
-
               {rewardExchangedAt && (
-                <div className="rewardExchangeTime">
-
-                  <span>
-                    EXCHANGED AT
-                  </span>
-
-                  <strong>
-                    {rewardExchangedAt}
-                  </strong>
-
-                </div>
+                <p>
+                  交換日時：
+                  {rewardExchangedAt}
+                </p>
               )}
 
             </div>
-          ) : !rewardQrIssued ? (
-            /* =========================
-               ISSUE
-            ========================= */
+          ) : !completed ? (
+            <div className="rewardExchangeCard">
 
+              <h3>
+                まだ交換できません
+              </h3>
+
+              <p>
+                5つのスタンプを集めると交換できます。
+              </p>
+
+            </div>
+          ) : !postSurveyCompleted ? (
+            <div className="rewardExchangeCard locked">
+
+              <div className="rewardExchangeIcon">
+                🔒
+              </div>
+
+              <span>
+                SURVEY REQUIRED
+              </span>
+
+              <h3>
+                アンケート回答後にQRを発行できます
+              </h3>
+
+              <p>
+                上の「参加後アンケートに回答する」から回答してください。
+              </p>
+
+            </div>
+          ) : !rewardQrIssued ? (
             <div className="rewardExchangeCard">
 
               <div className="rewardExchangeIcon">
@@ -1585,128 +1561,69 @@ export default function RewardPage() {
               </span>
 
               <h3>
-
-                {completed
-                  ? "交換用QRを発行しよう"
-                  : "まだ交換できません"}
-
+                交換用QRを発行しよう
               </h3>
 
               <p>
-
-                {completed
-                  ? "景品交換前に学籍番号を数字8桁で入力してください。"
-                  : "5つのスタンプを集めると景品交換できます。"}
-
+                学籍番号を数字8桁で入力してください。
               </p>
 
-              {completed && (
-                <>
+              <div className="rewardStudentNumberField">
 
-                  <div className="rewardStudentNumberField">
+                <label htmlFor="studentNumber">
+                  学籍番号
+                </label>
 
-                    <label htmlFor="studentNumber">
-                      学籍番号
-                    </label>
-
-                    <input
-                      id="studentNumber"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="off"
-                      maxLength={8}
-                      value={
-                        studentNumber
-                      }
-                      onChange={(
-                        event
-                      ) =>
-                        changeStudentNumber(
-                          event.target.value
-                        )
-                      }
-                      placeholder="数字8桁"
-                      disabled={
-                        issuingRewardQr
-                      }
-                    />
-
-                    <div className="rewardStudentNumberCount">
-
-                      <span>
-                        数字8桁で入力してください
-                      </span>
-
-                      <strong
-                        className={
-                          studentNumber.length ===
-                          8
-                            ? "complete"
-                            : ""
-                        }
-                      >
-                        {studentNumber.length}/8
-                      </strong>
-
-                    </div>
-
-                  </div>
-
-                  <button
-                    type="button"
-                    className="rewardExchangeButton"
-                    onClick={
-                      issueRewardQr
-                    }
-                    disabled={
-                      issuingRewardQr ||
-                      studentNumber.length !==
-                        8
-                    }
-                  >
-
-                    {issuingRewardQr
-                      ? "QRを発行中..."
-                      : "交換用QRを発行する"}
-
-                  </button>
-
-                  <p className="rewardQrIssueNotice">
-                    ※ QR発行後は学籍番号を変更できません。
-                    入力内容を確認してから発行してください。
-                  </p>
-
-                </>
-              )}
-
-            </div>
-          ) : (
-            /* =========================
-               QR
-            ========================= */
-
-            <div className="rewardExchangeCard rewardQrCard">
-
-              <div className="rewardQrStatus">
-
-                <span className="rewardQrStatusDot" />
-
-                READY TO EXCHANGE
+                <input
+                  id="studentNumber"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={8}
+                  value={
+                    studentNumber
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    changeStudentNumber(
+                      event.target.value
+                    )
+                  }
+                  placeholder="数字8桁"
+                />
 
               </div>
 
-              <span>
-                REWARD QR
-              </span>
+              <button
+                type="button"
+                className="rewardExchangeButton"
+                onClick={
+                  issueRewardQr
+                }
+                disabled={
+                  issuingRewardQr ||
+                  studentNumber.length !==
+                    8
+                }
+              >
+
+                {issuingRewardQr
+                  ? "QRを発行中..."
+                  : "交換用QRを発行する"}
+
+              </button>
+
+            </div>
+          ) : (
+            <div className="rewardExchangeCard rewardQrCard">
+
+              <div className="rewardQrStatus">
+                READY TO EXCHANGE
+              </div>
 
               <h3>
                 スタッフにQRを見せてください
               </h3>
-
-              <p>
-                景品交換時にスタッフが
-                このQRコードを読み取ります。
-              </p>
 
               <div className="rewardQrBox">
 
@@ -1734,47 +1651,6 @@ export default function RewardPage() {
 
               </div>
 
-              <div className="rewardQrInstruction">
-
-                <span>
-                  1
-                </span>
-
-                <p>
-                  この画面をスタッフに提示
-                </p>
-
-              </div>
-
-              <div className="rewardQrInstruction">
-
-                <span>
-                  2
-                </span>
-
-                <p>
-                  スタッフがQRを読み取り
-                </p>
-
-              </div>
-
-              <div className="rewardQrInstruction">
-
-                <span>
-                  3
-                </span>
-
-                <p>
-                  スタッフが交換処理を確定
-                </p>
-
-              </div>
-
-              <p className="rewardQrWaitingText">
-                スタッフが交換を確定すると、
-                この画面は自動で景品交換完了に切り替わります。
-              </p>
-
             </div>
           )}
 
@@ -1799,20 +1675,9 @@ export default function RewardPage() {
 
             </div>
 
-            <p className="certificateGuide">
-              達成時間・達成順位は必ず表示されます。
-              ニックネーム・学年・学科から最低1つ選んでください。
-            </p>
-
-            {/* PROFILE SETTINGS */}
-
             <div className="certificateSettingCard">
 
               <div className="certificateSettingTitle">
-
-                <span>
-                  PARTICIPANT
-                </span>
 
                 <strong>
                   掲載する達成者情報
@@ -1874,15 +1739,9 @@ export default function RewardPage() {
 
             </div>
 
-            {/* KNOWLEDGE SETTINGS */}
-
             <div className="certificateSettingCard">
 
               <div className="certificateSettingTitle">
-
-                <span>
-                  FAVORITE KNOWLEDGE
-                </span>
 
                 <strong>
                   一番「へぇ！」となった豆知識
@@ -1930,8 +1789,6 @@ export default function RewardPage() {
 
             </div>
 
-            {/* CERTIFICATE */}
-
             <div
               ref={
                 certificateRef
@@ -1953,29 +1810,6 @@ export default function RewardPage() {
                   COMPLETION CERTIFICATE
                 </strong>
 
-                <p>
-                  スタンプラリー達成証
-                </p>
-
-              </div>
-
-              <div className="certificatePockyVisual">
-
-                <div className="certificatePocky certificatePockyLeft">
-                  <div className="certificatePockyCoating" />
-                  <div className="certificatePockyBiscuit" />
-                </div>
-
-                <div className="certificatePocky certificatePockyCenter">
-                  <div className="certificatePockyCoating" />
-                  <div className="certificatePockyBiscuit" />
-                </div>
-
-                <div className="certificatePocky certificatePockyRight">
-                  <div className="certificatePockyCoating" />
-                  <div className="certificatePockyBiscuit" />
-                </div>
-
               </div>
 
               <div className="certificateStats">
@@ -1987,8 +1821,7 @@ export default function RewardPage() {
                   </span>
 
                   <strong>
-                    {completedAt ||
-                      "----/--/-- --:--"}
+                    {completedAt}
                   </strong>
 
                 </div>
@@ -1999,22 +1832,11 @@ export default function RewardPage() {
                     RANK
                   </span>
 
-                  <div className="certificateRankNumber">
-
-                    <strong>
-
-                      {achievementRank !==
-                      null
-                        ? achievementRank
-                        : "—"}
-
-                    </strong>
-
-                    <span>
-                      番目
-                    </span>
-
-                  </div>
+                  <strong>
+                    {achievementRank ??
+                      "—"}
+                    番目
+                  </strong>
 
                 </div>
 
@@ -2024,46 +1846,22 @@ export default function RewardPage() {
 
                 {showNickname && (
                   <div className="certificateProfileItem">
-
-                    <span>
-                      NICKNAME
-                    </span>
-
-                    <strong>
-                      {nickname ||
-                        "未設定"}
-                    </strong>
-
+                    <span>NICKNAME</span>
+                    <strong>{nickname}</strong>
                   </div>
                 )}
 
                 {showGrade && (
                   <div className="certificateProfileItem">
-
-                    <span>
-                      GRADE
-                    </span>
-
-                    <strong>
-                      {grade ||
-                        "未設定"}
-                    </strong>
-
+                    <span>GRADE</span>
+                    <strong>{grade}</strong>
                   </div>
                 )}
 
                 {showDepartment && (
                   <div className="certificateProfileItem">
-
-                    <span>
-                      DEPARTMENT
-                    </span>
-
-                    <strong>
-                      {department ||
-                        "未設定"}
-                    </strong>
-
+                    <span>DEPARTMENT</span>
+                    <strong>{department}</strong>
                   </div>
                 )}
 
@@ -2102,9 +1900,6 @@ export default function RewardPage() {
                 onClick={
                   downloadCertificate
                 }
-                disabled={
-                  creatingImage
-                }
               >
                 達成証を保存
               </button>
@@ -2115,9 +1910,6 @@ export default function RewardPage() {
                 onClick={
                   shareCertificate
                 }
-                disabled={
-                  creatingImage
-                }
               >
                 SNSで共有
               </button>
@@ -2126,10 +1918,6 @@ export default function RewardPage() {
 
           </section>
         )}
-
-        {/* =================================
-            SECRET
-        ================================= */}
 
         {secretStamp && (
           <section className="rewardSecretUnlocked">
@@ -2142,38 +1930,14 @@ export default function RewardPage() {
               🎆 雄飛祭モード解放済み
             </h2>
 
-            <p>
-              ポッキーの着せ替えや
-              雄飛祭限定フォトフレームを楽しめます。
-            </p>
-
-            <button
-              type="button"
-              onClick={() =>
-                router.push(
-                  "/yuhisai"
-                )
-              }
-            >
-              雄飛祭モードへ →
-            </button>
-
           </section>
         )}
-
-        {/* =================================
-            MESSAGE
-        ================================= */}
 
         {message && (
           <p className="rewardMessage">
             {message}
           </p>
         )}
-
-        {/* =================================
-            HOME
-        ================================= */}
 
         <button
           type="button"

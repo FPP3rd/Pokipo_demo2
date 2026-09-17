@@ -6,7 +6,9 @@ import {
   useState,
 } from "react";
 
-import { useRouter } from "next/navigation";
+import {
+  useRouter,
+} from "next/navigation";
 
 import {
   supabase,
@@ -36,33 +38,105 @@ export default function StartPage() {
     setMessage,
   ] = useState("");
 
-  /* ========================================
-     登録処理中
-  ======================================== */
-
   const [
     submitting,
     setSubmitting,
   ] = useState(false);
 
+  const [
+    checkingRegistration,
+    setCheckingRegistration,
+  ] = useState(true);
+
   /* ========================================
-     登録済みならホームへ
+     既存参加者チェック
   ======================================== */
 
   useEffect(() => {
-    const savedNickname =
-      localStorage.getItem(
-        "pokipo_nickname"
-      );
+    async function checkExistingParticipant() {
+      const savedParticipantId =
+        localStorage.getItem(
+          "pokipo_participant_id"
+        ) ??
+        localStorage.getItem(
+          "pokipo_user_id"
+        );
 
-    if (
-      savedNickname
-    ) {
+      const savedNickname =
+        localStorage.getItem(
+          "pokipo_nickname"
+        );
+
+      /* --------------------------------
+         未登録
+      -------------------------------- */
+
+      if (
+        !savedParticipantId ||
+        !savedNickname
+      ) {
+        setCheckingRegistration(
+          false
+        );
+
+        return;
+      }
+
+      /* --------------------------------
+         参加前アンケート確認
+      -------------------------------- */
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "has_completed_pokipo_pre_survey",
+          {
+            p_participant_id:
+              savedParticipantId,
+          }
+        );
+
+      if (
+        error
+      ) {
+        console.error(
+          "参加前アンケート確認エラー:",
+          error
+        );
+
+        /*
+          通信エラー時は
+          初期登録をやり直させない
+        */
+
+        router.replace(
+          "/survey/before"
+        );
+
+        return;
+      }
+
+      if (
+        data === true
+      ) {
+        router.replace(
+          "/home"
+        );
+
+        return;
+      }
+
       router.replace(
-        "/home"
+        "/survey/before"
       );
     }
-  }, [router]);
+
+    void checkExistingParticipant();
+  }, [
+    router,
+  ]);
 
   /* ========================================
      初回登録
@@ -73,20 +147,12 @@ export default function StartPage() {
   ) {
     e.preventDefault();
 
-    /* 二重送信防止 */
-
-    if (
-      submitting
-    ) {
-      return;
-    }
-
     const name =
       nickname.trim();
 
-    /* =================================
-       ニックネーム確認
-    ================================= */
+    /* --------------------------------
+       VALIDATION
+    -------------------------------- */
 
     if (
       name.length < 2 ||
@@ -99,21 +165,15 @@ export default function StartPage() {
       return;
     }
 
-    /* =================================
-       学年確認
-    ================================= */
-
-    if (!grade) {
+    if (
+      !grade
+    ) {
       setMessage(
         "学年を選択してください。"
       );
 
       return;
     }
-
-    /* =================================
-       学科確認
-    ================================= */
 
     if (
       !department
@@ -125,29 +185,22 @@ export default function StartPage() {
       return;
     }
 
-    setMessage("");
-
     setSubmitting(
       true
     );
 
-    /* =================================
-       参加者IDを発行
-
-       将来、
-       ・特典交換QR
-       ・スタッフ確認
-       ・スタンプ同期
-
-       に利用する
-    ================================= */
-
-    const participantId =
-      crypto.randomUUID();
+    setMessage("");
 
     try {
       /* =================================
-         SUPABASEへ参加者登録
+         PARTICIPANT ID
+      ================================= */
+
+      const participantId =
+        crypto.randomUUID();
+
+      /* =================================
+         SUPABASE
       ================================= */
 
       const {
@@ -164,23 +217,29 @@ export default function StartPage() {
             nickname:
               name,
 
-            grade:
-              grade,
+            grade,
 
-            department:
-              department,
+            department,
           });
-
-      /* =================================
-         登録失敗
-      ================================= */
 
       if (
         error
       ) {
         console.error(
-          "Supabase参加者登録エラー:",
-          error
+          "参加者登録エラー:",
+          {
+            message:
+              error.message,
+
+            details:
+              error.details,
+
+            hint:
+              error.hint,
+
+            code:
+              error.code,
+          }
         );
 
         setMessage(
@@ -191,9 +250,23 @@ export default function StartPage() {
       }
 
       /* =================================
-         Supabase登録成功後に
-         localStorageへ保存
+         LOCAL STORAGE
       ================================= */
+
+      localStorage.setItem(
+        "pokipo_participant_id",
+        participantId
+      );
+
+      /*
+        既存ページとの互換性のため
+        user_idにも同じIDを保存
+      */
+
+      localStorage.setItem(
+        "pokipo_user_id",
+        participantId
+      );
 
       localStorage.setItem(
         "pokipo_nickname",
@@ -211,25 +284,6 @@ export default function StartPage() {
       );
 
       /* =================================
-         参加者ID
-      ================================= */
-
-      localStorage.setItem(
-        "pokipo_participant_id",
-        participantId
-      );
-
-      /*
-        以前のコードとの互換性のため
-        pokipo_user_idにも同じIDを保存
-      */
-
-      localStorage.setItem(
-        "pokipo_user_id",
-        participantId
-      );
-
-      /* =================================
          スタンプ初期化
       ================================= */
 
@@ -238,8 +292,13 @@ export default function StartPage() {
         JSON.stringify([])
       );
 
+      localStorage.setItem(
+        "pokipo_progress",
+        "0"
+      );
+
       /* =================================
-         豆知識初期化
+         KNOWLEDGE
       ================================= */
 
       localStorage.setItem(
@@ -248,16 +307,7 @@ export default function StartPage() {
       );
 
       /* =================================
-         ポッキー進捗
-      ================================= */
-
-      localStorage.setItem(
-        "pokipo_progress",
-        "0"
-      );
-
-      /* =================================
-         コンプリート状態
+         COMPLETE
       ================================= */
 
       localStorage.setItem(
@@ -265,8 +315,16 @@ export default function StartPage() {
         "false"
       );
 
+      localStorage.removeItem(
+        "pokipo_completed_at"
+      );
+
+      localStorage.removeItem(
+        "pokipo_achievement_rank"
+      );
+
       /* =================================
-         特典交換状態
+         REWARD
       ================================= */
 
       localStorage.setItem(
@@ -274,18 +332,42 @@ export default function StartPage() {
         "false"
       );
 
+      localStorage.removeItem(
+        "pokipo_reward_exchanged_at"
+      );
+
+      localStorage.removeItem(
+        "pokipo_reward_student_number"
+      );
+
+      localStorage.removeItem(
+        "pokipo_reward_token"
+      );
+
       /* =================================
-         ホームへ
+         SURVEY
+      ================================= */
+
+      localStorage.removeItem(
+        "pokipo_pre_survey_completed"
+      );
+
+      localStorage.removeItem(
+        "pokipo_post_survey_completed"
+      );
+
+      /* =================================
+         NEXT
       ================================= */
 
       router.push(
-        "/home"
+        "/survey/before"
       );
     } catch (
       error
     ) {
       console.error(
-        "参加者登録エラー:",
+        "参加者登録通信エラー:",
         error
       );
 
@@ -300,6 +382,36 @@ export default function StartPage() {
   }
 
   /* ========================================
+     CHECKING
+  ======================================== */
+
+  if (
+    checkingRegistration
+  ) {
+    return (
+      <main className="shell">
+
+        <section className="card startPage">
+
+          <div
+            style={{
+              padding:
+                "40px 20px",
+
+              textAlign:
+                "center",
+            }}
+          >
+            参加情報を確認中...
+          </div>
+
+        </section>
+
+      </main>
+    );
+  }
+
+  /* ========================================
      VIEW
   ======================================== */
 
@@ -308,9 +420,9 @@ export default function StartPage() {
 
       <section className="card startPage">
 
-        {/* =========================
+        {/* =================================
             HERO
-        ========================== */}
+        ================================= */}
 
         <header className="startHero">
 
@@ -328,41 +440,30 @@ export default function StartPage() {
             ポッキーを完成させよう。
           </p>
 
-          {/* ポッキービジュアル */}
-
           <div className="startVisual">
 
             <div className="startPocky pockyOne">
-
               <div className="startChocolate" />
-
               <div className="startBiscuit" />
-
             </div>
 
             <div className="startPocky pockyTwo">
-
               <div className="startChocolate" />
-
               <div className="startBiscuit" />
-
             </div>
 
             <div className="startPocky pockyThree">
-
               <div className="startChocolate" />
-
               <div className="startBiscuit" />
-
             </div>
 
           </div>
 
         </header>
 
-        {/* =========================
-            スタンプラリー説明
-        ========================== */}
+        {/* =================================
+            INTRO
+        ================================= */}
 
         <section className="startIntro">
 
@@ -381,16 +482,17 @@ export default function StartPage() {
             </h2>
 
             <span>
-              学内に散りばめられたQRコードを読み取って、スタンプと豆知識を集めよう。
+              学内に散りばめられたQRコードを読み取って、
+              スタンプと豆知識を集めよう。
             </span>
 
           </div>
 
         </section>
 
-        {/* =========================
-            プロフィール登録
-        ========================== */}
+        {/* =================================
+            FORM
+        ================================= */}
 
         <form
           className="startForm"
@@ -411,9 +513,7 @@ export default function StartPage() {
 
           </div>
 
-          {/* =========================
-              ニックネーム
-          ========================== */}
+          {/* NICKNAME */}
 
           <div className="field">
 
@@ -445,9 +545,7 @@ export default function StartPage() {
 
           </div>
 
-          {/* =========================
-              学年
-          ========================== */}
+          {/* GRADE */}
 
           <div className="field">
 
@@ -500,9 +598,7 @@ export default function StartPage() {
 
           </div>
 
-          {/* =========================
-              学科
-          ========================== */}
+          {/* DEPARTMENT */}
 
           <div className="field">
 
@@ -595,9 +691,22 @@ export default function StartPage() {
 
           </div>
 
-          {/* =========================
-              エラー
-          ========================== */}
+          {/* NEXT INFO */}
+
+          <div className="startSurveyNotice">
+
+            <strong>
+              登録後、参加前アンケートがあります
+            </strong>
+
+            <p>
+              POKIPO体験による変化を確認するため、
+              簡単なアンケートへの回答をお願いします。
+            </p>
+
+          </div>
+
+          {/* ERROR */}
 
           {message && (
             <p className="error">
@@ -605,9 +714,7 @@ export default function StartPage() {
             </p>
           )}
 
-          {/* =========================
-              データ注意事項
-          ========================== */}
+          {/* DATA WARNING */}
 
           <section className="dataWarning">
 
@@ -618,15 +725,13 @@ export default function StartPage() {
               </strong>
 
               <p>
-                スタンプや豆知識などの進捗は、この端末のブラウザに保存されます。
+                スタンプや豆知識などの進捗は、
+                この端末のブラウザにも保存されます。
               </p>
 
               <p>
-                イベント終了まで、Cookie・サイトデータ・閲覧データを削除しないでください。
-              </p>
-
-              <p>
-                削除すると、集めたスタンプや進捗が消える場合があります。
+                イベント終了まで、
+                Cookie・サイトデータ・閲覧データを削除しないでください。
               </p>
 
               <p className="dataWarningImportant">
@@ -637,9 +742,7 @@ export default function StartPage() {
 
           </section>
 
-          {/* =========================
-              START BUTTON
-          ========================== */}
+          {/* SUBMIT */}
 
           <button
             type="submit"
@@ -650,28 +753,24 @@ export default function StartPage() {
           >
 
             <span>
+
               {submitting
                 ? "登録中..."
-                : "POKIPOをはじめる"}
+                : "次へ進む"}
+
             </span>
 
             <span>
-              {submitting
-                ? "…"
-                : "→"}
+              →
             </span>
 
           </button>
 
         </form>
 
-        {/* =========================
-            FOOTER
-        ========================== */}
-
         <p className="startFooter">
           登録した情報は、
-          POKIPOの進捗管理に使用します。
+          POKIPOの運営・進捗管理・企画分析に使用します。
         </p>
 
       </section>

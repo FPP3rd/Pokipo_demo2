@@ -92,10 +92,6 @@ export default function StaffPage() {
 
     void checkAuth();
 
-    /* ========================================
-       AUTH CHANGE
-    ======================================== */
-
     const {
       data:
         authListener,
@@ -378,6 +374,46 @@ export default function StaffPage() {
 
               <p>
                 参加者ホームのお知らせを投稿・編集
+              </p>
+
+            </div>
+
+            <strong>
+              →
+            </strong>
+
+          </button>
+
+          {/* =================================
+              SURVEY ANALYTICS
+          ================================= */}
+
+          <button
+            type="button"
+            className="staffPortalCard"
+            onClick={() =>
+              router.push(
+                "/staff/surveys"
+              )
+            }
+          >
+
+            <div className="staffPortalIcon">
+              DATA
+            </div>
+
+            <div>
+
+              <span>
+                SURVEY ANALYTICS
+              </span>
+
+              <h2>
+                アンケート分析
+              </h2>
+
+              <p>
+                POKIPO参加前後の回答変化を分析
               </p>
 
             </div>
