@@ -24,53 +24,28 @@ import {
 
 type RewardExchange = {
   id: string;
-
   participant_id: string;
-
   student_number: string;
-
   exchange_token: string;
-
   status: string;
-
   created_at: string;
-
-  exchanged_at:
-    | string
-    | null;
-
-  exchanged_by:
-    | string
-    | null;
+  exchanged_at: string | null;
+  exchanged_by: string | null;
 };
 
 type Participant = {
   id: string;
-
   nickname: string;
-
-  grade:
-    | string
-    | null;
-
-  department:
-    | string
-    | null;
-
+  grade: string | null;
+  department: string | null;
   created_at: string;
 };
 
 type DuplicateExchange = {
   id: string;
-
   student_number: string;
-
   status: string;
-
-  exchanged_at:
-    | string
-    | null;
-
+  exchanged_at: string | null;
   created_at: string;
 };
 
@@ -83,12 +58,12 @@ export default function StaffRewardPage() {
     useRouter();
 
   /* ========================================
-     AUTH
+     LOGIN
   ======================================== */
 
   const [
-    email,
-    setEmail,
+    adminId,
+    setAdminId,
   ] = useState("");
 
   const [
@@ -172,7 +147,7 @@ export default function StaffRewardPage() {
   ] = useState("");
 
   /* ========================================
-     DUPLICATE CHECK
+     DUPLICATE
   ======================================== */
 
   const [
@@ -210,7 +185,7 @@ export default function StaffRewardPage() {
           error
         ) {
           console.error(
-            "スタッフ認証確認エラー:",
+            "管理者認証確認エラー:",
             error
           );
 
@@ -262,19 +237,24 @@ export default function StaffRewardPage() {
   ======================================== */
 
   async function loginStaff() {
-    const normalizedEmail =
-      email.trim();
+    const normalizedAdminId =
+      adminId
+        .trim()
+        .toLowerCase();
 
     if (
-      !normalizedEmail ||
+      !normalizedAdminId ||
       !password
     ) {
       setMessage(
-        "メールアドレスとパスワードを入力してください。"
+        "管理IDとパスワードを入力してください。"
       );
 
       return;
     }
+
+    const loginEmail =
+      `${normalizedAdminId}@pokipo.staff`;
 
     setLoginLoading(
       true
@@ -288,7 +268,7 @@ export default function StaffRewardPage() {
       } =
         await supabase.auth.signInWithPassword({
           email:
-            normalizedEmail,
+            loginEmail,
 
           password,
         });
@@ -297,12 +277,12 @@ export default function StaffRewardPage() {
         error
       ) {
         console.error(
-          "スタッフログインエラー:",
+          "管理者ログインエラー:",
           error
         );
 
         setMessage(
-          "ログインできませんでした。メールアドレスとパスワードを確認してください。"
+          "管理IDまたはパスワードが正しくありません。"
         );
 
         return;
@@ -321,7 +301,7 @@ export default function StaffRewardPage() {
       error
     ) {
       console.error(
-        "スタッフログイン通信エラー:",
+        "管理者ログイン通信エラー:",
         error
       );
 
@@ -464,17 +444,14 @@ export default function StaffRewardPage() {
           },
 
           () => {
-            /*
-              読み取り途中のエラーは
-              表示しない
-            */
+            // 読み取り途中エラーは無視
           }
         );
       } catch (
         error
       ) {
         console.error(
-          "スタッフQRカメラエラー:",
+          "管理者QRカメラエラー:",
           error
         );
 
@@ -577,7 +554,7 @@ export default function StaffRewardPage() {
       error
     ) {
       console.error(
-        "スタッフQR停止エラー:",
+        "管理者QR停止エラー:",
         error
       );
     } finally {
@@ -650,7 +627,7 @@ export default function StaffRewardPage() {
         );
 
         setMessage(
-          "同一学籍番号の過去交換履歴を確認できませんでした。交換前に管理者へ確認してください。"
+          "同じ学籍番号の過去交換履歴を確認できませんでした。"
         );
 
         return;
@@ -731,14 +708,9 @@ export default function StaffRewardPage() {
     setMessage("");
 
     try {
-      /* =================================
-         REWARD
-      ================================= */
-
       const {
         data:
           rewardData,
-
         error:
           rewardError,
       } =
@@ -771,14 +743,9 @@ export default function StaffRewardPage() {
         return;
       }
 
-      /* =================================
-         PARTICIPANT
-      ================================= */
-
       const {
         data:
           participantData,
-
         error:
           participantError,
       } =
@@ -819,10 +786,6 @@ export default function StaffRewardPage() {
         participantData as Participant
       );
 
-      /* =================================
-         DUPLICATE CHECK
-      ================================= */
-
       await loadDuplicateExchangeHistory(
         rewardData.student_number,
         rewardData.id
@@ -846,7 +809,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     CONFIRM BUTTON
+     CONFIRM
   ======================================== */
 
   function confirmExchange() {
@@ -872,7 +835,7 @@ export default function StaffRewardPage() {
       checkingDuplicate
     ) {
       setMessage(
-        "過去の交換履歴を確認中です。少し待ってから再度お試しください。"
+        "過去の交換履歴を確認中です。"
       );
 
       return;
@@ -893,7 +856,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     ACTUAL EXCHANGE
+     EXCHANGE
   ======================================== */
 
   async function performExchange() {
@@ -928,7 +891,7 @@ export default function StaffRewardPage() {
       } =
         await supabase.auth.getUser();
 
-      const staffId =
+      const adminUserId =
         userData.user?.id ??
         null;
 
@@ -938,7 +901,6 @@ export default function StaffRewardPage() {
       const {
         data:
           updatedData,
-
         error,
       } =
         await supabase
@@ -953,7 +915,7 @@ export default function StaffRewardPage() {
               exchangedAt,
 
             exchanged_by:
-              staffId,
+              adminUserId,
           })
           .eq(
             "id",
@@ -981,10 +943,6 @@ export default function StaffRewardPage() {
 
         return;
       }
-
-      /* =================================
-         同時操作対策
-      ================================= */
 
       if (
         !updatedData ||
@@ -1015,7 +973,7 @@ export default function StaffRewardPage() {
           exchangedAt,
 
         exchanged_by:
-          staffId,
+          adminUserId,
       });
 
       setShowDuplicateWarning(
@@ -1027,7 +985,7 @@ export default function StaffRewardPage() {
         0
       ) {
         setMessage(
-          `${participant.nickname}さんの景品交換を記録しました。同一学籍番号の過去交換履歴がある状態で交換されています。`
+          `${participant.nickname}さんの景品交換を記録しました。同一学籍番号の過去交換履歴があります。`
         );
       } else {
         setMessage(
@@ -1083,13 +1041,11 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     DATE
+     DATE FORMAT
   ======================================== */
 
   function formatExchangeDate(
-    value:
-      | string
-      | null
+    value: string | null
   ) {
     if (
       !value
@@ -1136,7 +1092,7 @@ export default function StaffRewardPage() {
         <section className="staffRewardPage">
 
           <div className="staffLoadingCard">
-            スタッフ情報を確認中...
+            管理者情報を確認中...
           </div>
 
         </section>
@@ -1146,7 +1102,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     LOGIN
+     LOGIN VIEW
   ======================================== */
 
   if (
@@ -1164,35 +1120,38 @@ export default function StaffRewardPage() {
             </span>
 
             <h1>
-              スタッフログイン
+              管理者ログイン
             </h1>
 
             <p>
-              POKIPO運営スタッフ専用ページです。
-              ログイン後、スタッフメニューへ移動します。
+              POKIPO運営管理者専用ページです。
             </p>
 
             <div className="staffLoginField">
 
-              <label htmlFor="staffEmail">
-                メールアドレス
+              <label htmlFor="adminId">
+                管理ID
               </label>
 
               <input
-                id="staffEmail"
-                type="email"
+                id="adminId"
+                type="text"
                 value={
-                  email
+                  adminId
                 }
                 onChange={(
                   event
                 ) =>
-                  setEmail(
+                  setAdminId(
                     event.target.value
                   )
                 }
                 autoComplete="username"
-                placeholder="staff@example.com"
+                autoCapitalize="none"
+                spellCheck={
+                  false
+                }
+                placeholder="管理IDを入力"
               />
 
             </div>
@@ -1217,6 +1176,7 @@ export default function StaffRewardPage() {
                   )
                 }
                 autoComplete="current-password"
+                placeholder="パスワードを入力"
                 onKeyDown={(
                   event
                 ) => {
@@ -1244,7 +1204,7 @@ export default function StaffRewardPage() {
 
               {loginLoading
                 ? "ログイン中..."
-                : "スタッフログイン"}
+                : "管理者ログイン"}
 
             </button>
 
@@ -1263,7 +1223,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     VIEW
+     MAIN VIEW
   ======================================== */
 
   return (
@@ -1271,9 +1231,7 @@ export default function StaffRewardPage() {
 
       <section className="staffRewardPage">
 
-        {/* =================================
-            HEADER
-        ================================= */}
+        {/* HEADER */}
 
         <header className="staffRewardHeader">
 
@@ -1315,9 +1273,7 @@ export default function StaffRewardPage() {
 
         </header>
 
-        {/* =================================
-            NAV
-        ================================= */}
+        {/* QUICK NAV */}
 
         <section className="staffRewardQuickNav">
 
@@ -1361,9 +1317,7 @@ export default function StaffRewardPage() {
 
         </section>
 
-        {/* =================================
-            SCANNER
-        ================================= */}
+        {/* QR SCANNER */}
 
         {!reward &&
           !participant && (
@@ -1423,6 +1377,12 @@ export default function StaffRewardPage() {
                 </p>
               )}
 
+              {message && (
+                <p className="staffError">
+                  {message}
+                </p>
+              )}
+
               {loadingReward && (
                 <p className="staffLoadingText">
                   QR情報を確認中...
@@ -1432,9 +1392,7 @@ export default function StaffRewardPage() {
             </section>
           )}
 
-        {/* =================================
-            PARTICIPANT
-        ================================= */}
+        {/* PARTICIPANT */}
 
         {reward &&
           participant && (
@@ -1448,12 +1406,10 @@ export default function StaffRewardPage() {
                     : "staffExchangeStatus ready"
                 }
               >
-
                 {reward.status ===
                 "exchanged"
                   ? "交換済み"
                   : "交換可能"}
-
               </div>
 
               <span className="staffParticipantEyebrow">
@@ -1466,8 +1422,6 @@ export default function StaffRewardPage() {
                   さん
                 </small>
               </h2>
-
-              {/* INFORMATION */}
 
               <div className="staffParticipantInfo">
 
@@ -1511,15 +1465,11 @@ export default function StaffRewardPage() {
 
               </div>
 
-              {/* DUPLICATE CHECK LOADING */}
-
               {checkingDuplicate && (
                 <div className="staffDuplicateChecking">
                   同じ学籍番号の過去交換履歴を確認中...
                 </div>
               )}
-
-              {/* DUPLICATE ALERT */}
 
               {!checkingDuplicate &&
                 duplicateExchanges.length >
@@ -1539,7 +1489,7 @@ export default function StaffRewardPage() {
                       <strong>
                         {reward.student_number}
                       </strong>
-                      は、過去にも景品交換が行われています。
+                      は過去にも景品交換されています。
                     </p>
 
                     <div className="staffDuplicateHistory">
@@ -1573,14 +1523,11 @@ export default function StaffRewardPage() {
                     </div>
 
                     <p className="staffDuplicateAlertImportant">
-                      誤って2回目の景品を渡さないよう、
-                      本人確認を行ってください。
+                      本人確認を行ってから交換してください。
                     </p>
 
                   </section>
                 )}
-
-              {/* EXCHANGED */}
 
               {reward.status ===
               "exchanged" ? (
@@ -1620,7 +1567,6 @@ export default function StaffRewardPage() {
                     0 && (
                     <p className="staffExchangeDuplicateNotice">
                       ⚠ 同じ学籍番号の過去交換履歴があります。
-                      確定時にもう一度確認画面が表示されます。
                     </p>
                   )}
 
@@ -1634,7 +1580,6 @@ export default function StaffRewardPage() {
                       checkingDuplicate
                     }
                   >
-
                     {confirming
                       ? "交換を記録中..."
                       : checkingDuplicate
@@ -1643,13 +1588,10 @@ export default function StaffRewardPage() {
                         0
                       ? "警告を確認して交換へ進む"
                       : "景品交換を確定する"}
-
                   </button>
 
                 </div>
               )}
-
-              {/* NEXT */}
 
               <button
                 type="button"
@@ -1661,12 +1603,16 @@ export default function StaffRewardPage() {
                 次のQRを読み取る
               </button>
 
+              {message && (
+                <p className="staffMessage">
+                  {message}
+                </p>
+              )}
+
             </section>
           )}
 
-        {/* =================================
-            DUPLICATE CONFIRM MODAL
-        ================================= */}
+        {/* DUPLICATE MODAL */}
 
         {showDuplicateWarning &&
           reward &&
@@ -1675,7 +1621,6 @@ export default function StaffRewardPage() {
               className="staffDuplicateModal"
               role="dialog"
               aria-modal="true"
-              aria-label="重複交換警告"
             >
 
               <div className="staffDuplicateModalCard">
@@ -1693,8 +1638,7 @@ export default function StaffRewardPage() {
                 </h2>
 
                 <p>
-                  この学籍番号では、
-                  過去に
+                  この学籍番号では過去に
                   <strong>
                     {" "}
                     {duplicateExchanges.length}
@@ -1748,7 +1692,7 @@ export default function StaffRewardPage() {
 
                 <p className="staffDuplicateModalWarning">
                   本人確認を行い、
-                  例外的にもう一度景品を渡してよいと判断した場合のみ
+                  例外的にもう一度景品を渡す場合のみ
                   「確認して交換する」を押してください。
                 </p>
 
@@ -1783,11 +1727,9 @@ export default function StaffRewardPage() {
                       void performExchange();
                     }}
                   >
-
                     {confirming
                       ? "交換処理中..."
                       : "確認して交換する"}
-
                   </button>
 
                 </div>
@@ -1796,16 +1738,6 @@ export default function StaffRewardPage() {
 
             </div>
           )}
-
-        {/* =================================
-            MESSAGE
-        ================================= */}
-
-        {message && (
-          <p className="staffMessage">
-            {message}
-          </p>
-        )}
 
       </section>
 
