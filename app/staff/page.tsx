@@ -13,6 +13,20 @@ import {
   supabase,
 } from "../../lib/supabase-client";
 
+/* ========================================
+   STAFF PROFILE
+======================================== */
+
+type StaffProfile = {
+  user_id: string;
+  admin_id: string;
+  display_name: string;
+};
+
+/* ========================================
+   PAGE
+======================================== */
+
 export default function StaffPage() {
   const router =
     useRouter();
@@ -22,45 +36,63 @@ export default function StaffPage() {
   ======================================== */
 
   const [
+    authLoading,
+    setAuthLoading,
+  ] = useState(true);
+
+  const [
     authenticated,
     setAuthenticated,
   ] = useState(false);
 
   const [
-    loading,
-    setLoading,
+    currentStaffName,
+    setCurrentStaffName,
+  ] = useState("");
+
+  const [
+    currentAdminId,
+    setCurrentAdminId,
+  ] = useState("");
+
+  const [
+    profileLoading,
+    setProfileLoading,
   ] = useState(true);
 
+  const [
+    message,
+    setMessage,
+  ] = useState("");
+
   /* ========================================
-     AUTH CHECK
+     AUTH + PROFILE
   ======================================== */
 
   useEffect(() => {
-    async function checkAuth() {
+    async function loadStaff() {
+      setAuthLoading(
+        true
+      );
+
+      setProfileLoading(
+        true
+      );
+
+      setMessage("");
+
       try {
         const {
-          data,
-          error,
+          data:
+            sessionData,
+          error:
+            sessionError,
         } =
           await supabase.auth.getSession();
 
         if (
-          error
-        ) {
-          console.error(
-            "スタッフ認証確認エラー:",
-            error
-          );
-
-          router.replace(
-            "/staff/reward"
-          );
-
-          return;
-        }
-
-        if (
-          !data.session
+          sessionError ||
+          !sessionData.session
         ) {
           router.replace(
             "/staff/reward"
@@ -72,25 +104,81 @@ export default function StaffPage() {
         setAuthenticated(
           true
         );
+
+        const userId =
+          sessionData.session.user.id;
+
+        const {
+          data:
+            profileData,
+          error:
+            profileError,
+        } =
+          await supabase
+            .from(
+              "staff_profiles"
+            )
+            .select(
+              "user_id, admin_id, display_name"
+            )
+            .eq(
+              "user_id",
+              userId
+            )
+            .single();
+
+        if (
+          profileError
+        ) {
+          console.error(
+            "管理者プロフィール取得エラー:",
+            profileError
+          );
+
+          setMessage(
+            "ログイン中の管理者名を取得できませんでした。"
+          );
+
+          return;
+        }
+
+        if (
+          profileData
+        ) {
+          const typedProfile =
+            profileData as StaffProfile;
+
+          setCurrentStaffName(
+            typedProfile.display_name
+          );
+
+          setCurrentAdminId(
+            typedProfile.admin_id
+          );
+        }
       } catch (
         error
       ) {
         console.error(
-          "スタッフ認証通信エラー:",
+          "管理者情報取得エラー:",
           error
         );
 
-        router.replace(
-          "/staff/reward"
+        setMessage(
+          "管理者情報の読み込み中にエラーが発生しました。"
         );
       } finally {
-        setLoading(
+        setAuthLoading(
+          false
+        );
+
+        setProfileLoading(
           false
         );
       }
     }
 
-    void checkAuth();
+    void loadStaff();
 
     const {
       data:
@@ -111,13 +199,7 @@ export default function StaffPage() {
             router.replace(
               "/staff/reward"
             );
-
-            return;
           }
-
-          setAuthenticated(
-            true
-          );
         }
       );
 
@@ -132,13 +214,37 @@ export default function StaffPage() {
      LOGOUT
   ======================================== */
 
-  async function logout() {
+  async function logoutStaff() {
+    setMessage("");
+
     try {
-      await supabase.auth.signOut();
+      const {
+        error,
+      } =
+        await supabase.auth.signOut();
+
+      if (
+        error
+      ) {
+        console.error(
+          "ログアウトエラー:",
+          error
+        );
+
+        setMessage(
+          "ログアウトできませんでした。"
+        );
+
+        return;
+      }
 
       setAuthenticated(
         false
       );
+
+      setCurrentStaffName("");
+
+      setCurrentAdminId("");
 
       router.replace(
         "/staff/reward"
@@ -147,8 +253,12 @@ export default function StaffPage() {
       error
     ) {
       console.error(
-        "スタッフログアウトエラー:",
+        "ログアウト通信エラー:",
         error
+      );
+
+      setMessage(
+        "ログアウト中にエラーが発生しました。"
       );
     }
   }
@@ -158,22 +268,27 @@ export default function StaffPage() {
   ======================================== */
 
   if (
-    loading ||
-    !authenticated
+    authLoading
   ) {
     return (
       <main className="shell">
 
-        <section className="staffPortalPage">
+        <section className="staffMenuPage">
 
           <div className="staffLoadingCard">
-            スタッフ情報を確認中...
+            管理者情報を確認中...
           </div>
 
         </section>
 
       </main>
     );
+  }
+
+  if (
+    !authenticated
+  ) {
+    return null;
   }
 
   /* ========================================
@@ -183,17 +298,17 @@ export default function StaffPage() {
   return (
     <main className="shell">
 
-      <section className="staffPortalPage">
+      <section className="staffMenuPage">
 
         {/* =================================
             HEADER
         ================================= */}
 
-        <header className="staffPortalHeader">
+        <header className="staffMenuHeader">
 
           <div>
 
-            <span>
+            <span className="staffMenuEyebrow">
               POKIPO STAFF
             </span>
 
@@ -202,15 +317,17 @@ export default function StaffPage() {
             </h1>
 
             <p>
-              管理・景品交換をここから操作できます。
+              管理・景品交換・アンケート分析を
+              ここから操作できます。
             </p>
 
           </div>
 
           <button
             type="button"
-            onClick={
-              logout
+            className="staffLogoutButton"
+            onClick={() =>
+              void logoutStaff()
             }
           >
             ログアウト
@@ -219,18 +336,66 @@ export default function StaffPage() {
         </header>
 
         {/* =================================
-            MENU
+            CURRENT USER
         ================================= */}
 
-        <section className="staffPortalMenu">
+        <section className="staffCurrentUserCard">
 
-          {/* =================================
-              DASHBOARD
-          ================================= */}
+          <div className="staffCurrentUserIcon">
+            ✓
+          </div>
+
+          <div className="staffCurrentUserText">
+
+            <span>
+              LOGIN USER
+            </span>
+
+            <strong>
+
+              {profileLoading
+                ? "管理者名を取得中..."
+                : currentStaffName ||
+                  "管理者名未登録"}
+
+            </strong>
+
+            {currentAdminId && (
+              <small>
+                管理ID：
+                {currentAdminId}
+              </small>
+            )}
+
+          </div>
+
+          <div className="staffCurrentUserStatus">
+            LOGIN
+          </div>
+
+        </section>
+
+        {/* =================================
+            MESSAGE
+        ================================= */}
+
+        {message && (
+          <div className="staffMenuMessage">
+            {message}
+          </div>
+        )}
+
+        {/* =================================
+            MAIN MENU
+        ================================= */}
+
+        <section className="staffMenuGrid">
+
+          {/* DASHBOARD */}
 
           <button
             type="button"
-            className="staffPortalCard"
+            className="staffMenuCard"
             onClick={() =>
               router.push(
                 "/staff/dashboard"
@@ -238,14 +403,14 @@ export default function StaffPage() {
             }
           >
 
-            <div className="staffPortalIcon">
+            <div className="staffMenuCardIcon">
               LIVE
             </div>
 
-            <div>
+            <div className="staffMenuCardBody">
 
               <span>
-                MANAGEMENT
+                DASHBOARD
               </span>
 
               <h2>
@@ -253,24 +418,23 @@ export default function StaffPage() {
               </h2>
 
               <p>
-                参加者数・完走者数・交換状況を確認
+                POKIPOの現在の参加状況や
+                スタンプ進捗を確認します。
               </p>
 
             </div>
 
-            <strong>
+            <div className="staffMenuCardArrow">
               →
-            </strong>
+            </div>
 
           </button>
 
-          {/* =================================
-              REWARD
-          ================================= */}
+          {/* REWARD */}
 
           <button
             type="button"
-            className="staffPortalCard reward"
+            className="staffMenuCard reward"
             onClick={() =>
               router.push(
                 "/staff/reward"
@@ -278,39 +442,38 @@ export default function StaffPage() {
             }
           >
 
-            <div className="staffPortalIcon">
+            <div className="staffMenuCardIcon">
               QR
             </div>
 
-            <div>
+            <div className="staffMenuCardBody">
 
               <span>
-                REWARD EXCHANGE
+                REWARD
               </span>
 
               <h2>
-                特典交換
+                景品交換
               </h2>
 
               <p>
-                参加者の交換用QRを読み取る
+                参加者の特典交換QRを読み取り、
+                景品交換を記録します。
               </p>
 
             </div>
 
-            <strong>
+            <div className="staffMenuCardArrow">
               →
-            </strong>
+            </div>
 
           </button>
 
-          {/* =================================
-              HISTORY
-          ================================= */}
+          {/* HISTORY */}
 
           <button
             type="button"
-            className="staffPortalCard"
+            className="staffMenuCard"
             onClick={() =>
               router.push(
                 "/staff/reward/history"
@@ -318,79 +481,38 @@ export default function StaffPage() {
             }
           >
 
-            <div className="staffPortalIcon">
+            <div className="staffMenuCardIcon">
               LOG
             </div>
 
-            <div>
+            <div className="staffMenuCardBody">
 
               <span>
-                EXCHANGE HISTORY
+                HISTORY
               </span>
 
               <h2>
-                交換履歴
+                景品交換履歴
               </h2>
 
               <p>
-                これまでの景品交換を確認
+                過去の景品交換日時や、
+                交換を担当した管理者を確認します。
               </p>
 
             </div>
 
-            <strong>
+            <div className="staffMenuCardArrow">
               →
-            </strong>
+            </div>
 
           </button>
 
-          {/* =================================
-              ANNOUNCEMENTS
-          ================================= */}
+          {/* SURVEY */}
 
           <button
             type="button"
-            className="staffPortalCard"
-            onClick={() =>
-              router.push(
-                "/staff/announcements"
-              )
-            }
-          >
-
-            <div className="staffPortalIcon">
-              NEWS
-            </div>
-
-            <div>
-
-              <span>
-                LiPost NEWS
-              </span>
-
-              <h2>
-                お知らせ管理
-              </h2>
-
-              <p>
-                参加者ホームのお知らせを投稿・編集
-              </p>
-
-            </div>
-
-            <strong>
-              →
-            </strong>
-
-          </button>
-
-          {/* =================================
-              SURVEY ANALYTICS
-          ================================= */}
-
-          <button
-            type="button"
-            className="staffPortalCard"
+            className="staffMenuCard"
             onClick={() =>
               router.push(
                 "/staff/surveys"
@@ -398,14 +520,14 @@ export default function StaffPage() {
             }
           >
 
-            <div className="staffPortalIcon">
+            <div className="staffMenuCardIcon">
               DATA
             </div>
 
-            <div>
+            <div className="staffMenuCardBody">
 
               <span>
-                SURVEY ANALYTICS
+                SURVEY
               </span>
 
               <h2>
@@ -413,16 +535,34 @@ export default function StaffPage() {
               </h2>
 
               <p>
-                POKIPO参加前後の回答変化を分析
+                参加前・参加後アンケートの
+                回答結果や変化を分析します。
               </p>
 
             </div>
 
-            <strong>
+            <div className="staffMenuCardArrow">
               →
-            </strong>
+            </div>
 
           </button>
+
+        </section>
+
+        {/* =================================
+            SECURITY
+        ================================= */}
+
+        <section className="staffMenuSecurity">
+
+          <span>
+            STAFF ONLY
+          </span>
+
+          <p>
+            このページはPOKIPO運営管理者専用です。
+            操作終了後はログアウトしてください。
+          </p>
 
         </section>
 

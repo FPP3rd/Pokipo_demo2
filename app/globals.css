@@ -26061,3 +26061,167 @@ img {
       1fr;
   }
 }
+
+/* ==================================================
+   STAFF CURRENT USER
+================================================== */
+
+.staffCurrentUserCard {
+  display: flex;
+  align-items: center;
+
+  gap: 11px;
+
+  margin-top: 16px;
+
+  padding: 14px;
+
+  border:
+    1px solid
+    #e8ddd5;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf6,
+      #ffffff
+    );
+
+  box-shadow:
+    0 6px 18px
+    rgba(
+      60,
+      40,
+      30,
+      0.05
+    );
+}
+
+.staffCurrentUserIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 1000;
+}
+
+.staffCurrentUserText {
+  min-width: 0;
+
+  flex: 1;
+}
+
+.staffCurrentUserText > span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.staffCurrentUserText > strong {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #362f2b;
+
+  font-size: 14px;
+  font-weight: 1000;
+
+  line-height: 1.4;
+
+  overflow-wrap: anywhere;
+}
+
+.staffCurrentUserText > small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #8b7d74;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  overflow-wrap: anywhere;
+}
+
+.staffCurrentUserStatus {
+  flex-shrink: 0;
+
+  padding:
+    5px
+    8px;
+
+  border-radius: 999px;
+
+  background: #eaf7ee;
+
+  color: #317a4a;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.08em;
+}
+
+
+/* ==================================================
+   STAFF MENU MESSAGE
+================================================== */
+
+.staffMenuMessage {
+  margin-top: 12px;
+
+  padding: 11px 12px;
+
+  border:
+    1px solid
+    #ead4d6;
+
+  border-radius: 12px;
+
+  background: #fff3f3;
+
+  color: #962832;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  line-height: 1.7;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+  .staffCurrentUserCard {
+    padding: 12px;
+  }
+
+  .staffCurrentUserText > strong {
+    font-size: 13px;
+  }
+
+  .staffCurrentUserStatus {
+    font-size: 6px;
+  }
+}
