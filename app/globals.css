@@ -25078,3 +25078,477 @@ img {
     font-size: 10px;
   }
 }
+
+/* ==================================================
+   STAFF TEST QR
+================================================== */
+
+.staffTestOverlay {
+  position: fixed;
+  z-index: 10000;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+
+  background: rgba(28, 20, 18, 0.76);
+}
+
+
+/* ========================================
+   WARNING
+======================================== */
+
+.staffTestWarningCard {
+  width: 100%;
+  max-width: 420px;
+
+  padding: 23px 18px;
+
+  border-radius: 22px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 24px 60px
+    rgba(0, 0, 0, 0.28);
+}
+
+.staffTestWarningIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  margin-bottom: 12px;
+
+  border-radius: 50%;
+
+  background: #b4232c;
+
+  color: #ffffff;
+
+  font-size: 24px;
+  font-weight: 1000;
+}
+
+.staffTestWarningCard > span {
+  color: #b4232c;
+
+  font-size: 9px;
+  font-weight: 1000;
+
+  letter-spacing: 0.14em;
+}
+
+.staffTestWarningCard h2 {
+  margin: 5px 0 9px;
+
+  color: #332d29;
+
+  font-size: 21px;
+  font-weight: 1000;
+
+  line-height: 1.4;
+}
+
+.staffTestWarningCard > p {
+  margin: 7px 0 0;
+
+  color: #6e625b;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+.staffTestWarningCard > p strong {
+  color: #b4232c;
+}
+
+.staffTestWarningImportant {
+  padding: 11px;
+
+  border-radius: 11px;
+
+  background: #fff0ef;
+
+  color: #98252d !important;
+
+  font-weight: 900 !important;
+}
+
+.staffTestWarningCard h3 {
+  margin: 17px 0 0;
+
+  color: #3c3430;
+
+  font-size: 14px;
+  font-weight: 900;
+
+  line-height: 1.6;
+}
+
+.staffTestWarningActions {
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1.3fr;
+
+  gap: 8px;
+
+  margin-top: 16px;
+}
+
+.staffTestWarningActions button {
+  min-height: 46px;
+
+  padding: 10px;
+
+  border-radius: 13px;
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.staffTestWarningActions .cancel {
+  border: 1px solid #ddd3cc;
+
+  background: #ffffff;
+
+  color: #625851;
+}
+
+.staffTestWarningActions .continue {
+  border: 0;
+
+  background: #b4232c;
+
+  color: #ffffff;
+}
+
+
+/* ========================================
+   TEST PANEL
+======================================== */
+
+.staffTestPanel {
+  width: 100%;
+  max-width: 620px;
+
+  max-height: 92vh;
+
+  overflow-y: auto;
+
+  padding: 20px 16px;
+
+  border-radius: 22px;
+
+  background: #f8f5f1;
+
+  box-shadow:
+    0 24px 60px
+    rgba(0, 0, 0, 0.3);
+}
+
+.staffTestPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.staffTestPanelHeader > div {
+  min-width: 0;
+}
+
+.staffTestPanelHeader span {
+  color: #b4232c;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.staffTestPanelHeader h2 {
+  margin: 4px 0 4px;
+
+  color: #332d29;
+
+  font-size: 21px;
+  font-weight: 1000;
+}
+
+.staffTestPanelHeader p {
+  margin: 0;
+
+  color: #796d65;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.staffTestPanelHeader > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  border: 1px solid #ddd4cd;
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #665b54;
+
+  font-size: 17px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   QUIZ LIST
+======================================== */
+
+.staffTestQuizList {
+  display: grid;
+
+  gap: 12px;
+
+  margin-top: 18px;
+}
+
+.staffTestQuizCard {
+  padding: 15px;
+
+  border: 1px solid #e6ddd6;
+  border-radius: 17px;
+
+  background: #ffffff;
+}
+
+.staffTestQuizTop {
+  padding-bottom: 10px;
+
+  border-bottom: 1px solid #eee6e0;
+}
+
+.staffTestQuizTop span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.09em;
+}
+
+.staffTestQuizTop strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #38312d;
+
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.staffTestQuizSection {
+  margin-top: 11px;
+}
+
+.staffTestQuizSection > span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+}
+
+.staffTestQuizSection p {
+  margin: 0;
+
+  color: #655b54;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+.staffTestQuizSection.answer {
+  padding: 11px;
+
+  border-radius: 11px;
+
+  background: #eef8f1;
+}
+
+.staffTestQuizSection.answer > span {
+  color: #317a4a;
+}
+
+.staffTestQuizSection.answer > strong {
+  color: #27643b;
+
+  font-size: 15px;
+  font-weight: 1000;
+}
+
+.staffTestQuizSection.knowledge {
+  padding: 12px;
+
+  border-radius: 12px;
+
+  background: #fff7e9;
+}
+
+.staffTestQuizSection.knowledge h3 {
+  margin: 3px 0 5px;
+
+  color: #483c32;
+
+  font-size: 12px;
+  font-weight: 900;
+
+  line-height: 1.5;
+}
+
+
+/* ========================================
+   TEST FINAL
+======================================== */
+
+.staffTestFinalNotice {
+  margin-top: 15px;
+
+  padding: 13px;
+
+  border-radius: 13px;
+
+  background: #fff0ef;
+}
+
+.staffTestFinalNotice strong {
+  display: block;
+
+  color: #a32730;
+
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.staffTestFinalNotice p {
+  margin: 4px 0 0;
+
+  color: #715d59;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.staffTestError {
+  margin-top: 12px;
+
+  padding: 11px;
+
+  border-radius: 11px;
+
+  background: #fff0ef;
+
+  color: #a4262f;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  line-height: 1.7;
+}
+
+.staffTestPanelActions {
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1.6fr;
+
+  gap: 8px;
+
+  margin-top: 15px;
+}
+
+.staffTestPanelActions button {
+  min-height: 48px;
+
+  padding: 10px;
+
+  border-radius: 13px;
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.staffTestPanelActions .cancel {
+  border: 1px solid #ddd3cc;
+
+  background: #ffffff;
+
+  color: #625851;
+}
+
+.staffTestPanelActions .apply {
+  border: 0;
+
+  background: #8a1822;
+
+  color: #ffffff;
+}
+
+.staffTestPanelActions button:disabled {
+  opacity: 0.55;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 480px) {
+  .staffTestOverlay {
+    padding: 12px;
+  }
+
+  .staffTestPanel {
+    padding: 18px 13px;
+  }
+
+  .staffTestWarningCard h2,
+  .staffTestPanelHeader h2 {
+    font-size: 18px;
+  }
+
+  .staffTestPanelActions {
+    grid-template-columns: 1fr;
+  }
+}
