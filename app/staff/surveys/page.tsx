@@ -44,8 +44,12 @@ type PostSurvey = {
 type ComparisonRow = {
   participantId: string;
 
+  gender: string;
+
   knewRenewal: boolean;
+
   hasSharedPocky: boolean;
+
   pockyFrequency: string;
 
   preInterest: number;
@@ -197,7 +201,9 @@ function changeSummary(
   }
 
   let improved = 0;
+
   let same = 0;
+
   let decreased = 0;
 
   for (
@@ -212,11 +218,13 @@ function changeSummary(
       afterValues[index];
 
     if (
-      after > before
+      after >
+      before
     ) {
       improved += 1;
     } else if (
-      after === before
+      after ===
+      before
     ) {
       same += 1;
     } else {
@@ -226,7 +234,9 @@ function changeSummary(
 
   return {
     improved,
+
     same,
+
     decreased,
 
     improvedRate:
@@ -413,6 +423,38 @@ export default function StaffSurveyPage() {
   ] = useState("");
 
   /* ========================================
+     FILTERS
+  ======================================== */
+
+  const [
+    genderFilter,
+    setGenderFilter,
+  ] = useState(
+    "all"
+  );
+
+  const [
+    frequencyFilter,
+    setFrequencyFilter,
+  ] = useState(
+    "all"
+  );
+
+  const [
+    renewalFilter,
+    setRenewalFilter,
+  ] = useState(
+    "all"
+  );
+
+  const [
+    shareFilter,
+    setShareFilter,
+  ] = useState(
+    "all"
+  );
+
+  /* ========================================
      AUTH CHECK
   ======================================== */
 
@@ -530,13 +572,15 @@ export default function StaffSurveyPage() {
 
         setPreSurveys(
           (
-            preData ?? []
+            preData ??
+            []
           ) as PreSurvey[]
         );
 
         setPostSurveys(
           (
-            postData ?? []
+            postData ??
+            []
           ) as PostSurvey[]
         );
       } catch (
@@ -594,6 +638,9 @@ export default function StaffSurveyPage() {
             participantId:
               pre.participant_id,
 
+            gender:
+              pre.gender,
+
             knewRenewal:
               pre.knew_renewal,
 
@@ -632,11 +679,119 @@ export default function StaffSurveyPage() {
     );
 
   /* ========================================
+     FILTERED ROWS
+  ======================================== */
+
+  const filteredComparisonRows =
+    useMemo(
+      () => {
+        return comparisonRows.filter(
+          (
+            row
+          ) => {
+            if (
+              genderFilter !==
+                "all" &&
+              row.gender !==
+                genderFilter
+            ) {
+              return false;
+            }
+
+            if (
+              frequencyFilter !==
+                "all" &&
+              row.pockyFrequency !==
+                frequencyFilter
+            ) {
+              return false;
+            }
+
+            if (
+              renewalFilter ===
+                "known" &&
+              !row.knewRenewal
+            ) {
+              return false;
+            }
+
+            if (
+              renewalFilter ===
+                "unknown" &&
+              row.knewRenewal
+            ) {
+              return false;
+            }
+
+            if (
+              shareFilter ===
+                "shared" &&
+              !row.hasSharedPocky
+            ) {
+              return false;
+            }
+
+            if (
+              shareFilter ===
+                "not-shared" &&
+              row.hasSharedPocky
+            ) {
+              return false;
+            }
+
+            return true;
+          }
+        );
+      },
+      [
+        comparisonRows,
+        genderFilter,
+        frequencyFilter,
+        renewalFilter,
+        shareFilter,
+      ]
+    );
+
+  /* ========================================
+     FILTERED PRE / POST
+  ======================================== */
+
+  const filteredParticipantIds =
+    new Set(
+      filteredComparisonRows.map(
+        (
+          row
+        ) =>
+          row.participantId
+      )
+    );
+
+  const filteredPreSurveys =
+    preSurveys.filter(
+      (
+        survey
+      ) =>
+        filteredParticipantIds.has(
+          survey.participant_id
+        )
+    );
+
+  const filteredPostSurveys =
+    postSurveys.filter(
+      (
+        survey
+      ) =>
+        filteredParticipantIds.has(
+          survey.participant_id
+        )
+    );
+
+  /* ========================================
      VALUES
   ======================================== */
 
   const preInterestValues =
-    comparisonRows.map(
+    filteredComparisonRows.map(
       (
         row
       ) =>
@@ -644,7 +799,7 @@ export default function StaffSurveyPage() {
     );
 
   const postInterestValues =
-    comparisonRows.map(
+    filteredComparisonRows.map(
       (
         row
       ) =>
@@ -652,7 +807,7 @@ export default function StaffSurveyPage() {
     );
 
   const preEatValues =
-    comparisonRows.map(
+    filteredComparisonRows.map(
       (
         row
       ) =>
@@ -660,7 +815,7 @@ export default function StaffSurveyPage() {
     );
 
   const postEatValues =
-    comparisonRows.map(
+    filteredComparisonRows.map(
       (
         row
       ) =>
@@ -668,7 +823,7 @@ export default function StaffSurveyPage() {
     );
 
   const preShareValues =
-    comparisonRows.map(
+    filteredComparisonRows.map(
       (
         row
       ) =>
@@ -676,7 +831,7 @@ export default function StaffSurveyPage() {
     );
 
   const postShareValues =
-    comparisonRows.map(
+    filteredComparisonRows.map(
       (
         row
       ) =>
@@ -756,7 +911,7 @@ export default function StaffSurveyPage() {
   ======================================== */
 
   const renewalAwareCount =
-    preSurveys.filter(
+    filteredPreSurveys.filter(
       (
         survey
       ) =>
@@ -764,15 +919,16 @@ export default function StaffSurveyPage() {
     ).length;
 
   const renewalAwareRate =
-    preSurveys.length > 0
+    filteredPreSurveys.length >
+    0
       ? (
           renewalAwareCount /
-          preSurveys.length
+          filteredPreSurveys.length
         ) * 100
       : 0;
 
   const sharedCount =
-    preSurveys.filter(
+    filteredPreSurveys.filter(
       (
         survey
       ) =>
@@ -780,10 +936,11 @@ export default function StaffSurveyPage() {
     ).length;
 
   const sharedRate =
-    preSurveys.length > 0
+    filteredPreSurveys.length >
+    0
       ? (
           sharedCount /
-          preSurveys.length
+          filteredPreSurveys.length
         ) * 100
       : 0;
 
@@ -793,7 +950,7 @@ export default function StaffSurveyPage() {
 
   const postInterestPositiveRate =
     positiveRate(
-      postSurveys.map(
+      filteredPostSurveys.map(
         (
           survey
         ) =>
@@ -803,7 +960,7 @@ export default function StaffSurveyPage() {
 
   const postEatPositiveRate =
     positiveRate(
-      postSurveys.map(
+      filteredPostSurveys.map(
         (
           survey
         ) =>
@@ -813,7 +970,7 @@ export default function StaffSurveyPage() {
 
   const postSharePositiveRate =
     positiveRate(
-      postSurveys.map(
+      filteredPostSurveys.map(
         (
           survey
         ) =>
@@ -823,7 +980,7 @@ export default function StaffSurveyPage() {
 
   const renewalUnderstandingPositiveRate =
     positiveRate(
-      postSurveys.map(
+      filteredPostSurveys.map(
         (
           survey
         ) =>
@@ -858,7 +1015,7 @@ export default function StaffSurveyPage() {
   ======================================== */
 
   const knewRenewalRows =
-    comparisonRows.filter(
+    filteredComparisonRows.filter(
       (
         row
       ) =>
@@ -866,7 +1023,7 @@ export default function StaffSurveyPage() {
     );
 
   const didNotKnowRenewalRows =
-    comparisonRows.filter(
+    filteredComparisonRows.filter(
       (
         row
       ) =>
@@ -874,7 +1031,7 @@ export default function StaffSurveyPage() {
     );
 
   const sharedBeforeRows =
-    comparisonRows.filter(
+    filteredComparisonRows.filter(
       (
         row
       ) =>
@@ -882,7 +1039,7 @@ export default function StaffSurveyPage() {
     );
 
   const neverSharedRows =
-    comparisonRows.filter(
+    filteredComparisonRows.filter(
       (
         row
       ) =>
@@ -915,7 +1072,7 @@ export default function StaffSurveyPage() {
 
   const understandingAverage =
     average(
-      postSurveys.map(
+      filteredPostSurveys.map(
         (
           survey
         ) =>
@@ -926,7 +1083,7 @@ export default function StaffSurveyPage() {
   function understandingCount(
     score: number
   ) {
-    return postSurveys.filter(
+    return filteredPostSurveys.filter(
       (
         survey
       ) =>
@@ -939,7 +1096,8 @@ export default function StaffSurveyPage() {
     score: number
   ) {
     if (
-      postSurveys.length === 0
+      filteredPostSurveys.length ===
+      0
     ) {
       return 0;
     }
@@ -948,7 +1106,7 @@ export default function StaffSurveyPage() {
       understandingCount(
         score
       ) /
-      postSurveys.length
+      filteredPostSurveys.length
     ) * 100;
   }
 
@@ -967,13 +1125,35 @@ export default function StaffSurveyPage() {
   function frequencyCount(
     value: string
   ) {
-    return preSurveys.filter(
+    return filteredPreSurveys.filter(
       (
         survey
       ) =>
         survey.pocky_frequency ===
         value
     ).length;
+  }
+
+  /* ========================================
+     RESET FILTER
+  ======================================== */
+
+  function resetFilters() {
+    setGenderFilter(
+      "all"
+    );
+
+    setFrequencyFilter(
+      "all"
+    );
+
+    setRenewalFilter(
+      "all"
+    );
+
+    setShareFilter(
+      "all"
+    );
   }
 
   /* ========================================
@@ -1007,7 +1187,9 @@ export default function StaffSurveyPage() {
 
       <section className="staffSurveyPage">
 
-        {/* HEADER */}
+        {/* =================================
+            HEADER
+        ================================= */}
 
         <header className="staffSurveyHeader">
 
@@ -1040,13 +1222,19 @@ export default function StaffSurveyPage() {
 
         </header>
 
+        {/* =================================
+            MESSAGE
+        ================================= */}
+
         {message && (
           <p className="staffSurveyMessage">
             {message}
           </p>
         )}
 
-        {/* RESPONSE COUNTS */}
+        {/* =================================
+            RESPONSE COUNTS
+        ================================= */}
 
         <section className="staffSurveyCounts">
 
@@ -1106,7 +1294,213 @@ export default function StaffSurveyPage() {
 
         </section>
 
-        {/* MAIN COMPARISON */}
+        {/* =================================
+            FILTER
+        ================================= */}
+
+        <section className="staffSurveyFilterSection">
+
+          <div className="staffSurveySectionTitle">
+
+            <span>
+              FILTER
+            </span>
+
+            <h2>
+              分析条件
+            </h2>
+
+            <p>
+              条件を選ぶと、
+              下の分析結果が対象者だけに絞り込まれます。
+            </p>
+
+          </div>
+
+          <div className="staffSurveyFilters">
+
+            <label>
+
+              <span>
+                性別
+              </span>
+
+              <select
+                value={
+                  genderFilter
+                }
+                onChange={(
+                  event
+                ) =>
+                  setGenderFilter(
+                    event.target.value
+                  )
+                }
+              >
+
+                <option value="all">
+                  すべて
+                </option>
+
+                <option value="男性">
+                  男性
+                </option>
+
+                <option value="女性">
+                  女性
+                </option>
+
+                <option value="回答しない">
+                  回答しない
+                </option>
+
+              </select>
+
+            </label>
+
+            <label>
+
+              <span>
+                食べる頻度
+              </span>
+
+              <select
+                value={
+                  frequencyFilter
+                }
+                onChange={(
+                  event
+                ) =>
+                  setFrequencyFilter(
+                    event.target.value
+                  )
+                }
+              >
+
+                <option value="all">
+                  すべて
+                </option>
+
+                {frequencyOptions.map(
+                  (
+                    option
+                  ) => (
+                    <option
+                      key={
+                        option
+                      }
+                      value={
+                        option
+                      }
+                    >
+                      {option}
+                    </option>
+                  )
+                )}
+
+              </select>
+
+            </label>
+
+            <label>
+
+              <span>
+                リニューアル認知
+              </span>
+
+              <select
+                value={
+                  renewalFilter
+                }
+                onChange={(
+                  event
+                ) =>
+                  setRenewalFilter(
+                    event.target.value
+                  )
+                }
+              >
+
+                <option value="all">
+                  すべて
+                </option>
+
+                <option value="known">
+                  知っていた
+                </option>
+
+                <option value="unknown">
+                  知らなかった
+                </option>
+
+              </select>
+
+            </label>
+
+            <label>
+
+              <span>
+                シェア経験
+              </span>
+
+              <select
+                value={
+                  shareFilter
+                }
+                onChange={(
+                  event
+                ) =>
+                  setShareFilter(
+                    event.target.value
+                  )
+                }
+              >
+
+                <option value="all">
+                  すべて
+                </option>
+
+                <option value="shared">
+                  経験あり
+                </option>
+
+                <option value="not-shared">
+                  経験なし
+                </option>
+
+              </select>
+
+            </label>
+
+          </div>
+
+          <div className="staffSurveyFilterResult">
+
+            <span>
+              現在の分析対象
+            </span>
+
+            <strong>
+              {filteredComparisonRows.length}
+              人
+            </strong>
+
+            <button
+              type="button"
+              onClick={
+                resetFilters
+              }
+            >
+              条件をリセット
+            </button>
+
+          </div>
+
+        </section>
+
+        {/* =================================
+            MAIN COMPARISON
+        ================================= */}
 
         <section className="staffSurveySection">
 
@@ -1121,6 +1515,7 @@ export default function StaffSurveyPage() {
             </h2>
 
             <p>
+              現在の分析条件に該当し、
               前後両方に回答した参加者のみで比較しています。
             </p>
 
@@ -1426,7 +1821,9 @@ export default function StaffSurveyPage() {
 
         </section>
 
-        {/* BEFORE STATUS */}
+        {/* =================================
+            BEFORE STATUS
+        ================================= */}
 
         <section className="staffSurveySection">
 
@@ -1441,7 +1838,8 @@ export default function StaffSurveyPage() {
             </h2>
 
             <p>
-              POKIPO体験前の参加者の状態です。
+              現在の分析条件に該当する参加者の
+              POKIPO体験前の状態です。
             </p>
 
           </div>
@@ -1504,10 +1902,11 @@ export default function StaffSurveyPage() {
                   );
 
                 const rate =
-                  preSurveys.length > 0
+                  filteredPreSurveys.length >
+                  0
                     ? (
                         count /
-                        preSurveys.length
+                        filteredPreSurveys.length
                       ) * 100
                     : 0;
 
@@ -1547,7 +1946,9 @@ export default function StaffSurveyPage() {
 
         </section>
 
-        {/* AFTER STATUS */}
+        {/* =================================
+            AFTER STATUS
+        ================================= */}
 
         <section className="staffSurveySection">
 
@@ -1562,6 +1963,7 @@ export default function StaffSurveyPage() {
             </h2>
 
             <p>
+              現在の分析条件に該当する参加者の
               POKIPO体験後の肯定回答率です。
             </p>
 
@@ -1645,7 +2047,9 @@ export default function StaffSurveyPage() {
 
         </section>
 
-        {/* CHANGE ANALYSIS */}
+        {/* =================================
+            CHANGE ANALYSIS
+        ================================= */}
 
         <section className="staffSurveySection">
 
@@ -1660,15 +2064,13 @@ export default function StaffSurveyPage() {
             </h2>
 
             <p>
-              前後両方に回答した参加者を、
+              現在の分析対象者を、
               改善・変化なし・低下に分類しています。
             </p>
 
           </div>
 
           <div className="staffSurveyChangeList">
-
-            {/* INTEREST */}
 
             <article>
 
@@ -1747,8 +2149,6 @@ export default function StaffSurveyPage() {
 
             </article>
 
-            {/* EAT */}
-
             <article>
 
               <div className="staffSurveyChangeTitle">
@@ -1825,8 +2225,6 @@ export default function StaffSurveyPage() {
               </div>
 
             </article>
-
-            {/* SHARE */}
 
             <article>
 
@@ -1909,7 +2307,9 @@ export default function StaffSurveyPage() {
 
         </section>
 
-        {/* SEGMENT ANALYSIS */}
+        {/* =================================
+            SEGMENT ANALYSIS
+        ================================= */}
 
         <section className="staffSurveySection">
 
@@ -1920,12 +2320,12 @@ export default function StaffSurveyPage() {
             </span>
 
             <h2>
-              属性・参加前状況別の変化
+              参加前状況別の変化
             </h2>
 
             <p>
-              参加前の状態ごとに、
-              POKIPO体験後の変化を比較します。
+              現在のフィルター条件の中で、
+              さらに参加前の状態ごとに比較します。
             </p>
 
           </div>
@@ -1945,7 +2345,7 @@ export default function StaffSurveyPage() {
               </h3>
 
               <p>
-                参加前にリニューアルを知っていた人と
+                リニューアルを知っていた人と
                 知らなかった人を比較します。
               </p>
 
@@ -2422,7 +2822,9 @@ export default function StaffSurveyPage() {
 
         </section>
 
-        {/* UNDERSTANDING */}
+        {/* =================================
+            UNDERSTANDING
+        ================================= */}
 
         <section className="staffSurveySection">
 
@@ -2437,6 +2839,7 @@ export default function StaffSurveyPage() {
             </h2>
 
             <p>
+              現在の分析対象：
               平均
               {" "}
               {formatScore(
@@ -2515,7 +2918,9 @@ export default function StaffSurveyPage() {
 
         </section>
 
-        {/* COMMENTS */}
+        {/* =================================
+            COMMENTS
+        ================================= */}
 
         <section className="staffSurveySection">
 
@@ -2529,23 +2934,28 @@ export default function StaffSurveyPage() {
               印象に残ったこと
             </h2>
 
+            <p>
+              現在の分析条件に該当する参加者の自由記述です。
+            </p>
+
           </div>
 
           <div className="staffSurveyComments">
 
-            {postSurveys.filter(
+            {filteredPostSurveys.filter(
               (
                 survey
               ) =>
                 Boolean(
                   survey.memorable_point?.trim()
                 )
-            ).length === 0 ? (
+            ).length ===
+            0 ? (
               <div className="staffSurveyEmpty">
-                まだ自由記述回答はありません。
+                現在の条件に該当する自由記述回答はありません。
               </div>
             ) : (
-              postSurveys
+              filteredPostSurveys
                 .filter(
                   (
                     survey

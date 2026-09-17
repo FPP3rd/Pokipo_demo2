@@ -24258,3 +24258,823 @@ img {
     font-size: 17px;
   }
 }
+
+/* ==================================================
+   STAFF SURVEY FILTERS
+================================================== */
+
+.staffSurveyFilterSection {
+  margin-top: 24px;
+
+  padding: 17px;
+
+  border: 1px solid #e8dfd8;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 7px 20px
+    rgba(55, 35, 25, 0.05);
+}
+
+.staffSurveyFilters {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 10px;
+}
+
+.staffSurveyFilters label {
+  display: block;
+}
+
+.staffSurveyFilters label > span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #675d56;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.staffSurveyFilters select {
+  width: 100%;
+
+  min-height: 42px;
+
+  padding:
+    8px
+    10px;
+
+  border: 1px solid #ddd4cd;
+  border-radius: 12px;
+
+  background: #ffffff;
+
+  color: #3c3530;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  outline: none;
+}
+
+.staffSurveyFilters select:focus {
+  border-color: #8a1822;
+
+  box-shadow:
+    0
+    0
+    0
+    3px
+    rgba(
+      138,
+      24,
+      34,
+      0.08
+    );
+}
+
+.staffSurveyFilterResult {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 14px;
+
+  padding-top: 13px;
+
+  border-top:
+    1px solid
+    #eee5de;
+}
+
+.staffSurveyFilterResult > span {
+  color: #796d65;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.staffSurveyFilterResult > strong {
+  color: #8a1822;
+
+  font-size: 17px;
+  font-weight: 1000;
+}
+
+.staffSurveyFilterResult > button {
+  margin-left: auto;
+
+  min-height: 34px;
+
+  padding:
+    7px
+    10px;
+
+  border:
+    1px solid
+    #dfd5cd;
+
+  border-radius: 999px;
+
+  background: #faf7f3;
+
+  color: #6d625a;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+  .staffSurveyFilters {
+    grid-template-columns:
+      1fr;
+  }
+
+  .staffSurveyFilterResult {
+    flex-wrap: wrap;
+  }
+
+  .staffSurveyFilterResult > button {
+    margin-left: 0;
+
+    width: 100%;
+  }
+}
+
+/* ==================================================
+   STAFF DUPLICATE EXCHANGE WARNING
+================================================== */
+
+.staffDuplicateAlert {
+  margin-top: 16px;
+
+  padding: 17px;
+
+  border:
+    2px solid
+    #b4232c;
+
+  border-radius: 17px;
+
+  background: #fff0f0;
+}
+
+.staffDuplicateAlert > span {
+  display: block;
+
+  color: #b4232c;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.staffDuplicateAlert h3 {
+  margin:
+    5px
+    0
+    7px;
+
+  color: #921d26;
+
+  font-size: 16px;
+  font-weight: 1000;
+
+  line-height: 1.5;
+}
+
+.staffDuplicateAlert > p {
+  margin: 0;
+
+  color: #65524f;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+.staffDuplicateAlert > p > strong {
+  margin:
+    0
+    4px;
+
+  color: #921d26;
+
+  font-size: 12px;
+}
+
+
+/* HISTORY */
+
+.staffDuplicateHistory {
+  display: grid;
+
+  gap: 7px;
+
+  margin-top: 12px;
+}
+
+.staffDuplicateHistory > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  padding:
+    10px
+    11px;
+
+  border-radius: 11px;
+
+  background: #ffffff;
+}
+
+.staffDuplicateHistory span {
+  color: #8a6e6b;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.staffDuplicateHistory strong {
+  color: #493b39;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  text-align: right;
+}
+
+.staffDuplicateAlertImportant {
+  margin-top: 12px !important;
+
+  padding:
+    10px;
+
+  border-radius: 10px;
+
+  background: #b4232c;
+
+  color: #ffffff !important;
+
+  font-weight: 900 !important;
+}
+
+
+/* ==================================================
+   DUPLICATE CONFIRM MODAL
+================================================== */
+
+.staffDuplicateModal {
+  position: fixed;
+
+  z-index: 9999;
+
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+
+  background:
+    rgba(
+      30,
+      20,
+      18,
+      0.72
+    );
+}
+
+.staffDuplicateModalCard {
+  width: 100%;
+  max-width: 440px;
+
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  padding: 22px 18px;
+
+  border-radius: 22px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0
+    24px
+    60px
+    rgba(
+      0,
+      0,
+      0,
+      0.25
+    );
+}
+
+.staffDuplicateModalIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 46px;
+  height: 46px;
+
+  margin-bottom: 12px;
+
+  border-radius: 50%;
+
+  background: #b4232c;
+
+  color: #ffffff;
+
+  font-size: 24px;
+  font-weight: 1000;
+}
+
+.staffDuplicateModalCard > span {
+  color: #b4232c;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.staffDuplicateModalCard h2 {
+  margin:
+    5px
+    0
+    8px;
+
+  color: #332b28;
+
+  font-size: 20px;
+  font-weight: 1000;
+
+  line-height: 1.45;
+}
+
+.staffDuplicateModalCard > p {
+  margin: 0;
+
+  color: #6c5f59;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+
+/* STUDENT NUMBER */
+
+.staffDuplicateModalStudent {
+  margin-top: 14px;
+
+  padding: 13px;
+
+  border-radius: 13px;
+
+  background: #fff0ef;
+}
+
+.staffDuplicateModalStudent span {
+  display: block;
+
+  color: #8f6a67;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.staffDuplicateModalStudent strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #b4232c;
+
+  font-size: 21px;
+  font-weight: 1000;
+
+  letter-spacing: 0.08em;
+}
+
+
+/* HISTORY */
+
+.staffDuplicateModalHistory {
+  display: grid;
+
+  gap: 7px;
+
+  margin-top: 12px;
+}
+
+.staffDuplicateModalHistory > div {
+  padding:
+    10px
+    11px;
+
+  border:
+    1px solid
+    #eee2df;
+
+  border-radius: 11px;
+
+  background: #faf8f7;
+}
+
+.staffDuplicateModalHistory span {
+  display: block;
+
+  color: #8a7b75;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.staffDuplicateModalHistory strong {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #443936;
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.staffDuplicateModalWarning {
+  margin-top: 13px !important;
+
+  padding: 11px;
+
+  border-radius: 11px;
+
+  background: #fff3d9;
+
+  color: #765317 !important;
+
+  font-weight: 900 !important;
+}
+
+
+/* ACTION */
+
+.staffDuplicateModalActions {
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1.4fr;
+
+  gap: 8px;
+
+  margin-top: 16px;
+}
+
+.staffDuplicateModalActions button {
+  min-height: 46px;
+
+  padding:
+    10px
+    8px;
+
+  border-radius: 13px;
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.staffDuplicateModalActions .cancel {
+  border:
+    1px solid
+    #ddd3cd;
+
+  background: #ffffff;
+
+  color: #615751;
+}
+
+.staffDuplicateModalActions .confirm {
+  border: 0;
+
+  background: #b4232c;
+
+  color: #ffffff;
+}
+
+/* ========================================
+   DUPLICATE CHECKING
+======================================== */
+
+.staffDuplicateChecking {
+  margin-top: 14px;
+
+  padding: 11px 12px;
+
+  border-radius: 12px;
+
+  background: #f6f2ed;
+
+  color: #72665e;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  line-height: 1.6;
+}
+
+
+/* ========================================
+   DUPLICATE NOTICE
+======================================== */
+
+.staffExchangeDuplicateNotice {
+  margin-bottom: 12px !important;
+
+  padding: 10px;
+
+  border-radius: 10px;
+
+  background: #fff0ef;
+
+  color: #a2262f !important;
+
+  font-weight: 900 !important;
+}
+
+/* ==================================================
+   POKIPO FIRST TUTORIAL
+================================================== */
+
+.pokipoTutorialOverlay {
+  position: fixed;
+  z-index: 9999;
+
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+
+  background:
+    rgba(
+      35,
+      25,
+      22,
+      0.72
+    );
+}
+
+.pokipoTutorialCard {
+  width: 100%;
+  max-width: 420px;
+
+  padding: 24px 19px;
+
+  border-radius: 22px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0
+    26px
+    60px
+    rgba(
+      0,
+      0,
+      0,
+      0.25
+    );
+}
+
+.pokipoTutorialStep {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 42px;
+  height: 25px;
+
+  padding:
+    0
+    8px;
+
+  border-radius: 999px;
+
+  background: #f4ece5;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.pokipoTutorialLabel {
+  display: block;
+
+  margin-top: 14px;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+}
+
+.pokipoTutorialCard h2 {
+  margin:
+    5px
+    0
+    8px;
+
+  color: #332d29;
+
+  font-size: 22px;
+  font-weight: 900;
+
+  line-height: 1.4;
+}
+
+.pokipoTutorialCard p {
+  margin:
+    7px
+    0
+    0;
+
+  color: #6e625b;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+.pokipoTutorialCard p strong {
+  color: #8a1822;
+  font-weight: 900;
+}
+
+.pokipoTutorialDemo {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 18px;
+
+  padding:
+    14px;
+
+  border:
+    1px solid
+    #eadfd7;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf4,
+      #fff1e3
+    );
+}
+
+.pokipoTutorialQrIcon,
+.pokipoTutorialRewardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 50px;
+  height: 50px;
+
+  flex-shrink: 0;
+
+  border-radius: 15px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.pokipoTutorialDemo > div:last-child > span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+.pokipoTutorialDemo > div:last-child > strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #3b342f;
+
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.pokipoTutorialNext {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  width: 100%;
+
+  margin-top: 18px;
+
+  min-height: 48px;
+
+  padding:
+    12px
+    15px;
+
+  border: 0;
+
+  border-radius: 14px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.pokipoTutorialNext strong {
+  font-size: 17px;
+}
+
+.pokipoTutorialSkip {
+  display: block;
+
+  margin:
+    12px
+    auto
+    0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #8b8078;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  text-decoration: underline;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 480px) {
+  .pokipoTutorialCard {
+    padding:
+      21px
+      16px;
+  }
+
+  .pokipoTutorialCard h2 {
+    font-size: 19px;
+  }
+
+  .pokipoTutorialCard p {
+    font-size: 10px;
+  }
+}

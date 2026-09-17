@@ -60,6 +60,20 @@ type Participant = {
   created_at: string;
 };
 
+type DuplicateExchange = {
+  id: string;
+
+  student_number: string;
+
+  status: string;
+
+  exchanged_at:
+    | string
+    | null;
+
+  created_at: string;
+};
+
 /* ========================================
    PAGE
 ======================================== */
@@ -123,7 +137,7 @@ export default function StaffRewardPage() {
     useRef(false);
 
   /* ========================================
-     REWARD DATA
+     REWARD
   ======================================== */
 
   const [
@@ -156,6 +170,28 @@ export default function StaffRewardPage() {
     message,
     setMessage,
   ] = useState("");
+
+  /* ========================================
+     DUPLICATE CHECK
+  ======================================== */
+
+  const [
+    duplicateExchanges,
+    setDuplicateExchanges,
+  ] =
+    useState<DuplicateExchange[]>(
+      []
+    );
+
+  const [
+    checkingDuplicate,
+    setCheckingDuplicate,
+  ] = useState(false);
+
+  const [
+    showDuplicateWarning,
+    setShowDuplicateWarning,
+  ] = useState(false);
 
   /* ========================================
      AUTH CHECK
@@ -278,10 +314,6 @@ export default function StaffRewardPage() {
 
       setPassword("");
 
-      /* =================================
-         ログイン後はスタッフメニューへ
-      ================================= */
-
       router.replace(
         "/staff"
       );
@@ -322,6 +354,14 @@ export default function StaffRewardPage() {
 
     setParticipant(
       null
+    );
+
+    setDuplicateExchanges(
+      []
+    );
+
+    setShowDuplicateWarning(
+      false
     );
 
     setMessage("");
@@ -425,7 +465,7 @@ export default function StaffRewardPage() {
 
           () => {
             /*
-              QR解析途中エラーは
+              読み取り途中のエラーは
               表示しない
             */
           }
@@ -479,6 +519,14 @@ export default function StaffRewardPage() {
 
     setParticipant(
       null
+    );
+
+    setDuplicateExchanges(
+      []
+    );
+
+    setShowDuplicateWarning(
+      false
     );
 
     setMessage("");
@@ -546,6 +594,92 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
+     DUPLICATE HISTORY
+  ======================================== */
+
+  async function loadDuplicateExchangeHistory(
+    studentNumber: string,
+    currentRewardId: string
+  ) {
+    setCheckingDuplicate(
+      true
+    );
+
+    setDuplicateExchanges(
+      []
+    );
+
+    try {
+      const {
+        data,
+        error,
+      } =
+        await supabase
+          .from(
+            "reward_exchanges"
+          )
+          .select(
+            "id, student_number, status, exchanged_at, created_at"
+          )
+          .eq(
+            "student_number",
+            studentNumber
+          )
+          .eq(
+            "status",
+            "exchanged"
+          )
+          .neq(
+            "id",
+            currentRewardId
+          )
+          .order(
+            "exchanged_at",
+            {
+              ascending:
+                false,
+            }
+          );
+
+      if (
+        error
+      ) {
+        console.error(
+          "重複交換履歴確認エラー:",
+          error
+        );
+
+        setMessage(
+          "同一学籍番号の過去交換履歴を確認できませんでした。交換前に管理者へ確認してください。"
+        );
+
+        return;
+      }
+
+      setDuplicateExchanges(
+        (
+          data ?? []
+        ) as DuplicateExchange[]
+      );
+    } catch (
+      error
+    ) {
+      console.error(
+        "重複交換履歴通信エラー:",
+        error
+      );
+
+      setMessage(
+        "過去の交換履歴確認中に通信エラーが発生しました。"
+      );
+    } finally {
+      setCheckingDuplicate(
+        false
+      );
+    }
+  }
+
+  /* ========================================
      READ QR
   ======================================== */
 
@@ -554,6 +688,14 @@ export default function StaffRewardPage() {
   ) {
     const prefix =
       "POKIPO_REWARD:";
+
+    setDuplicateExchanges(
+      []
+    );
+
+    setShowDuplicateWarning(
+      false
+    );
 
     if (
       !qrValue.startsWith(
@@ -590,7 +732,7 @@ export default function StaffRewardPage() {
 
     try {
       /* =================================
-         EXCHANGE DATA
+         REWARD
       ================================= */
 
       const {
@@ -670,11 +812,20 @@ export default function StaffRewardPage() {
       }
 
       setReward(
-        rewardData
+        rewardData as RewardExchange
       );
 
       setParticipant(
-        participantData
+        participantData as Participant
+      );
+
+      /* =================================
+         DUPLICATE CHECK
+      ================================= */
+
+      await loadDuplicateExchangeHistory(
+        rewardData.student_number,
+        rewardData.id
       );
     } catch (
       error
@@ -695,10 +846,57 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     CONFIRM EXCHANGE
+     CONFIRM BUTTON
   ======================================== */
 
-  async function confirmExchange() {
+  function confirmExchange() {
+    if (
+      !reward ||
+      !participant
+    ) {
+      return;
+    }
+
+    if (
+      reward.status ===
+      "exchanged"
+    ) {
+      setMessage(
+        "このQRはすでに景品交換済みです。"
+      );
+
+      return;
+    }
+
+    if (
+      checkingDuplicate
+    ) {
+      setMessage(
+        "過去の交換履歴を確認中です。少し待ってから再度お試しください。"
+      );
+
+      return;
+    }
+
+    if (
+      duplicateExchanges.length >
+      0
+    ) {
+      setShowDuplicateWarning(
+        true
+      );
+
+      return;
+    }
+
+    void performExchange();
+  }
+
+  /* ========================================
+     ACTUAL EXCHANGE
+  ======================================== */
+
+  async function performExchange() {
     if (
       !reward ||
       !participant
@@ -784,9 +982,9 @@ export default function StaffRewardPage() {
         return;
       }
 
-      /*
-        同時に他スタッフが交換処理した場合
-      */
+      /* =================================
+         同時操作対策
+      ================================= */
 
       if (
         !updatedData ||
@@ -799,6 +997,7 @@ export default function StaffRewardPage() {
 
         setReward({
           ...reward,
+
           status:
             "exchanged",
         });
@@ -819,9 +1018,22 @@ export default function StaffRewardPage() {
           staffId,
       });
 
-      setMessage(
-        `${participant.nickname}さんの景品交換を記録しました。`
+      setShowDuplicateWarning(
+        false
       );
+
+      if (
+        duplicateExchanges.length >
+        0
+      ) {
+        setMessage(
+          `${participant.nickname}さんの景品交換を記録しました。同一学籍番号の過去交換履歴がある状態で交換されています。`
+        );
+      } else {
+        setMessage(
+          `${participant.nickname}さんの景品交換を記録しました。`
+        );
+      }
     } catch (
       error
     ) {
@@ -853,9 +1065,62 @@ export default function StaffRewardPage() {
       null
     );
 
+    setDuplicateExchanges(
+      []
+    );
+
+    setShowDuplicateWarning(
+      false
+    );
+
+    setCheckingDuplicate(
+      false
+    );
+
     setMessage("");
 
     startQrScanner();
+  }
+
+  /* ========================================
+     DATE
+  ======================================== */
+
+  function formatExchangeDate(
+    value:
+      | string
+      | null
+  ) {
+    if (
+      !value
+    ) {
+      return "交換日時不明";
+    }
+
+    return new Date(
+      value
+    ).toLocaleString(
+      "ja-JP",
+      {
+        timeZone:
+          "Asia/Tokyo",
+
+        year:
+          "numeric",
+
+        month:
+          "2-digit",
+
+        day:
+          "2-digit",
+
+        hour:
+          "2-digit",
+
+        minute:
+          "2-digit",
+      }
+    );
   }
 
   /* ========================================
@@ -881,7 +1146,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     LOGIN VIEW
+     LOGIN
   ======================================== */
 
   if (
@@ -907,10 +1172,6 @@ export default function StaffRewardPage() {
               ログイン後、スタッフメニューへ移動します。
             </p>
 
-            {/* =========================
-                EMAIL
-            ========================= */}
-
             <div className="staffLoginField">
 
               <label htmlFor="staffEmail">
@@ -935,10 +1196,6 @@ export default function StaffRewardPage() {
               />
 
             </div>
-
-            {/* =========================
-                PASSWORD
-            ========================= */}
 
             <div className="staffLoginField">
 
@@ -974,10 +1231,6 @@ export default function StaffRewardPage() {
 
             </div>
 
-            {/* =========================
-                LOGIN
-            ========================= */}
-
             <button
               type="button"
               className="staffLoginButton"
@@ -1010,7 +1263,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     STAFF VIEW
+     VIEW
   ======================================== */
 
   return (
@@ -1063,7 +1316,7 @@ export default function StaffRewardPage() {
         </header>
 
         {/* =================================
-            SUB NAVIGATION
+            NAV
         ================================= */}
 
         <section className="staffRewardQuickNav">
@@ -1076,6 +1329,7 @@ export default function StaffRewardPage() {
               )
             }
           >
+
             <span>
               LIVE
             </span>
@@ -1083,6 +1337,7 @@ export default function StaffRewardPage() {
             <strong>
               管理ダッシュボード
             </strong>
+
           </button>
 
           <button
@@ -1093,6 +1348,7 @@ export default function StaffRewardPage() {
               )
             }
           >
+
             <span>
               LOG
             </span>
@@ -1100,6 +1356,7 @@ export default function StaffRewardPage() {
             <strong>
               交換履歴
             </strong>
+
           </button>
 
         </section>
@@ -1176,7 +1433,7 @@ export default function StaffRewardPage() {
           )}
 
         {/* =================================
-            PARTICIPANT RESULT
+            PARTICIPANT
         ================================= */}
 
         {reward &&
@@ -1210,9 +1467,7 @@ export default function StaffRewardPage() {
                 </small>
               </h2>
 
-              {/* =========================
-                  INFORMATION
-              ========================= */}
+              {/* INFORMATION */}
 
               <div className="staffParticipantInfo">
 
@@ -1256,9 +1511,76 @@ export default function StaffRewardPage() {
 
               </div>
 
-              {/* =========================
-                  EXCHANGED
-              ========================= */}
+              {/* DUPLICATE CHECK LOADING */}
+
+              {checkingDuplicate && (
+                <div className="staffDuplicateChecking">
+                  同じ学籍番号の過去交換履歴を確認中...
+                </div>
+              )}
+
+              {/* DUPLICATE ALERT */}
+
+              {!checkingDuplicate &&
+                duplicateExchanges.length >
+                  0 && (
+                  <section className="staffDuplicateAlert">
+
+                    <span>
+                      DUPLICATE WARNING
+                    </span>
+
+                    <h3>
+                      同じ学籍番号の交換履歴があります
+                    </h3>
+
+                    <p>
+                      学籍番号
+                      <strong>
+                        {reward.student_number}
+                      </strong>
+                      は、過去にも景品交換が行われています。
+                    </p>
+
+                    <div className="staffDuplicateHistory">
+
+                      {duplicateExchanges.map(
+                        (
+                          exchange,
+                          index
+                        ) => (
+                          <div
+                            key={
+                              exchange.id
+                            }
+                          >
+
+                            <span>
+                              過去の交換
+                              {index + 1}
+                            </span>
+
+                            <strong>
+                              {formatExchangeDate(
+                                exchange.exchanged_at
+                              )}
+                            </strong>
+
+                          </div>
+                        )
+                      )}
+
+                    </div>
+
+                    <p className="staffDuplicateAlertImportant">
+                      誤って2回目の景品を渡さないよう、
+                      本人確認を行ってください。
+                    </p>
+
+                  </section>
+                )}
+
+              {/* EXCHANGED */}
 
               {reward.status ===
               "exchanged" ? (
@@ -1273,36 +1595,34 @@ export default function StaffRewardPage() {
                   </span>
 
                   <h3>
-                    この参加者は交換済みです
+                    このQRは交換済みです
                   </h3>
 
                   {reward.exchanged_at && (
                     <p>
                       交換日時：
-                      {new Date(
+                      {formatExchangeDate(
                         reward.exchanged_at
-                      ).toLocaleString(
-                        "ja-JP",
-                        {
-                          timeZone:
-                            "Asia/Tokyo",
-                        }
                       )}
                     </p>
                   )}
 
                 </div>
               ) : (
-                /* =========================
-                    CONFIRM
-                ========================= */
-
                 <div className="staffExchangeConfirm">
 
                   <p>
                     学籍番号と参加者名を確認し、
-                    景品を渡してから交換を確定してください。
+                    景品を渡す直前に交換を確定してください。
                   </p>
+
+                  {duplicateExchanges.length >
+                    0 && (
+                    <p className="staffExchangeDuplicateNotice">
+                      ⚠ 同じ学籍番号の過去交換履歴があります。
+                      確定時にもう一度確認画面が表示されます。
+                    </p>
+                  )}
 
                   <button
                     type="button"
@@ -1310,12 +1630,18 @@ export default function StaffRewardPage() {
                       confirmExchange
                     }
                     disabled={
-                      confirming
+                      confirming ||
+                      checkingDuplicate
                     }
                   >
 
                     {confirming
                       ? "交換を記録中..."
+                      : checkingDuplicate
+                      ? "履歴確認中..."
+                      : duplicateExchanges.length >
+                        0
+                      ? "警告を確認して交換へ進む"
                       : "景品交換を確定する"}
 
                   </button>
@@ -1323,9 +1649,7 @@ export default function StaffRewardPage() {
                 </div>
               )}
 
-              {/* =========================
-                  NEXT
-              ========================= */}
+              {/* NEXT */}
 
               <button
                 type="button"
@@ -1338,6 +1662,139 @@ export default function StaffRewardPage() {
               </button>
 
             </section>
+          )}
+
+        {/* =================================
+            DUPLICATE CONFIRM MODAL
+        ================================= */}
+
+        {showDuplicateWarning &&
+          reward &&
+          participant && (
+            <div
+              className="staffDuplicateModal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="重複交換警告"
+            >
+
+              <div className="staffDuplicateModalCard">
+
+                <div className="staffDuplicateModalIcon">
+                  !
+                </div>
+
+                <span>
+                  DUPLICATE EXCHANGE
+                </span>
+
+                <h2>
+                  本当に景品を交換しますか？
+                </h2>
+
+                <p>
+                  この学籍番号では、
+                  過去に
+                  <strong>
+                    {" "}
+                    {duplicateExchanges.length}
+                    件
+                    {" "}
+                  </strong>
+                  の交換履歴があります。
+                </p>
+
+                <div className="staffDuplicateModalStudent">
+
+                  <span>
+                    今回の学籍番号
+                  </span>
+
+                  <strong>
+                    {reward.student_number}
+                  </strong>
+
+                </div>
+
+                <div className="staffDuplicateModalHistory">
+
+                  {duplicateExchanges.map(
+                    (
+                      exchange,
+                      index
+                    ) => (
+                      <div
+                        key={
+                          exchange.id
+                        }
+                      >
+
+                        <span>
+                          過去の交換
+                          {index + 1}
+                        </span>
+
+                        <strong>
+                          {formatExchangeDate(
+                            exchange.exchanged_at
+                          )}
+                        </strong>
+
+                      </div>
+                    )
+                  )}
+
+                </div>
+
+                <p className="staffDuplicateModalWarning">
+                  本人確認を行い、
+                  例外的にもう一度景品を渡してよいと判断した場合のみ
+                  「確認して交換する」を押してください。
+                </p>
+
+                <div className="staffDuplicateModalActions">
+
+                  <button
+                    type="button"
+                    className="cancel"
+                    disabled={
+                      confirming
+                    }
+                    onClick={() =>
+                      setShowDuplicateWarning(
+                        false
+                      )
+                    }
+                  >
+                    キャンセル
+                  </button>
+
+                  <button
+                    type="button"
+                    className="confirm"
+                    disabled={
+                      confirming
+                    }
+                    onClick={() => {
+                      setShowDuplicateWarning(
+                        false
+                      );
+
+                      void performExchange();
+                    }}
+                  >
+
+                    {confirming
+                      ? "交換処理中..."
+                      : "確認して交換する"}
+
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
           )}
 
         {/* =================================

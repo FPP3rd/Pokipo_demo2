@@ -29,11 +29,8 @@ type PockySkin =
 
 type Announcement = {
   id: string;
-
   title: string;
-
   body: string;
-
   published_at: string;
 };
 
@@ -101,6 +98,20 @@ export default function HomePage() {
   ] = useState<PockySkin>(
     "chocolate"
   );
+
+  /* ========================================
+     FIRST TUTORIAL
+  ======================================== */
+
+  const [
+    showTutorial,
+    setShowTutorial,
+  ] = useState(false);
+
+  const [
+    tutorialStep,
+    setTutorialStep,
+  ] = useState(1);
 
   /* ========================================
      LOAD
@@ -175,6 +186,27 @@ export default function HomePage() {
           "chocolate"
         );
       }
+
+      /* =========================
+         FIRST TUTORIAL
+      ========================= */
+
+      const tutorialCompleted =
+        localStorage.getItem(
+          "pokipo_tutorial_completed"
+        ) === "true";
+
+      if (
+        !tutorialCompleted
+      ) {
+        setShowTutorial(
+          true
+        );
+
+        setTutorialStep(
+          1
+        );
+      }
     }
 
     /* --------------------------------
@@ -210,7 +242,6 @@ export default function HomePage() {
 
     /* --------------------------------
        スタンプ進捗取得
-       Supabase優先
     -------------------------------- */
 
     async function loadStampProgress() {
@@ -221,11 +252,6 @@ export default function HomePage() {
         localStorage.getItem(
           "pokipo_user_id"
         );
-
-      /* =========================
-         IDなし
-         localStorage使用
-      ========================= */
 
       if (
         !participantId
@@ -250,10 +276,6 @@ export default function HomePage() {
         return;
       }
 
-      /* =========================
-         SUPABASE
-      ========================= */
-
       const {
         data,
         error,
@@ -265,11 +287,6 @@ export default function HomePage() {
               participantId,
           }
         );
-
-      /* =========================
-         ERROR
-         localStorageへ
-      ========================= */
 
       if (
         error
@@ -299,10 +316,6 @@ export default function HomePage() {
         return;
       }
 
-      /* =========================
-         STAMP COUNT
-      ========================= */
-
       const stampCount =
         Math.min(
           Array.isArray(
@@ -316,10 +329,6 @@ export default function HomePage() {
       setProgress(
         stampCount
       );
-
-      /* =========================
-         localStorage同期
-      ========================= */
 
       localStorage.setItem(
         "pokipo_progress",
@@ -691,6 +700,21 @@ export default function HomePage() {
   }
 
   /* ========================================
+     TUTORIAL COMPLETE
+  ======================================== */
+
+  function completeTutorial() {
+    localStorage.setItem(
+      "pokipo_tutorial_completed",
+      "true"
+    );
+
+    setShowTutorial(
+      false
+    );
+  }
+
+  /* ========================================
      VIEW
   ======================================== */
 
@@ -836,10 +860,6 @@ export default function HomePage() {
 
           </div>
 
-          {/* =================================
-              POCKY
-          ================================= */}
-
           <div className="visualPockyScene">
 
             <span className="visualSpark visualSpark1">
@@ -903,10 +923,6 @@ export default function HomePage() {
             )}
 
           </div>
-
-          {/* =================================
-              HERO BOTTOM
-          ================================= */}
 
           <div className="visualHeroBottom">
 
@@ -1374,6 +1390,161 @@ export default function HomePage() {
           )}
 
         </section>
+
+        {/* ==================================
+            FIRST TUTORIAL
+        ================================== */}
+
+        {showTutorial && (
+          <div className="pokipoTutorialOverlay">
+
+            <div className="pokipoTutorialCard">
+
+              <div className="pokipoTutorialStep">
+                {tutorialStep} / 2
+              </div>
+
+              {tutorialStep ===
+              1 ? (
+                <>
+
+                  <span className="pokipoTutorialLabel">
+                    HOW TO PLAY
+                  </span>
+
+                  <h2>
+                    QRコードを読み取ろう
+                  </h2>
+
+                  <p>
+                    学内のスポットにあるQRコードを見つけたら、
+                    ホーム画面の
+                    <strong>
+                      「QRを読み取る」
+                    </strong>
+                    を押してください。
+                  </p>
+
+                  <p>
+                    カメラを起動してQRコードを読み取ると、
+                    クイズに挑戦できます。
+                    正解するとスタンプと豆知識を獲得できます。
+                  </p>
+
+                  <div className="pokipoTutorialDemo">
+
+                    <div className="pokipoTutorialQrIcon">
+                      QR
+                    </div>
+
+                    <div>
+
+                      <span>
+                        STEP 1
+                      </span>
+
+                      <strong>
+                        QRを読み取る
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    className="pokipoTutorialNext"
+                    onClick={() =>
+                      setTutorialStep(
+                        2
+                      )
+                    }
+                  >
+                    次へ
+
+                    <strong>
+                      →
+                    </strong>
+                  </button>
+
+                </>
+              ) : (
+                <>
+
+                  <span className="pokipoTutorialLabel">
+                    REWARD
+                  </span>
+
+                  <h2>
+                    特典を確認しよう
+                  </h2>
+
+                  <p>
+                    ホーム画面の
+                    <strong>
+                      「特典」
+                    </strong>
+                    を押すと、
+                    現在の特典交換状況を確認できます。
+                  </p>
+
+                  <p>
+                    5つのスタンプをすべて集めたら、
+                    参加後アンケートに回答し、
+                    特典交換用QRを発行できます。
+                  </p>
+
+                  <div className="pokipoTutorialDemo reward">
+
+                    <div className="pokipoTutorialRewardIcon">
+                      ★
+                    </div>
+
+                    <div>
+
+                      <span>
+                        STEP 2
+                      </span>
+
+                      <strong>
+                        特典をチェック
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    className="pokipoTutorialNext"
+                    onClick={
+                      completeTutorial
+                    }
+                  >
+                    POKIPOをはじめる
+
+                    <strong>
+                      →
+                    </strong>
+                  </button>
+
+                </>
+              )}
+
+              <button
+                type="button"
+                className="pokipoTutorialSkip"
+                onClick={
+                  completeTutorial
+                }
+              >
+                スキップ
+              </button>
+
+            </div>
+
+          </div>
+        )}
 
       </section>
 
