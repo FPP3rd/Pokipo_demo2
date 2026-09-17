@@ -23,14 +23,17 @@ import {
 } from "../../lib/supabase-client";
 
 /* ========================================
-   SECRET QR
+   SPECIAL QR
 ======================================== */
 
 const SECRET_QR_VALUE =
   "pokipo-yuhisai-lipost-2026";
 
+const TEST_STAFF_QR_VALUE =
+  "test-staff-qr";
+
 /* ========================================
-   CAMPUS MAP PINS
+   CAMPUS MAP
 ======================================== */
 
 const mapPins = [
@@ -41,7 +44,6 @@ const mapPins = [
     top: "38%",
     left: "50%",
   },
-
   {
     id: "spot2",
     number: 2,
@@ -49,7 +51,6 @@ const mapPins = [
     top: "54%",
     left: "50%",
   },
-
   {
     id: "spot3",
     number: 3,
@@ -57,7 +58,6 @@ const mapPins = [
     top: "52%",
     left: "36.5%",
   },
-
   {
     id: "spot4",
     number: 4,
@@ -65,7 +65,6 @@ const mapPins = [
     top: "56%",
     left: "18%",
   },
-
   {
     id: "spot5",
     number: 5,
@@ -76,7 +75,7 @@ const mapPins = [
 ];
 
 /* ========================================
-   STAMP PAGE
+   PAGE
 ======================================== */
 
 export default function StampPage() {
@@ -200,6 +199,30 @@ export default function StampPage() {
   ] = useState(false);
 
   /* ========================================
+     STAFF TEST
+  ======================================== */
+
+  const [
+    showTestWarning,
+    setShowTestWarning,
+  ] = useState(false);
+
+  const [
+    showTestPanel,
+    setShowTestPanel,
+  ] = useState(false);
+
+  const [
+    applyingTestMode,
+    setApplyingTestMode,
+  ] = useState(false);
+
+  const [
+    testModeError,
+    setTestModeError,
+  ] = useState("");
+
+  /* ========================================
      CAMERA
   ======================================== */
 
@@ -223,6 +246,22 @@ export default function StampPage() {
 
   const processingQrRef =
     useRef(false);
+
+  /* ========================================
+     PARTICIPANT ID
+  ======================================== */
+
+  function getParticipantId() {
+    return (
+      localStorage.getItem(
+        "pokipo_participant_id"
+      ) ??
+      localStorage.getItem(
+        "pokipo_user_id"
+      ) ??
+      ""
+    );
+  }
 
   /* ========================================
      FORMAT DATE
@@ -252,26 +291,96 @@ export default function StampPage() {
   }
 
   /* ========================================
+     QR NORMALIZE
+  ======================================== */
+
+  function normalizeQrValue(
+    value: string
+  ) {
+    return value
+      .normalize("NFKC")
+      .replace(
+        /\u200B/g,
+        ""
+      )
+      .replace(
+        /\r/g,
+        ""
+      )
+      .replace(
+        /\n/g,
+        ""
+      )
+      .trim()
+      .toLowerCase();
+  }
+
+  /* ========================================
+     STAFF TEST QR CHECK
+  ======================================== */
+
+  function isStaffTestQr(
+    value: string
+  ) {
+    const normalized =
+      normalizeQrValue(
+        value
+      );
+
+    if (
+      normalized ===
+      TEST_STAFF_QR_VALUE
+    ) {
+      return true;
+    }
+
+    try {
+      const decoded =
+        decodeURIComponent(
+          normalized
+        );
+
+      if (
+        decoded ===
+        TEST_STAFF_QR_VALUE
+      ) {
+        return true;
+      }
+
+      if (
+        decoded.includes(
+          `code=${TEST_STAFF_QR_VALUE}`
+        )
+      ) {
+        return true;
+      }
+
+      if (
+        decoded.endsWith(
+          `#${TEST_STAFF_QR_VALUE}`
+        )
+      ) {
+        return true;
+      }
+    } catch {
+      // decodeできない場合は無視
+    }
+
+    return false;
+  }
+
+  /* ========================================
      LOAD STAMPS
-     Supabase優先
   ======================================== */
 
   useEffect(() => {
     async function loadStampData() {
       const participantId =
-        localStorage.getItem(
-          "pokipo_participant_id"
-        ) ??
-        localStorage.getItem(
-          "pokipo_user_id"
-        );
+        getParticipantId();
 
-      /* =================================
-         IDなし
-         localStorageを使用
-      ================================= */
-
-      if (!participantId) {
+      if (
+        !participantId
+      ) {
         const savedScans =
           localStorage.getItem(
             "pokipo_scans"
@@ -302,10 +411,6 @@ export default function StampPage() {
 
         return;
       }
-
-      /* =================================
-         SUPABASE
-      ================================= */
 
       const {
         data,
@@ -319,11 +424,6 @@ export default function StampPage() {
           }
         );
 
-      /* =================================
-         ERROR
-         localStorageへフォールバック
-      ================================= */
-
       if (
         error
       ) {
@@ -332,40 +432,8 @@ export default function StampPage() {
           error
         );
 
-        const savedScans =
-          localStorage.getItem(
-            "pokipo_scans"
-          );
-
-        if (
-          savedScans
-        ) {
-          try {
-            const parsed =
-              JSON.parse(
-                savedScans
-              );
-
-            if (
-              Array.isArray(
-                parsed
-              )
-            ) {
-              setScans(
-                parsed
-              );
-            }
-          } catch {
-            setScans([]);
-          }
-        }
-
         return;
       }
-
-      /* =================================
-         SERVER SCANS
-      ================================= */
 
       const serverScans =
         (
@@ -382,10 +450,6 @@ export default function StampPage() {
       setScans(
         serverScans
       );
-
-      /* =================================
-         localStorage同期
-      ================================= */
 
       localStorage.setItem(
         "pokipo_scans",
@@ -404,18 +468,15 @@ export default function StampPage() {
         )
       );
 
-      if (
-        serverScans.length >=
-        5
-      ) {
-        localStorage.setItem(
-          "pokipo_completed",
-          "true"
-        );
-      }
+      localStorage.setItem(
+        "pokipo_completed",
+        serverScans.length >= 5
+          ? "true"
+          : "false"
+      );
     }
 
-    loadStampData();
+    void loadStampData();
 
     const savedSecret =
       localStorage.getItem(
@@ -442,6 +503,119 @@ export default function StampPage() {
       }
     };
   }, []);
+
+  /* ========================================
+     QR DECODE HANDLER
+  ======================================== */
+
+  async function handleDecodedQr(
+    decodedText: string
+  ) {
+    const qrValue =
+      normalizeQrValue(
+        decodedText
+      );
+
+    console.log(
+      "POKIPO QR RAW:",
+      JSON.stringify(
+        decodedText
+      )
+    );
+
+    console.log(
+      "POKIPO QR NORMALIZED:",
+      qrValue
+    );
+
+    /* =================================
+       STAFF TEST
+    ================================= */
+
+    if (
+      isStaffTestQr(
+        decodedText
+      )
+    ) {
+      processingQrRef.current =
+        true;
+
+      await stopQrScanner();
+
+      setCameraError("");
+
+      setMessage("");
+
+      setTestModeError("");
+
+      setShowTestPanel(
+        false
+      );
+
+      setShowTestWarning(
+        true
+      );
+
+      return;
+    }
+
+    /* =================================
+       SECRET
+    ================================= */
+
+    if (
+      qrValue ===
+      normalizeQrValue(
+        SECRET_QR_VALUE
+      )
+    ) {
+      processingQrRef.current =
+        true;
+
+      await stopQrScanner();
+
+      scanSecretSpot();
+
+      return;
+    }
+
+    /* =================================
+       NORMAL
+    ================================= */
+
+    const targetSpot =
+      pokipoSpots.find(
+        (
+          spot
+        ) =>
+          normalizeQrValue(
+            spot.id
+          ) ===
+          qrValue
+      );
+
+    if (
+      !targetSpot
+    ) {
+      setMessage(
+        "このQRコードはPOKIPOのQRではありません。"
+      );
+
+      processingQrRef.current =
+        false;
+
+      return;
+    }
+
+    processingQrRef.current =
+      true;
+
+    await stopQrScanner();
+
+    await scanSpot(
+      targetSpot.id
+    );
+  }
 
   /* ========================================
      CAMERA
@@ -504,11 +678,13 @@ export default function StampPage() {
 
             qrbox: {
               width:
-                230,
-
+                240,
               height:
-                230,
+                240,
             },
+
+            aspectRatio:
+              1,
           },
 
           async (
@@ -521,64 +697,16 @@ export default function StampPage() {
               return;
             }
 
-            const qrValue =
-              decodedText.trim();
-
-            /* =========================
-               SECRET
-            ========================= */
-
-            if (
-              qrValue ===
-              SECRET_QR_VALUE
-            ) {
-              processingQrRef.current =
-                true;
-
-              await stopQrScanner();
-
-              scanSecretSpot();
-
-              return;
-            }
-
-            /* =========================
-               NORMAL
-            ========================= */
-
-            const spotExists =
-              pokipoSpots.some(
-                (
-                  spot
-                ) =>
-                  spot.id ===
-                  qrValue
-              );
-
-            if (
-              !spotExists
-            ) {
-              setMessage(
-                "このQRコードはPOKIPOのQRではありません。"
-              );
-
-              return;
-            }
-
             processingQrRef.current =
               true;
 
-            await stopQrScanner();
-
-            await scanSpot(
-              qrValue
+            await handleDecodedQr(
+              decodedText
             );
           },
 
           () => {
-            /*
-              QR解析途中エラーは無視
-            */
+            // 読み取り途中エラーは無視
           }
         );
       } catch (
@@ -608,7 +736,7 @@ export default function StampPage() {
       }
     }
 
-    startCamera();
+    void startCamera();
 
     return () => {
       cancelled =
@@ -623,7 +751,8 @@ export default function StampPage() {
   ======================================== */
 
   const completed =
-    scans.length >= 5;
+    scans.length >=
+    5;
 
   /* ========================================
      POCKY STEP
@@ -639,10 +768,8 @@ export default function StampPage() {
         return {
           step:
             "STEP 1",
-
           title:
             "材料をそろえる",
-
           description:
             "ポッキーづくりがスタート！小麦粉など、プレッツェルやチョコレートにつながる材料をそろえました。",
         };
@@ -651,10 +778,8 @@ export default function StampPage() {
         return {
           step:
             "STEP 2",
-
           title:
             "生地をつくる",
-
           description:
             "材料を混ぜ合わせて、ポッキーのプレッツェル部分になる生地ができてきました。",
         };
@@ -663,10 +788,8 @@ export default function StampPage() {
         return {
           step:
             "STEP 3",
-
           title:
             "プレッツェルを焼く",
-
           description:
             "生地を焼き上げて、ポッキーの芯になるプレッツェルが完成しました。",
         };
@@ -675,10 +798,8 @@ export default function StampPage() {
         return {
           step:
             "STEP 4",
-
           title:
             "チョコレートをまとわせる",
-
           description:
             "焼き上がったプレッツェルにチョコレートをまとわせて、いよいよポッキーらしい姿に！",
         };
@@ -688,10 +809,8 @@ export default function StampPage() {
         return {
           step:
             "STEP 5",
-
           title:
             "ポッキー完成！",
-
           description:
             "プレッツェルとチョコレートがそろって、ついにポッキーが完成しました！",
         };
@@ -784,8 +903,313 @@ export default function StampPage() {
   }
 
   /* ========================================
-     SCAN SPOT
-     Supabase + localStorage
+     TEST WARNING
+  ======================================== */
+
+  function cancelStaffTest() {
+    setShowTestWarning(
+      false
+    );
+
+    setShowTestPanel(
+      false
+    );
+
+    setTestModeError("");
+
+    processingQrRef.current =
+      false;
+  }
+
+  function openStaffTestPanel() {
+    setShowTestWarning(
+      false
+    );
+
+    setShowTestPanel(
+      true
+    );
+
+    setTestModeError("");
+  }
+
+  /* ========================================
+     TEST APPLY
+  ======================================== */
+
+  async function completeStaffTest() {
+    const participantId =
+      getParticipantId();
+
+    if (
+      !participantId
+    ) {
+      setTestModeError(
+        "参加者情報を確認できませんでした。トップ画面から参加登録を行ってください。"
+      );
+
+      return;
+    }
+
+    setApplyingTestMode(
+      true
+    );
+
+    setTestModeError("");
+
+    try {
+      const {
+        data:
+          currentStampData,
+        error:
+          currentStampError,
+      } =
+        await supabase.rpc(
+          "get_pokipo_stamps",
+          {
+            p_participant_id:
+              participantId,
+          }
+        );
+
+      if (
+        currentStampError
+      ) {
+        console.error(
+          "テスト用現在スタンプ取得エラー:",
+          currentStampError
+        );
+
+        throw currentStampError;
+      }
+
+      const alreadyCollected =
+        new Set(
+          (
+            currentStampData ??
+            []
+          ).map(
+            (
+              item: {
+                spot_id: string;
+              }
+            ) =>
+              item.spot_id
+          )
+        );
+
+      for (
+        const spot of pokipoSpots
+      ) {
+        if (
+          alreadyCollected.has(
+            spot.id
+          )
+        ) {
+          continue;
+        }
+
+        const {
+          error,
+        } =
+          await supabase.rpc(
+            "record_pokipo_stamp",
+            {
+              p_participant_id:
+                participantId,
+
+              p_spot_id:
+                spot.id,
+            }
+          );
+
+        if (
+          error
+        ) {
+          console.error(
+            `テスト用スタンプ保存エラー ${spot.id}:`,
+            error
+          );
+
+          throw error;
+        }
+      }
+
+      for (
+        const spot of pokipoSpots
+      ) {
+        try {
+          const {
+            error,
+          } =
+            await supabase.rpc(
+              "record_pokipo_knowledge",
+              {
+                p_participant_id:
+                  participantId,
+
+                p_knowledge_id:
+                  spot.knowledgeId,
+              }
+            );
+
+          if (
+            error
+          ) {
+            console.error(
+              `テスト用豆知識保存エラー ${spot.knowledgeId}:`,
+              error
+            );
+          }
+        } catch (
+          error
+        ) {
+          console.error(
+            "テスト用豆知識保存通信エラー:",
+            error
+          );
+        }
+      }
+
+      const {
+        data:
+          completionData,
+        error:
+          completionError,
+      } =
+        await supabase.rpc(
+          "record_pokipo_completion",
+          {
+            p_participant_id:
+              participantId,
+          }
+        );
+
+      if (
+        completionError
+      ) {
+        console.error(
+          "テスト用完走記録保存エラー:",
+          completionError
+        );
+      }
+
+      if (
+        completionData &&
+        completionData.length >
+          0
+      ) {
+        const completion =
+          completionData[0];
+
+        if (
+          completion.completed_at
+        ) {
+          localStorage.setItem(
+            "pokipo_completed_at",
+            formatDateTime(
+              completion.completed_at
+            )
+          );
+        }
+
+        if (
+          completion.achievement_rank !==
+            null &&
+          completion.achievement_rank !==
+            undefined
+        ) {
+          localStorage.setItem(
+            "pokipo_achievement_rank",
+            String(
+              completion.achievement_rank
+            )
+          );
+        }
+      }
+
+      const allSpotIds =
+        pokipoSpots.map(
+          (
+            spot
+          ) =>
+            spot.id
+        );
+
+      const allKnowledgeIds =
+        pokipoSpots.map(
+          (
+            spot
+          ) =>
+            spot.knowledgeId
+        );
+
+      localStorage.setItem(
+        "pokipo_scans",
+        JSON.stringify(
+          allSpotIds
+        )
+      );
+
+      localStorage.setItem(
+        "pokipo_progress",
+        "5"
+      );
+
+      localStorage.setItem(
+        "pokipo_completed",
+        "true"
+      );
+
+      localStorage.setItem(
+        "pokipo_knowledge",
+        JSON.stringify(
+          allKnowledgeIds
+        )
+      );
+
+      setScans(
+        allSpotIds
+      );
+
+      setAchievedStepCount(
+        5
+      );
+
+      setShowTestPanel(
+        false
+      );
+
+      setShowTestWarning(
+        false
+      );
+
+      setMessage(
+        "スタッフテストモード：5つのスタンプを取得済みにしました。"
+      );
+
+      processingQrRef.current =
+        false;
+    } catch (
+      error
+    ) {
+      console.error(
+        "スタッフテストモードエラー:",
+        error
+      );
+
+      setTestModeError(
+        "テスト状態を保存できませんでした。通信環境を確認してもう一度お試しください。"
+      );
+    } finally {
+      setApplyingTestMode(
+        false
+      );
+    }
+  }
+
+  /* ========================================
+     NORMAL STAMP
   ======================================== */
 
   async function scanSpot(
@@ -800,10 +1224,6 @@ export default function StampPage() {
           spotId
       );
 
-    /* =================================
-       INVALID
-    ================================= */
-
     if (
       !targetSpot
     ) {
@@ -816,10 +1236,6 @@ export default function StampPage() {
 
       return;
     }
-
-    /* =================================
-       ALREADY
-    ================================= */
 
     if (
       scans.includes(
@@ -836,17 +1252,8 @@ export default function StampPage() {
       return;
     }
 
-    /* =================================
-       PARTICIPANT
-    ================================= */
-
     const participantId =
-      localStorage.getItem(
-        "pokipo_participant_id"
-      ) ??
-      localStorage.getItem(
-        "pokipo_user_id"
-      );
+      getParticipantId();
 
     if (
       !participantId
@@ -862,10 +1269,6 @@ export default function StampPage() {
     }
 
     try {
-      /* =================================
-         STAMP SAVE
-      ================================= */
-
       const {
         error:
           stampSaveError,
@@ -895,10 +1298,6 @@ export default function StampPage() {
 
         return;
       }
-
-      /* =================================
-         LOCAL UPDATE
-      ================================= */
 
       const updatedScans = [
         ...scans,
@@ -933,10 +1332,6 @@ export default function StampPage() {
         nextCount
       );
 
-      /* =================================
-         COMPLETION
-      ================================= */
-
       if (
         updatedScans.length >=
         5
@@ -950,7 +1345,6 @@ export default function StampPage() {
           const {
             data:
               completionData,
-
             error:
               completionError,
           } =
@@ -977,27 +1371,16 @@ export default function StampPage() {
             const completion =
               completionData[0];
 
-            /* =========================
-               COMPLETED AT
-            ========================= */
-
             if (
               completion.completed_at
             ) {
-              const formatted =
-                formatDateTime(
-                  completion.completed_at
-                );
-
               localStorage.setItem(
                 "pokipo_completed_at",
-                formatted
+                formatDateTime(
+                  completion.completed_at
+                )
               );
             }
-
-            /* =========================
-               RANK
-            ========================= */
 
             if (
               completion.achievement_rank !==
@@ -1023,10 +1406,6 @@ export default function StampPage() {
         }
       }
 
-      /* =================================
-         KNOWLEDGE PREP
-      ================================= */
-
       setNewKnowledge(
         targetSpot.knowledgeText
       );
@@ -1038,10 +1417,6 @@ export default function StampPage() {
       setPendingKnowledgeId(
         targetSpot.knowledgeId
       );
-
-      /* =================================
-         QUIZ PREP
-      ================================= */
 
       setQuizQuestion(
         targetSpot.quizQuestion
@@ -1064,10 +1439,6 @@ export default function StampPage() {
       setQuizError(
         false
       );
-
-      /* =================================
-         EFFECT
-      ================================= */
 
       setGetSpotName(
         targetSpot.spotName
@@ -1120,7 +1491,7 @@ export default function StampPage() {
   }
 
   /* ========================================
-     NORMALIZE ANSWER
+     ANSWER NORMALIZE
   ======================================== */
 
   function normalizeAnswer(
@@ -1139,25 +1510,20 @@ export default function StampPage() {
               0xfee0
           )
       )
-
       .replace(
         /　/g,
         ""
       )
-
       .replace(
         /\s+/g,
         ""
       )
-
       .trim()
-
       .toLowerCase();
   }
 
   /* ========================================
      QUIZ CHECK
-     Supabase + localStorage
   ======================================== */
 
   async function checkTriviaAnswer() {
@@ -1172,18 +1538,14 @@ export default function StampPage() {
         quizInput
       );
 
-    const normalizedCorrectAnswer =
+    const normalizedCorrect =
       normalizeAnswer(
         quizAnswer
       );
 
-    /* =================================
-       WRONG
-    ================================= */
-
     if (
       normalizedInput !==
-      normalizedCorrectAnswer
+      normalizedCorrect
     ) {
       setQuizCorrect(
         false
@@ -1195,10 +1557,6 @@ export default function StampPage() {
 
       return;
     }
-
-    /* =================================
-       CORRECT
-    ================================= */
 
     setQuizCorrect(
       true
@@ -1215,16 +1573,7 @@ export default function StampPage() {
     }
 
     const participantId =
-      localStorage.getItem(
-        "pokipo_participant_id"
-      ) ??
-      localStorage.getItem(
-        "pokipo_user_id"
-      );
-
-    /* =================================
-       KNOWLEDGE SUPABASE SAVE
-    ================================= */
+      getParticipantId();
 
     if (
       participantId
@@ -1261,10 +1610,6 @@ export default function StampPage() {
         );
       }
     }
-
-    /* =================================
-       KNOWLEDGE LOCAL SAVE
-    ================================= */
 
     const savedKnowledge =
       localStorage.getItem(
@@ -1375,12 +1720,13 @@ export default function StampPage() {
   }
 
   /* ========================================
-     SECRET STAMP
+     SECRET
   ======================================== */
 
   function scanSecretSpot() {
     if (
-      scans.length < 5
+      scans.length <
+      5
     ) {
       setMessage(
         "雄飛祭シークレットスタンプは、通常5つのスタンプをすべて集めた人だけ獲得できます。"
@@ -1433,10 +1779,6 @@ export default function StampPage() {
     processingQrRef.current =
       false;
   }
-
-  /* ========================================
-     SECRET CLOSE
-  ======================================== */
 
   function closeSecretEffect() {
     setSecretGetEffect(
@@ -1539,7 +1881,11 @@ export default function StampPage() {
             </div>
 
             <strong>
-              {scans.length * 20}%
+              {Math.min(
+                scans.length,
+                5
+              ) * 20}
+              %
             </strong>
 
           </div>
@@ -1550,7 +1896,10 @@ export default function StampPage() {
               className="progressBarFill"
               style={{
                 width:
-                  `${scans.length * 20}%`,
+                  `${Math.min(
+                    scans.length,
+                    5
+                  ) * 20}%`,
               }}
             />
 
@@ -1558,7 +1907,9 @@ export default function StampPage() {
 
         </section>
 
-        {/* QR */}
+        {/* ========================================
+            QR SCANNER
+        ======================================== */}
 
         <section className="qrScannerSection">
 
@@ -1627,16 +1978,58 @@ export default function StampPage() {
               />
 
               <p className="qrCameraHelp">
-                どのスポットからでも読み取れます。
+                QRコード全体が枠内に入るようにしてください。
               </p>
 
             </div>
           )}
 
+          {/* CAMERA ERROR */}
+
           {cameraError && (
-            <p className="error">
-              {cameraError}
-            </p>
+            <div className="qrScanMessage errorMessage">
+
+              <span className="qrScanMessageIcon">
+                !
+              </span>
+
+              <div>
+
+                <span>
+                  CAMERA ERROR
+                </span>
+
+                <strong>
+                  {cameraError}
+                </strong>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* QR RESULT / ERROR */}
+
+          {message && (
+            <div className="qrScanMessage">
+
+              <span className="qrScanMessageIcon">
+                !
+              </span>
+
+              <div>
+
+                <span>
+                  QR MESSAGE
+                </span>
+
+                <strong>
+                  {message}
+                </strong>
+
+              </div>
+
+            </div>
           )}
 
         </section>
@@ -1698,7 +2091,6 @@ export default function StampPage() {
                       style={{
                         top:
                           pin.top,
-
                         left:
                           pin.left,
                       }}
@@ -1754,17 +2146,10 @@ export default function StampPage() {
                   }
                   className={[
                     "spotCard",
-
                     collected
                       ? "collected"
                       : "available",
-                  ]
-                    .filter(
-                      Boolean
-                    )
-                    .join(
-                      " "
-                    )}
+                  ].join(" ")}
                 >
 
                   <div className="spotTimeline">
@@ -1815,18 +2200,6 @@ export default function StampPage() {
 
         </section>
 
-        {/* RESULT */}
-
-        {message && (
-          <section className="scanResultCard">
-
-            <strong>
-              {message}
-            </strong>
-
-          </section>
-        )}
-
         {/* COMPLETE */}
 
         {completed && (
@@ -1861,7 +2234,267 @@ export default function StampPage() {
 
       </section>
 
-      {/* NORMAL GET */}
+      {/* ========================================
+          STAFF TEST WARNING
+      ======================================== */}
+
+      {showTestWarning && (
+        <div className="staffTestOverlay">
+
+          <section className="staffTestWarningCard">
+
+            <div className="staffTestWarningIcon">
+              !
+            </div>
+
+            <span>
+              WARNING
+            </span>
+
+            <h2>
+              スタッフテスト用QRです
+            </h2>
+
+            <p>
+              このQRはPOKIPOの
+              動作確認用テストQRです。
+            </p>
+
+            <p className="staffTestWarningImportant">
+              続けると、
+              全5スポットのクイズ・正解・ヒント・解説を表示します。
+            </p>
+
+            <p>
+              最後に
+              <strong>
+                「5スタンプ取得状態にする」
+              </strong>
+              を押すと、
+              この参加者は5/5の状態になります。
+            </p>
+
+            <h3>
+              テスト画面を表示します。
+              続けますか？
+            </h3>
+
+            <div className="staffTestWarningActions">
+
+              <button
+                type="button"
+                className="cancel"
+                onClick={
+                  cancelStaffTest
+                }
+              >
+                キャンセル
+              </button>
+
+              <button
+                type="button"
+                className="continue"
+                onClick={
+                  openStaffTestPanel
+                }
+              >
+                続ける
+              </button>
+
+            </div>
+
+          </section>
+
+        </div>
+      )}
+
+      {/* ========================================
+          STAFF TEST PANEL
+      ======================================== */}
+
+      {showTestPanel && (
+        <div className="staffTestOverlay">
+
+          <section className="staffTestPanel">
+
+            <div className="staffTestPanelHeader">
+
+              <div>
+
+                <span>
+                  STAFF TEST MODE
+                </span>
+
+                <h2>
+                  POKIPOテスト確認
+                </h2>
+
+                <p>
+                  全スポットの内容を
+                  一覧で確認できます。
+                </p>
+
+              </div>
+
+              <button
+                type="button"
+                onClick={
+                  cancelStaffTest
+                }
+                disabled={
+                  applyingTestMode
+                }
+              >
+                ×
+              </button>
+
+            </div>
+
+            <div className="staffTestQuizList">
+
+              {pokipoSpots.map(
+                (
+                  spot
+                ) => (
+                  <article
+                    key={
+                      spot.id
+                    }
+                    className="staffTestQuizCard"
+                  >
+
+                    <div className="staffTestQuizTop">
+
+                      <span>
+                        SPOT {spot.number}
+                      </span>
+
+                      <strong>
+                        {spot.spotName}
+                      </strong>
+
+                    </div>
+
+                    <div className="staffTestQuizSection">
+
+                      <span>
+                        QUESTION
+                      </span>
+
+                      <p>
+                        {spot.quizQuestion}
+                      </p>
+
+                    </div>
+
+                    <div className="staffTestQuizSection answer">
+
+                      <span>
+                        ANSWER
+                      </span>
+
+                      <strong>
+                        {spot.quizAnswer}
+                      </strong>
+
+                    </div>
+
+                    <div className="staffTestQuizSection">
+
+                      <span>
+                        HINT
+                      </span>
+
+                      <p>
+                        {spot.quizHint}
+                      </p>
+
+                    </div>
+
+                    <div className="staffTestQuizSection knowledge">
+
+                      <span>
+                        解説・豆知識
+                      </span>
+
+                      <h3>
+                        {spot.knowledgeTitle}
+                      </h3>
+
+                      <p>
+                        {spot.knowledgeText}
+                      </p>
+
+                    </div>
+
+                  </article>
+                )
+              )}
+
+            </div>
+
+            {testModeError && (
+              <p className="staffTestError">
+                {testModeError}
+              </p>
+            )}
+
+            <div className="staffTestFinalNotice">
+
+              <strong>
+                テストを完了すると
+              </strong>
+
+              <p>
+                5スポットすべての
+                スタンプと豆知識を取得済みにして、
+                通常のコンプリート状態にします。
+              </p>
+
+            </div>
+
+            <div className="staffTestPanelActions">
+
+              <button
+                type="button"
+                className="cancel"
+                disabled={
+                  applyingTestMode
+                }
+                onClick={
+                  cancelStaffTest
+                }
+              >
+                キャンセル
+              </button>
+
+              <button
+                type="button"
+                className="apply"
+                disabled={
+                  applyingTestMode
+                }
+                onClick={() =>
+                  void completeStaffTest()
+                }
+              >
+
+                {applyingTestMode
+                  ? "保存中..."
+                  : "5スタンプ取得状態にする"}
+
+              </button>
+
+            </div>
+
+          </section>
+
+        </div>
+      )}
+
+      {/* ========================================
+          NORMAL STAMP GET
+      ======================================== */}
 
       {showGetEffect && (
         <div className="stampGetOverlay">
@@ -1900,8 +2533,6 @@ export default function StampPage() {
               {getSpotName}
             </p>
 
-            {/* PROGRESS */}
-
             <div className="stampGetProgress">
 
               <span>
@@ -1926,8 +2557,6 @@ export default function StampPage() {
 
             </div>
 
-            {/* POCKY STEP */}
-
             <div className="stampGetStep">
 
               <span>
@@ -1947,8 +2576,6 @@ export default function StampPage() {
               </p>
 
             </div>
-
-            {/* TRIVIA */}
 
             <div
               className={
@@ -2140,7 +2767,9 @@ export default function StampPage() {
         </div>
       )}
 
-      {/* SECRET */}
+      {/* ========================================
+          SECRET
+      ======================================== */}
 
       {secretGetEffect && (
         <div className="stampGetOverlay">
