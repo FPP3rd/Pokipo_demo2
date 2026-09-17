@@ -26225,3 +26225,572 @@ img {
     font-size: 6px;
   }
 }
+
+/* ==================================================
+   STAFF MENU - CLEAN UI
+================================================== */
+
+.staffMenuPage {
+  width: 100%;
+  max-width: 760px;
+
+  margin: 0 auto;
+
+  padding:
+    28px
+    18px
+    56px;
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.staffMenuHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  padding-bottom: 18px;
+
+  border-bottom:
+    1px solid
+    #ece3dc;
+}
+
+.staffMenuEyebrow {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 1000;
+
+  letter-spacing: 0.14em;
+}
+
+.staffMenuHeader h1 {
+  margin:
+    5px
+    0
+    0;
+
+  color: #302a27;
+
+  font-size: 28px;
+  font-weight: 1000;
+
+  line-height: 1.25;
+
+  letter-spacing: -0.03em;
+}
+
+.staffMenuHeader p {
+  margin:
+    8px
+    0
+    0;
+
+  max-width: 420px;
+
+  color: #786c64;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.staffLogoutButton {
+  flex-shrink: 0;
+
+  min-height: 38px;
+
+  padding:
+    8px
+    13px;
+
+  border:
+    1px solid
+    #ded3cc;
+
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  color: #6d615a;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.staffLogoutButton:hover {
+  border-color: #cdbdb4;
+
+  background: #faf7f4;
+
+  transform:
+    translateY(-1px);
+}
+
+
+/* ========================================
+   CURRENT USER
+======================================== */
+
+.staffCurrentUserCard {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 18px;
+
+  padding:
+    14px
+    15px;
+
+  border:
+    1px solid
+    #eaded6;
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fffaf6 0%,
+      #ffffff 65%
+    );
+
+  box-shadow:
+    0
+    8px
+    24px
+    rgba(
+      55,
+      35,
+      25,
+      0.05
+    );
+}
+
+.staffCurrentUserIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+
+  flex-shrink: 0;
+
+  border-radius: 14px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 14px;
+  font-weight: 1000;
+}
+
+.staffCurrentUserText {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.staffCurrentUserText > span {
+  display: block;
+
+  color: #9a7f73;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.staffCurrentUserText > strong {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #332c28;
+
+  font-size: 14px;
+  font-weight: 1000;
+
+  line-height: 1.4;
+}
+
+.staffCurrentUserText > small {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #8c8078;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.staffCurrentUserStatus {
+  flex-shrink: 0;
+
+  padding:
+    5px
+    8px;
+
+  border-radius: 999px;
+
+  background: #eaf7ee;
+
+  color: #317a4a;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.08em;
+}
+
+
+/* ========================================
+   MENU GRID
+======================================== */
+
+.staffMenuGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 12px;
+
+  margin-top: 20px;
+}
+
+
+/* ========================================
+   MENU CARD
+======================================== */
+
+.staffMenuCard {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  min-width: 0;
+
+  min-height: 132px;
+
+  padding:
+    16px;
+
+  border:
+    1px solid
+    #e8dfd8;
+
+  border-radius: 19px;
+
+  background: #ffffff;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-shadow:
+    0
+    8px
+    22px
+    rgba(
+      55,
+      35,
+      25,
+      0.045
+    );
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.staffMenuCard:hover {
+  transform:
+    translateY(-2px);
+
+  border-color:
+    #d8c8be;
+
+  box-shadow:
+    0
+    12px
+    30px
+    rgba(
+      55,
+      35,
+      25,
+      0.08
+    );
+}
+
+.staffMenuCard.reward {
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf5,
+      #ffffff
+    );
+
+  border-color:
+    #ead8cc;
+}
+
+
+/* ========================================
+   CARD ICON
+======================================== */
+
+.staffMenuCardIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  flex-shrink: 0;
+
+  border-radius: 15px;
+
+  background: #f6efea;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 1000;
+
+  letter-spacing: 0.04em;
+}
+
+.staffMenuCard.reward .staffMenuCardIcon {
+  background: #8a1822;
+
+  color: #ffffff;
+}
+
+
+/* ========================================
+   CARD TEXT
+======================================== */
+
+.staffMenuCardBody {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.staffMenuCardBody > span {
+  display: block;
+
+  color: #9d8c82;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.11em;
+}
+
+.staffMenuCardBody h2 {
+  margin:
+    4px
+    0
+    0;
+
+  color: #332d29;
+
+  font-size: 14px;
+  font-weight: 1000;
+
+  line-height: 1.4;
+
+  word-break: keep-all;
+}
+
+.staffMenuCardBody p {
+  margin:
+    5px
+    0
+    0;
+
+  color: #83766e;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.6;
+}
+
+.staffMenuCardArrow {
+  flex-shrink: 0;
+
+  color: #b7aaa2;
+
+  font-size: 17px;
+  font-weight: 900;
+
+  transition:
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.staffMenuCard:hover .staffMenuCardArrow {
+  color: #8a1822;
+
+  transform:
+    translateX(2px);
+}
+
+
+/* ========================================
+   MESSAGE
+======================================== */
+
+.staffMenuMessage {
+  margin-top: 14px;
+
+  padding:
+    11px
+    12px;
+
+  border:
+    1px solid
+    #ead5d7;
+
+  border-radius: 13px;
+
+  background: #fff4f4;
+
+  color: #972b34;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  line-height: 1.7;
+}
+
+
+/* ========================================
+   SECURITY
+======================================== */
+
+.staffMenuSecurity {
+  margin-top: 18px;
+
+  padding:
+    13px
+    14px;
+
+  border:
+    1px solid
+    #e9e0da;
+
+  border-radius: 15px;
+
+  background: #faf8f6;
+}
+
+.staffMenuSecurity > span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.1em;
+}
+
+.staffMenuSecurity p {
+  margin:
+    4px
+    0
+    0;
+
+  color: #83776f;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 600px) {
+  .staffMenuPage {
+    padding:
+      22px
+      13px
+      46px;
+  }
+
+  .staffMenuHeader {
+    display: block;
+  }
+
+  .staffMenuHeader h1 {
+    font-size: 24px;
+  }
+
+  .staffLogoutButton {
+    margin-top: 12px;
+  }
+
+  .staffMenuGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .staffMenuCard {
+    min-height: 112px;
+
+    padding:
+      14px;
+  }
+
+  .staffMenuCardIcon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .staffMenuCardBody h2 {
+    font-size: 13px;
+  }
+
+  .staffCurrentUserCard {
+    padding:
+      12px;
+  }
+}
