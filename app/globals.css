@@ -23005,3 +23005,1256 @@ img {
     font-size: 10px;
   }
 }
+
+/* ==================================================
+   STAFF SURVEY ANALYTICS - READABILITY
+================================================== */
+
+.staffSurveyPage {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 18px 60px;
+  color: #302a26;
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.staffSurveyHeader {
+  display: block;
+  margin-bottom: 22px;
+}
+
+.staffSurveyHeader > div > span {
+  display: block;
+  margin-bottom: 4px;
+
+  color: #8a1822;
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.staffSurveyHeader h1 {
+  margin: 0;
+
+  color: #302a26;
+
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.staffSurveyHeader p {
+  margin: 7px 0 0;
+
+  color: #756961;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.staffSurveyHeader > button {
+  margin-top: 13px;
+
+  min-height: 40px;
+
+  padding: 9px 14px;
+
+  border: 1px solid #ded3cb;
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  color: #8a1822;
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   MESSAGE
+======================================== */
+
+.staffSurveyMessage {
+  margin-bottom: 14px;
+
+  padding: 11px 12px;
+
+  border-radius: 12px;
+
+  background: #fff0ef;
+
+  color: #97262f;
+
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+
+/* ========================================
+   RESPONSE COUNTS
+======================================== */
+
+.staffSurveyCounts {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+.staffSurveyCounts article {
+  min-width: 0;
+
+  padding: 17px 10px;
+
+  border: 1px solid #ebe1da;
+  border-radius: 17px;
+
+  background: #ffffff;
+
+  text-align: center;
+
+  box-shadow:
+    0 6px 18px
+    rgba(60, 40, 30, 0.05);
+}
+
+.staffSurveyCounts article.comparison {
+  border-color: #8a1822;
+  background: #8a1822;
+}
+
+.staffSurveyCounts span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.staffSurveyCounts strong {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #332d29;
+
+  font-size: 29px;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.staffSurveyCounts p {
+  margin: 5px 0 0;
+
+  color: #756a62;
+
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.staffSurveyCounts .comparison span,
+.staffSurveyCounts .comparison strong,
+.staffSurveyCounts .comparison p {
+  color: #ffffff;
+}
+
+
+/* ========================================
+   SECTION
+======================================== */
+
+.staffSurveySection {
+  margin-top: 28px;
+}
+
+.staffSurveySectionTitle {
+  margin-bottom: 11px;
+}
+
+.staffSurveySectionTitle > span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.staffSurveySectionTitle h2 {
+  margin: 3px 0 0;
+
+  color: #302a26;
+
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.4;
+
+  word-break: keep-all;
+}
+
+.staffSurveySectionTitle p {
+  margin: 5px 0 0;
+
+  max-width: 560px;
+
+  color: #857970;
+
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+
+/* ========================================
+   MAIN METRICS
+======================================== */
+
+.staffSurveyMetricList {
+  display: grid;
+  gap: 11px;
+}
+
+.staffSurveyMetricCard {
+  padding: 18px;
+
+  border: 1px solid #e9dfd8;
+  border-radius: 19px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 7px 20px
+    rgba(60, 40, 30, 0.05);
+}
+
+.staffSurveyMetricHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.staffSurveyMetricHeader > div {
+  min-width: 0;
+}
+
+.staffSurveyMetricHeader span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.staffSurveyMetricHeader h3 {
+  margin: 3px 0 0;
+
+  color: #37302c;
+
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.5;
+
+  word-break: keep-all;
+}
+
+.staffSurveyMetricHeader > strong {
+  flex-shrink: 0;
+
+  color: #317a4a;
+
+  font-size: 19px;
+  font-weight: 1000;
+}
+
+
+/* ========================================
+   BEFORE / AFTER
+======================================== */
+
+.staffSurveyBeforeAfter {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto
+    minmax(0, 1fr);
+
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 15px;
+}
+
+.staffSurveyBeforeAfter > div:not(.arrow) {
+  min-width: 0;
+
+  padding: 13px 8px;
+
+  border-radius: 14px;
+
+  background: #faf6f1;
+
+  text-align: center;
+}
+
+.staffSurveyBeforeAfter span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.staffSurveyBeforeAfter strong {
+  display: inline-block;
+
+  margin-top: 3px;
+
+  color: #342e2a;
+
+  font-size: 25px;
+  font-weight: 1000;
+  line-height: 1;
+}
+
+.staffSurveyBeforeAfter small {
+  color: #81756d;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.staffSurveyBeforeAfter .arrow {
+  color: #8a1822;
+
+  font-size: 18px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   POSITIVE RATE
+======================================== */
+
+.staffSurveyPositiveRate {
+  display: grid;
+
+  grid-template-columns:
+    auto
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 9px;
+
+  min-height: 43px;
+
+  margin-top: 10px;
+
+  padding: 10px 11px;
+
+  border-radius: 12px;
+
+  background: #eef8f1;
+}
+
+.staffSurveyPositiveRate span {
+  color: #53705c;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.staffSurveyPositiveRate strong {
+  color: #315f40;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.staffSurveyPositiveRate b {
+  color: #317a4a;
+
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+
+/* ========================================
+   BEFORE STATUS
+======================================== */
+
+.staffSurveySimpleStats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+.staffSurveySimpleStats article {
+  min-width: 0;
+
+  padding: 17px 14px;
+
+  border: 1px solid #eee2d7;
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf2,
+      #fff4e8
+    );
+}
+
+.staffSurveySimpleStats span {
+  display: block;
+
+  color: #786b62;
+
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.staffSurveySimpleStats strong {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #8a1822;
+
+  font-size: 27px;
+  font-weight: 1000;
+  line-height: 1.1;
+}
+
+.staffSurveySimpleStats p {
+  margin: 6px 0 0;
+
+  color: #7b6e66;
+
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+
+/* ========================================
+   AFTER STATUS
+======================================== */
+
+.staffSurveyAfterStats {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 10px;
+}
+
+.staffSurveyAfterStats article {
+  min-width: 0;
+
+  padding: 17px 14px;
+
+  border: 1px solid #e3ebe5;
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #f1f9f3
+    );
+
+  box-shadow:
+    0 6px 18px
+    rgba(55, 35, 25, 0.04);
+}
+
+.staffSurveyAfterStats span {
+  display: block;
+
+  color: #5f6e63;
+
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.staffSurveyAfterStats strong {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #317a4a;
+
+  font-size: 27px;
+  font-weight: 1000;
+  line-height: 1.1;
+}
+
+.staffSurveyAfterStats p {
+  margin: 6px 0 0;
+
+  color: #6f7c72;
+
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+
+/* ========================================
+   FREQUENCY DISTRIBUTION
+======================================== */
+
+.staffSurveyDistribution {
+  margin-top: 12px;
+
+  padding: 16px;
+
+  border: 1px solid #ebe1d9;
+  border-radius: 16px;
+
+  background: #ffffff;
+}
+
+.staffSurveyDistribution h3 {
+  margin: 0 0 12px;
+
+  color: #3b342f;
+
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.staffSurveyDistributionRow {
+  display: grid;
+
+  grid-template-columns:
+    92px
+    minmax(0, 1fr)
+    42px;
+
+  align-items: center;
+
+  gap: 9px;
+
+  margin-top: 9px;
+}
+
+.staffSurveyDistributionRow > span {
+  color: #665b54;
+
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.staffSurveyDistributionRow > div {
+  overflow: hidden;
+
+  height: 8px;
+
+  border-radius: 999px;
+
+  background: #eee7e1;
+}
+
+.staffSurveyDistributionRow > div > div {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #8a1822;
+}
+
+.staffSurveyDistributionRow > strong {
+  color: #504741;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  text-align: right;
+}
+
+
+/* ========================================
+   CHANGE ANALYSIS
+======================================== */
+
+.staffSurveyChangeList {
+  display: grid;
+  gap: 12px;
+}
+
+.staffSurveyChangeList > article {
+  padding: 18px;
+
+  border: 1px solid #e8dfd8;
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 7px 20px
+    rgba(55, 35, 25, 0.05);
+}
+
+.staffSurveyChangeTitle > span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.staffSurveyChangeTitle h3 {
+  margin: 3px 0 13px;
+
+  color: #342e2a;
+
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.5;
+
+  word-break: keep-all;
+}
+
+.staffSurveyChangeNumbers {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, minmax(0, 1fr));
+
+  gap: 8px;
+}
+
+.staffSurveyChangeNumbers > div {
+  min-width: 0;
+
+  padding: 12px 6px;
+
+  border-radius: 13px;
+
+  text-align: center;
+}
+
+.staffSurveyChangeNumbers .improved {
+  background: #ebf7ee;
+}
+
+.staffSurveyChangeNumbers .same {
+  background: #f6f3ef;
+}
+
+.staffSurveyChangeNumbers .decreased {
+  background: #fff0ef;
+}
+
+.staffSurveyChangeNumbers span {
+  display: block;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.staffSurveyChangeNumbers strong {
+  display: block;
+
+  margin-top: 3px;
+
+  font-size: 18px;
+  font-weight: 1000;
+}
+
+.staffSurveyChangeNumbers small {
+  display: block;
+
+  margin-top: 2px;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.staffSurveyChangeNumbers .improved span,
+.staffSurveyChangeNumbers .improved strong {
+  color: #317a4a;
+}
+
+.staffSurveyChangeNumbers .same span,
+.staffSurveyChangeNumbers .same strong {
+  color: #746960;
+}
+
+.staffSurveyChangeNumbers .decreased span,
+.staffSurveyChangeNumbers .decreased strong {
+  color: #a52d35;
+}
+
+
+/* ========================================
+   UNDERSTANDING
+======================================== */
+
+.staffSurveyUnderstandingList {
+  display: grid;
+  gap: 8px;
+}
+
+.staffSurveyUnderstandingList article {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    42px
+    46px;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 11px 12px;
+
+  border: 1px solid #ece2da;
+  border-radius: 13px;
+
+  background: #ffffff;
+}
+
+.staffSurveyUnderstandingList article > div {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  min-width: 0;
+}
+
+.staffSurveyUnderstandingList article > div > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.staffSurveyUnderstandingList strong {
+  min-width: 0;
+
+  color: #4a423c;
+
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.5;
+
+  word-break: keep-all;
+}
+
+.staffSurveyUnderstandingList p,
+.staffSurveyUnderstandingList b {
+  margin: 0;
+
+  font-size: 9px;
+  text-align: right;
+}
+
+.staffSurveyUnderstandingList p {
+  color: #766b63;
+}
+
+.staffSurveyUnderstandingList b {
+  color: #8a1822;
+}
+
+
+/* ========================================
+   COMMENTS
+======================================== */
+
+.staffSurveyComments {
+  display: grid;
+  gap: 8px;
+}
+
+.staffSurveyComments article {
+  padding: 15px;
+
+  border: 1px solid #ebe1da;
+  border-radius: 14px;
+
+  background: #ffffff;
+}
+
+.staffSurveyComments span {
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.staffSurveyComments p {
+  margin: 6px 0 0;
+
+  color: #61574f;
+
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.8;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.staffSurveyEmpty {
+  padding: 21px;
+
+  border-radius: 14px;
+
+  background: #faf7f3;
+
+  color: #84786f;
+
+  text-align: center;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 480px) {
+  .staffSurveyPage {
+    padding:
+      22px
+      13px
+      48px;
+  }
+
+  .staffSurveyHeader h1 {
+    font-size: 24px;
+  }
+
+  .staffSurveyCounts {
+    gap: 7px;
+  }
+
+  .staffSurveyCounts article {
+    padding:
+      14px
+      6px;
+  }
+
+  .staffSurveyCounts strong {
+    font-size: 23px;
+  }
+
+  .staffSurveyCounts p {
+    font-size: 8px;
+  }
+
+  .staffSurveySectionTitle h2 {
+    font-size: 18px;
+  }
+
+  .staffSurveyMetricCard {
+    padding: 15px;
+  }
+
+  .staffSurveyMetricHeader h3 {
+    font-size: 14px;
+  }
+
+  .staffSurveyMetricHeader > strong {
+    font-size: 17px;
+  }
+
+  .staffSurveyBeforeAfter strong {
+    font-size: 22px;
+  }
+
+  .staffSurveySimpleStats strong,
+  .staffSurveyAfterStats strong {
+    font-size: 23px;
+  }
+
+  .staffSurveyChangeNumbers strong {
+    font-size: 16px;
+  }
+
+  .staffSurveyDistributionRow {
+    grid-template-columns:
+      78px
+      minmax(0, 1fr)
+      36px;
+  }
+}
+
+
+/* ========================================
+   EXTRA SMALL
+======================================== */
+
+@media (max-width: 350px) {
+  .staffSurveyCounts {
+    grid-template-columns: 1fr;
+  }
+
+  .staffSurveySimpleStats {
+    grid-template-columns: 1fr;
+  }
+
+  .staffSurveyAfterStats {
+    grid-template-columns: 1fr;
+  }
+
+  .staffSurveyChangeNumbers {
+    grid-template-columns: 1fr;
+  }
+
+  .staffSurveyBeforeAfter {
+    grid-template-columns: 1fr;
+  }
+
+  .staffSurveyBeforeAfter .arrow {
+    transform: rotate(90deg);
+    text-align: center;
+  }
+
+  .staffSurveyUnderstandingList article {
+    grid-template-columns:
+      minmax(0, 1fr)
+      36px;
+  }
+
+  .staffSurveyUnderstandingList b {
+    grid-column: 2;
+  }
+}
+
+/* ==================================================
+   STAFF SURVEY SEGMENT ANALYSIS
+================================================== */
+
+.staffSurveySegmentBlock {
+  margin-top: 14px;
+
+  padding: 17px;
+
+  border:
+    1px solid
+    #e8dfd8;
+
+  border-radius: 18px;
+
+  background: #faf8f5;
+}
+
+.staffSurveySegmentBlock + .staffSurveySegmentBlock {
+  margin-top: 13px;
+}
+
+
+/* ========================================
+   HEADING
+======================================== */
+
+.staffSurveySegmentHeading {
+  margin-bottom: 12px;
+}
+
+.staffSurveySegmentHeading > span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.1em;
+}
+
+.staffSurveySegmentHeading h3 {
+  margin:
+    3px
+    0
+    0;
+
+  color: #342e2a;
+
+  font-size: 16px;
+  font-weight: 900;
+
+  line-height: 1.5;
+}
+
+.staffSurveySegmentHeading p {
+  margin:
+    4px
+    0
+    0;
+
+  color: #7d7168;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+
+/* ========================================
+   GRID
+======================================== */
+
+.staffSurveySegmentGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 9px;
+}
+
+
+/* ========================================
+   CARD
+======================================== */
+
+.staffSurveySegmentCard {
+  min-width: 0;
+
+  padding:
+    14px;
+
+  border:
+    1px solid
+    #e5ddd6;
+
+  border-radius: 16px;
+
+  background: #ffffff;
+}
+
+.staffSurveySegmentCard.highlight {
+  border-color:
+    rgba(
+      138,
+      24,
+      34,
+      0.15
+    );
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf3,
+      #fff1e3
+    );
+}
+
+
+/* ========================================
+   CARD HEADER
+======================================== */
+
+.staffSurveySegmentCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 8px;
+
+  margin-bottom: 12px;
+}
+
+.staffSurveySegmentCardHeader > div {
+  min-width: 0;
+}
+
+.staffSurveySegmentCardHeader span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+.staffSurveySegmentCardHeader h4 {
+  margin:
+    3px
+    0
+    0;
+
+  color: #3b342f;
+
+  font-size: 12px;
+  font-weight: 900;
+
+  line-height: 1.5;
+
+  word-break: keep-all;
+}
+
+.staffSurveySegmentCardHeader > strong {
+  flex-shrink: 0;
+
+  padding:
+    5px
+    8px;
+
+  border-radius: 999px;
+
+  background: #f2ece7;
+
+  color: #625850;
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+
+/* ========================================
+   METRIC
+======================================== */
+
+.staffSurveySegmentMetric {
+  position: relative;
+
+  padding:
+    10px;
+
+  border-radius: 12px;
+
+  background:
+    rgba(
+      248,
+      245,
+      241,
+      0.9
+    );
+}
+
+.staffSurveySegmentMetric + .staffSurveySegmentMetric {
+  margin-top: 7px;
+}
+
+.staffSurveySegmentMetric > span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #71665e;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.staffSurveySegmentMetric > div {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+}
+
+.staffSurveySegmentMetric > div strong {
+  color: #39322e;
+
+  font-size: 16px;
+  font-weight: 1000;
+}
+
+.staffSurveySegmentMetric > div b {
+  color: #a2958c;
+
+  font-size: 10px;
+}
+
+.staffSurveySegmentMetric > em {
+  position: absolute;
+
+  right: 10px;
+  bottom: 10px;
+
+  color: #317a4a;
+
+  font-size: 10px;
+  font-weight: 1000;
+
+  font-style: normal;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 480px) {
+  .staffSurveySegmentBlock {
+    padding:
+      14px;
+  }
+
+  .staffSurveySegmentGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .staffSurveySegmentCardHeader h4 {
+    font-size: 13px;
+  }
+
+  .staffSurveySegmentMetric > div strong {
+    font-size: 17px;
+  }
+}
