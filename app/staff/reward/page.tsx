@@ -352,7 +352,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     CAMERA EFFECT
+     CAMERA
   ======================================== */
 
   useEffect(() => {
@@ -485,10 +485,6 @@ export default function StaffRewardPage() {
     authenticated,
   ]);
 
-  /* ========================================
-     START CAMERA
-  ======================================== */
-
   function startQrScanner() {
     setReward(
       null
@@ -517,10 +513,6 @@ export default function StaffRewardPage() {
       true
     );
   }
-
-  /* ========================================
-     STOP CAMERA
-  ======================================== */
 
   async function stopQrScanner() {
     const scanner =
@@ -1080,7 +1072,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     AUTH LOADING
+     LOADING
   ======================================== */
 
   if (
@@ -1201,11 +1193,9 @@ export default function StaffRewardPage() {
                 loginLoading
               }
             >
-
               {loginLoading
                 ? "ログイン中..."
                 : "管理者ログイン"}
-
             </button>
 
             {message && (
@@ -1230,8 +1220,6 @@ export default function StaffRewardPage() {
     <main className="shell">
 
       <section className="staffRewardPage">
-
-        {/* HEADER */}
 
         <header className="staffRewardHeader">
 
@@ -1273,8 +1261,6 @@ export default function StaffRewardPage() {
 
         </header>
 
-        {/* QUICK NAV */}
-
         <section className="staffRewardQuickNav">
 
           <button
@@ -1285,7 +1271,6 @@ export default function StaffRewardPage() {
               )
             }
           >
-
             <span>
               LIVE
             </span>
@@ -1293,7 +1278,6 @@ export default function StaffRewardPage() {
             <strong>
               管理ダッシュボード
             </strong>
-
           </button>
 
           <button
@@ -1304,7 +1288,6 @@ export default function StaffRewardPage() {
               )
             }
           >
-
             <span>
               LOG
             </span>
@@ -1312,12 +1295,9 @@ export default function StaffRewardPage() {
             <strong>
               交換履歴
             </strong>
-
           </button>
 
         </section>
-
-        {/* QR SCANNER */}
 
         {!reward &&
           !participant && (
@@ -1391,8 +1371,6 @@ export default function StaffRewardPage() {
 
             </section>
           )}
-
-        {/* PARTICIPANT */}
 
         {reward &&
           participant && (
@@ -1611,8 +1589,6 @@ export default function StaffRewardPage() {
 
             </section>
           )}
-
-        {/* DUPLICATE MODAL */}
 
         {showDuplicateWarning &&
           reward &&

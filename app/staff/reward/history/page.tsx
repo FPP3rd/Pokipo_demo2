@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -22,6 +23,7 @@ type RewardExchange = {
   participant_id: string;
   student_number: string;
   status: string;
+  created_at: string;
   exchanged_at: string | null;
   exchanged_by: string | null;
 };
@@ -33,45 +35,29 @@ type Participant = {
   department: string | null;
 };
 
-type HistoryItem = {
-  rewardId: string;
-  participantId: string;
-  nickname: string;
-  grade: string;
-  department: string;
-  studentNumber: string;
-  exchangedAt: string;
-  exchangedBy: string | null;
+type StaffProfile = {
+  user_id: string;
+  display_name: string;
 };
+
+type HistoryRow = {
+  id: string;
+  nickname: string;
+  studentNumber: string;
+  grade: string | null;
+  department: string | null;
+  exchangedAt: string | null;
+  exchangedBy: string | null;
+  staffName: string;
+};
+
+/* ========================================
+   PAGE
+======================================== */
 
 export default function RewardHistoryPage() {
   const router =
     useRouter();
-
-  /* ========================================
-     AUTH
-  ======================================== */
-
-  const [
-    authenticated,
-    setAuthenticated,
-  ] = useState(false);
-
-  const [
-    authLoading,
-    setAuthLoading,
-  ] = useState(true);
-
-  /* ========================================
-     HISTORY
-  ======================================== */
-
-  const [
-    history,
-    setHistory,
-  ] = useState<HistoryItem[]>(
-    []
-  );
 
   const [
     loading,
@@ -79,32 +65,62 @@ export default function RewardHistoryPage() {
   ] = useState(true);
 
   const [
+    authLoading,
+    setAuthLoading,
+  ] = useState(true);
+
+  const [
+    authenticated,
+    setAuthenticated,
+  ] = useState(false);
+
+  const [
+    exchanges,
+    setExchanges,
+  ] = useState<RewardExchange[]>(
+    []
+  );
+
+  const [
+    participants,
+    setParticipants,
+  ] = useState<Participant[]>(
+    []
+  );
+
+  const [
+    staffProfiles,
+    setStaffProfiles,
+  ] = useState<StaffProfile[]>(
+    []
+  );
+
+  const [
     message,
     setMessage,
   ] = useState("");
 
+  const [
+    searchText,
+    setSearchText,
+  ] = useState("");
+
   /* ========================================
-     AUTH CHECK
+     AUTH
   ======================================== */
 
   useEffect(() => {
     async function checkAuth() {
       const {
         data,
+        error,
       } =
         await supabase.auth.getSession();
 
       if (
+        error ||
         !data.session
       ) {
-        setAuthenticated(
-          false
-        );
-
-        setAuthLoading(
-          false
-        );
-
         router.replace(
           "/staff/reward"
         );
@@ -121,11 +137,13 @@ export default function RewardHistoryPage() {
       );
     }
 
-    checkAuth();
-  }, [router]);
+    void checkAuth();
+  }, [
+    router,
+  ]);
 
   /* ========================================
-     LOAD HISTORY
+     LOAD
   ======================================== */
 
   useEffect(() => {
@@ -143,23 +161,18 @@ export default function RewardHistoryPage() {
       setMessage("");
 
       try {
-        /* =================================
-           交換済みデータ
-        ================================= */
-
         const {
           data:
-            rewardData,
-
+            exchangeData,
           error:
-            rewardError,
+            exchangeError,
         } =
           await supabase
             .from(
               "reward_exchanges"
             )
             .select(
-              "id, participant_id, student_number, status, exchanged_at, exchanged_by"
+              "id, participant_id, student_number, status, created_at, exchanged_at, exchanged_by"
             )
             .eq(
               "status",
@@ -174,11 +187,11 @@ export default function RewardHistoryPage() {
             );
 
         if (
-          rewardError
+          exchangeError
         ) {
           console.error(
             "交換履歴取得エラー:",
-            rewardError
+            exchangeError
           );
 
           setMessage(
@@ -188,147 +201,145 @@ export default function RewardHistoryPage() {
           return;
         }
 
-        const rewards =
+        const typedExchanges =
           (
-            rewardData ??
+            exchangeData ??
             []
           ) as RewardExchange[];
-
-        if (
-          rewards.length ===
-          0
-        ) {
-          setHistory(
-            []
-          );
-
-          return;
-        }
-
-        /* =================================
-           participant IDs
-        ================================= */
 
         const participantIds =
           Array.from(
             new Set(
-              rewards.map(
+              typedExchanges.map(
                 (
-                  reward
+                  item: RewardExchange
                 ) =>
-                  reward.participant_id
+                  item.participant_id
               )
             )
           );
 
-        /* =================================
-           参加者情報
-        ================================= */
-
-        const {
-          data:
-            participantData,
-
-          error:
-            participantError,
-        } =
-          await supabase
-            .from(
-              "participants"
-            )
-            .select(
-              "id, nickname, grade, department"
-            )
-            .in(
-              "id",
-              participantIds
-            );
+        let participantData:
+          Participant[] = [];
 
         if (
-          participantError
+          participantIds.length >
+          0
         ) {
-          console.error(
-            "参加者情報取得エラー:",
-            participantError
-          );
+          const {
+            data,
+            error,
+          } =
+            await supabase
+              .from(
+                "participants"
+              )
+              .select(
+                "id, nickname, grade, department"
+              )
+              .in(
+                "id",
+                participantIds
+              );
 
-          setMessage(
-            "参加者情報を取得できませんでした。"
-          );
-
-          return;
+          if (
+            error
+          ) {
+            console.error(
+              "参加者情報取得エラー:",
+              error
+            );
+          } else {
+            participantData =
+              (
+                data ??
+                []
+              ) as Participant[];
+          }
         }
 
-        const participants =
-          (
-            participantData ??
-            []
-          ) as Participant[];
-
-        /* =================================
-           結合
-        ================================= */
-
-        const combined:
-          HistoryItem[] =
-          rewards.map(
-            (
-              reward
-            ) => {
-              const participant =
-                participants.find(
+        const staffIds =
+          Array.from(
+            new Set(
+              typedExchanges
+                .map(
                   (
-                    item
+                    item: RewardExchange
                   ) =>
-                    item.id ===
-                    reward.participant_id
-                );
-
-              return {
-                rewardId:
-                  reward.id,
-
-                participantId:
-                  reward.participant_id,
-
-                nickname:
-                  participant?.nickname ??
-                  "不明",
-
-                grade:
-                  participant?.grade ??
-                  "未設定",
-
-                department:
-                  participant?.department ??
-                  "未設定",
-
-                studentNumber:
-                  reward.student_number,
-
-                exchangedAt:
-                  reward.exchanged_at ??
-                  "",
-
-                exchangedBy:
-                  reward.exchanged_by,
-              };
-            }
+                    item.exchanged_by
+                )
+                .filter(
+                  (
+                    value:
+                      string | null
+                  ): value is string =>
+                    Boolean(
+                      value
+                    )
+                )
+            )
           );
 
-        setHistory(
-          combined
+        let profileData:
+          StaffProfile[] = [];
+
+        if (
+          staffIds.length >
+          0
+        ) {
+          const {
+            data,
+            error,
+          } =
+            await supabase
+              .from(
+                "staff_profiles"
+              )
+              .select(
+                "user_id, display_name"
+              )
+              .in(
+                "user_id",
+                staffIds
+              );
+
+          if (
+            error
+          ) {
+            console.error(
+              "管理者名取得エラー:",
+              error
+            );
+          } else {
+            profileData =
+              (
+                data ??
+                []
+              ) as StaffProfile[];
+          }
+        }
+
+        setExchanges(
+          typedExchanges
+        );
+
+        setParticipants(
+          participantData
+        );
+
+        setStaffProfiles(
+          profileData
         );
       } catch (
         error
       ) {
         console.error(
-          "履歴読み込みエラー:",
+          "交換履歴通信エラー:",
           error
         );
 
         setMessage(
-          "通信中にエラーが発生しました。"
+          "交換履歴の読み込み中にエラーが発生しました。"
         );
       } finally {
         setLoading(
@@ -337,56 +348,138 @@ export default function RewardHistoryPage() {
       }
     }
 
-    loadHistory();
-
-    /* ========================================
-       REALTIME
-       新しい交換があれば自動更新
-    ======================================== */
-
-    const channel =
-      supabase
-        .channel(
-          "staff-reward-history"
-        )
-        .on(
-          "postgres_changes",
-          {
-            event:
-              "UPDATE",
-
-            schema:
-              "public",
-
-            table:
-              "reward_exchanges",
-          },
-          () => {
-            loadHistory();
-          }
-        )
-        .subscribe();
-
-    return () => {
-      supabase.removeChannel(
-        channel
-      );
-    };
+    void loadHistory();
   }, [
     authenticated,
   ]);
 
   /* ========================================
-     FORMAT DATE
+     ROWS
+  ======================================== */
+
+  const historyRows =
+    useMemo(
+      () => {
+        return exchanges.map(
+          (
+            exchange
+          ): HistoryRow => {
+            const participant =
+              participants.find(
+                (
+                  item
+                ) =>
+                  item.id ===
+                  exchange.participant_id
+              );
+
+            const staff =
+              staffProfiles.find(
+                (
+                  item
+                ) =>
+                  item.user_id ===
+                  exchange.exchanged_by
+              );
+
+            return {
+              id:
+                exchange.id,
+
+              nickname:
+                participant?.nickname ??
+                "不明",
+
+              studentNumber:
+                exchange.student_number,
+
+              grade:
+                participant?.grade ??
+                null,
+
+              department:
+                participant?.department ??
+                null,
+
+              exchangedAt:
+                exchange.exchanged_at,
+
+              exchangedBy:
+                exchange.exchanged_by,
+
+              staffName:
+                staff?.display_name ??
+                (
+                  exchange.exchanged_by
+                    ? "管理者名未登録"
+                    : "不明"
+                ),
+            };
+          }
+        );
+      },
+      [
+        exchanges,
+        participants,
+        staffProfiles,
+      ]
+    );
+
+  /* ========================================
+     SEARCH
+  ======================================== */
+
+  const filteredRows =
+    useMemo(
+      () => {
+        const keyword =
+          searchText
+            .trim()
+            .toLowerCase();
+
+        if (
+          !keyword
+        ) {
+          return historyRows;
+        }
+
+        return historyRows.filter(
+          (
+            row
+          ) =>
+            [
+              row.nickname,
+              row.studentNumber,
+              row.grade ?? "",
+              row.department ?? "",
+              row.staffName,
+            ]
+              .join(" ")
+              .toLowerCase()
+              .includes(
+                keyword
+              )
+        );
+      },
+      [
+        historyRows,
+        searchText,
+      ]
+    );
+
+  /* ========================================
+     DATE
   ======================================== */
 
   function formatDate(
-    value: string
+    value:
+      | string
+      | null
   ) {
     if (
       !value
     ) {
-      return "----";
+      return "日時不明";
     }
 
     return new Date(
@@ -416,48 +509,6 @@ export default function RewardHistoryPage() {
   }
 
   /* ========================================
-     TODAY
-  ======================================== */
-
-  const todayString =
-    new Date().toLocaleDateString(
-      "ja-JP",
-      {
-        timeZone:
-          "Asia/Tokyo",
-      }
-    );
-
-  const todayCount =
-    history.filter(
-      (
-        item
-      ) => {
-        if (
-          !item.exchangedAt
-        ) {
-          return false;
-        }
-
-        const exchangeDate =
-          new Date(
-            item.exchangedAt
-          ).toLocaleDateString(
-            "ja-JP",
-            {
-              timeZone:
-                "Asia/Tokyo",
-            }
-          );
-
-        return (
-          exchangeDate ===
-          todayString
-        );
-      }
-    ).length;
-
-  /* ========================================
      LOADING
   ======================================== */
 
@@ -467,10 +518,10 @@ export default function RewardHistoryPage() {
     return (
       <main className="shell">
 
-        <section className="staffRewardPage">
+        <section className="staffRewardHistoryPage">
 
           <div className="staffLoadingCard">
-            スタッフ情報を確認中...
+            管理者情報を確認中...
           </div>
 
         </section>
@@ -486,25 +537,9 @@ export default function RewardHistoryPage() {
   return (
     <main className="shell">
 
-      <section className="staffRewardPage">
+      <section className="staffRewardHistoryPage">
 
-        {/* =================================
-            HEADER
-        ================================= */}
-
-        <header className="staffHistoryHeader">
-
-          <button
-            type="button"
-            className="staffHistoryBack"
-            onClick={() =>
-              router.push(
-                "/staff/reward"
-              )
-            }
-          >
-            ←
-          </button>
+        <header className="staffRewardHistoryHeader">
 
           <div>
 
@@ -516,250 +551,254 @@ export default function RewardHistoryPage() {
               景品交換履歴
             </h1>
 
+            <p>
+              景品交換日時と担当管理者を確認できます。
+            </p>
+
+          </div>
+
+          <div className="staffRewardHistoryHeaderActions">
+
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  "/staff/reward"
+                )
+              }
+            >
+              景品交換へ
+            </button>
+
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  "/staff"
+                )
+              }
+            >
+              メニュー
+            </button>
+
           </div>
 
         </header>
 
-        {/* =================================
-            STATS
-        ================================= */}
+        <section className="staffRewardHistorySummary">
 
-        <section className="staffHistoryStats">
-
-          <div className="staffHistoryStatCard">
-
-            <span>
-              TODAY
-            </span>
-
-            <strong>
-              {todayCount}
-            </strong>
-
-            <small>
-              本日の交換
-            </small>
-
-          </div>
-
-          <div className="staffHistoryStatCard">
+          <article>
 
             <span>
               TOTAL
             </span>
 
             <strong>
-              {history.length}
+              {loading
+                ? "—"
+                : historyRows.length}
             </strong>
 
-            <small>
-              累計交換
-            </small>
+            <p>
+              交換済み件数
+            </p>
 
-          </div>
+          </article>
+
+          <article>
+
+            <span>
+              STAFF
+            </span>
+
+            <strong>
+              {
+                new Set(
+                  historyRows
+                    .map(
+                      (
+                        row
+                      ) =>
+                        row.staffName
+                    )
+                    .filter(
+                      (
+                        name
+                      ) =>
+                        name !==
+                        "不明"
+                    )
+                ).size
+              }
+            </strong>
+
+            <p>
+              担当管理者数
+            </p>
+
+          </article>
 
         </section>
 
-        {/* =================================
-            TITLE
-        ================================= */}
+        <section className="staffRewardHistorySearch">
 
-        <div className="staffHistoryTitle">
+          <label htmlFor="rewardHistorySearch">
+            履歴検索
+          </label>
 
-          <div>
+          <input
+            id="rewardHistorySearch"
+            type="search"
+            value={
+              searchText
+            }
+            onChange={(
+              event
+            ) =>
+              setSearchText(
+                event.target.value
+              )
+            }
+            placeholder="名前・学籍番号・担当管理者で検索"
+          />
 
-            <span>
-              EXCHANGE HISTORY
-            </span>
+        </section>
 
-            <h2>
-              交換済み一覧
-            </h2>
-
-          </div>
-
-          <strong>
-            {history.length}件
-          </strong>
-
-        </div>
-
-        {/* =================================
-            LOADING
-        ================================= */}
-
-        {loading && (
-          <div className="staffHistoryEmpty">
-            交換履歴を読み込み中...
-          </div>
+        {message && (
+          <p className="staffRewardHistoryMessage">
+            {message}
+          </p>
         )}
 
-        {/* =================================
-            EMPTY
-        ================================= */}
+        <section className="staffRewardHistoryList">
 
-        {!loading &&
-          history.length ===
-            0 && (
-            <div className="staffHistoryEmpty">
+          {loading ? (
+            <div className="staffRewardHistoryEmpty">
+              交換履歴を読み込み中...
+            </div>
+          ) : filteredRows.length ===
+            0 ? (
+            <div className="staffRewardHistoryEmpty">
 
-              <div>
-                🎁
-              </div>
-
-              <strong>
-                まだ交換履歴はありません
-              </strong>
-
-              <p>
-                景品交換が完了すると
-                ここに自動で表示されます。
-              </p>
+              {searchText
+                ? "検索条件に一致する交換履歴はありません。"
+                : "まだ景品交換履歴はありません。"}
 
             </div>
-          )}
+          ) : (
+            filteredRows.map(
+              (
+                row,
+                index
+              ) => (
+                <article
+                  key={
+                    row.id
+                  }
+                  className="staffRewardHistoryCard"
+                >
 
-        {/* =================================
-            HISTORY
-        ================================= */}
+                  <div className="staffRewardHistoryCardTop">
 
-        {!loading &&
-          history.length >
-            0 && (
-            <div className="staffHistoryList">
-
-              {history.map(
-                (
-                  item,
-                  index
-                ) => (
-                  <article
-                    key={
-                      item.rewardId
-                    }
-                    className="staffHistoryCard"
-                  >
-
-                    {/* NUMBER */}
-
-                    <div className="staffHistoryNumber">
-
-                      {history.length -
-                        index}
-
-                    </div>
-
-                    {/* PARTICIPANT */}
-
-                    <div className="staffHistoryParticipant">
+                    <div>
 
                       <span>
-                        PARTICIPANT
+                        EXCHANGE #{historyRows.length - index}
                       </span>
 
-                      <h3>
-                        {item.nickname}
+                      <h2>
+                        {row.nickname}
                         <small>
                           さん
                         </small>
-                      </h3>
+                      </h2>
 
                     </div>
 
-                    {/* INFORMATION */}
-
-                    <div className="staffHistoryInfo">
-
-                      <div>
-
-                        <span>
-                          学籍番号
-                        </span>
-
-                        <strong>
-                          {item.studentNumber}
-                        </strong>
-
-                      </div>
-
-                      <div>
-
-                        <span>
-                          学年
-                        </span>
-
-                        <strong>
-                          {item.grade}
-                        </strong>
-
-                      </div>
-
-                      <div>
-
-                        <span>
-                          学科
-                        </span>
-
-                        <strong>
-                          {item.department}
-                        </strong>
-
-                      </div>
-
+                    <div className="staffRewardHistoryStatus">
+                      交換済み
                     </div>
 
-                    {/* TIME */}
+                  </div>
 
-                    <div className="staffHistoryTime">
+                  <div className="staffRewardHistoryInfo">
+
+                    <div>
 
                       <span>
-                        EXCHANGED AT
+                        学籍番号
+                      </span>
+
+                      <strong>
+                        {row.studentNumber}
+                      </strong>
+
+                    </div>
+
+                    <div>
+
+                      <span>
+                        学年
+                      </span>
+
+                      <strong>
+                        {row.grade ??
+                          "未設定"}
+                      </strong>
+
+                    </div>
+
+                    <div>
+
+                      <span>
+                        学科
+                      </span>
+
+                      <strong>
+                        {row.department ??
+                          "未設定"}
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                  <div className="staffRewardHistoryMeta">
+
+                    <div>
+
+                      <span>
+                        交換日時
                       </span>
 
                       <strong>
                         {formatDate(
-                          item.exchangedAt
+                          row.exchangedAt
                         )}
                       </strong>
 
                     </div>
 
-                    {/* STAFF */}
+                    <div className="staffRewardHistoryStaff">
 
-                    {item.exchangedBy && (
-                      <div className="staffHistoryStaff">
+                      <span>
+                        交換担当者
+                      </span>
 
-                        <span>
-                          STAFF ID
-                        </span>
+                      <strong>
+                        {row.staffName}
+                      </strong>
 
-                        <strong>
-                          {item.exchangedBy.slice(
-                            0,
-                            8
-                          )}
-                          …
-                        </strong>
+                    </div>
 
-                      </div>
-                    )}
+                  </div>
 
-                  </article>
-                )
-              )}
-
-            </div>
+                </article>
+              )
+            )
           )}
 
-        {/* =================================
-            MESSAGE
-        ================================= */}
-
-        {message && (
-          <p className="staffMessage">
-            {message}
-          </p>
-        )}
+        </section>
 
       </section>
 
