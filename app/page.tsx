@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  FormEvent,
   useEffect,
   useRef,
   useState,
@@ -15,7 +16,7 @@ import {
 } from "../lib/supabase-client";
 
 /* ========================================
-   INTRO SETTINGS
+   INTRO
 ======================================== */
 
 const INTRO_STORAGE_KEY =
@@ -24,27 +25,18 @@ const INTRO_STORAGE_KEY =
 const INTRO_VIDEO_PATH =
   "/videos/pokipo-intro.mp4";
 
-/* ========================================
-   PAGE
-======================================== */
-
-export default function Page() {
+export default function StartPage() {
   const router =
     useRouter();
+
+  /* ========================================
+     VIDEO INTRO
+  ======================================== */
 
   const videoRef =
     useRef<HTMLVideoElement | null>(
       null
     );
-
-  /* ========================================
-     INTRO
-  ======================================== */
-
-  const [
-    introChecked,
-    setIntroChecked,
-  ] = useState(false);
 
   const [
     showIntro,
@@ -67,17 +59,15 @@ export default function Page() {
   ] = useState(false);
 
   const [
-    introLeaving,
-    setIntroLeaving,
-  ] = useState(false);
-
-  const [
     videoError,
     setVideoError,
   ] = useState("");
 
+  const introFinishingRef =
+    useRef(false);
+
   /* ========================================
-     REGISTRATION
+     FORM
   ======================================== */
 
   const [
@@ -96,45 +86,129 @@ export default function Page() {
   ] = useState("");
 
   const [
+    message,
+    setMessage,
+  ] = useState("");
+
+  const [
     submitting,
     setSubmitting,
   ] = useState(false);
 
   const [
-    errorMessage,
-    setErrorMessage,
-  ] = useState("");
+    checkingRegistration,
+    setCheckingRegistration,
+  ] = useState(true);
 
   /* ========================================
-     INTRO CHECK
+     既存参加者チェック
   ======================================== */
 
   useEffect(() => {
-    const alreadySeen =
-      localStorage.getItem(
-        INTRO_STORAGE_KEY
-      ) === "true";
+    async function checkExistingParticipant() {
+      const savedParticipantId =
+        localStorage.getItem(
+          "pokipo_participant_id"
+        ) ??
+        localStorage.getItem(
+          "pokipo_user_id"
+        );
 
-    setShowIntro(
-      !alreadySeen
-    );
+      const savedNickname =
+        localStorage.getItem(
+          "pokipo_nickname"
+        );
 
-    setIntroChecked(
-      true
-    );
-  }, []);
+      /* --------------------------------
+         未登録
+      -------------------------------- */
+
+      if (
+        !savedParticipantId ||
+        !savedNickname
+      ) {
+        /*
+          未登録ユーザーだけ
+          初回イントロを判定
+        */
+
+        const introSeen =
+          localStorage.getItem(
+            INTRO_STORAGE_KEY
+          ) === "true";
+
+        setShowIntro(
+          !introSeen
+        );
+
+        setCheckingRegistration(
+          false
+        );
+
+        return;
+      }
+
+      /* --------------------------------
+         参加前アンケート確認
+      -------------------------------- */
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "has_completed_pokipo_pre_survey",
+          {
+            p_participant_id:
+              savedParticipantId,
+          }
+        );
+
+      if (
+        error
+      ) {
+        console.error(
+          "参加前アンケート確認エラー:",
+          error
+        );
+
+        /*
+          通信エラー時は
+          初期登録をやり直させない
+        */
+
+        router.replace(
+          "/survey/before"
+        );
+
+        return;
+      }
+
+      if (
+        data === true
+      ) {
+        router.replace(
+          "/home"
+        );
+
+        return;
+      }
+
+      router.replace(
+        "/survey/before"
+      );
+    }
+
+    void checkExistingParticipant();
+  }, [
+    router,
+  ]);
 
   /* ========================================
-     START INTRO
+     INTRO START
   ======================================== */
 
   async function startIntro() {
-    setVideoError("");
-
-    setIntroStarted(
-      true
-    );
-
     const video =
       videoRef.current;
 
@@ -148,6 +222,8 @@ export default function Page() {
       return;
     }
 
+    setVideoError("");
+
     try {
       video.currentTime =
         0;
@@ -159,6 +235,10 @@ export default function Page() {
         1;
 
       await video.play();
+
+      setIntroStarted(
+        true
+      );
     } catch (
       error
     ) {
@@ -168,7 +248,7 @@ export default function Page() {
       );
 
       setVideoError(
-        "動画を再生できませんでした。もう一度タップしてください。"
+        "動画を再生できませんでした。もう一度お試しください。"
       );
 
       setIntroStarted(
@@ -178,17 +258,18 @@ export default function Page() {
   }
 
   /* ========================================
-     FINISH INTRO
+     INTRO FINISH
   ======================================== */
 
   function finishIntro() {
     if (
-      curtainClosing ||
-      curtainOpening ||
-      introLeaving
+      introFinishingRef.current
     ) {
       return;
     }
+
+    introFinishingRef.current =
+      true;
 
     const video =
       videoRef.current;
@@ -202,37 +283,42 @@ export default function Page() {
     /*
       1. カーテンを閉じる
     */
+
     setCurtainClosing(
       true
     );
 
-    setTimeout(
+    /*
+      2. 閉じ切ったあと
+         初回視聴済みにする
+    */
+
+    window.setTimeout(
       () => {
-        /*
-          初回再生済みとして保存
-        */
         localStorage.setItem(
           INTRO_STORAGE_KEY,
           "true"
         );
 
         /*
-          2. 登録画面を見せる準備
-        */
-        setIntroLeaving(
-          true
-        );
-
-        /*
           3. カーテンを開く
         */
+
         setCurtainOpening(
           true
         );
 
-        setTimeout(
+        /*
+          4. イントロ全体を消す
+        */
+
+        window.setTimeout(
           () => {
             setShowIntro(
+              false
+            );
+
+            setIntroStarted(
               false
             );
 
@@ -243,6 +329,9 @@ export default function Page() {
             setCurtainOpening(
               false
             );
+
+            introFinishingRef.current =
+              false;
           },
           1100
         );
@@ -252,7 +341,7 @@ export default function Page() {
   }
 
   /* ========================================
-     SKIP INTRO
+     INTRO SKIP
   ======================================== */
 
   function skipIntro() {
@@ -260,18 +349,27 @@ export default function Page() {
   }
 
   /* ========================================
-     REGISTER
+     初回登録
   ======================================== */
 
-  async function registerParticipant() {
-    const normalizedNickname =
+  async function submit(
+    e: FormEvent<HTMLFormElement>
+  ) {
+    e.preventDefault();
+
+    const name =
       nickname.trim();
 
+    /* --------------------------------
+       VALIDATION
+    -------------------------------- */
+
     if (
-      !normalizedNickname
+      name.length < 2 ||
+      name.length > 20
     ) {
-      setErrorMessage(
-        "ニックネームを入力してください。"
+      setMessage(
+        "ニックネームは2〜20文字で入力してください。"
       );
 
       return;
@@ -280,7 +378,7 @@ export default function Page() {
     if (
       !grade
     ) {
-      setErrorMessage(
+      setMessage(
         "学年を選択してください。"
       );
 
@@ -290,7 +388,7 @@ export default function Page() {
     if (
       !department
     ) {
-      setErrorMessage(
+      setMessage(
         "学科を選択してください。"
       );
 
@@ -301,11 +399,21 @@ export default function Page() {
       true
     );
 
-    setErrorMessage("");
+    setMessage("");
 
     try {
+      /* =================================
+         PARTICIPANT ID
+      ================================= */
+
+      const participantId =
+        crypto.randomUUID();
+
+      /* =================================
+         SUPABASE
+      ================================= */
+
       const {
-        data,
         error,
       } =
         await supabase
@@ -313,56 +421,66 @@ export default function Page() {
             "participants"
           )
           .insert({
+            id:
+              participantId,
+
             nickname:
-              normalizedNickname,
+              name,
 
             grade,
 
             department,
-          })
-          .select(
-            "id"
-          )
-          .single();
+          });
 
       if (
         error
       ) {
         console.error(
           "参加者登録エラー:",
-          error
+          {
+            message:
+              error.message,
+
+            details:
+              error.details,
+
+            hint:
+              error.hint,
+
+            code:
+              error.code,
+          }
         );
 
-        setErrorMessage(
-          error.message
+        setMessage(
+          "参加者情報を登録できませんでした。通信環境を確認して、もう一度お試しください。"
         );
 
         return;
       }
 
-      if (
-        !data?.id
-      ) {
-        setErrorMessage(
-          "参加者情報を作成できませんでした。"
-        );
-
-        return;
-      }
+      /* =================================
+         LOCAL STORAGE
+      ================================= */
 
       localStorage.setItem(
         "pokipo_participant_id",
-        data.id
+        participantId
       );
+
+      /*
+        既存ページとの互換性のため
+        user_idにも同じIDを保存
+      */
 
       localStorage.setItem(
         "pokipo_user_id",
-        data.id
+        participantId
       );
 
       localStorage.setItem(
         "pokipo_nickname",
-        normalizedNickname
+        name
       );
 
       localStorage.setItem(
@@ -375,10 +493,32 @@ export default function Page() {
         department
       );
 
+      /* =================================
+         スタンプ初期化
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_scans",
+        JSON.stringify([])
+      );
+
       localStorage.setItem(
         "pokipo_progress",
         "0"
       );
+
+      /* =================================
+         KNOWLEDGE
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_knowledge",
+        JSON.stringify([])
+      );
+
+      /* =================================
+         COMPLETE
+      ================================= */
 
       localStorage.setItem(
         "pokipo_completed",
@@ -386,12 +526,37 @@ export default function Page() {
       );
 
       localStorage.removeItem(
-        "pokipo_scans"
+        "pokipo_completed_at"
       );
 
       localStorage.removeItem(
-        "pokipo_knowledge"
+        "pokipo_achievement_rank"
       );
+
+      /* =================================
+         REWARD
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_reward_exchanged",
+        "false"
+      );
+
+      localStorage.removeItem(
+        "pokipo_reward_exchanged_at"
+      );
+
+      localStorage.removeItem(
+        "pokipo_reward_student_number"
+      );
+
+      localStorage.removeItem(
+        "pokipo_reward_token"
+      );
+
+      /* =================================
+         SURVEY
+      ================================= */
 
       localStorage.removeItem(
         "pokipo_pre_survey_completed"
@@ -400,6 +565,10 @@ export default function Page() {
       localStorage.removeItem(
         "pokipo_post_survey_completed"
       );
+
+      /* =================================
+         NEXT
+      ================================= */
 
       router.push(
         "/survey/before"
@@ -412,7 +581,7 @@ export default function Page() {
         error
       );
 
-      setErrorMessage(
+      setMessage(
         "通信中にエラーが発生しました。もう一度お試しください。"
       );
     } finally {
@@ -423,17 +592,31 @@ export default function Page() {
   }
 
   /* ========================================
-     LOADING
+     CHECKING
   ======================================== */
 
   if (
-    !introChecked
+    checkingRegistration
   ) {
     return (
       <main className="shell">
-        <section className="card">
-          読み込み中...
+
+        <section className="card startPage">
+
+          <div
+            style={{
+              padding:
+                "40px 20px",
+
+              textAlign:
+                "center",
+            }}
+          >
+            参加情報を確認中...
+          </div>
+
         </section>
+
       </main>
     );
   }
@@ -445,240 +628,378 @@ export default function Page() {
   return (
     <>
       {/* ========================================
-          REGISTRATION
+          ここから元の初期登録画面
+          デザイン・構造はそのまま
       ======================================== */}
 
       <main className="shell">
 
-        <section className="card">
+        <section className="card startPage">
 
-          <div className="intro">
+          {/* =================================
+              HERO
+          ================================= */}
 
-            <p className="eyebrow">
-              POCKY JOURNEY
+          <header className="startHero">
+
+            <p className="startEyebrow">
+              高安ゼミ LiPost × POCKY
             </p>
 
-            <h1>
+            <h1 className="startLogo">
               POKIPO
             </h1>
 
-            <p>
-              学内をめぐって、
-              ポッキーの魅力を見つけよう。
+            <p className="startCatch">
+              キャンパスをめぐって、
+              <br />
+              ポッキーを完成させよう。
             </p>
 
-          </div>
+            <div className="startVisual">
 
-          <div className="formGroup">
+              <div className="startPocky pockyOne">
+                <div className="startChocolate" />
+                <div className="startBiscuit" />
+              </div>
 
-            <label htmlFor="nickname">
-              ニックネーム
-            </label>
+              <div className="startPocky pockyTwo">
+                <div className="startChocolate" />
+                <div className="startBiscuit" />
+              </div>
 
-            <input
-              id="nickname"
-              type="text"
-              value={
-                nickname
-              }
-              onChange={(
-                event
-              ) =>
-                setNickname(
-                  event.target.value
-                )
-              }
-              placeholder="ニックネームを入力"
-              maxLength={
-                30
-              }
-            />
+              <div className="startPocky pockyThree">
+                <div className="startChocolate" />
+                <div className="startBiscuit" />
+              </div>
 
-          </div>
+            </div>
 
-          <div className="formGroup">
+          </header>
 
-            <label htmlFor="grade">
-              学年
-            </label>
+          {/* =================================
+              INTRO
+          ================================= */}
 
-            <select
-              id="grade"
-              value={
-                grade
-              }
-              onChange={(
-                event
-              ) =>
-                setGrade(
-                  event.target.value
-                )
-              }
-            >
-              <option value="">
-                選択してください
-              </option>
+          <section className="startIntro">
 
-              <option value="1年">
-                1年
-              </option>
+            <div className="startIntroNumber">
+              5
+            </div>
 
-              <option value="2年">
-                2年
-              </option>
+            <div>
 
-              <option value="3年">
-                3年
-              </option>
+              <p>
+                POKIPO STAMP RALLY
+              </p>
 
-              <option value="4年">
-                4年
-              </option>
+              <h2>
+                5つのスポットを巡って特典をゲットしよう
+              </h2>
 
-              <option value="その他">
-                その他
-              </option>
+              <span>
+                学内に散りばめられたQRコードを読み取って、
+                スタンプと豆知識を集めよう。
+              </span>
 
-            </select>
+            </div>
 
-          </div>
+          </section>
 
-          <div className="formGroup">
+          {/* =================================
+              FORM
+          ================================= */}
 
-            <label htmlFor="department">
-              学科
-            </label>
-
-            <select
-              id="department"
-              value={
-                department
-              }
-              onChange={(
-                event
-              ) =>
-                setDepartment(
-                  event.target.value
-                )
-              }
-            >
-              <option value="">
-                選択してください
-              </option>
-
-              <option value="ドイツ語学科">
-                ドイツ語学科
-              </option>
-
-              <option value="英語学科">
-                英語学科
-              </option>
-
-              <option value="フランス語学科">
-                フランス語学科
-              </option>
-
-              <option value="交流文化学科">
-                交流文化学科
-              </option>
-
-              <option value="言語文化学科">
-                言語文化学科
-              </option>
-
-              <option value="経済学科">
-                経済学科
-              </option>
-
-              <option value="経営学科">
-                経営学科
-              </option>
-
-              <option value="国際環境経済学科">
-                国際環境経済学科
-              </option>
-
-              <option value="法律学科">
-                法律学科
-              </option>
-
-              <option value="国際関係法学科">
-                国際関係法学科
-              </option>
-
-              <option value="総合政策学科">
-                総合政策学科
-              </option>
-
-              <option value="その他">
-                その他
-              </option>
-
-            </select>
-
-          </div>
-
-          {errorMessage && (
-            <p className="error">
-              {errorMessage}
-            </p>
-          )}
-
-          <button
-            type="button"
-            className="mainActionButton"
-            disabled={
-              submitting
-            }
-            onClick={() =>
-              void registerParticipant()
+          <form
+            className="startForm"
+            onSubmit={
+              submit
             }
           >
 
-            <span>
+            <div className="startFormTitle">
+
+              <p>
+                PLAYER PROFILE
+              </p>
+
+              <h2>
+                プロフィールを登録
+              </h2>
+
+            </div>
+
+            {/* NICKNAME */}
+
+            <div className="field">
+
+              <label htmlFor="nickname">
+                ニックネーム
+              </label>
+
+              <input
+                id="nickname"
+                type="text"
+                value={
+                  nickname
+                }
+                onChange={(
+                  e
+                ) =>
+                  setNickname(
+                    e.target.value
+                  )
+                }
+                placeholder="例：ぽっきー"
+                maxLength={
+                  20
+                }
+                disabled={
+                  submitting
+                }
+              />
+
+            </div>
+
+            {/* GRADE */}
+
+            <div className="field">
+
+              <label htmlFor="grade">
+                学年
+              </label>
+
+              <select
+                id="grade"
+                value={
+                  grade
+                }
+                onChange={(
+                  e
+                ) =>
+                  setGrade(
+                    e.target.value
+                  )
+                }
+                disabled={
+                  submitting
+                }
+              >
+
+                <option value="">
+                  選択してください
+                </option>
+
+                <option value="1年">
+                  1年
+                </option>
+
+                <option value="2年">
+                  2年
+                </option>
+
+                <option value="3年">
+                  3年
+                </option>
+
+                <option value="4年">
+                  4年
+                </option>
+
+                <option value="その他">
+                  その他
+                </option>
+
+              </select>
+
+            </div>
+
+            {/* DEPARTMENT */}
+
+            <div className="field">
+
+              <label htmlFor="department">
+                学科
+              </label>
+
+              <select
+                id="department"
+                value={
+                  department
+                }
+                onChange={(
+                  e
+                ) =>
+                  setDepartment(
+                    e.target.value
+                  )
+                }
+                disabled={
+                  submitting
+                }
+              >
+
+                <option value="">
+                  選択してください
+                </option>
+
+                <optgroup label="外国語学部">
+
+                  <option value="ドイツ語学科">
+                    ドイツ語学科
+                  </option>
+
+                  <option value="英語学科">
+                    英語学科
+                  </option>
+
+                  <option value="フランス語学科">
+                    フランス語学科
+                  </option>
+
+                  <option value="交流文化学科">
+                    交流文化学科
+                  </option>
+
+                </optgroup>
+
+                <optgroup label="国際教養学部">
+
+                  <option value="言語文化学科">
+                    言語文化学科
+                  </option>
+
+                </optgroup>
+
+                <optgroup label="経済学部">
+
+                  <option value="経済学科">
+                    経済学科
+                  </option>
+
+                  <option value="経営学科">
+                    経営学科
+                  </option>
+
+                  <option value="国際環境経済学科">
+                    国際環境経済学科
+                  </option>
+
+                </optgroup>
+
+                <optgroup label="法学部">
+
+                  <option value="法律学科">
+                    法律学科
+                  </option>
+
+                  <option value="国際関係法学科">
+                    国際関係法学科
+                  </option>
+
+                  <option value="総合政策学科">
+                    総合政策学科
+                  </option>
+
+                </optgroup>
+
+              </select>
+
+            </div>
+
+            {/* NEXT INFO */}
+
+            <div className="startSurveyNotice">
 
               <strong>
+                登録後、参加前アンケートがあります
+              </strong>
+
+              <p>
+                POKIPO体験による変化を確認するため、
+                簡単なアンケートへの回答をお願いします。
+              </p>
+
+            </div>
+
+            {/* ERROR */}
+
+            {message && (
+              <p className="error">
+                {message}
+              </p>
+            )}
+
+            {/* DATA WARNING */}
+
+            <section className="dataWarning">
+
+              <div className="dataWarningText">
+
+                <strong>
+                  始める前にチェック！
+                </strong>
+
+                <p>
+                  スタンプや豆知識などの進捗は、
+                  この端末のブラウザにも保存されます。
+                </p>
+
+                <p>
+                  イベント終了まで、
+                  Cookie・サイトデータ・閲覧データを削除しないでください。
+                </p>
+
+                <p className="dataWarningImportant">
+                  シークレットモード・プライベートブラウズでの参加も避けてください。
+                </p>
+
+              </div>
+
+            </section>
+
+            {/* SUBMIT */}
+
+            <button
+              type="submit"
+              className="primaryButton startButton"
+              disabled={
+                submitting
+              }
+            >
+
+              <span>
+
                 {submitting
                   ? "登録中..."
                   : "次へ進む"}
-              </strong>
 
-              {!submitting && (
-                <small>
-                  参加前アンケートへ
-                </small>
-              )}
-
-            </span>
-
-            {!submitting && (
-              <span className="buttonArrow">
-                ›
               </span>
-            )}
 
-          </button>
+              <span>
+                →
+              </span>
+
+            </button>
+
+          </form>
+
+          <p className="startFooter">
+            登録した情報は、
+            POKIPOの運営・進捗管理・企画分析に使用します。
+          </p>
 
         </section>
 
       </main>
 
       {/* ========================================
-          INTRO OVERLAY
+          動画イントロ
+          元画面の上に重ねるだけ
       ======================================== */}
 
       {showIntro && (
-        <div
-          className={[
-            "pokipoIntroOverlay",
-
-            introLeaving
-              ? "isLeaving"
-              : "",
-          ].join(
-            " "
-          )}
-        >
+        <div className="pokipoIntroOverlay">
 
           {/* VIDEO */}
 
@@ -687,26 +1008,37 @@ export default function Page() {
               videoRef
             }
             className="pokipoIntroVideo"
-            src={
-              INTRO_VIDEO_PATH
-            }
             playsInline
             preload="auto"
             onEnded={
               finishIntro
             }
-            onError={() =>
+            onError={(
+              event
+            ) => {
+              console.error(
+                "動画読み込みエラー:",
+                event.currentTarget.error
+              );
+
               setVideoError(
                 "動画ファイルを読み込めませんでした。"
-              )
-            }
-          />
+              );
+            }}
+          >
 
-          {/* DARK FILTER */}
+            <source
+              src={
+                INTRO_VIDEO_PATH
+              }
+              type="video/mp4"
+            />
+
+          </video>
 
           <div className="pokipoIntroShade" />
 
-          {/* START SCREEN */}
+          {/* START */}
 
           {!introStarted &&
             !curtainClosing && (
@@ -766,7 +1098,7 @@ export default function Page() {
             </button>
           )}
 
-          {/* SOUND LABEL */}
+          {/* SOUND */}
 
           {introStarted &&
             !curtainClosing && (
@@ -775,7 +1107,7 @@ export default function Page() {
             </div>
           )}
 
-          {/* CURTAINS */}
+          {/* CURTAIN */}
 
           <div
             className={[
@@ -825,6 +1157,7 @@ export default function Page() {
 
         </div>
       )}
+
     </>
   );
 }
