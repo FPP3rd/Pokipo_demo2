@@ -672,7 +672,7 @@ export default function BeforeSurveyPage() {
           </div>
 
           <h2>
-            ポッキーがリニューアルしたことを知っていましたか？
+            2025年9月にポッキーがリニューアルしたことを知っていましたか？
           </h2>
 
           <div className="surveyChoiceGrid two">
@@ -717,71 +717,7 @@ export default function BeforeSurveyPage() {
               RENEWAL INFO
           ================================= */}
 
-          <div className="surveyRenewalInfo">
 
-            <span>
-              POCKY RENEWAL
-            </span>
-
-            <h3>
-              2025年9月2日から全面リニューアル
-            </h3>
-
-            <p>
-              江崎グリコ株式会社では、
-              2025年9月2日からポッキーとポッキー極細を
-              全面リニューアルしています。
-            </p>
-
-            <div className="surveyRenewalBlock">
-
-              <strong>
-                リニューアルした理由
-              </strong>
-
-              <p>
-                瞬間的な「Share Happiness」ではなく、
-                誰でも気軽に世代や境遇を超えてシェアできる、
-                持続的な「Share Happiness」を作りたいという思いから、
-                全面リニューアルをしました。
-              </p>
-
-            </div>
-
-            <div className="surveyRenewalBlock">
-
-              <strong>
-                チョコレート
-              </strong>
-
-              <p>
-                シナモンのようなスパイシーな風味が特徴のカカオや、
-                フローラル・フルーティーな香りのカカオなど、
-                複数のカカオをブレンドしたチョコレートを使用しています。
-              </p>
-
-            </div>
-
-            <div className="surveyRenewalBlock">
-
-              <strong>
-                プレッツェル
-              </strong>
-
-              <p>
-                国産全粒粉を5％、発酵バターを0.8％新たに使用。
-                砂糖も複数種類を使うなど素材を見直し、
-                数百回の試作検証を行いました。
-              </p>
-
-              <p>
-                これにより、
-                チョコレートの風味を引き立てる味わいとなっています。
-              </p>
-
-            </div>
-
-          </div>
 
         </section>
 
