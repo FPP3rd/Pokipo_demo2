@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  FormEvent,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 
@@ -14,51 +16,34 @@ import {
 } from "../../../lib/supabase-client";
 
 /* ========================================
-   SCORE OPTIONS
+   TYPES
 ======================================== */
 
-type ScoreOption = {
-  value: number;
-  label: string;
-};
+type GenderValue =
+  | "male"
+  | "female"
+  | "no_answer"
+  | "";
 
-const interestOptions: ScoreOption[] = [
-  {
-    value: 4,
-    label: "とても興味がある",
-  },
-  {
-    value: 3,
-    label: "やや興味がある",
-  },
-  {
-    value: 2,
-    label: "あまり興味がない",
-  },
-  {
-    value: 1,
-    label: "まったく興味がない",
-  },
-];
+type FrequencyValue =
+  | "daily"
+  | "weekly"
+  | "monthly"
+  | "half_year"
+  | "never"
+  | "";
 
-const intentOptions: ScoreOption[] = [
-  {
-    value: 4,
-    label: "とても思う",
-  },
-  {
-    value: 3,
-    label: "やや思う",
-  },
-  {
-    value: 2,
-    label: "あまり思わない",
-  },
-  {
-    value: 1,
-    label: "まったく思わない",
-  },
-];
+type YesNoValue =
+  | "yes"
+  | "no"
+  | "";
+
+type ScaleValue =
+  | 1
+  | 2
+  | 3
+  | 4
+  | null;
 
 /* ========================================
    PAGE
@@ -69,32 +54,53 @@ export default function BeforeSurveyPage() {
     useRouter();
 
   /* ========================================
-     BASIC QUESTIONS
+     PARTICIPANT
+  ======================================== */
+
+  const [
+    participantId,
+    setParticipantId,
+  ] = useState("");
+
+  /* ========================================
+     QUESTION 01
   ======================================== */
 
   const [
     gender,
     setGender,
-  ] = useState("");
+  ] =
+    useState<GenderValue>("");
+
+  /* ========================================
+     QUESTION 02
+  ======================================== */
 
   const [
-    frequency,
-    setFrequency,
-  ] = useState("");
+    pockyFrequency,
+    setPockyFrequency,
+  ] =
+    useState<FrequencyValue>("");
+
+  /* ========================================
+     QUESTION 03
+  ======================================== */
 
   const [
-    knewRenewal,
-    setKnewRenewal,
-  ] = useState<
-    boolean | null
-  >(null);
+    renewalKnown,
+    setRenewalKnown,
+  ] =
+    useState<YesNoValue>("");
+
+  /* ========================================
+     QUESTION 04
+  ======================================== */
 
   const [
     hasShared,
     setHasShared,
-  ] = useState<
-    boolean | null
-  >(null);
+  ] =
+    useState<YesNoValue>("");
 
   const [
     shareSituation,
@@ -102,43 +108,41 @@ export default function BeforeSurveyPage() {
   ] = useState("");
 
   /* ========================================
-     PRE / POST COMPARISON
+     FEELING QUESTIONS
   ======================================== */
 
   const [
     interestScore,
     setInterestScore,
-  ] = useState<number | null>(
-    null
-  );
+  ] =
+    useState<ScaleValue>(
+      null
+    );
 
   const [
-    eatIntentScore,
-    setEatIntentScore,
-  ] = useState<number | null>(
-    null
-  );
+    wantToEatScore,
+    setWantToEatScore,
+  ] =
+    useState<ScaleValue>(
+      null
+    );
 
   const [
-    shareIntentScore,
-    setShareIntentScore,
-  ] = useState<number | null>(
-    null
-  );
+    shareIntentionScore,
+    setShareIntentionScore,
+  ] =
+    useState<ScaleValue>(
+      null
+    );
 
   /* ========================================
      UI
   ======================================== */
 
   const [
-    submitting,
-    setSubmitting,
-  ] = useState(false);
-
-  const [
     loading,
     setLoading,
-  ] = useState(true);
+  ] = useState(false);
 
   const [
     message,
@@ -146,195 +150,138 @@ export default function BeforeSurveyPage() {
   ] = useState("");
 
   /* ========================================
-     ACCESS CHECK
+     LOAD PARTICIPANT
   ======================================== */
 
   useEffect(() => {
-    async function checkSurvey() {
-      const participantId =
-        localStorage.getItem(
-          "pokipo_participant_id"
-        ) ??
-        localStorage.getItem(
-          "pokipo_user_id"
-        );
-
-      if (
-        !participantId
-      ) {
-        router.replace(
-          "/"
-        );
-
-        return;
-      }
-
-      const {
-        data,
-        error,
-      } =
-        await supabase.rpc(
-          "has_completed_pokipo_pre_survey",
-          {
-            p_participant_id:
-              participantId,
-          }
-        );
-
-      if (
-        error
-      ) {
-        console.error(
-          "参加前アンケート確認エラー:",
-          error
-        );
-
-        setLoading(
-          false
-        );
-
-        return;
-      }
-
-      if (
-        data === true
-      ) {
-        localStorage.setItem(
-          "pokipo_pre_survey_completed",
-          "true"
-        );
-
-        router.replace(
-          "/home"
-        );
-
-        return;
-      }
-
-      setLoading(
-        false
-      );
-    }
-
-    void checkSurvey();
-  }, [
-    router,
-  ]);
-
-  /* ========================================
-     SUBMIT
-  ======================================== */
-
-  async function submitSurvey() {
-    /* --------------------------------
-       VALIDATION
-    -------------------------------- */
-
-    if (
-      !gender
-    ) {
-      setMessage(
-        "① 性別を選択してください。"
-      );
-
-      return;
-    }
-
-    if (
-      !frequency
-    ) {
-      setMessage(
-        "② ポッキーを食べる頻度を選択してください。"
-      );
-
-      return;
-    }
-
-    if (
-      knewRenewal ===
-      null
-    ) {
-      setMessage(
-        "③ リニューアルについて回答してください。"
-      );
-
-      return;
-    }
-
-    if (
-      hasShared ===
-      null
-    ) {
-      setMessage(
-        "④ シェア経験について回答してください。"
-      );
-
-      return;
-    }
-
-    if (
-      hasShared &&
-      !shareSituation.trim()
-    ) {
-      setMessage(
-        "ポッキーをどんな時にシェアするか入力してください。"
-      );
-
-      return;
-    }
-
-    if (
-      interestScore ===
-      null
-    ) {
-      setMessage(
-        "⑤ ポッキーへの興味を選択してください。"
-      );
-
-      return;
-    }
-
-    if (
-      eatIntentScore ===
-      null
-    ) {
-      setMessage(
-        "⑥ ポッキーを食べたい気持ちを選択してください。"
-      );
-
-      return;
-    }
-
-    if (
-      shareIntentScore ===
-      null
-    ) {
-      setMessage(
-        "⑦ ポッキーをシェアしたい気持ちを選択してください。"
-      );
-
-      return;
-    }
-
-    const participantId =
+    const savedParticipantId =
       localStorage.getItem(
         "pokipo_participant_id"
       ) ??
       localStorage.getItem(
         "pokipo_user_id"
+      ) ??
+      "";
+
+    setParticipantId(
+      savedParticipantId
+    );
+
+    if (
+      !savedParticipantId
+    ) {
+      setMessage(
+        "参加者情報を確認できませんでした。最初の登録画面からもう一度お試しください。"
       );
+    }
+  }, []);
+
+  /* ========================================
+     COMPLETE CHECK
+  ======================================== */
+
+  const isComplete =
+    useMemo(
+      () => {
+        if (
+          !gender ||
+          !pockyFrequency ||
+          !renewalKnown ||
+          !hasShared
+        ) {
+          return false;
+        }
+
+        if (
+          hasShared ===
+            "yes" &&
+          !shareSituation.trim()
+        ) {
+          return false;
+        }
+
+        if (
+          interestScore ===
+            null ||
+          wantToEatScore ===
+            null ||
+          shareIntentionScore ===
+            null
+        ) {
+          return false;
+        }
+
+        return true;
+      },
+      [
+        gender,
+        pockyFrequency,
+        renewalKnown,
+        hasShared,
+        shareSituation,
+        interestScore,
+        wantToEatScore,
+        shareIntentionScore,
+      ]
+    );
+
+  /* ========================================
+     SCALE LABEL
+  ======================================== */
+
+  function getScaleLabel(
+    value: number
+  ) {
+    switch (
+      value
+    ) {
+      case 1:
+        return "あまりそう思わない";
+
+      case 2:
+        return "どちらかといえばそう思わない";
+
+      case 3:
+        return "どちらかといえばそう思う";
+
+      case 4:
+        return "とてもそう思う";
+
+      default:
+        return "";
+    }
+  }
+
+  /* ========================================
+     SAVE
+  ======================================== */
+
+  async function submitSurvey(
+    event: FormEvent
+  ) {
+    event.preventDefault();
 
     if (
       !participantId
     ) {
       setMessage(
-        "参加者情報を確認できませんでした。"
+        "参加者情報を確認できませんでした。最初の登録画面からもう一度お試しください。"
       );
 
       return;
     }
 
-    setSubmitting(
+    if (
+      !isComplete
+    ) {
+      setMessage(
+        "未回答の項目があります。すべての質問に回答してください。"
+      );
+
+      return;
+    }
+
+    setLoading(
       true
     );
 
@@ -344,81 +291,68 @@ export default function BeforeSurveyPage() {
       const {
         error,
       } =
-        await supabase.rpc(
-          "submit_pokipo_pre_survey",
-          {
-            p_participant_id:
-              participantId,
+        await supabase
+          .from(
+            "survey_before"
+          )
+          .upsert(
+            {
+              participant_id:
+                participantId,
 
-            p_gender:
               gender,
 
-            p_pocky_frequency:
-              frequency,
+              pocky_frequency:
+                pockyFrequency,
 
-            p_knew_renewal:
-              knewRenewal,
+              renewal_known:
+                renewalKnown,
 
-            p_has_shared_pocky:
-              hasShared,
+              has_shared_pocky:
+                hasShared,
 
-            p_share_situation:
-              hasShared
-                ? shareSituation.trim()
-                : "",
+              share_situation:
+                hasShared ===
+                "yes"
+                  ? shareSituation.trim()
+                  : null,
 
-            p_interest_score:
-              interestScore,
+              interest_score:
+                interestScore,
 
-            p_eat_intent_score:
-              eatIntentScore,
+              want_to_eat_score:
+                wantToEatScore,
 
-            p_share_intent_score:
-              shareIntentScore,
-          }
-        );
+              share_intention_score:
+                shareIntentionScore,
+            },
+            {
+              onConflict:
+                "participant_id",
+            }
+          );
 
       if (
         error
       ) {
         console.error(
           "参加前アンケート保存エラー:",
-          {
-            message:
-              error.message,
-
-            details:
-              error.details,
-
-            hint:
-              error.hint,
-
-            code:
-              error.code,
-          }
+          error
         );
 
         setMessage(
-          "アンケートを保存できませんでした。通信環境を確認して、もう一度お試しください。"
+          "アンケートを保存できませんでした。通信環境を確認してもう一度お試しください。"
         );
 
         return;
       }
 
-      /* =================================
-         LOCAL STORAGE
-      ================================= */
-
       localStorage.setItem(
-        "pokipo_pre_survey_completed",
+        "pokipo_before_survey_completed",
         "true"
       );
 
-      /* =================================
-         HOME
-      ================================= */
-
-      router.replace(
+      router.push(
         "/home"
       );
     } catch (
@@ -430,86 +364,65 @@ export default function BeforeSurveyPage() {
       );
 
       setMessage(
-        "通信中にエラーが発生しました。"
+        "通信中にエラーが発生しました。もう一度お試しください。"
       );
     } finally {
-      setSubmitting(
+      setLoading(
         false
       );
     }
   }
 
   /* ========================================
-     SCORE QUESTION
+     SCALE BUTTONS
   ======================================== */
 
-  function renderScoreQuestion(
-    options: ScoreOption[],
-    currentValue: number | null,
+  function renderScaleButtons(
+    value: ScaleValue,
     setter: (
-      value: number
+      value: ScaleValue
     ) => void
   ) {
     return (
-      <div className="surveyScoreOptions">
+      <div className="surveyScaleGrid">
 
-        {options.map(
+        {[1, 2, 3, 4].map(
           (
-            option
+            score
           ) => (
             <button
               key={
-                option.value
+                score
               }
               type="button"
               className={
-                currentValue ===
-                option.value
-                  ? "surveyScoreOption active"
-                  : "surveyScoreOption"
+                value ===
+                score
+                  ? "surveyScaleButton active"
+                  : "surveyScaleButton"
               }
               onClick={() =>
                 setter(
-                  option.value
+                  score as ScaleValue
                 )
               }
             >
 
-              <span>
-                {option.value}
-              </span>
-
               <strong>
-                {option.label}
+                {score}
               </strong>
+
+              <span>
+                {getScaleLabel(
+                  score
+                )}
+              </span>
 
             </button>
           )
         )}
 
       </div>
-    );
-  }
-
-  /* ========================================
-     LOADING
-  ======================================== */
-
-  if (
-    loading
-  ) {
-    return (
-      <main className="shell">
-
-        <section className="surveyPage">
-
-          <div className="surveyLoading">
-            アンケート情報を確認中...
-          </div>
-
-        </section>
-
-      </main>
     );
   }
 
@@ -528,7 +441,7 @@ export default function BeforeSurveyPage() {
 
         <header className="surveyHeader">
 
-          <span>
+          <span className="surveyEyebrow">
             BEFORE POKIPO
           </span>
 
@@ -537,473 +450,508 @@ export default function BeforeSurveyPage() {
           </h1>
 
           <p>
-            POKIPOを体験する前の、
-            あなたのポッキーに対する印象を教えてください。
+            POKIPOを始める前の
+            あなたのことを教えてください。
           </p>
 
         </header>
 
         {/* =================================
-            PROGRESS NOTICE
+            FORM
         ================================= */}
 
-        <section className="surveyIntroCard">
+        <form
+          onSubmit={
+            submitSurvey
+          }
+          className="surveyForm"
+        >
 
-          <strong>
-            回答後、POKIPOがスタートします！
-          </strong>
+          {/* =================================
+              01
+          ================================= */}
 
-          <p>
-            このアンケートはPOKIPO体験前後の変化を分析するために使用します。
-          </p>
+          <section className="surveyQuestionCard">
 
-        </section>
+            <div className="surveyQuestionNumber">
+              01
+            </div>
 
-        {/* =================================
-            Q1
-        ================================= */}
+            <div className="surveyQuestionBody">
 
-        <section className="surveyQuestionCard">
+              <span className="surveyQuestionLabel">
+                QUESTION
+              </span>
 
-          <div className="surveyQuestionNumber">
-            01
-          </div>
+              <h2>
+                性別を教えてください。
+              </h2>
 
-          <h2>
-            性別を教えてください
-          </h2>
+              <div className="surveyChoiceGrid">
 
-          <div className="surveyChoiceGrid">
-
-            {[
-              "男性",
-              "女性",
-              "回答しない",
-            ].map(
-              (
-                option
-              ) => (
                 <button
-                  key={
-                    option
-                  }
                   type="button"
                   className={
                     gender ===
-                    option
+                    "male"
                       ? "surveyChoice active"
                       : "surveyChoice"
                   }
                   onClick={() =>
                     setGender(
-                      option
+                      "male"
                     )
                   }
                 >
-                  {option}
+                  男性
                 </button>
-              )
-            )}
 
-          </div>
-
-        </section>
-
-        {/* =================================
-            Q2
-        ================================= */}
-
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            02
-          </div>
-
-          <h2>
-            ポッキーを食べる頻度はどれくらいですか？
-          </h2>
-
-          <div className="surveyChoiceList">
-
-            {[
-              "毎日食べる",
-              "週1回",
-              "月1〜2回",
-              "半年に1回",
-              "食べない",
-            ].map(
-              (
-                option
-              ) => (
                 <button
-                  key={
-                    option
-                  }
                   type="button"
                   className={
-                    frequency ===
-                    option
+                    gender ===
+                    "female"
                       ? "surveyChoice active"
                       : "surveyChoice"
                   }
                   onClick={() =>
-                    setFrequency(
-                      option
+                    setGender(
+                      "female"
                     )
                   }
                 >
-                  {option}
+                  女性
                 </button>
-              )
-            )}
 
-          </div>
+                <button
+                  type="button"
+                  className={
+                    gender ===
+                    "no_answer"
+                      ? "surveyChoice active"
+                      : "surveyChoice"
+                  }
+                  onClick={() =>
+                    setGender(
+                      "no_answer"
+                    )
+                  }
+                >
+                  回答しない
+                </button>
 
-        </section>
+              </div>
 
-        {/* =================================
-            Q3
-        ================================= */}
+            </div>
 
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            03
-          </div>
-
-          <h2>
-            ポッキーがリニューアルしたことを知っていましたか？
-          </h2>
-
-          <div className="surveyChoiceGrid two">
-
-            <button
-              type="button"
-              className={
-                knewRenewal ===
-                true
-                  ? "surveyChoice active"
-                  : "surveyChoice"
-              }
-              onClick={() =>
-                setKnewRenewal(
-                  true
-                )
-              }
-            >
-              はい
-            </button>
-
-            <button
-              type="button"
-              className={
-                knewRenewal ===
-                false
-                  ? "surveyChoice active"
-                  : "surveyChoice"
-              }
-              onClick={() =>
-                setKnewRenewal(
-                  false
-                )
-              }
-            >
-              いいえ
-            </button>
-
-          </div>
+          </section>
 
           {/* =================================
-              RENEWAL INFO
+              02
           ================================= */}
 
-          <div className="surveyRenewalInfo">
+          <section className="surveyQuestionCard">
 
-            <span>
-              POCKY RENEWAL
-            </span>
-
-            <h3>
-              2025年9月2日から全面リニューアル
-            </h3>
-
-            <p>
-              江崎グリコ株式会社では、
-              2025年9月2日からポッキーとポッキー極細を
-              全面リニューアルしています。
-            </p>
-
-            <div className="surveyRenewalBlock">
-
-              <strong>
-                リニューアルした理由
-              </strong>
-
-              <p>
-                瞬間的な「Share Happiness」ではなく、
-                誰でも気軽に世代や境遇を超えてシェアできる、
-                持続的な「Share Happiness」を作りたいという思いから、
-                全面リニューアルをしました。
-              </p>
-
+            <div className="surveyQuestionNumber">
+              02
             </div>
 
-            <div className="surveyRenewalBlock">
+            <div className="surveyQuestionBody">
 
-              <strong>
-                チョコレート
-              </strong>
-
-              <p>
-                シナモンのようなスパイシーな風味が特徴のカカオや、
-                フローラル・フルーティーな香りのカカオなど、
-                複数のカカオをブレンドしたチョコレートを使用しています。
-              </p>
-
-            </div>
-
-            <div className="surveyRenewalBlock">
-
-              <strong>
-                プレッツェル
-              </strong>
-
-              <p>
-                国産全粒粉を5％、発酵バターを0.8％新たに使用。
-                砂糖も複数種類を使うなど素材を見直し、
-                数百回の試作検証を行いました。
-              </p>
-
-              <p>
-                これにより、
-                チョコレートの風味を引き立てる味わいとなっています。
-              </p>
-
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* =================================
-            Q4
-        ================================= */}
-
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            04
-          </div>
-
-          <h2>
-            ポッキーをシェアして食べたことがありますか？
-          </h2>
-
-          <div className="surveyChoiceGrid two">
-
-            <button
-              type="button"
-              className={
-                hasShared ===
-                true
-                  ? "surveyChoice active"
-                  : "surveyChoice"
-              }
-              onClick={() =>
-                setHasShared(
-                  true
-                )
-              }
-            >
-              はい
-            </button>
-
-            <button
-              type="button"
-              className={
-                hasShared ===
-                false
-                  ? "surveyChoice active"
-                  : "surveyChoice"
-              }
-              onClick={() => {
-                setHasShared(
-                  false
-                );
-
-                setShareSituation(
-                  ""
-                );
-              }}
-            >
-              いいえ
-            </button>
-
-          </div>
-
-          {hasShared ===
-            true && (
-            <div className="surveyTextField">
-
-              <label htmlFor="shareSituation">
-                どんな時にシェアしますか？
-              </label>
-
-              <textarea
-                id="shareSituation"
-                value={
-                  shareSituation
-                }
-                onChange={(
-                  event
-                ) =>
-                  setShareSituation(
-                    event.target.value
-                  )
-                }
-                maxLength={
-                  200
-                }
-                rows={
-                  4
-                }
-                placeholder="例：友達と休み時間にお菓子を食べる時"
-              />
-
-              <span>
-                {shareSituation.length}/200
+              <span className="surveyQuestionLabel">
+                QUESTION
               </span>
 
+              <h2>
+                ポッキーを食べる頻度は
+                どれくらいですか？
+              </h2>
+
+              <div className="surveyChoiceGrid singleColumn">
+
+                {[
+                  {
+                    value:
+                      "daily",
+                    label:
+                      "毎日食べる",
+                  },
+                  {
+                    value:
+                      "weekly",
+                    label:
+                      "週1回",
+                  },
+                  {
+                    value:
+                      "monthly",
+                    label:
+                      "月1〜2回",
+                  },
+                  {
+                    value:
+                      "half_year",
+                    label:
+                      "半年に1回",
+                  },
+                  {
+                    value:
+                      "never",
+                    label:
+                      "食べない",
+                  },
+                ].map(
+                  (
+                    item
+                  ) => (
+                    <button
+                      key={
+                        item.value
+                      }
+                      type="button"
+                      className={
+                        pockyFrequency ===
+                        item.value
+                          ? "surveyChoice active"
+                          : "surveyChoice"
+                      }
+                      onClick={() =>
+                        setPockyFrequency(
+                          item.value as FrequencyValue
+                        )
+                      }
+                    >
+                      {item.label}
+                    </button>
+                  )
+                )}
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* =================================
+              03
+          ================================= */}
+
+          <section className="surveyQuestionCard">
+
+            <div className="surveyQuestionNumber">
+              03
+            </div>
+
+            <div className="surveyQuestionBody">
+
+              <span className="surveyQuestionLabel">
+                QUESTION
+              </span>
+
+              <h2>
+                2025年9月に
+                ポッキーがリニューアルしたことを
+                知っていましたか？
+              </h2>
+
+              <div className="surveyChoiceGrid">
+
+                <button
+                  type="button"
+                  className={
+                    renewalKnown ===
+                    "yes"
+                      ? "surveyChoice active"
+                      : "surveyChoice"
+                  }
+                  onClick={() =>
+                    setRenewalKnown(
+                      "yes"
+                    )
+                  }
+                >
+                  知っていた
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    renewalKnown ===
+                    "no"
+                      ? "surveyChoice active"
+                      : "surveyChoice"
+                  }
+                  onClick={() =>
+                    setRenewalKnown(
+                      "no"
+                    )
+                  }
+                >
+                  知らなかった
+                </button>
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* =================================
+              04
+          ================================= */}
+
+          <section className="surveyQuestionCard">
+
+            <div className="surveyQuestionNumber">
+              04
+            </div>
+
+            <div className="surveyQuestionBody">
+
+              <span className="surveyQuestionLabel">
+                QUESTION
+              </span>
+
+              <h2>
+                ポッキーを
+                誰かとシェアして
+                食べたことがありますか？
+              </h2>
+
+              <div className="surveyChoiceGrid">
+
+                <button
+                  type="button"
+                  className={
+                    hasShared ===
+                    "yes"
+                      ? "surveyChoice active"
+                      : "surveyChoice"
+                  }
+                  onClick={() =>
+                    setHasShared(
+                      "yes"
+                    )
+                  }
+                >
+                  はい
+                </button>
+
+                <button
+                  type="button"
+                  className={
+                    hasShared ===
+                    "no"
+                      ? "surveyChoice active"
+                      : "surveyChoice"
+                  }
+                  onClick={() => {
+                    setHasShared(
+                      "no"
+                    );
+
+                    setShareSituation(
+                      ""
+                    );
+                  }}
+                >
+                  いいえ
+                </button>
+
+              </div>
+
+              {hasShared ===
+                "yes" && (
+                <div className="surveyFreeText">
+
+                  <label htmlFor="shareSituation">
+                    どんなときに
+                    シェアしますか？
+                  </label>
+
+                  <textarea
+                    id="shareSituation"
+                    value={
+                      shareSituation
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setShareSituation(
+                        event.target.value
+                      )
+                    }
+                    placeholder="例：友達とお菓子を食べるとき"
+                    rows={
+                      4
+                    }
+                  />
+
+                </div>
+              )}
+
+            </div>
+
+          </section>
+
+          {/* =================================
+              FEELING HEADER
+          ================================= */}
+
+          <section className="surveyFeelingHeader">
+
+            <span>
+              CURRENT FEELING
+            </span>
+
+            <h2>
+              現在の気持ちを教えてください
+            </h2>
+
+            <p>
+              それぞれ、
+              今のあなたの気持ちに
+              一番近いものを選んでください。
+            </p>
+
+          </section>
+
+          {/* =================================
+              05
+          ================================= */}
+
+          <section className="surveyQuestionCard feeling">
+
+            <div className="surveyQuestionNumber">
+              05
+            </div>
+
+            <div className="surveyQuestionBody">
+
+              <span className="surveyQuestionLabel">
+                BEFORE SCORE
+              </span>
+
+              <h2>
+                ポッキーについて
+                もっと知りたいと思いますか？
+              </h2>
+
+              {renderScaleButtons(
+                interestScore,
+                setInterestScore
+              )}
+
+            </div>
+
+          </section>
+
+          {/* =================================
+              06
+          ================================= */}
+
+          <section className="surveyQuestionCard feeling">
+
+            <div className="surveyQuestionNumber">
+              06
+            </div>
+
+            <div className="surveyQuestionBody">
+
+              <span className="surveyQuestionLabel">
+                BEFORE SCORE
+              </span>
+
+              <h2>
+                今、
+                ポッキーを食べたいと思いますか？
+              </h2>
+
+              {renderScaleButtons(
+                wantToEatScore,
+                setWantToEatScore
+              )}
+
+            </div>
+
+          </section>
+
+          {/* =================================
+              07
+          ================================= */}
+
+          <section className="surveyQuestionCard feeling">
+
+            <div className="surveyQuestionNumber">
+              07
+            </div>
+
+            <div className="surveyQuestionBody">
+
+              <span className="surveyQuestionLabel">
+                BEFORE SCORE
+              </span>
+
+              <h2>
+                今後、
+                誰かとポッキーを
+                シェアしてみたいと思いますか？
+              </h2>
+
+              {renderScaleButtons(
+                shareIntentionScore,
+                setShareIntentionScore
+              )}
+
+            </div>
+
+          </section>
+
+          {/* =================================
+              MESSAGE
+          ================================= */}
+
+          {message && (
+            <div className="surveyMessage">
+              {message}
             </div>
           )}
 
-        </section>
+          {/* =================================
+              SUBMIT
+          ================================= */}
 
-        {/* =================================
-            PRE / POST SECTION
-        ================================= */}
+          <button
+            type="submit"
+            className="surveySubmitButton"
+            disabled={
+              !isComplete ||
+              loading
+            }
+          >
 
-        <section className="surveyComparisonIntro">
+            <span>
 
-          <span>
-            BEFORE / AFTER
-          </span>
+              <strong>
+                {loading
+                  ? "保存しています..."
+                  : "POKIPOをはじめる"}
+              </strong>
 
-          <h2>
-            現在の気持ちを教えてください
-          </h2>
+              <small>
+                回答後、
+                ホーム画面へ進みます
+              </small>
 
-          <p>
-            次の3問は、POKIPO体験後にも同じ質問をします。
-            今の気持ちに最も近いものを選んでください。
-          </p>
+            </span>
 
-        </section>
+            <span className="buttonArrow">
+              →
+            </span>
 
-        {/* =================================
-            Q5
-        ================================= */}
+          </button>
 
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            05
-          </div>
-
-          <h2>
-            現在、ポッキーにどの程度興味がありますか？
-          </h2>
-
-          {renderScoreQuestion(
-            interestOptions,
-            interestScore,
-            setInterestScore
-          )}
-
-        </section>
-
-        {/* =================================
-            Q6
-        ================================= */}
-
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            06
-          </div>
-
-          <h2>
-            今後、ポッキーを食べたいと思いますか？
-          </h2>
-
-          {renderScoreQuestion(
-            intentOptions,
-            eatIntentScore,
-            setEatIntentScore
-          )}
-
-        </section>
-
-        {/* =================================
-            Q7
-        ================================= */}
-
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            07
-          </div>
-
-          <h2>
-            今後、ポッキーを誰かとシェアして食べたいと思いますか？
-          </h2>
-
-          {renderScoreQuestion(
-            intentOptions,
-            shareIntentScore,
-            setShareIntentScore
-          )}
-
-        </section>
-
-        {/* =================================
-            MESSAGE
-        ================================= */}
-
-        {message && (
-          <p className="surveyError">
-            {message}
-          </p>
-        )}
-
-        {/* =================================
-            SUBMIT
-        ================================= */}
-
-        <button
-          type="button"
-          className="surveySubmitButton"
-          onClick={
-            submitSurvey
-          }
-          disabled={
-            submitting
-          }
-        >
-
-          <span>
-
-            {submitting
-              ? "回答を保存中..."
-              : "回答してPOKIPOをはじめる"}
-
-          </span>
-
-          <strong>
-            →
-          </strong>
-
-        </button>
+        </form>
 
       </section>
 
