@@ -13,112 +13,122 @@ import {
   supabase,
 } from "../../../lib/supabase-client";
 
-/* ========================================
-   TYPES
-======================================== */
-
-type FourPointScore =
-  | 1
-  | 2
-  | 3
-  | 4
-  | null;
-
 type PreSurvey = {
-  interest_score:
-    number | null;
-
-  eat_intent_score:
-    number | null;
-
-  share_intent_score:
-    number | null;
-
-  knew_renewal:
-    boolean | null;
-
-  has_shared_pocky:
-    boolean | null;
+  gender: string;
+  pocky_frequency: string;
+  knew_renewal: boolean;
+  has_shared_pocky: boolean;
+  share_situation: string | null;
+  interest_score: number;
+  eat_intent_score: number;
+  share_intent_score: number;
 };
 
-/* ========================================
-   PAGE
-======================================== */
+type ScoreOption = {
+  value: number;
+  label: string;
+};
+
+const interestOptions: ScoreOption[] = [
+  {
+    value: 4,
+    label: "とても興味がある",
+  },
+  {
+    value: 3,
+    label: "やや興味がある",
+  },
+  {
+    value: 2,
+    label: "あまり興味がない",
+  },
+  {
+    value: 1,
+    label: "まったく興味がない",
+  },
+];
+
+const intentOptions: ScoreOption[] = [
+  {
+    value: 4,
+    label: "とても思う",
+  },
+  {
+    value: 3,
+    label: "やや思う",
+  },
+  {
+    value: 2,
+    label: "あまり思わない",
+  },
+  {
+    value: 1,
+    label: "まったく思わない",
+  },
+];
+
+const understandingOptions: ScoreOption[] = [
+  {
+    value: 4,
+    label: "よく知ることができた",
+  },
+  {
+    value: 3,
+    label: "ある程度知ることができた",
+  },
+  {
+    value: 2,
+    label: "あまり知ることができなかった",
+  },
+  {
+    value: 1,
+    label: "知ることができなかった",
+  },
+];
 
 export default function AfterSurveyPage() {
   const router =
     useRouter();
 
-  /* ========================================
-     PARTICIPANT
-  ======================================== */
-
-  const [
-    participantId,
-    setParticipantId,
-  ] = useState("");
-
-  const [
-    nickname,
-    setNickname,
-  ] = useState("");
-
-  /* ========================================
-     BEFORE SURVEY
-  ======================================== */
-
   const [
     preSurvey,
     setPreSurvey,
-  ] =
-    useState<PreSurvey | null>(
-      null
-    );
-
-  /* ========================================
-     AFTER SURVEY
-  ======================================== */
+  ] = useState<PreSurvey | null>(
+    null
+  );
 
   const [
     interestScore,
     setInterestScore,
-  ] =
-    useState<FourPointScore>(
-      null
-    );
+  ] = useState<number | null>(
+    null
+  );
 
   const [
     eatIntentScore,
     setEatIntentScore,
-  ] =
-    useState<FourPointScore>(
-      null
-    );
+  ] = useState<number | null>(
+    null
+  );
 
   const [
     shareIntentScore,
     setShareIntentScore,
-  ] =
-    useState<FourPointScore>(
-      null
-    );
+  ] = useState<number | null>(
+    null
+  );
 
   const [
     renewalUnderstandingScore,
     setRenewalUnderstandingScore,
-  ] =
-    useState<FourPointScore>(
-      null
-    );
+  ] = useState<number | null>(
+    null
+  );
 
   const [
     memorablePoint,
     setMemorablePoint,
   ] = useState("");
-
-  /* ========================================
-     UI
-  ======================================== */
 
   const [
     loading,
@@ -131,17 +141,13 @@ export default function AfterSurveyPage() {
   ] = useState(false);
 
   const [
-    errorMessage,
-    setErrorMessage,
+    message,
+    setMessage,
   ] = useState("");
 
-  /* ========================================
-     LOAD
-  ======================================== */
-
   useEffect(() => {
-    async function loadSurvey() {
-      const savedParticipantId =
+    async function loadSurveyData() {
+      const participantId =
         localStorage.getItem(
           "pokipo_participant_id"
         ) ??
@@ -149,13 +155,8 @@ export default function AfterSurveyPage() {
           "pokipo_user_id"
         );
 
-      const savedNickname =
-        localStorage.getItem(
-          "pokipo_nickname"
-        ) ?? "";
-
       if (
-        !savedParticipantId
+        !participantId
       ) {
         router.replace(
           "/"
@@ -164,147 +165,136 @@ export default function AfterSurveyPage() {
         return;
       }
 
-      setParticipantId(
-        savedParticipantId
-      );
+      const {
+        data:
+          completedData,
 
-      setNickname(
-        savedNickname
-      );
+        error:
+          completedError,
+      } =
+        await supabase.rpc(
+          "has_completed_pokipo_post_survey",
+          {
+            p_participant_id:
+              participantId,
+          }
+        );
 
-      try {
-        const {
-          data,
-          error,
-        } =
-          await supabase
-            .from(
-              "pokipo_pre_surveys"
-            )
-            .select(
-              "interest_score, eat_intent_score, share_intent_score, knew_renewal, has_shared_pocky"
-            )
-            .eq(
-              "participant_id",
-              savedParticipantId
-            )
-            .order(
-              "created_at",
-              {
-                ascending:
-                  false,
-              }
-            )
-            .limit(
-              1
-            );
-
-        if (
-          error
-        ) {
-          console.error(
-            "参加前アンケート取得エラー:",
-            error
-          );
-        } else if (
-          data &&
-          data.length >
-            0
-        ) {
-          setPreSurvey(
-            data[0] as PreSurvey
-          );
-        }
-      } catch (
-        error
+      if (
+        completedError
       ) {
         console.error(
-          "参加前アンケート通信エラー:",
-          error
+          "参加後アンケート確認エラー:",
+          completedError
         );
-      } finally {
+
         setLoading(
           false
         );
+
+        return;
       }
+
+      if (
+        completedData ===
+        true
+      ) {
+        localStorage.setItem(
+          "pokipo_post_survey_completed",
+          "true"
+        );
+
+        router.replace(
+          "/reward"
+        );
+
+        return;
+      }
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "get_pokipo_pre_survey",
+          {
+            p_participant_id:
+              participantId,
+          }
+        );
+
+      if (
+        error
+      ) {
+        console.error(
+          "参加前アンケート取得エラー:",
+          error
+        );
+
+        setMessage(
+          "参加前アンケートの回答を読み込めませんでした。"
+        );
+
+        setLoading(
+          false
+        );
+
+        return;
+      }
+
+      if (
+        data &&
+        data.length >
+          0
+      ) {
+        setPreSurvey(
+          data[0] as PreSurvey
+        );
+      }
+
+      setLoading(
+        false
+      );
     }
 
-    void loadSurvey();
+    void loadSurveyData();
   }, [
     router,
   ]);
 
-  /* ========================================
-     SCORE LABEL
-  ======================================== */
-
-  function getScoreLabel(
-    score:
-      number | null
+  function scoreLabel(
+    type:
+      | "interest"
+      | "intent",
+    value: number
   ) {
-    switch (
-      score
-    ) {
-      case 1:
-        return "そう思わない";
-
-      case 2:
-        return "あまりそう思わない";
-
-      case 3:
-        return "ややそう思う";
-
-      case 4:
-        return "とてもそう思う";
-
-      default:
-        return "回答なし";
-    }
-  }
-
-  /* ========================================
-     SCALE
-  ======================================== */
-
-  function renderScoreButtons(
-    value: FourPointScore,
-    setter: (
-      score: FourPointScore
-    ) => void
-  ) {
-    const options = [
-      {
-        value:
-          1 as const,
-
-        label:
-          "そう思わない",
-      },
-      {
-        value:
-          2 as const,
-
-        label:
-          "あまりそう思わない",
-      },
-      {
-        value:
-          3 as const,
-
-        label:
-          "ややそう思う",
-      },
-      {
-        value:
-          4 as const,
-
-        label:
-          "とてもそう思う",
-      },
-    ];
+    const options =
+      type ===
+      "interest"
+        ? interestOptions
+        : intentOptions;
 
     return (
-      <div className="surveyScaleGrid">
+      options.find(
+        (
+          option
+        ) =>
+          option.value ===
+          value
+      )?.label ??
+      ""
+    );
+  }
+
+  function renderScoreQuestion(
+    options: ScoreOption[],
+    currentValue: number | null,
+    setter: (
+      value: number
+    ) => void
+  ) {
+    return (
+      <div className="surveyScoreOptions">
 
         {options.map(
           (
@@ -316,10 +306,10 @@ export default function AfterSurveyPage() {
               }
               type="button"
               className={
-                value ===
+                currentValue ===
                 option.value
-                  ? "surveyScaleButton active"
-                  : "surveyScaleButton"
+                  ? "surveyScoreOption active"
+                  : "surveyScoreOption"
               }
               onClick={() =>
                 setter(
@@ -327,13 +317,15 @@ export default function AfterSurveyPage() {
                 )
               }
             >
-              <strong>
-                {option.value}
-              </strong>
 
               <span>
-                {option.label}
+                {option.value}
               </span>
+
+              <strong>
+                {option.label}
+              </strong>
+
             </button>
           )
         )}
@@ -342,64 +334,63 @@ export default function AfterSurveyPage() {
     );
   }
 
-  /* ========================================
-     VALIDATION
-  ======================================== */
-
-  function validateForm() {
+  async function submitSurvey() {
     if (
       interestScore ===
       null
     ) {
-      return "ポッキーへの興味を選択してください。";
-    }
-
-    if (
-      eatIntentScore ===
-      null
-    ) {
-      return "ポッキーを食べたい気持ちを選択してください。";
-    }
-
-    if (
-      shareIntentScore ===
-      null
-    ) {
-      return "ポッキーをシェアしたい気持ちを選択してください。";
-    }
-
-    if (
-      renewalUnderstandingScore ===
-      null
-    ) {
-      return "リニューアルへの理解度を選択してください。";
-    }
-
-    return "";
-  }
-
-  /* ========================================
-     SUBMIT
-  ======================================== */
-
-  async function submitSurvey() {
-    const validationError =
-      validateForm();
-
-    if (
-      validationError
-    ) {
-      setErrorMessage(
-        validationError
+      setMessage(
+        "① ポッキーへの興味を選択してください。"
       );
 
       return;
     }
 
     if (
+      eatIntentScore ===
+      null
+    ) {
+      setMessage(
+        "② ポッキーを食べたい気持ちを選択してください。"
+      );
+
+      return;
+    }
+
+    if (
+      shareIntentScore ===
+      null
+    ) {
+      setMessage(
+        "③ ポッキーをシェアしたい気持ちを選択してください。"
+      );
+
+      return;
+    }
+
+    if (
+      renewalUnderstandingScore ===
+      null
+    ) {
+      setMessage(
+        "④ リニューアル内容の理解度を選択してください。"
+      );
+
+      return;
+    }
+
+    const participantId =
+      localStorage.getItem(
+        "pokipo_participant_id"
+      ) ??
+      localStorage.getItem(
+        "pokipo_user_id"
+      );
+
+    if (
       !participantId
     ) {
-      setErrorMessage(
+      setMessage(
         "参加者情報を確認できませんでした。"
       );
 
@@ -410,135 +401,57 @@ export default function AfterSurveyPage() {
       true
     );
 
-    setErrorMessage("");
+    setMessage("");
 
     try {
       const {
-        data:
-          existingData,
-
-        error:
-          existingError,
+        error,
       } =
-        await supabase
-          .from(
-            "pokipo_post_surveys"
-          )
-          .select(
-            "id"
-          )
-          .eq(
-            "participant_id",
-            participantId
-          )
-          .order(
-            "created_at",
-            {
-              ascending:
-                false,
-            }
-          )
-          .limit(
-            1
-          );
+        await supabase.rpc(
+          "submit_pokipo_post_survey",
+          {
+            p_participant_id:
+              participantId,
 
-      if (
-        existingError
-      ) {
-        console.error(
-          "参加後アンケート確認エラー:",
-          existingError
+            p_interest_score:
+              interestScore,
+
+            p_eat_intent_score:
+              eatIntentScore,
+
+            p_share_intent_score:
+              shareIntentScore,
+
+            p_renewal_understanding_score:
+              renewalUnderstandingScore,
+
+            p_memorable_point:
+              memorablePoint.trim(),
+          }
         );
 
-        setErrorMessage(
-          "回答状況を確認できませんでした。"
+      if (
+        error
+      ) {
+        console.error(
+          "参加後アンケート保存エラー:",
+          {
+            message:
+              error.message,
+            details:
+              error.details,
+            hint:
+              error.hint,
+            code:
+              error.code,
+          }
+        );
+
+        setMessage(
+          "アンケートを保存できませんでした。通信環境を確認してください。"
         );
 
         return;
-      }
-
-      const surveyPayload = {
-        participant_id:
-          participantId,
-
-        interest_score:
-          interestScore,
-
-        eat_intent_score:
-          eatIntentScore,
-
-        share_intent_score:
-          shareIntentScore,
-
-        renewal_understanding_score:
-          renewalUnderstandingScore,
-
-        memorable_point:
-          memorablePoint.trim()
-            ? memorablePoint.trim()
-            : null,
-      };
-
-      if (
-        existingData &&
-        existingData.length >
-          0
-      ) {
-        const {
-          error,
-        } =
-          await supabase
-            .from(
-              "pokipo_post_surveys"
-            )
-            .update(
-              surveyPayload
-            )
-            .eq(
-              "id",
-              existingData[0].id
-            );
-
-        if (
-          error
-        ) {
-          console.error(
-            "参加後アンケート更新エラー:",
-            error
-          );
-
-          setErrorMessage(
-            error.message
-          );
-
-          return;
-        }
-      } else {
-        const {
-          error,
-        } =
-          await supabase
-            .from(
-              "pokipo_post_surveys"
-            )
-            .insert(
-              surveyPayload
-            );
-
-        if (
-          error
-        ) {
-          console.error(
-            "参加後アンケート保存エラー:",
-            error
-          );
-
-          setErrorMessage(
-            error.message
-          );
-
-          return;
-        }
       }
 
       localStorage.setItem(
@@ -546,7 +459,7 @@ export default function AfterSurveyPage() {
         "true"
       );
 
-      router.push(
+      router.replace(
         "/reward"
       );
     } catch (
@@ -557,7 +470,7 @@ export default function AfterSurveyPage() {
         error
       );
 
-      setErrorMessage(
+      setMessage(
         "通信中にエラーが発生しました。"
       );
     } finally {
@@ -567,10 +480,6 @@ export default function AfterSurveyPage() {
     }
   }
 
-  /* ========================================
-     LOADING
-  ======================================== */
-
   if (
     loading
   ) {
@@ -579,8 +488,8 @@ export default function AfterSurveyPage() {
 
         <section className="surveyPage">
 
-          <div className="surveyLoadingCard">
-            読み込み中...
+          <div className="surveyLoading">
+            アンケート情報を確認中...
           </div>
 
         </section>
@@ -588,10 +497,6 @@ export default function AfterSurveyPage() {
       </main>
     );
   }
-
-  /* ========================================
-     VIEW
-  ======================================== */
 
   return (
     <main className="shell">
@@ -609,31 +514,30 @@ export default function AfterSurveyPage() {
           </h1>
 
           <p>
-            {nickname
-              ? `${nickname}さん、`
-              : ""}
-            POKIPOを体験したあとの
-            気持ちを教えてください。
+            POKIPOを体験した後の、
+            現在の気持ちを教えてください。
           </p>
 
         </header>
 
-        {/* BEFORE SUMMARY */}
+        {/* =================================
+            BEFORE ANSWERS
+        ================================= */}
 
         {preSurvey && (
           <section className="surveyBeforeSummary">
 
             <span>
-              BEFORE
+              YOUR BEFORE ANSWERS
             </span>
 
             <h2>
-              参加前の回答
+              参加前のあなたの回答
             </h2>
 
             <p>
-              参加前に回答した内容を
-              参考として確認できます。
+              参加前の回答を参考にしながら、
+              現在の気持ちを回答してください。
             </p>
 
             <div className="surveyBeforeSummaryGrid">
@@ -641,16 +545,56 @@ export default function AfterSurveyPage() {
               <div>
 
                 <span>
-                  興味
+                  食べる頻度
                 </span>
 
                 <strong>
-                  {preSurvey.interest_score ??
-                    "—"} / 4
+                  {preSurvey.pocky_frequency}
+                </strong>
+
+              </div>
+
+              <div>
+
+                <span>
+                  リニューアル認知
+                </span>
+
+                <strong>
+                  {preSurvey.knew_renewal
+                    ? "知っていた"
+                    : "知らなかった"}
+                </strong>
+
+              </div>
+
+              <div>
+
+                <span>
+                  シェア経験
+                </span>
+
+                <strong>
+                  {preSurvey.has_shared_pocky
+                    ? "あり"
+                    : "なし"}
+                </strong>
+
+              </div>
+
+              <div>
+
+                <span>
+                  ポッキーへの興味
+                </span>
+
+                <strong>
+                  {preSurvey.interest_score}/4
                 </strong>
 
                 <small>
-                  {getScoreLabel(
+                  {scoreLabel(
+                    "interest",
                     preSurvey.interest_score
                   )}
                 </small>
@@ -660,16 +604,16 @@ export default function AfterSurveyPage() {
               <div>
 
                 <span>
-                  食べたい
+                  食べたい気持ち
                 </span>
 
                 <strong>
-                  {preSurvey.eat_intent_score ??
-                    "—"} / 4
+                  {preSurvey.eat_intent_score}/4
                 </strong>
 
                 <small>
-                  {getScoreLabel(
+                  {scoreLabel(
+                    "intent",
                     preSurvey.eat_intent_score
                   )}
                 </small>
@@ -683,12 +627,12 @@ export default function AfterSurveyPage() {
                 </span>
 
                 <strong>
-                  {preSurvey.share_intent_score ??
-                    "—"} / 4
+                  {preSurvey.share_intent_score}/4
                 </strong>
 
                 <small>
-                  {getScoreLabel(
+                  {scoreLabel(
+                    "intent",
                     preSurvey.share_intent_score
                   )}
                 </small>
@@ -697,110 +641,134 @@ export default function AfterSurveyPage() {
 
             </div>
 
+            {preSurvey.has_shared_pocky &&
+              preSurvey.share_situation && (
+                <div className="surveyBeforeShareSituation">
+
+                  <span>
+                    シェアする場面
+                  </span>
+
+                  <p>
+                    {preSurvey.share_situation}
+                  </p>
+
+                </div>
+              )}
+
           </section>
         )}
 
-        {/* AFTER */}
-
-        <section className="surveyFeelingSection">
+        <section className="surveyComparisonIntro">
 
           <span>
-            AFTER CHECK
+            BEFORE / AFTER
           </span>
 
           <h2>
-            現在の気持ちを教えてください
+            参加後の気持ちを教えてください
           </h2>
 
           <p>
-            参加前と同じ質問に
-            もう一度回答してください。
+            次の3問は参加前と同じ質問です。
+            POKIPOを体験した現在の気持ちを選んでください。
           </p>
 
         </section>
 
+        {/* Q1 */}
+
         <section className="surveyQuestionCard">
 
-          <span className="surveyQuestionNumber">
+          <div className="surveyQuestionNumber">
             01
-          </span>
+          </div>
 
           <h2>
-            ポッキーに興味がありますか？
+            現在、ポッキーにどの程度興味がありますか？
           </h2>
 
-          {renderScoreButtons(
+          {renderScoreQuestion(
+            interestOptions,
             interestScore,
             setInterestScore
           )}
 
         </section>
 
+        {/* Q2 */}
+
         <section className="surveyQuestionCard">
 
-          <span className="surveyQuestionNumber">
+          <div className="surveyQuestionNumber">
             02
-          </span>
+          </div>
 
           <h2>
-            ポッキーを食べたいと思いますか？
+            今後、ポッキーを食べたいと思いますか？
           </h2>
 
-          {renderScoreButtons(
+          {renderScoreQuestion(
+            intentOptions,
             eatIntentScore,
             setEatIntentScore
           )}
 
         </section>
 
+        {/* Q3 */}
+
         <section className="surveyQuestionCard">
 
-          <span className="surveyQuestionNumber">
+          <div className="surveyQuestionNumber">
             03
-          </span>
+          </div>
 
           <h2>
-            誰かとポッキーを
-            シェアしたいと思いますか？
+            今後、ポッキーを誰かとシェアして食べたいと思いますか？
           </h2>
 
-          {renderScoreButtons(
+          {renderScoreQuestion(
+            intentOptions,
             shareIntentScore,
             setShareIntentScore
           )}
 
         </section>
 
+        {/* Q4 */}
+
         <section className="surveyQuestionCard">
 
-          <span className="surveyQuestionNumber">
+          <div className="surveyQuestionNumber">
             04
-          </span>
+          </div>
 
           <h2>
-            ポッキーのリニューアル内容を
-            理解できましたか？
+            POKIPOを通じて、ポッキーのリニューアル内容をどの程度知ることができましたか？
           </h2>
 
-          {renderScoreButtons(
+          {renderScoreQuestion(
+            understandingOptions,
             renewalUnderstandingScore,
             setRenewalUnderstandingScore
           )}
 
         </section>
 
+        {/* Q5 */}
+
         <section className="surveyQuestionCard">
 
-          <span className="surveyQuestionNumber">
+          <div className="surveyQuestionNumber">
             05
-          </span>
+          </div>
 
           <h2>
-            POKIPOで印象に残ったことを
-            教えてください
+            POKIPOで一番印象に残ったことを教えてください
           </h2>
 
-          <div className="surveyTextAreaWrap">
+          <div className="surveyTextField">
 
             <textarea
               value={
@@ -813,35 +781,52 @@ export default function AfterSurveyPage() {
                   event.target.value
                 )
               }
-              placeholder="例：ポッキーのリニューアルについて初めて知った"
-              rows={
-                5
+              maxLength={
+                500
               }
+              rows={
+                6
+              }
+              placeholder="自由に入力してください（任意）"
             />
+
+            <span>
+              {memorablePoint.length}/500
+            </span>
 
           </div>
 
         </section>
 
-        {errorMessage && (
-          <div className="surveyError">
-            {errorMessage}
-          </div>
+        {message && (
+          <p className="surveyError">
+            {message}
+          </p>
         )}
 
         <button
           type="button"
           className="surveySubmitButton"
+          onClick={
+            submitSurvey
+          }
           disabled={
             submitting
           }
-          onClick={() =>
-            void submitSurvey()
-          }
         >
-          {submitting
-            ? "回答を保存中..."
-            : "回答して特典を確認する"}
+
+          <span>
+
+            {submitting
+              ? "回答を保存中..."
+              : "回答して特典交換へ進む"}
+
+          </span>
+
+          <strong>
+            →
+          </strong>
+
         </button>
 
       </section>
