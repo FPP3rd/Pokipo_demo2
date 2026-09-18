@@ -26794,3 +26794,549 @@ img {
       12px;
   }
 }
+
+/* ==================================================
+   POKIPO INTRO VIDEO
+================================================== */
+
+.pokipoIntroOverlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 99999;
+
+  overflow: hidden;
+
+  background: #050505;
+}
+
+.pokipoIntroVideo {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  background: #000000;
+}
+
+.pokipoIntroShade {
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.25),
+      rgba(0, 0, 0, 0.05) 55%,
+      rgba(0, 0, 0, 0.35)
+    );
+}
+
+
+/* START */
+
+.pokipoIntroStart {
+  position: absolute;
+  inset: 0;
+
+  z-index: 5;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 28px;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(40, 10, 14, 0.45),
+      rgba(0, 0, 0, 0.86)
+    );
+
+  color: #ffffff;
+
+  text-align: center;
+}
+
+.pokipoIntroBrand {
+  display: block;
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 1000;
+
+  letter-spacing: 0.22em;
+}
+
+.pokipoIntroStart h2 {
+  margin:
+    16px
+    0
+    0;
+
+  color: #ffffff;
+
+  font-size:
+    clamp(
+      29px,
+      9vw,
+      46px
+    );
+
+  font-weight: 1000;
+
+  line-height: 1.3;
+
+  letter-spacing: -0.04em;
+}
+
+.pokipoIntroStart p {
+  margin:
+    16px
+    0
+    0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.76
+    );
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+.pokipoIntroStartButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  width: min(
+    330px,
+    100%
+  );
+
+  min-height: 58px;
+
+  margin-top: 24px;
+
+  padding:
+    12px
+    18px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.3
+    );
+
+  border-radius: 999px;
+
+  background: #971c28;
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 1000;
+
+  cursor: pointer;
+
+  box-shadow:
+    0
+    12px
+    30px
+    rgba(
+      0,
+      0,
+      0,
+      0.28
+    );
+}
+
+.pokipoIntroStartButton span {
+  font-size: 14px;
+}
+
+.pokipoIntroError {
+  margin-top: 12px !important;
+
+  color: #ffd7da !important;
+}
+
+
+/* SKIP */
+
+.pokipoIntroSkip {
+  position: absolute;
+
+  top:
+    max(
+      18px,
+      env(safe-area-inset-top)
+    );
+
+  right: 16px;
+
+  z-index: 8;
+
+  padding:
+    8px
+    13px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.3
+    );
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      0,
+      0,
+      0,
+      0.35
+    );
+
+  backdrop-filter:
+    blur(8px);
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.pokipoIntroSound {
+  position: absolute;
+
+  left: 16px;
+
+  bottom:
+    max(
+      18px,
+      env(safe-area-inset-bottom)
+    );
+
+  z-index: 8;
+
+  padding:
+    7px
+    10px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      0,
+      0,
+      0,
+      0.36
+    );
+
+  backdrop-filter:
+    blur(8px);
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.88
+    );
+
+  font-size: 8px;
+  font-weight: 900;
+
+  letter-spacing: 0.08em;
+}
+
+
+/* ==================================================
+   CURTAIN
+================================================== */
+
+.pokipoCurtain {
+  position: absolute;
+  inset: 0;
+
+  z-index: 20;
+
+  pointer-events: none;
+
+  visibility: hidden;
+}
+
+.pokipoCurtain.closing,
+.pokipoCurtain.opening {
+  visibility: visible;
+}
+
+
+/* LEFT / RIGHT */
+
+.pokipoCurtainLeft,
+.pokipoCurtainRight {
+  position: absolute;
+
+  top: 0;
+
+  width: 52%;
+  height: 100%;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      90deg,
+      #66111a,
+      #b12532 45%,
+      #7e1621 100%
+    );
+
+  box-shadow:
+    0
+    0
+    35px
+    rgba(
+      0,
+      0,
+      0,
+      0.3
+    );
+
+  transition:
+    transform
+    1s
+    cubic-bezier(
+      0.77,
+      0,
+      0.18,
+      1
+    );
+}
+
+.pokipoCurtainLeft {
+  left: 0;
+
+  transform:
+    translateX(
+      -102%
+    );
+}
+
+.pokipoCurtainRight {
+  right: 0;
+
+  transform:
+    translateX(
+      102%
+    );
+}
+
+.pokipoCurtain.closing
+  .pokipoCurtainLeft,
+.pokipoCurtain.closing
+  .pokipoCurtainRight {
+  transform:
+    translateX(
+      0
+    );
+}
+
+.pokipoCurtain.opening
+  .pokipoCurtainLeft {
+  transform:
+    translateX(
+      -102%
+    );
+}
+
+.pokipoCurtain.opening
+  .pokipoCurtainRight {
+  transform:
+    translateX(
+      102%
+    );
+}
+
+
+/* CURTAIN FOLDS */
+
+.pokipoCurtainFold {
+  position: absolute;
+
+  top: 0;
+
+  width: 18%;
+  height: 100%;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(
+        0,
+        0,
+        0,
+        0.16
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.08
+      ),
+      rgba(
+        0,
+        0,
+        0,
+        0.2
+      )
+    );
+}
+
+.pokipoCurtainFold.fold1 {
+  left: 15%;
+}
+
+.pokipoCurtainFold.fold2 {
+  left: 44%;
+}
+
+.pokipoCurtainFold.fold3 {
+  left: 73%;
+}
+
+
+/* CENTER LOGO */
+
+.pokipoCurtainCenterLogo {
+  position: absolute;
+
+  top: 50%;
+  left: 50%;
+
+  z-index: 25;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  opacity: 0;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    )
+    scale(
+      0.92
+    );
+
+  transition:
+    opacity 0.3s ease 0.65s,
+    transform 0.3s ease 0.65s;
+}
+
+.pokipoCurtain.closing
+  .pokipoCurtainCenterLogo {
+  opacity: 1;
+
+  transform:
+    translate(
+      -50%,
+      -50%
+    )
+    scale(
+      1
+    );
+}
+
+.pokipoCurtain.opening
+  .pokipoCurtainCenterLogo {
+  opacity: 0;
+
+  transition-delay: 0s;
+}
+
+.pokipoCurtainCenterLogo span {
+  color: #ffffff;
+
+  font-size:
+    clamp(
+      28px,
+      9vw,
+      48px
+    );
+
+  font-weight: 1000;
+
+  letter-spacing: 0.1em;
+
+  text-shadow:
+    0
+    4px
+    18px
+    rgba(
+      0,
+      0,
+      0,
+      0.28
+    );
+}
+
+.pokipoCurtainCenterLogo small {
+  margin-top: 6px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.7
+    );
+
+  font-size: 7px;
+  font-weight: 900;
+
+  letter-spacing: 0.2em;
+}
+
+
+/* ==================================================
+   REDUCED MOTION
+================================================== */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .pokipoCurtainLeft,
+  .pokipoCurtainRight {
+    transition-duration:
+      0.15s;
+  }
+}

@@ -1,8 +1,8 @@
 "use client";
 
 import {
-  FormEvent,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -14,9 +14,71 @@ import {
   supabase,
 } from "../lib/supabase-client";
 
-export default function StartPage() {
+/* ========================================
+   INTRO SETTINGS
+======================================== */
+
+const INTRO_STORAGE_KEY =
+  "pokipo_intro_seen";
+
+const INTRO_VIDEO_PATH =
+  "/videos/pokipo-intro.mp4";
+
+/* ========================================
+   PAGE
+======================================== */
+
+export default function Page() {
   const router =
     useRouter();
+
+  const videoRef =
+    useRef<HTMLVideoElement | null>(
+      null
+    );
+
+  /* ========================================
+     INTRO
+  ======================================== */
+
+  const [
+    introChecked,
+    setIntroChecked,
+  ] = useState(false);
+
+  const [
+    showIntro,
+    setShowIntro,
+  ] = useState(false);
+
+  const [
+    introStarted,
+    setIntroStarted,
+  ] = useState(false);
+
+  const [
+    curtainClosing,
+    setCurtainClosing,
+  ] = useState(false);
+
+  const [
+    curtainOpening,
+    setCurtainOpening,
+  ] = useState(false);
+
+  const [
+    introLeaving,
+    setIntroLeaving,
+  ] = useState(false);
+
+  const [
+    videoError,
+    setVideoError,
+  ] = useState("");
+
+  /* ========================================
+     REGISTRATION
+  ======================================== */
 
   const [
     nickname,
@@ -34,132 +96,182 @@ export default function StartPage() {
   ] = useState("");
 
   const [
-    message,
-    setMessage,
-  ] = useState("");
-
-  const [
     submitting,
     setSubmitting,
   ] = useState(false);
 
   const [
-    checkingRegistration,
-    setCheckingRegistration,
-  ] = useState(true);
+    errorMessage,
+    setErrorMessage,
+  ] = useState("");
 
   /* ========================================
-     既存参加者チェック
+     INTRO CHECK
   ======================================== */
 
   useEffect(() => {
-    async function checkExistingParticipant() {
-      const savedParticipantId =
-        localStorage.getItem(
-          "pokipo_participant_id"
-        ) ??
-        localStorage.getItem(
-          "pokipo_user_id"
-        );
+    const alreadySeen =
+      localStorage.getItem(
+        INTRO_STORAGE_KEY
+      ) === "true";
 
-      const savedNickname =
-        localStorage.getItem(
-          "pokipo_nickname"
-        );
+    setShowIntro(
+      !alreadySeen
+    );
 
-      /* --------------------------------
-         未登録
-      -------------------------------- */
+    setIntroChecked(
+      true
+    );
+  }, []);
 
-      if (
-        !savedParticipantId ||
-        !savedNickname
-      ) {
-        setCheckingRegistration(
-          false
-        );
+  /* ========================================
+     START INTRO
+  ======================================== */
 
-        return;
-      }
+  async function startIntro() {
+    setVideoError("");
 
-      /* --------------------------------
-         参加前アンケート確認
-      -------------------------------- */
+    setIntroStarted(
+      true
+    );
 
-      const {
-        data,
-        error,
-      } =
-        await supabase.rpc(
-          "has_completed_pokipo_pre_survey",
-          {
-            p_participant_id:
-              savedParticipantId,
-          }
-        );
+    const video =
+      videoRef.current;
 
-      if (
+    if (
+      !video
+    ) {
+      setVideoError(
+        "動画を読み込めませんでした。"
+      );
+
+      return;
+    }
+
+    try {
+      video.currentTime =
+        0;
+
+      video.muted =
+        false;
+
+      video.volume =
+        1;
+
+      await video.play();
+    } catch (
+      error
+    ) {
+      console.error(
+        "イントロ動画再生エラー:",
         error
-      ) {
-        console.error(
-          "参加前アンケート確認エラー:",
-          error
+      );
+
+      setVideoError(
+        "動画を再生できませんでした。もう一度タップしてください。"
+      );
+
+      setIntroStarted(
+        false
+      );
+    }
+  }
+
+  /* ========================================
+     FINISH INTRO
+  ======================================== */
+
+  function finishIntro() {
+    if (
+      curtainClosing ||
+      curtainOpening ||
+      introLeaving
+    ) {
+      return;
+    }
+
+    const video =
+      videoRef.current;
+
+    if (
+      video
+    ) {
+      video.pause();
+    }
+
+    /*
+      1. カーテンを閉じる
+    */
+    setCurtainClosing(
+      true
+    );
+
+    setTimeout(
+      () => {
+        /*
+          初回再生済みとして保存
+        */
+        localStorage.setItem(
+          INTRO_STORAGE_KEY,
+          "true"
         );
 
         /*
-          通信エラー時は
-          初期登録をやり直させない
+          2. 登録画面を見せる準備
         */
-
-        router.replace(
-          "/survey/before"
+        setIntroLeaving(
+          true
         );
 
-        return;
-      }
-
-      if (
-        data === true
-      ) {
-        router.replace(
-          "/home"
+        /*
+          3. カーテンを開く
+        */
+        setCurtainOpening(
+          true
         );
 
-        return;
-      }
+        setTimeout(
+          () => {
+            setShowIntro(
+              false
+            );
 
-      router.replace(
-        "/survey/before"
-      );
-    }
+            setCurtainClosing(
+              false
+            );
 
-    void checkExistingParticipant();
-  }, [
-    router,
-  ]);
+            setCurtainOpening(
+              false
+            );
+          },
+          1100
+        );
+      },
+      1050
+    );
+  }
 
   /* ========================================
-     初回登録
+     SKIP INTRO
   ======================================== */
 
-  async function submit(
-    e: FormEvent<HTMLFormElement>
-  ) {
-    e.preventDefault();
+  function skipIntro() {
+    finishIntro();
+  }
 
-    const name =
+  /* ========================================
+     REGISTER
+  ======================================== */
+
+  async function registerParticipant() {
+    const normalizedNickname =
       nickname.trim();
 
-    /* --------------------------------
-       VALIDATION
-    -------------------------------- */
-
     if (
-      name.length < 2 ||
-      name.length > 20
+      !normalizedNickname
     ) {
-      setMessage(
-        "ニックネームは2〜20文字で入力してください。"
+      setErrorMessage(
+        "ニックネームを入力してください。"
       );
 
       return;
@@ -168,7 +280,7 @@ export default function StartPage() {
     if (
       !grade
     ) {
-      setMessage(
+      setErrorMessage(
         "学年を選択してください。"
       );
 
@@ -178,7 +290,7 @@ export default function StartPage() {
     if (
       !department
     ) {
-      setMessage(
+      setErrorMessage(
         "学科を選択してください。"
       );
 
@@ -189,21 +301,11 @@ export default function StartPage() {
       true
     );
 
-    setMessage("");
+    setErrorMessage("");
 
     try {
-      /* =================================
-         PARTICIPANT ID
-      ================================= */
-
-      const participantId =
-        crypto.randomUUID();
-
-      /* =================================
-         SUPABASE
-      ================================= */
-
       const {
+        data,
         error,
       } =
         await supabase
@@ -211,66 +313,56 @@ export default function StartPage() {
             "participants"
           )
           .insert({
-            id:
-              participantId,
-
             nickname:
-              name,
+              normalizedNickname,
 
             grade,
 
             department,
-          });
+          })
+          .select(
+            "id"
+          )
+          .single();
 
       if (
         error
       ) {
         console.error(
           "参加者登録エラー:",
-          {
-            message:
-              error.message,
-
-            details:
-              error.details,
-
-            hint:
-              error.hint,
-
-            code:
-              error.code,
-          }
+          error
         );
 
-        setMessage(
-          "参加者情報を登録できませんでした。通信環境を確認して、もう一度お試しください。"
+        setErrorMessage(
+          error.message
         );
 
         return;
       }
 
-      /* =================================
-         LOCAL STORAGE
-      ================================= */
+      if (
+        !data?.id
+      ) {
+        setErrorMessage(
+          "参加者情報を作成できませんでした。"
+        );
+
+        return;
+      }
 
       localStorage.setItem(
         "pokipo_participant_id",
-        participantId
+        data.id
       );
-
-      /*
-        既存ページとの互換性のため
-        user_idにも同じIDを保存
-      */
 
       localStorage.setItem(
         "pokipo_user_id",
-        participantId
+        data.id
       );
 
       localStorage.setItem(
         "pokipo_nickname",
-        name
+        normalizedNickname
       );
 
       localStorage.setItem(
@@ -283,32 +375,10 @@ export default function StartPage() {
         department
       );
 
-      /* =================================
-         スタンプ初期化
-      ================================= */
-
-      localStorage.setItem(
-        "pokipo_scans",
-        JSON.stringify([])
-      );
-
       localStorage.setItem(
         "pokipo_progress",
         "0"
       );
-
-      /* =================================
-         KNOWLEDGE
-      ================================= */
-
-      localStorage.setItem(
-        "pokipo_knowledge",
-        JSON.stringify([])
-      );
-
-      /* =================================
-         COMPLETE
-      ================================= */
 
       localStorage.setItem(
         "pokipo_completed",
@@ -316,37 +386,12 @@ export default function StartPage() {
       );
 
       localStorage.removeItem(
-        "pokipo_completed_at"
+        "pokipo_scans"
       );
 
       localStorage.removeItem(
-        "pokipo_achievement_rank"
+        "pokipo_knowledge"
       );
-
-      /* =================================
-         REWARD
-      ================================= */
-
-      localStorage.setItem(
-        "pokipo_reward_exchanged",
-        "false"
-      );
-
-      localStorage.removeItem(
-        "pokipo_reward_exchanged_at"
-      );
-
-      localStorage.removeItem(
-        "pokipo_reward_student_number"
-      );
-
-      localStorage.removeItem(
-        "pokipo_reward_token"
-      );
-
-      /* =================================
-         SURVEY
-      ================================= */
 
       localStorage.removeItem(
         "pokipo_pre_survey_completed"
@@ -355,10 +400,6 @@ export default function StartPage() {
       localStorage.removeItem(
         "pokipo_post_survey_completed"
       );
-
-      /* =================================
-         NEXT
-      ================================= */
 
       router.push(
         "/survey/before"
@@ -371,7 +412,7 @@ export default function StartPage() {
         error
       );
 
-      setMessage(
+      setErrorMessage(
         "通信中にエラーが発生しました。もう一度お試しください。"
       );
     } finally {
@@ -382,31 +423,17 @@ export default function StartPage() {
   }
 
   /* ========================================
-     CHECKING
+     LOADING
   ======================================== */
 
   if (
-    checkingRegistration
+    !introChecked
   ) {
     return (
       <main className="shell">
-
-        <section className="card startPage">
-
-          <div
-            style={{
-              padding:
-                "40px 20px",
-
-              textAlign:
-                "center",
-            }}
-          >
-            参加情報を確認中...
-          </div>
-
+        <section className="card">
+          読み込み中...
         </section>
-
       </main>
     );
   }
@@ -416,106 +443,33 @@ export default function StartPage() {
   ======================================== */
 
   return (
-    <main className="shell">
+    <>
+      {/* ========================================
+          REGISTRATION
+      ======================================== */}
 
-      <section className="card startPage">
+      <main className="shell">
 
-        {/* =================================
-            HERO
-        ================================= */}
+        <section className="card">
 
-        <header className="startHero">
+          <div className="intro">
 
-          <p className="startEyebrow">
-            高安ゼミ LiPost × POCKY
-          </p>
-
-          <h1 className="startLogo">
-            POKIPO
-          </h1>
-
-          <p className="startCatch">
-            キャンパスをめぐって、
-            <br />
-            ポッキーを完成させよう。
-          </p>
-
-          <div className="startVisual">
-
-            <div className="startPocky pockyOne">
-              <div className="startChocolate" />
-              <div className="startBiscuit" />
-            </div>
-
-            <div className="startPocky pockyTwo">
-              <div className="startChocolate" />
-              <div className="startBiscuit" />
-            </div>
-
-            <div className="startPocky pockyThree">
-              <div className="startChocolate" />
-              <div className="startBiscuit" />
-            </div>
-
-          </div>
-
-        </header>
-
-        {/* =================================
-            INTRO
-        ================================= */}
-
-        <section className="startIntro">
-
-          <div className="startIntroNumber">
-            5
-          </div>
-
-          <div>
-
-            <p>
-              POKIPO STAMP RALLY
+            <p className="eyebrow">
+              POCKY JOURNEY
             </p>
 
-            <h2>
-              5つのスポットを巡って特典をゲットしよう
-            </h2>
-
-            <span>
-              学内に散りばめられたQRコードを読み取って、
-              スタンプと豆知識を集めよう。
-            </span>
-
-          </div>
-
-        </section>
-
-        {/* =================================
-            FORM
-        ================================= */}
-
-        <form
-          className="startForm"
-          onSubmit={
-            submit
-          }
-        >
-
-          <div className="startFormTitle">
+            <h1>
+              POKIPO
+            </h1>
 
             <p>
-              PLAYER PROFILE
+              学内をめぐって、
+              ポッキーの魅力を見つけよう。
             </p>
-
-            <h2>
-              プロフィールを登録
-            </h2>
 
           </div>
 
-          {/* NICKNAME */}
-
-          <div className="field">
+          <div className="formGroup">
 
             <label htmlFor="nickname">
               ニックネーム
@@ -528,26 +482,21 @@ export default function StartPage() {
                 nickname
               }
               onChange={(
-                e
+                event
               ) =>
                 setNickname(
-                  e.target.value
+                  event.target.value
                 )
               }
-              placeholder="例：ぽっきー"
+              placeholder="ニックネームを入力"
               maxLength={
-                20
-              }
-              disabled={
-                submitting
+                30
               }
             />
 
           </div>
 
-          {/* GRADE */}
-
-          <div className="field">
+          <div className="formGroup">
 
             <label htmlFor="grade">
               学年
@@ -559,17 +508,13 @@ export default function StartPage() {
                 grade
               }
               onChange={(
-                e
+                event
               ) =>
                 setGrade(
-                  e.target.value
+                  event.target.value
                 )
               }
-              disabled={
-                submitting
-              }
             >
-
               <option value="">
                 選択してください
               </option>
@@ -598,9 +543,7 @@ export default function StartPage() {
 
           </div>
 
-          {/* DEPARTMENT */}
-
-          <div className="field">
+          <div className="formGroup">
 
             <label htmlFor="department">
               学科
@@ -612,169 +555,276 @@ export default function StartPage() {
                 department
               }
               onChange={(
-                e
+                event
               ) =>
                 setDepartment(
-                  e.target.value
+                  event.target.value
                 )
               }
-              disabled={
-                submitting
-              }
             >
-
               <option value="">
                 選択してください
               </option>
 
-              <optgroup label="外国語学部">
+              <option value="ドイツ語学科">
+                ドイツ語学科
+              </option>
 
-                <option value="ドイツ語学科">
-                  ドイツ語学科
-                </option>
+              <option value="英語学科">
+                英語学科
+              </option>
 
-                <option value="英語学科">
-                  英語学科
-                </option>
+              <option value="フランス語学科">
+                フランス語学科
+              </option>
 
-                <option value="フランス語学科">
-                  フランス語学科
-                </option>
+              <option value="交流文化学科">
+                交流文化学科
+              </option>
 
-                <option value="交流文化学科">
-                  交流文化学科
-                </option>
+              <option value="言語文化学科">
+                言語文化学科
+              </option>
 
-              </optgroup>
+              <option value="経済学科">
+                経済学科
+              </option>
 
-              <optgroup label="国際教養学部">
+              <option value="経営学科">
+                経営学科
+              </option>
 
-                <option value="言語文化学科">
-                  言語文化学科
-                </option>
+              <option value="国際環境経済学科">
+                国際環境経済学科
+              </option>
 
-              </optgroup>
+              <option value="法律学科">
+                法律学科
+              </option>
 
-              <optgroup label="経済学部">
+              <option value="国際関係法学科">
+                国際関係法学科
+              </option>
 
-                <option value="経済学科">
-                  経済学科
-                </option>
+              <option value="総合政策学科">
+                総合政策学科
+              </option>
 
-                <option value="経営学科">
-                  経営学科
-                </option>
-
-                <option value="国際環境経済学科">
-                  国際環境経済学科
-                </option>
-
-              </optgroup>
-
-              <optgroup label="法学部">
-
-                <option value="法律学科">
-                  法律学科
-                </option>
-
-                <option value="国際関係法学科">
-                  国際関係法学科
-                </option>
-
-                <option value="総合政策学科">
-                  総合政策学科
-                </option>
-
-              </optgroup>
+              <option value="その他">
+                その他
+              </option>
 
             </select>
 
           </div>
 
-          {/* NEXT INFO */}
-
-          <div className="startSurveyNotice">
-
-            <strong>
-              登録後、参加前アンケートがあります
-            </strong>
-
-            <p>
-              POKIPO体験による変化を確認するため、
-              簡単なアンケートへの回答をお願いします。
-            </p>
-
-          </div>
-
-          {/* ERROR */}
-
-          {message && (
+          {errorMessage && (
             <p className="error">
-              {message}
+              {errorMessage}
             </p>
           )}
 
-          {/* DATA WARNING */}
-
-          <section className="dataWarning">
-
-            <div className="dataWarningText">
-
-              <strong>
-                始める前にチェック！
-              </strong>
-
-              <p>
-                スタンプや豆知識などの進捗は、
-                この端末のブラウザにも保存されます。
-              </p>
-
-              <p>
-                イベント終了まで、
-                Cookie・サイトデータ・閲覧データを削除しないでください。
-              </p>
-
-              <p className="dataWarningImportant">
-                シークレットモード・プライベートブラウズでの参加も避けてください。
-              </p>
-
-            </div>
-
-          </section>
-
-          {/* SUBMIT */}
-
           <button
-            type="submit"
-            className="primaryButton startButton"
+            type="button"
+            className="mainActionButton"
             disabled={
               submitting
+            }
+            onClick={() =>
+              void registerParticipant()
             }
           >
 
             <span>
 
-              {submitting
-                ? "登録中..."
-                : "次へ進む"}
+              <strong>
+                {submitting
+                  ? "登録中..."
+                  : "次へ進む"}
+              </strong>
+
+              {!submitting && (
+                <small>
+                  参加前アンケートへ
+                </small>
+              )}
 
             </span>
 
-            <span>
-              →
-            </span>
+            {!submitting && (
+              <span className="buttonArrow">
+                ›
+              </span>
+            )}
 
           </button>
 
-        </form>
+        </section>
 
-        <p className="startFooter">
-          登録した情報は、
-          POKIPOの運営・進捗管理・企画分析に使用します。
-        </p>
+      </main>
 
-      </section>
+      {/* ========================================
+          INTRO OVERLAY
+      ======================================== */}
 
-    </main>
+      {showIntro && (
+        <div
+          className={[
+            "pokipoIntroOverlay",
+
+            introLeaving
+              ? "isLeaving"
+              : "",
+          ].join(
+            " "
+          )}
+        >
+
+          {/* VIDEO */}
+
+          <video
+            ref={
+              videoRef
+            }
+            className="pokipoIntroVideo"
+            src={
+              INTRO_VIDEO_PATH
+            }
+            playsInline
+            preload="auto"
+            onEnded={
+              finishIntro
+            }
+            onError={() =>
+              setVideoError(
+                "動画ファイルを読み込めませんでした。"
+              )
+            }
+          />
+
+          {/* DARK FILTER */}
+
+          <div className="pokipoIntroShade" />
+
+          {/* START SCREEN */}
+
+          {!introStarted &&
+            !curtainClosing && (
+            <div className="pokipoIntroStart">
+
+              <span className="pokipoIntroBrand">
+                POKIPO
+              </span>
+
+              <h2>
+                ポッキーの旅を、
+                <br />
+                はじめよう。
+              </h2>
+
+              <p>
+                音声が流れます。
+                <br />
+                音量をご確認ください。
+              </p>
+
+              <button
+                type="button"
+                className="pokipoIntroStartButton"
+                onClick={() =>
+                  void startIntro()
+                }
+              >
+                <span>
+                  ▶
+                </span>
+
+                音声ありでスタート
+              </button>
+
+              {videoError && (
+                <p className="pokipoIntroError">
+                  {videoError}
+                </p>
+              )}
+
+            </div>
+          )}
+
+          {/* SKIP */}
+
+          {introStarted &&
+            !curtainClosing && (
+            <button
+              type="button"
+              className="pokipoIntroSkip"
+              onClick={
+                skipIntro
+              }
+            >
+              スキップ
+            </button>
+          )}
+
+          {/* SOUND LABEL */}
+
+          {introStarted &&
+            !curtainClosing && (
+            <div className="pokipoIntroSound">
+              🔊 SOUND ON
+            </div>
+          )}
+
+          {/* CURTAINS */}
+
+          <div
+            className={[
+              "pokipoCurtain",
+
+              curtainClosing
+                ? "closing"
+                : "",
+
+              curtainOpening
+                ? "opening"
+                : "",
+            ].join(
+              " "
+            )}
+          >
+
+            <div className="pokipoCurtainLeft">
+
+              <div className="pokipoCurtainFold fold1" />
+              <div className="pokipoCurtainFold fold2" />
+              <div className="pokipoCurtainFold fold3" />
+
+            </div>
+
+            <div className="pokipoCurtainRight">
+
+              <div className="pokipoCurtainFold fold1" />
+              <div className="pokipoCurtainFold fold2" />
+              <div className="pokipoCurtainFold fold3" />
+
+            </div>
+
+            <div className="pokipoCurtainCenterLogo">
+
+              <span>
+                POKIPO
+              </span>
+
+              <small>
+                SHARE HAPPINESS
+              </small>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+    </>
   );
 }
