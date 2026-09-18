@@ -27590,3 +27590,1106 @@ img {
     min-height: 68px;
   }
 }
+
+/* ==================================================
+   BEFORE SURVEY
+   専用UI
+================================================== */
+
+.beforeSurveyShell {
+  min-height: 100vh;
+
+  padding:
+    24px
+    14px
+    64px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #f7eee8 0%,
+      #fbf8f5 28%,
+      #f5eee8 100%
+    );
+
+  color: #332d29;
+}
+
+.beforeSurveyPage {
+  width: 100%;
+  max-width: 620px;
+
+  margin: 0 auto;
+}
+
+
+/* ==================================================
+   LOADING
+================================================== */
+
+.beforeSurveyLoading {
+  width: 100%;
+  max-width: 620px;
+
+  margin:
+    60px
+    auto;
+
+  padding: 28px;
+
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  color: #756961;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  text-align: center;
+}
+
+
+/* ==================================================
+   HEADER
+================================================== */
+
+.beforeSurveyHeader {
+  padding:
+    24px
+    20px;
+
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #861721,
+      #a6202c
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0
+    16px
+    36px
+    rgba(
+      90,
+      20,
+      28,
+      0.18
+    );
+}
+
+.beforeSurveyHeaderBadge {
+  display: inline-flex;
+
+  padding:
+    5px
+    9px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.35
+    );
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.12
+    );
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.14em;
+}
+
+.beforeSurveyHeader h1 {
+  margin:
+    12px
+    0
+    0;
+
+  color: #ffffff;
+
+  font-size:
+    clamp(
+      24px,
+      7vw,
+      32px
+    );
+
+  font-weight: 1000;
+
+  line-height: 1.25;
+
+  letter-spacing: -0.03em;
+}
+
+.beforeSurveyHeader p {
+  margin:
+    10px
+    0
+    0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.9
+    );
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+
+/* ==================================================
+   GUIDE
+================================================== */
+
+.beforeSurveyGuide {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 14px;
+
+  padding:
+    13px
+    14px;
+
+  border:
+    1px solid
+    #eadfd7;
+
+  border-radius: 16px;
+
+  background: #ffffff;
+}
+
+.beforeSurveyGuide > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  border-radius: 11px;
+
+  background: #f3e5de;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 1000;
+}
+
+.beforeSurveyGuide p {
+  margin: 0;
+
+  color: #72665f;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   QUESTION CARD
+================================================== */
+
+.beforeSurveyCard {
+  margin-top: 14px;
+
+  padding:
+    18px;
+
+  border:
+    1px solid
+    #e8ddd5;
+
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0
+    8px
+    22px
+    rgba(
+      50,
+      35,
+      27,
+      0.04
+    );
+}
+
+.beforeSurveyQuestionHeader {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 11px;
+}
+
+.beforeSurveyQuestionHeader > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  border-radius: 11px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 1000;
+}
+
+.beforeSurveyQuestionHeader > div {
+  min-width: 0;
+
+  flex: 1;
+}
+
+.beforeSurveyQuestionHeader small {
+  display: block;
+
+  color: #a08d82;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.1em;
+}
+
+.beforeSurveyQuestionHeader h2 {
+  margin:
+    3px
+    0
+    0;
+
+  color: #332d29;
+
+  font-size:
+    clamp(
+      15px,
+      4.7vw,
+      19px
+    );
+
+  font-weight: 1000;
+
+  line-height: 1.55;
+
+  word-break: normal;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ==================================================
+   CHOICE BUTTONS
+================================================== */
+
+.beforeSurveyChoiceGrid {
+  display: grid;
+
+  gap: 8px;
+
+  margin-top: 16px;
+}
+
+.beforeSurveyChoiceGrid.two {
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+}
+
+.beforeSurveyChoiceGrid.three {
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+}
+
+.beforeSurveyChoice {
+  width: 100%;
+
+  min-width: 0;
+  min-height: 48px;
+
+  padding:
+    10px
+    8px;
+
+  border:
+    1px solid
+    #ded3cc;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  color: #655a53;
+
+  font-size:
+    clamp(
+      10px,
+      3vw,
+      12px
+    );
+
+  font-weight: 900;
+
+  line-height: 1.35;
+
+  word-break: keep-all;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.beforeSurveyChoice:hover {
+  border-color: #bca8a0;
+
+  transform:
+    translateY(-1px);
+}
+
+.beforeSurveyChoice.active {
+  border-color: #8a1822;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  box-shadow:
+    0
+    7px
+    18px
+    rgba(
+      138,
+      24,
+      34,
+      0.17
+    );
+}
+
+
+/* ==================================================
+   FREQUENCY
+================================================== */
+
+.beforeSurveyChoiceList {
+  display: grid;
+
+  gap: 7px;
+
+  margin-top: 16px;
+}
+
+.beforeSurveyChoiceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  width: 100%;
+
+  min-height: 48px;
+
+  padding:
+    11px
+    13px;
+
+  border:
+    1px solid
+    #dfd5cf;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  color: #5f554f;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.beforeSurveyChoiceRow span {
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.beforeSurveyChoiceRow strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 24px;
+  height: 24px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+
+  font-size: 10px;
+}
+
+.beforeSurveyChoiceRow.active {
+  border-color: #8a1822;
+
+  background: #fff5f4;
+
+  color: #8a1822;
+}
+
+.beforeSurveyChoiceRow.active strong {
+  background: #8a1822;
+}
+
+
+/* ==================================================
+   RENEWAL INFO
+================================================== */
+
+.beforeSurveyRenewalInfo {
+  margin-top: 14px;
+
+  padding:
+    15px;
+
+  border:
+    1px solid
+    #ead8ca;
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff8ef,
+      #fffdf9
+    );
+}
+
+.beforeSurveyRenewalInfo > span {
+  display: block;
+
+  color: #9d623e;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.09em;
+}
+
+.beforeSurveyRenewalInfo h3 {
+  margin:
+    5px
+    0
+    0;
+
+  color: #533f34;
+
+  font-size: 13px;
+  font-weight: 1000;
+
+  line-height: 1.6;
+}
+
+.beforeSurveyRenewalInfo > p {
+  margin:
+    8px
+    0
+    0;
+
+  color: #75665d;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+.beforeSurveyRenewalGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 8px;
+
+  margin-top: 12px;
+}
+
+.beforeSurveyRenewalGrid > div {
+  padding:
+    11px;
+
+  border-radius: 12px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.75
+    );
+}
+
+.beforeSurveyRenewalGrid strong {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 1000;
+}
+
+.beforeSurveyRenewalGrid p {
+  margin:
+    5px
+    0
+    0;
+
+  color: #73655d;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   TEXTAREA
+================================================== */
+
+.beforeSurveyTextareaBox {
+  margin-top: 14px;
+}
+
+.beforeSurveyTextareaBox label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #625750;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.beforeSurveyTextareaBox textarea {
+  width: 100%;
+
+  min-height: 100px;
+
+  resize: vertical;
+
+  padding:
+    12px;
+
+  border:
+    1px solid
+    #dcd1ca;
+
+  border-radius: 13px;
+
+  background: #fffdfa;
+
+  color: #332d29;
+
+  font: inherit;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.7;
+
+  outline: none;
+
+  box-sizing: border-box;
+}
+
+.beforeSurveyTextareaBox textarea:focus {
+  border-color: #8a1822;
+
+  box-shadow:
+    0
+    0
+    0
+    3px
+    rgba(
+      138,
+      24,
+      34,
+      0.08
+    );
+}
+
+
+/* ==================================================
+   FEELING HEADER
+================================================== */
+
+.beforeSurveyFeelingHeader {
+  margin-top: 20px;
+
+  padding:
+    20px
+    18px;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #8a1822,
+      #a82a35
+    );
+
+  color: #ffffff;
+}
+
+.beforeSurveyFeelingHeader > span {
+  display: block;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.beforeSurveyFeelingHeader h2 {
+  margin:
+    5px
+    0
+    0;
+
+  color: #ffffff !important;
+
+  font-size:
+    clamp(
+      18px,
+      5.5vw,
+      23px
+    );
+
+  font-weight: 1000;
+
+  line-height: 1.45;
+}
+
+.beforeSurveyFeelingHeader p {
+  margin:
+    7px
+    0
+    0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.88
+    );
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   SCORE BUTTONS
+================================================== */
+
+.beforeSurveyScoreGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+
+  gap: 7px;
+
+  margin-top: 16px;
+}
+
+.beforeSurveyScoreButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 0;
+  min-height: 86px;
+
+  padding:
+    9px
+    5px;
+
+  border:
+    1px solid
+    #dfd4cd;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  color: #625851;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.beforeSurveyScoreButton strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+
+  border-radius: 50%;
+
+  background: #f3ece7;
+
+  color: #8a1822;
+
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.beforeSurveyScoreButton span {
+  margin-top: 7px;
+
+  color: inherit;
+
+  font-size:
+    clamp(
+      7px,
+      2.2vw,
+      9px
+    );
+
+  font-weight: 900;
+
+  line-height: 1.35;
+
+  text-align: center;
+
+  word-break: normal;
+
+  overflow-wrap: anywhere;
+}
+
+.beforeSurveyScoreButton.active {
+  border-color: #8a1822;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  transform:
+    translateY(-1px);
+
+  box-shadow:
+    0
+    8px
+    18px
+    rgba(
+      138,
+      24,
+      34,
+      0.16
+    );
+}
+
+.beforeSurveyScoreButton.active strong {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.18
+    );
+
+  color: #ffffff;
+}
+
+
+/* ==================================================
+   ERROR
+================================================== */
+
+.beforeSurveyError {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 9px;
+
+  margin-top: 14px;
+
+  padding:
+    12px
+    13px;
+
+  border:
+    1px solid
+    #e3aeb3;
+
+  border-radius: 14px;
+
+  background: #fff0ef;
+}
+
+.beforeSurveyError > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 26px;
+  height: 26px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #a52730;
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.beforeSurveyError p {
+  margin: 0;
+
+  color: #8f2b32;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   SUBMIT
+================================================== */
+
+.beforeSurveySubmit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  width: 100%;
+
+  margin-top: 18px;
+
+  min-height: 62px;
+
+  padding:
+    13px
+    16px;
+
+  border: 0;
+
+  border-radius: 17px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #861721,
+      #a5202c
+    );
+
+  color: #ffffff;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-shadow:
+    0
+    12px
+    28px
+    rgba(
+      138,
+      24,
+      34,
+      0.2
+    );
+}
+
+.beforeSurveySubmit > span {
+  min-width: 0;
+}
+
+.beforeSurveySubmit strong {
+  display: block;
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 1000;
+
+  line-height: 1.4;
+}
+
+.beforeSurveySubmit small {
+  display: block;
+
+  margin-top: 3px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.beforeSurveySubmit b {
+  flex-shrink: 0;
+
+  font-size: 19px;
+  font-weight: 1000;
+}
+
+.beforeSurveySubmit:disabled {
+  opacity: 0.55;
+
+  cursor: wait;
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (max-width: 520px) {
+  .beforeSurveyShell {
+    padding:
+      14px
+      10px
+      48px;
+  }
+
+  .beforeSurveyHeader {
+    padding:
+      20px
+      16px;
+  }
+
+  .beforeSurveyCard {
+    padding:
+      15px
+      13px;
+  }
+
+  .beforeSurveyChoiceGrid.three {
+    grid-template-columns:
+      1fr;
+  }
+
+  .beforeSurveyRenewalGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .beforeSurveyScoreGrid {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .beforeSurveyScoreButton {
+    min-height: 74px;
+  }
+}
+
+
+/* ==================================================
+   VERY SMALL DEVICES
+================================================== */
+
+@media (max-width: 340px) {
+  .beforeSurveyChoiceGrid.two {
+    grid-template-columns:
+      1fr;
+  }
+
+  .beforeSurveyScoreGrid {
+    grid-template-columns:
+      1fr;
+  }
+}

@@ -17,12 +17,35 @@ import {
    TYPES
 ======================================== */
 
-type FourPointScore =
+type Score =
   | 1
   | 2
   | 3
   | 4
   | null;
+
+/* ========================================
+   SCORE OPTIONS
+======================================== */
+
+const scoreOptions = [
+  {
+    value: 1 as const,
+    label: "そう思わない",
+  },
+  {
+    value: 2 as const,
+    label: "あまりそう思わない",
+  },
+  {
+    value: 3 as const,
+    label: "ややそう思う",
+  },
+  {
+    value: 4 as const,
+    label: "とてもそう思う",
+  },
+];
 
 /* ========================================
    PAGE
@@ -47,7 +70,7 @@ export default function BeforeSurveyPage() {
   ] = useState("");
 
   /* ========================================
-     SURVEY
+     BASIC QUESTIONS
   ======================================== */
 
   const [
@@ -63,27 +86,33 @@ export default function BeforeSurveyPage() {
   const [
     knewRenewal,
     setKnewRenewal,
-  ] = useState<
-    boolean | null
-  >(null);
+  ] =
+    useState<boolean | null>(
+      null
+    );
 
   const [
     hasSharedPocky,
     setHasSharedPocky,
-  ] = useState<
-    boolean | null
-  >(null);
+  ] =
+    useState<boolean | null>(
+      null
+    );
 
   const [
     shareSituation,
     setShareSituation,
   ] = useState("");
 
+  /* ========================================
+     SCORES
+  ======================================== */
+
   const [
     interestScore,
     setInterestScore,
   ] =
-    useState<FourPointScore>(
+    useState<Score>(
       null
     );
 
@@ -91,7 +120,7 @@ export default function BeforeSurveyPage() {
     eatIntentScore,
     setEatIntentScore,
   ] =
-    useState<FourPointScore>(
+    useState<Score>(
       null
     );
 
@@ -99,7 +128,7 @@ export default function BeforeSurveyPage() {
     shareIntentScore,
     setShareIntentScore,
   ] =
-    useState<FourPointScore>(
+    useState<Score>(
       null
     );
 
@@ -123,7 +152,7 @@ export default function BeforeSurveyPage() {
   ] = useState("");
 
   /* ========================================
-     LOAD
+     LOAD PARTICIPANT
   ======================================== */
 
   useEffect(() => {
@@ -169,7 +198,7 @@ export default function BeforeSurveyPage() {
      VALIDATION
   ======================================== */
 
-  function validateForm() {
+  function validate() {
     if (
       !gender
     ) {
@@ -200,7 +229,7 @@ export default function BeforeSurveyPage() {
       hasSharedPocky &&
       !shareSituation.trim()
     ) {
-      return "どんな時にポッキーをシェアするか入力してください。";
+      return "どんな時にシェアするか入力してください。";
     }
 
     if (
@@ -233,7 +262,7 @@ export default function BeforeSurveyPage() {
 
   async function submitSurvey() {
     const validationError =
-      validateForm();
+      validate();
 
     if (
       validationError
@@ -262,15 +291,39 @@ export default function BeforeSurveyPage() {
     setErrorMessage("");
 
     try {
-      /*
-        同じ参加者の参加前回答が
-        すでに存在するか確認
-      */
+      const payload = {
+        participant_id:
+          participantId,
+
+        gender,
+
+        pocky_frequency:
+          pockyFrequency,
+
+        knew_renewal:
+          knewRenewal,
+
+        has_shared_pocky:
+          hasSharedPocky,
+
+        share_situation:
+          hasSharedPocky
+            ? shareSituation.trim()
+            : null,
+
+        interest_score:
+          interestScore,
+
+        eat_intent_score:
+          eatIntentScore,
+
+        share_intent_score:
+          shareIntentScore,
+      };
 
       const {
         data:
           existingData,
-
         error:
           existingError,
       } =
@@ -305,41 +358,11 @@ export default function BeforeSurveyPage() {
         );
 
         setErrorMessage(
-          "アンケート情報を確認できませんでした。"
+          existingError.message
         );
 
         return;
       }
-
-      const surveyPayload = {
-        participant_id:
-          participantId,
-
-        gender,
-
-        pocky_frequency:
-          pockyFrequency,
-
-        knew_renewal:
-          knewRenewal,
-
-        has_shared_pocky:
-          hasSharedPocky,
-
-        share_situation:
-          hasSharedPocky
-            ? shareSituation.trim()
-            : null,
-
-        interest_score:
-          interestScore,
-
-        eat_intent_score:
-          eatIntentScore,
-
-        share_intent_score:
-          shareIntentScore,
-      };
 
       if (
         existingData &&
@@ -354,7 +377,7 @@ export default function BeforeSurveyPage() {
               "pokipo_pre_surveys"
             )
             .update(
-              surveyPayload
+              payload
             )
             .eq(
               "id",
@@ -384,7 +407,7 @@ export default function BeforeSurveyPage() {
               "pokipo_pre_surveys"
             )
             .insert(
-              surveyPayload
+              payload
             );
 
         if (
@@ -430,50 +453,22 @@ export default function BeforeSurveyPage() {
   }
 
   /* ========================================
-     SCORE BUTTON
+     SCORE BLOCK
   ======================================== */
 
-  function renderScoreButtons(
-    value: FourPointScore,
-    setter: (
-      score: FourPointScore
-    ) => void
-  ) {
-    const options = [
-      {
-        value:
-          1 as const,
-
-        label:
-          "そう思わない",
-      },
-      {
-        value:
-          2 as const,
-
-        label:
-          "あまりそう思わない",
-      },
-      {
-        value:
-          3 as const,
-
-        label:
-          "ややそう思う",
-      },
-      {
-        value:
-          4 as const,
-
-        label:
-          "とてもそう思う",
-      },
-    ];
-
+  function ScoreQuestion({
+    value,
+    onChange,
+  }: {
+    value: Score;
+    onChange: (
+      value: Score
+    ) => void;
+  }) {
     return (
-      <div className="surveyScaleGrid">
+      <div className="beforeSurveyScoreGrid">
 
-        {options.map(
+        {scoreOptions.map(
           (
             option
           ) => (
@@ -485,15 +480,16 @@ export default function BeforeSurveyPage() {
               className={
                 value ===
                 option.value
-                  ? "surveyScaleButton active"
-                  : "surveyScaleButton"
+                  ? "beforeSurveyScoreButton active"
+                  : "beforeSurveyScoreButton"
               }
               onClick={() =>
-                setter(
+                onChange(
                   option.value
                 )
               }
             >
+
               <strong>
                 {option.value}
               </strong>
@@ -501,6 +497,7 @@ export default function BeforeSurveyPage() {
               <span>
                 {option.label}
               </span>
+
             </button>
           )
         )}
@@ -517,15 +514,11 @@ export default function BeforeSurveyPage() {
     loading
   ) {
     return (
-      <main className="shell">
+      <main className="beforeSurveyShell">
 
-        <section className="surveyPage">
-
-          <div className="surveyLoadingCard">
-            読み込み中...
-          </div>
-
-        </section>
+        <div className="beforeSurveyLoading">
+          読み込み中...
+        </div>
 
       </main>
     );
@@ -536,17 +529,19 @@ export default function BeforeSurveyPage() {
   ======================================== */
 
   return (
-    <main className="shell">
+    <main className="beforeSurveyShell">
 
-      <section className="surveyPage">
+      <section className="beforeSurveyPage">
 
-        {/* HEADER */}
+        {/* =================================
+            HEADER
+        ================================= */}
 
-        <header className="surveyHeader">
+        <header className="beforeSurveyHeader">
 
-          <span>
+          <div className="beforeSurveyHeaderBadge">
             BEFORE POKIPO
-          </span>
+          </div>
 
           <h1>
             参加前アンケート
@@ -557,24 +552,56 @@ export default function BeforeSurveyPage() {
               ? `${nickname}さん、`
               : ""}
             POKIPOを始める前の
-            あなたの気持ちを教えてください。
+            あなたのことを教えてください。
           </p>
 
         </header>
 
-        {/* 01 GENDER */}
+        {/* =================================
+            GUIDE
+        ================================= */}
 
-        <section className="surveyQuestionCard">
+        <section className="beforeSurveyGuide">
 
-          <span className="surveyQuestionNumber">
+          <div>
             01
-          </span>
+          </div>
 
-          <h2>
-            性別を教えてください
-          </h2>
+          <p>
+            回答は数分で完了します。
+            POKIPO参加前後の変化を
+            確認するために使用します。
+          </p>
 
-          <div className="surveyChoiceGrid">
+        </section>
+
+        {/* =================================
+            01 GENDER
+        ================================= */}
+
+        <section className="beforeSurveyCard">
+
+          <div className="beforeSurveyQuestionHeader">
+
+            <span>
+              01
+            </span>
+
+            <div>
+
+              <small>
+                PROFILE
+              </small>
+
+              <h2>
+                性別を教えてください
+              </h2>
+
+            </div>
+
+          </div>
+
+          <div className="beforeSurveyChoiceGrid three">
 
             {[
               "男性",
@@ -582,26 +609,26 @@ export default function BeforeSurveyPage() {
               "回答しない",
             ].map(
               (
-                value
+                item
               ) => (
                 <button
                   key={
-                    value
+                    item
                   }
                   type="button"
                   className={
                     gender ===
-                    value
-                      ? "surveyChoiceButton active"
-                      : "surveyChoiceButton"
+                    item
+                      ? "beforeSurveyChoice active"
+                      : "beforeSurveyChoice"
                   }
                   onClick={() =>
                     setGender(
-                      value
+                      item
                     )
                   }
                 >
-                  {value}
+                  {item}
                 </button>
               )
             )}
@@ -610,20 +637,34 @@ export default function BeforeSurveyPage() {
 
         </section>
 
-        {/* 02 FREQUENCY */}
+        {/* =================================
+            02 FREQUENCY
+        ================================= */}
 
-        <section className="surveyQuestionCard">
+        <section className="beforeSurveyCard">
 
-          <span className="surveyQuestionNumber">
-            02
-          </span>
+          <div className="beforeSurveyQuestionHeader">
 
-          <h2>
-            ポッキーを食べる頻度は
-            どれくらいですか？
-          </h2>
+            <span>
+              02
+            </span>
 
-          <div className="surveyChoiceGrid single">
+            <div>
+
+              <small>
+                FREQUENCY
+              </small>
+
+              <h2>
+                ポッキーを食べる頻度は
+                どれくらいですか？
+              </h2>
+
+            </div>
+
+          </div>
+
+          <div className="beforeSurveyChoiceList">
 
             {[
               "毎日食べる",
@@ -633,26 +674,37 @@ export default function BeforeSurveyPage() {
               "食べない",
             ].map(
               (
-                value
+                item
               ) => (
                 <button
                   key={
-                    value
+                    item
                   }
                   type="button"
                   className={
                     pockyFrequency ===
-                    value
-                      ? "surveyChoiceButton active"
-                      : "surveyChoiceButton"
+                    item
+                      ? "beforeSurveyChoiceRow active"
+                      : "beforeSurveyChoiceRow"
                   }
                   onClick={() =>
                     setPockyFrequency(
-                      value
+                      item
                     )
                   }
                 >
-                  {value}
+
+                  <span>
+                    {item}
+                  </span>
+
+                  <strong>
+                    {pockyFrequency ===
+                    item
+                      ? "✓"
+                      : ""}
+                  </strong>
+
                 </button>
               )
             )}
@@ -661,28 +713,42 @@ export default function BeforeSurveyPage() {
 
         </section>
 
-        {/* 03 RENEWAL */}
+        {/* =================================
+            03 RENEWAL
+        ================================= */}
 
-        <section className="surveyQuestionCard">
+        <section className="beforeSurveyCard">
 
-          <span className="surveyQuestionNumber">
-            03
-          </span>
+          <div className="beforeSurveyQuestionHeader">
 
-          <h2>
-            ポッキーがリニューアルしたことを
-            知っていましたか？
-          </h2>
+            <span>
+              03
+            </span>
 
-          <div className="surveyChoiceGrid">
+            <div>
+
+              <small>
+                RENEWAL
+              </small>
+
+              <h2>
+                ポッキーがリニューアルしたことを
+                知っていましたか？
+              </h2>
+
+            </div>
+
+          </div>
+
+          <div className="beforeSurveyChoiceGrid two">
 
             <button
               type="button"
               className={
                 knewRenewal ===
                 true
-                  ? "surveyChoiceButton active"
-                  : "surveyChoiceButton"
+                  ? "beforeSurveyChoice active"
+                  : "beforeSurveyChoice"
               }
               onClick={() =>
                 setKnewRenewal(
@@ -698,8 +764,8 @@ export default function BeforeSurveyPage() {
               className={
                 knewRenewal ===
                 false
-                  ? "surveyChoiceButton active"
-                  : "surveyChoiceButton"
+                  ? "beforeSurveyChoice active"
+                  : "beforeSurveyChoice"
               }
               onClick={() =>
                 setKnewRenewal(
@@ -712,52 +778,98 @@ export default function BeforeSurveyPage() {
 
           </div>
 
-          <div className="surveyInfoBox">
+          <div className="beforeSurveyRenewalInfo">
 
-            <strong>
-              2025年9月2日から全面リニューアル
-            </strong>
+            <span>
+              2025.09.02 RENEWAL
+            </span>
+
+            <h3>
+              ポッキーとポッキー極細が
+              全面リニューアル
+            </h3>
 
             <p>
-              江崎グリコ株式会社では、
-              ポッキーとポッキー極細を
+              瞬間的な「Share Happiness」ではなく、
+              誰でも気軽に世代や境遇を超えて
+              シェアできる、
+              持続的な「Share Happiness」を
+              作りたいという思いから
               全面リニューアルしました。
             </p>
 
-            <p>
-              チョコレートには複数のカカオを
-              ブレンドし、
-              プレッツェルには国産全粒粉や
-              発酵バターを新たに使用するなど、
-              素材や味わいが見直されています。
-            </p>
+            <div className="beforeSurveyRenewalGrid">
+
+              <div>
+
+                <strong>
+                  チョコレート
+                </strong>
+
+                <p>
+                  スパイシーな風味や
+                  フローラル・フルーティーな香りを
+                  持つ複数のカカオをブレンド。
+                </p>
+
+              </div>
+
+              <div>
+
+                <strong>
+                  プレッツェル
+                </strong>
+
+                <p>
+                  国産全粒粉5％、
+                  発酵バター0.8％を新たに使用。
+                  数百回の試作検証を実施。
+                </p>
+
+              </div>
+
+            </div>
 
           </div>
 
         </section>
 
-        {/* 04 SHARE */}
+        {/* =================================
+            04 SHARE
+        ================================= */}
 
-        <section className="surveyQuestionCard">
+        <section className="beforeSurveyCard">
 
-          <span className="surveyQuestionNumber">
-            04
-          </span>
+          <div className="beforeSurveyQuestionHeader">
 
-          <h2>
-            ポッキーをシェアして
-            食べたことがありますか？
-          </h2>
+            <span>
+              04
+            </span>
 
-          <div className="surveyChoiceGrid">
+            <div>
+
+              <small>
+                SHARE
+              </small>
+
+              <h2>
+                ポッキーをシェアして
+                食べたことがありますか？
+              </h2>
+
+            </div>
+
+          </div>
+
+          <div className="beforeSurveyChoiceGrid two">
 
             <button
               type="button"
               className={
                 hasSharedPocky ===
                 true
-                  ? "surveyChoiceButton active"
-                  : "surveyChoiceButton"
+                  ? "beforeSurveyChoice active"
+                  : "beforeSurveyChoice"
               }
               onClick={() =>
                 setHasSharedPocky(
@@ -773,8 +885,8 @@ export default function BeforeSurveyPage() {
               className={
                 hasSharedPocky ===
                 false
-                  ? "surveyChoiceButton active"
-                  : "surveyChoiceButton"
+                  ? "beforeSurveyChoice active"
+                  : "beforeSurveyChoice"
               }
               onClick={() => {
                 setHasSharedPocky(
@@ -793,7 +905,7 @@ export default function BeforeSurveyPage() {
 
           {hasSharedPocky ===
             true && (
-            <div className="surveyTextAreaWrap">
+            <div className="beforeSurveyTextareaBox">
 
               <label htmlFor="shareSituation">
                 どんな時にシェアしますか？
@@ -822,9 +934,11 @@ export default function BeforeSurveyPage() {
 
         </section>
 
-        {/* FEELINGS */}
+        {/* =================================
+            FEELINGS HEADER
+        ================================= */}
 
-        <section className="surveyFeelingSection">
+        <section className="beforeSurveyFeelingHeader">
 
           <span>
             BEFORE CHECK
@@ -835,83 +949,150 @@ export default function BeforeSurveyPage() {
           </h2>
 
           <p>
-            それぞれ4段階で
-            選択してください。
+            それぞれ、
+            今の気持ちに最も近いものを
+            4段階で選んでください。
           </p>
 
         </section>
 
-        {/* 05 INTEREST */}
+        {/* =================================
+            05 INTEREST
+        ================================= */}
 
-        <section className="surveyQuestionCard">
+        <section className="beforeSurveyCard scoreCard">
 
-          <span className="surveyQuestionNumber">
-            05
-          </span>
+          <div className="beforeSurveyQuestionHeader">
 
-          <h2>
-            ポッキーに興味がありますか？
-          </h2>
+            <span>
+              05
+            </span>
 
-          {renderScoreButtons(
-            interestScore,
-            setInterestScore
-          )}
+            <div>
 
-        </section>
+              <small>
+                INTEREST
+              </small>
 
-        {/* 06 EAT */}
+              <h2>
+                ポッキーに興味がありますか？
+              </h2>
 
-        <section className="surveyQuestionCard">
+            </div>
 
-          <span className="surveyQuestionNumber">
-            06
-          </span>
+          </div>
 
-          <h2>
-            ポッキーを食べたいと思いますか？
-          </h2>
-
-          {renderScoreButtons(
-            eatIntentScore,
-            setEatIntentScore
-          )}
-
-        </section>
-
-        {/* 07 SHARE INTENT */}
-
-        <section className="surveyQuestionCard">
-
-          <span className="surveyQuestionNumber">
-            07
-          </span>
-
-          <h2>
-            誰かとポッキーを
-            シェアしたいと思いますか？
-          </h2>
-
-          {renderScoreButtons(
-            shareIntentScore,
-            setShareIntentScore
-          )}
+          <ScoreQuestion
+            value={
+              interestScore
+            }
+            onChange={
+              setInterestScore
+            }
+          />
 
         </section>
 
-        {/* ERROR */}
+        {/* =================================
+            06 EAT
+        ================================= */}
+
+        <section className="beforeSurveyCard scoreCard">
+
+          <div className="beforeSurveyQuestionHeader">
+
+            <span>
+              06
+            </span>
+
+            <div>
+
+              <small>
+                EAT INTENT
+              </small>
+
+              <h2>
+                ポッキーを食べたいと思いますか？
+              </h2>
+
+            </div>
+
+          </div>
+
+          <ScoreQuestion
+            value={
+              eatIntentScore
+            }
+            onChange={
+              setEatIntentScore
+            }
+          />
+
+        </section>
+
+        {/* =================================
+            07 SHARE INTENT
+        ================================= */}
+
+        <section className="beforeSurveyCard scoreCard">
+
+          <div className="beforeSurveyQuestionHeader">
+
+            <span>
+              07
+            </span>
+
+            <div>
+
+              <small>
+                SHARE INTENT
+              </small>
+
+              <h2>
+                誰かとポッキーを
+                シェアしたいと思いますか？
+              </h2>
+
+            </div>
+
+          </div>
+
+          <ScoreQuestion
+            value={
+              shareIntentScore
+            }
+            onChange={
+              setShareIntentScore
+            }
+          />
+
+        </section>
+
+        {/* =================================
+            ERROR
+        ================================= */}
 
         {errorMessage && (
-          <div className="surveyError">
-            {errorMessage}
+          <div className="beforeSurveyError">
+
+            <span>
+              !
+            </span>
+
+            <p>
+              {errorMessage}
+            </p>
+
           </div>
         )}
 
-        {/* SUBMIT */}
+        {/* =================================
+            SUBMIT
+        ================================= */}
 
         <button
           type="button"
-          className="surveySubmitButton"
+          className="beforeSurveySubmit"
           disabled={
             submitting
           }
@@ -919,9 +1100,29 @@ export default function BeforeSurveyPage() {
             void submitSurvey()
           }
         >
-          {submitting
-            ? "回答を保存中..."
-            : "回答してPOKIPOをはじめる"}
+
+          <span>
+
+            <strong>
+              {submitting
+                ? "回答を保存中..."
+                : "回答してPOKIPOをはじめる"}
+            </strong>
+
+            {!submitting && (
+              <small>
+                ここからスタンプラリーがスタート
+              </small>
+            )}
+
+          </span>
+
+          {!submitting && (
+            <b>
+              →
+            </b>
+          )}
+
         </button>
 
       </section>
