@@ -108,7 +108,7 @@ export default function BeforeSurveyPage() {
   ] = useState("");
 
   /* ========================================
-     FEELING QUESTIONS
+     FEELING
   ======================================== */
 
   const [
@@ -253,7 +253,7 @@ export default function BeforeSurveyPage() {
   }
 
   /* ========================================
-     SAVE
+     SUBMIT
   ======================================== */
 
   async function submitSurvey(
@@ -293,7 +293,7 @@ export default function BeforeSurveyPage() {
       } =
         await supabase
           .from(
-            "survey_before"
+            "pokipo_pre_surveys"
           )
           .upsert(
             {
@@ -341,7 +341,7 @@ export default function BeforeSurveyPage() {
         );
 
         setMessage(
-          "アンケートを保存できませんでした。通信環境を確認してもう一度お試しください。"
+          `アンケートを保存できませんでした。${error.message}`
         );
 
         return;
@@ -435,10 +435,6 @@ export default function BeforeSurveyPage() {
 
       <section className="surveyPage">
 
-        {/* =================================
-            HEADER
-        ================================= */}
-
         <header className="surveyHeader">
 
           <span className="surveyEyebrow">
@@ -456,10 +452,6 @@ export default function BeforeSurveyPage() {
 
         </header>
 
-        {/* =================================
-            FORM
-        ================================= */}
-
         <form
           onSubmit={
             submitSurvey
@@ -467,9 +459,7 @@ export default function BeforeSurveyPage() {
           className="surveyForm"
         >
 
-          {/* =================================
-              01
-          ================================= */}
+          {/* 01 */}
 
           <section className="surveyQuestionCard">
 
@@ -546,9 +536,7 @@ export default function BeforeSurveyPage() {
 
           </section>
 
-          {/* =================================
-              02
-          ================================= */}
+          {/* 02 */}
 
           <section className="surveyQuestionCard">
 
@@ -632,9 +620,7 @@ export default function BeforeSurveyPage() {
 
           </section>
 
-          {/* =================================
-              03
-          ================================= */}
+          {/* 03 */}
 
           <section className="surveyQuestionCard">
 
@@ -696,9 +682,7 @@ export default function BeforeSurveyPage() {
 
           </section>
 
-          {/* =================================
-              04
-          ================================= */}
+          {/* 04 */}
 
           <section className="surveyQuestionCard">
 
@@ -794,9 +778,7 @@ export default function BeforeSurveyPage() {
 
           </section>
 
-          {/* =================================
-              FEELING HEADER
-          ================================= */}
+          {/* FEELING */}
 
           <section className="surveyFeelingHeader">
 
@@ -816,9 +798,7 @@ export default function BeforeSurveyPage() {
 
           </section>
 
-          {/* =================================
-              05
-          ================================= */}
+          {/* 05 */}
 
           <section className="surveyQuestionCard feeling">
 
@@ -846,9 +826,7 @@ export default function BeforeSurveyPage() {
 
           </section>
 
-          {/* =================================
-              06
-          ================================= */}
+          {/* 06 */}
 
           <section className="surveyQuestionCard feeling">
 
@@ -876,9 +854,7 @@ export default function BeforeSurveyPage() {
 
           </section>
 
-          {/* =================================
-              07
-          ================================= */}
+          {/* 07 */}
 
           <section className="surveyQuestionCard feeling">
 
@@ -907,19 +883,11 @@ export default function BeforeSurveyPage() {
 
           </section>
 
-          {/* =================================
-              MESSAGE
-          ================================= */}
-
           {message && (
             <div className="surveyMessage">
               {message}
             </div>
           )}
-
-          {/* =================================
-              SUBMIT
-          ================================= */}
 
           <button
             type="submit"
