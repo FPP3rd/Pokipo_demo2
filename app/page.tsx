@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  FormEvent,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -14,17 +16,17 @@ import {
 } from "../lib/supabase-client";
 
 /* ========================================
-   TYPES
+   INTRO
 ======================================== */
 
-type StaffProfile = {
-  user_id: string;
-  admin_id: string;
-  display_name: string;
-};
+const INTRO_STORAGE_KEY =
+  "pokipo_intro_seen";
+
+const INTRO_VIDEO_PATH =
+  "/videos/pokipo-intro.mp4";
 
 /* ========================================
-   DEFAULT MESSAGE
+   MAINTENANCE
 ======================================== */
 
 const DEFAULT_MAINTENANCE_MESSAGE =
@@ -34,47 +36,18 @@ const DEFAULT_MAINTENANCE_MESSAGE =
    PAGE
 ======================================== */
 
-export default function StaffPage() {
+export default function StartPage() {
   const router =
     useRouter();
 
   /* ========================================
-     AUTH
-  ======================================== */
-
-  const [
-    authLoading,
-    setAuthLoading,
-  ] = useState(true);
-
-  const [
-    authenticated,
-    setAuthenticated,
-  ] = useState(false);
-
-  const [
-    currentStaffName,
-    setCurrentStaffName,
-  ] = useState("");
-
-  const [
-    currentAdminId,
-    setCurrentAdminId,
-  ] = useState("");
-
-  const [
-    profileLoading,
-    setProfileLoading,
-  ] = useState(true);
-
-  const [
-    message,
-    setMessage,
-  ] = useState("");
-
-  /* ========================================
      MAINTENANCE
   ======================================== */
+
+  const [
+    maintenanceChecking,
+    setMaintenanceChecking,
+  ] = useState(true);
 
   const [
     maintenanceMode,
@@ -88,557 +61,690 @@ export default function StaffPage() {
     DEFAULT_MAINTENANCE_MESSAGE
   );
 
-  const [
-    maintenanceLoading,
-    setMaintenanceLoading,
-  ] = useState(true);
+  /* ========================================
+     VIDEO INTRO
+  ======================================== */
+
+  const videoRef =
+    useRef<HTMLVideoElement | null>(
+      null
+    );
 
   const [
-    maintenanceSaving,
-    setMaintenanceSaving,
+    showIntro,
+    setShowIntro,
   ] = useState(false);
 
+  const [
+    introStarted,
+    setIntroStarted,
+  ] = useState(false);
+
+  const [
+    curtainClosing,
+    setCurtainClosing,
+  ] = useState(false);
+
+  const [
+    curtainOpening,
+    setCurtainOpening,
+  ] = useState(false);
+
+  const [
+    videoError,
+    setVideoError,
+  ] = useState("");
+
+  const introFinishingRef =
+    useRef(false);
+
   /* ========================================
-     MAINTENANCE TARGETS
+     FORM
   ======================================== */
 
   const [
-    maintenanceHome,
-    setMaintenanceHome,
+    nickname,
+    setNickname,
+  ] = useState("");
+
+  const [
+    grade,
+    setGrade,
+  ] = useState("");
+
+  const [
+    department,
+    setDepartment,
+  ] = useState("");
+
+  const [
+    message,
+    setMessage,
+  ] = useState("");
+
+  const [
+    submitting,
+    setSubmitting,
   ] = useState(false);
 
   const [
-    maintenanceStamp,
-    setMaintenanceStamp,
-  ] = useState(false);
-
-  const [
-    maintenanceKnowledge,
-    setMaintenanceKnowledge,
-  ] = useState(false);
-
-  const [
-    maintenanceProgress,
-    setMaintenanceProgress,
-  ] = useState(false);
-
-  const [
-    maintenanceReward,
-    setMaintenanceReward,
-  ] = useState(false);
-
-  const [
-    maintenanceSurveyBefore,
-    setMaintenanceSurveyBefore,
-  ] = useState(false);
-
-  const [
-    maintenanceSurveyAfter,
-    setMaintenanceSurveyAfter,
-  ] = useState(false);
+    checkingRegistration,
+    setCheckingRegistration,
+  ] = useState(true);
 
   /* ========================================
-     LOAD STAFF
+     MAINTENANCE CHECK
   ======================================== */
 
   useEffect(() => {
-    async function loadStaff() {
-      setAuthLoading(
-        true
-      );
-
-      setProfileLoading(
-        true
-      );
-
-      setMaintenanceLoading(
-        true
-      );
-
-      setMessage("");
-
-      try {
-        /* =================================
-           SESSION
-        ================================= */
-
-        const {
-          data:
-            sessionData,
-          error:
-            sessionError,
-        } =
-          await supabase.auth.getSession();
-
-        if (
-          sessionError ||
-          !sessionData.session
-        ) {
-          router.replace(
-            "/staff/reward"
-          );
-
-          return;
-        }
-
-        setAuthenticated(
-          true
-        );
-
-        const userId =
-          sessionData.session.user.id;
-
-        /* =================================
-           STAFF PROFILE
-        ================================= */
-
-        const {
-          data:
-            profileData,
-          error:
-            profileError,
-        } =
-          await supabase
-            .from(
-              "staff_profiles"
-            )
-            .select(
-              "user_id, admin_id, display_name"
-            )
-            .eq(
-              "user_id",
-              userId
-            )
-            .single();
-
-        if (
-          profileError
-        ) {
-          console.error(
-            "管理者プロフィール取得エラー:",
-            profileError
-          );
-
-          setMessage(
-            "ログイン中の管理者名を取得できませんでした。"
-          );
-        } else if (
-          profileData
-        ) {
-          const typedProfile =
-            profileData as StaffProfile;
-
-          setCurrentStaffName(
-            typedProfile.display_name
-          );
-
-          setCurrentAdminId(
-            typedProfile.admin_id
-          );
-        }
-
-        /* =================================
-           MAINTENANCE SETTINGS
-        ================================= */
-
-        const {
-          data:
-            maintenanceData,
-          error:
-            maintenanceError,
-        } =
-          await supabase
-            .from(
-              "pokipo_app_settings"
-            )
-            .select(
-              `
-                maintenance_mode,
-                maintenance_message,
-                maintenance_home,
-                maintenance_stamp,
-                maintenance_knowledge,
-                maintenance_progress,
-                maintenance_reward,
-                maintenance_survey_before,
-                maintenance_survey_after
-              `
-            )
-            .eq(
-              "id",
-              1
-            )
-            .single();
-
-        if (
-          maintenanceError
-        ) {
-          console.error(
-            "メンテナンス設定取得エラー:",
-            maintenanceError
-          );
-
-          setMessage(
-            "メンテナンス設定を取得できませんでした。"
-          );
-        } else if (
-          maintenanceData
-        ) {
-          setMaintenanceMode(
-            Boolean(
-              maintenanceData.maintenance_mode
-            )
-          );
-
-          setMaintenanceMessage(
-            maintenanceData.maintenance_message?.trim() ||
-              DEFAULT_MAINTENANCE_MESSAGE
-          );
-
-          setMaintenanceHome(
-            Boolean(
-              maintenanceData.maintenance_home
-            )
-          );
-
-          setMaintenanceStamp(
-            Boolean(
-              maintenanceData.maintenance_stamp
-            )
-          );
-
-          setMaintenanceKnowledge(
-            Boolean(
-              maintenanceData.maintenance_knowledge
-            )
-          );
-
-          setMaintenanceProgress(
-            Boolean(
-              maintenanceData.maintenance_progress
-            )
-          );
-
-          setMaintenanceReward(
-            Boolean(
-              maintenanceData.maintenance_reward
-            )
-          );
-
-          setMaintenanceSurveyBefore(
-            Boolean(
-              maintenanceData.maintenance_survey_before
-            )
-          );
-
-          setMaintenanceSurveyAfter(
-            Boolean(
-              maintenanceData.maintenance_survey_after
-            )
-          );
-        }
-      } catch (
-        error
-      ) {
-        console.error(
-          "管理者情報取得エラー:",
-          error
-        );
-
-        setMessage(
-          "管理者情報の読み込み中にエラーが発生しました。"
-        );
-      } finally {
-        setAuthLoading(
-          false
-        );
-
-        setProfileLoading(
-          false
-        );
-
-        setMaintenanceLoading(
-          false
-        );
-      }
-    }
-
-    void loadStaff();
-
-    /* ========================================
-       AUTH LISTENER
-    ======================================== */
-
-    const {
-      data:
-        authListener,
-    } =
-      supabase.auth.onAuthStateChange(
-        (
-          _event,
-          session
-        ) => {
-          if (
-            !session
-          ) {
-            setAuthenticated(
-              false
-            );
-
-            router.replace(
-              "/staff/reward"
-            );
-          }
-        }
-      );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [
-    router,
-  ]);
-
-  /* ========================================
-     SAVE MAINTENANCE
-  ======================================== */
-
-  async function saveMaintenanceSettings() {
-    if (
-      maintenanceSaving
-    ) {
-      return;
-    }
-
-    setMaintenanceSaving(
-      true
-    );
-
-    setMessage("");
-
-    try {
-      const finalMessage =
-        maintenanceMessage.trim() ||
-        DEFAULT_MAINTENANCE_MESSAGE;
-
+    async function loadMaintenanceSetting() {
       const {
+        data,
         error,
       } =
         await supabase
           .from(
             "pokipo_app_settings"
           )
-          .update({
-            maintenance_mode:
-              maintenanceMode,
-
-            maintenance_message:
-              finalMessage,
-
-            maintenance_home:
-              maintenanceHome,
-
-            maintenance_stamp:
-              maintenanceStamp,
-
-            maintenance_knowledge:
-              maintenanceKnowledge,
-
-            maintenance_progress:
-              maintenanceProgress,
-
-            maintenance_reward:
-              maintenanceReward,
-
-            maintenance_survey_before:
-              maintenanceSurveyBefore,
-
-            maintenance_survey_after:
-              maintenanceSurveyAfter,
-
-            updated_at:
-              new Date().toISOString(),
-          })
+          .select(
+            "maintenance_mode, maintenance_message"
+          )
           .eq(
             "id",
             1
-          );
+          )
+          .single();
 
       if (
         error
       ) {
         console.error(
-          "メンテナンス設定保存エラー:",
+          "メンテナンス設定取得エラー:",
           error
         );
 
-        setMessage(
-          "メンテナンス設定を保存できませんでした。"
+        /*
+          設定取得に失敗した場合は
+          通常画面を表示
+        */
+
+        setMaintenanceMode(
+          false
+        );
+
+        setMaintenanceMessage(
+          DEFAULT_MAINTENANCE_MESSAGE
+        );
+
+        setMaintenanceChecking(
+          false
         );
 
         return;
       }
 
-      setMaintenanceMessage(
-        finalMessage
+      setMaintenanceMode(
+        Boolean(
+          data?.maintenance_mode
+        )
       );
 
-      setMessage(
-        "メンテナンス設定を保存しました。"
+      setMaintenanceMessage(
+        data?.maintenance_message?.trim() ||
+          DEFAULT_MAINTENANCE_MESSAGE
+      );
+
+      setMaintenanceChecking(
+        false
+      );
+    }
+
+    void loadMaintenanceSetting();
+
+    /* ========================================
+       MAINTENANCE REALTIME
+    ======================================== */
+
+    const maintenanceChannel =
+      supabase
+        .channel(
+          "pokipo-root-maintenance-live"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event:
+              "*",
+
+            schema:
+              "public",
+
+            table:
+              "pokipo_app_settings",
+
+            filter:
+              "id=eq.1",
+          },
+          (
+            payload
+          ) => {
+            const newData =
+              payload.new as {
+                maintenance_mode?:
+                  boolean;
+
+                maintenance_message?:
+                  string;
+              };
+
+            if (
+              typeof newData.maintenance_mode ===
+              "boolean"
+            ) {
+              setMaintenanceMode(
+                newData.maintenance_mode
+              );
+            }
+
+            if (
+              typeof newData.maintenance_message ===
+              "string"
+            ) {
+              setMaintenanceMessage(
+                newData.maintenance_message.trim() ||
+                  DEFAULT_MAINTENANCE_MESSAGE
+              );
+            }
+          }
+        )
+        .subscribe();
+
+    return () => {
+      supabase.removeChannel(
+        maintenanceChannel
+      );
+    };
+  }, []);
+
+  /* ========================================
+     EXISTING PARTICIPANT CHECK
+  ======================================== */
+
+  useEffect(() => {
+    if (
+      maintenanceChecking
+    ) {
+      return;
+    }
+
+    if (
+      maintenanceMode
+    ) {
+      setCheckingRegistration(
+        false
+      );
+
+      return;
+    }
+
+    async function checkExistingParticipant() {
+      const savedParticipantId =
+        localStorage.getItem(
+          "pokipo_participant_id"
+        ) ??
+        localStorage.getItem(
+          "pokipo_user_id"
+        );
+
+      const savedNickname =
+        localStorage.getItem(
+          "pokipo_nickname"
+        );
+
+      /* =================================
+         NEW PARTICIPANT
+      ================================= */
+
+      if (
+        !savedParticipantId ||
+        !savedNickname
+      ) {
+        const introSeen =
+          localStorage.getItem(
+            INTRO_STORAGE_KEY
+          ) === "true";
+
+        setShowIntro(
+          !introSeen
+        );
+
+        setCheckingRegistration(
+          false
+        );
+
+        return;
+      }
+
+      /* =================================
+         PRE SURVEY CHECK
+      ================================= */
+
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "has_completed_pokipo_pre_survey",
+          {
+            p_participant_id:
+              savedParticipantId,
+          }
+        );
+
+      if (
+        error
+      ) {
+        console.error(
+          "参加前アンケート確認エラー:",
+          error
+        );
+
+        router.replace(
+          "/survey/before"
+        );
+
+        return;
+      }
+
+      if (
+        data === true
+      ) {
+        router.replace(
+          "/home"
+        );
+
+        return;
+      }
+
+      router.replace(
+        "/survey/before"
+      );
+    }
+
+    void checkExistingParticipant();
+  }, [
+    router,
+    maintenanceChecking,
+    maintenanceMode,
+  ]);
+
+  /* ========================================
+     INTRO START
+  ======================================== */
+
+  async function startIntro() {
+    const video =
+      videoRef.current;
+
+    if (
+      !video
+    ) {
+      setVideoError(
+        "動画を読み込めませんでした。"
+      );
+
+      return;
+    }
+
+    setVideoError("");
+
+    try {
+      video.currentTime =
+        0;
+
+      video.muted =
+        false;
+
+      video.volume =
+        1;
+
+      await video.play();
+
+      setIntroStarted(
+        true
       );
     } catch (
       error
     ) {
       console.error(
-        "メンテナンス設定通信エラー:",
+        "イントロ動画再生エラー:",
         error
       );
 
-      setMessage(
-        "メンテナンス設定の保存中にエラーが発生しました。"
+      setVideoError(
+        "動画を再生できませんでした。もう一度お試しください。"
       );
-    } finally {
-      setMaintenanceSaving(
+
+      setIntroStarted(
         false
       );
     }
   }
 
   /* ========================================
-     SELECT ALL TARGETS
+     INTRO FINISH
   ======================================== */
 
-  function selectAllMaintenanceTargets() {
-    setMaintenanceHome(
+  function finishIntro() {
+    if (
+      introFinishingRef.current
+    ) {
+      return;
+    }
+
+    introFinishingRef.current =
+      true;
+
+    const video =
+      videoRef.current;
+
+    if (
+      video
+    ) {
+      video.pause();
+    }
+
+    setCurtainClosing(
       true
     );
 
-    setMaintenanceStamp(
-      true
-    );
+    window.setTimeout(
+      () => {
+        localStorage.setItem(
+          INTRO_STORAGE_KEY,
+          "true"
+        );
 
-    setMaintenanceKnowledge(
-      true
-    );
+        setCurtainOpening(
+          true
+        );
 
-    setMaintenanceProgress(
-      true
-    );
+        window.setTimeout(
+          () => {
+            setShowIntro(
+              false
+            );
 
-    setMaintenanceReward(
-      true
-    );
+            setIntroStarted(
+              false
+            );
 
-    setMaintenanceSurveyBefore(
-      true
-    );
+            setCurtainClosing(
+              false
+            );
 
-    setMaintenanceSurveyAfter(
-      true
+            setCurtainOpening(
+              false
+            );
+
+            introFinishingRef.current =
+              false;
+          },
+          1100
+        );
+      },
+      1050
     );
   }
 
   /* ========================================
-     CLEAR TARGETS
+     INTRO SKIP
   ======================================== */
 
-  function clearAllMaintenanceTargets() {
-    setMaintenanceHome(
-      false
-    );
-
-    setMaintenanceStamp(
-      false
-    );
-
-    setMaintenanceKnowledge(
-      false
-    );
-
-    setMaintenanceProgress(
-      false
-    );
-
-    setMaintenanceReward(
-      false
-    );
-
-    setMaintenanceSurveyBefore(
-      false
-    );
-
-    setMaintenanceSurveyAfter(
-      false
-    );
+  function skipIntro() {
+    finishIntro();
   }
 
   /* ========================================
-     LOGOUT
+     REGISTER PARTICIPANT
   ======================================== */
 
-  async function logoutStaff() {
+  async function submit(
+    e: FormEvent<HTMLFormElement>
+  ) {
+    e.preventDefault();
+
+    const name =
+      nickname.trim();
+
+    if (
+      name.length < 2 ||
+      name.length > 20
+    ) {
+      setMessage(
+        "ニックネームは2〜20文字で入力してください。"
+      );
+
+      return;
+    }
+
+    if (
+      !grade
+    ) {
+      setMessage(
+        "学年を選択してください。"
+      );
+
+      return;
+    }
+
+    if (
+      !department
+    ) {
+      setMessage(
+        "学科を選択してください。"
+      );
+
+      return;
+    }
+
+    setSubmitting(
+      true
+    );
+
     setMessage("");
 
     try {
+      const participantId =
+        crypto.randomUUID();
+
       const {
         error,
       } =
-        await supabase.auth.signOut();
+        await supabase
+          .from(
+            "participants"
+          )
+          .insert({
+            id:
+              participantId,
+
+            nickname:
+              name,
+
+            grade,
+
+            department,
+          });
 
       if (
         error
       ) {
         console.error(
-          "ログアウトエラー:",
-          error
+          "参加者登録エラー:",
+          {
+            message:
+              error.message,
+
+            details:
+              error.details,
+
+            hint:
+              error.hint,
+
+            code:
+              error.code,
+          }
         );
 
         setMessage(
-          "ログアウトできませんでした。"
+          "参加者情報を登録できませんでした。通信環境を確認して、もう一度お試しください。"
         );
 
         return;
       }
 
-      setAuthenticated(
-        false
+      /* =================================
+         PARTICIPANT DATA
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_participant_id",
+        participantId
       );
 
-      setCurrentStaffName("");
+      localStorage.setItem(
+        "pokipo_user_id",
+        participantId
+      );
 
-      setCurrentAdminId("");
+      localStorage.setItem(
+        "pokipo_nickname",
+        name
+      );
 
-      router.replace(
-        "/staff/reward"
+      localStorage.setItem(
+        "pokipo_grade",
+        grade
+      );
+
+      localStorage.setItem(
+        "pokipo_department",
+        department
+      );
+
+      /* =================================
+         PROGRESS RESET
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_scans",
+        JSON.stringify([])
+      );
+
+      localStorage.setItem(
+        "pokipo_progress",
+        "0"
+      );
+
+      localStorage.setItem(
+        "pokipo_knowledge",
+        JSON.stringify([])
+      );
+
+      localStorage.setItem(
+        "pokipo_completed",
+        "false"
+      );
+
+      localStorage.removeItem(
+        "pokipo_completed_at"
+      );
+
+      localStorage.removeItem(
+        "pokipo_achievement_rank"
+      );
+
+      /* =================================
+         REWARD RESET
+      ================================= */
+
+      localStorage.setItem(
+        "pokipo_reward_exchanged",
+        "false"
+      );
+
+      localStorage.removeItem(
+        "pokipo_reward_exchanged_at"
+      );
+
+      localStorage.removeItem(
+        "pokipo_reward_student_number"
+      );
+
+      localStorage.removeItem(
+        "pokipo_reward_token"
+      );
+
+      /* =================================
+         SURVEY RESET
+      ================================= */
+
+      localStorage.removeItem(
+        "pokipo_pre_survey_completed"
+      );
+
+      localStorage.removeItem(
+        "pokipo_post_survey_completed"
+      );
+
+      /* =================================
+         MOVE TO PRE SURVEY
+      ================================= */
+
+      router.push(
+        "/survey/before"
       );
     } catch (
       error
     ) {
       console.error(
-        "ログアウト通信エラー:",
+        "参加者登録通信エラー:",
         error
       );
 
       setMessage(
-        "ログアウト中にエラーが発生しました。"
+        "通信中にエラーが発生しました。もう一度お試しください。"
+      );
+    } finally {
+      setSubmitting(
+        false
       );
     }
   }
 
   /* ========================================
-     LOADING
+     MAINTENANCE LOADING
   ======================================== */
 
   if (
-    authLoading
+    maintenanceChecking
   ) {
     return (
       <main className="shell">
 
-        <section className="staffMenuPage">
+        <section className="card startPage">
 
-          <div className="staffLoadingCard">
-            管理者情報を確認中...
+          <div
+            style={{
+              padding:
+                "40px 20px",
+
+              textAlign:
+                "center",
+            }}
+          >
+            POKIPOを読み込み中...
           </div>
 
         </section>
@@ -647,10 +753,89 @@ export default function StaffPage() {
     );
   }
 
+  /* ========================================
+     MAINTENANCE
+  ======================================== */
+
   if (
-    !authenticated
+    maintenanceMode
   ) {
-    return null;
+    return (
+      <main className="maintenancePage">
+
+        <section className="maintenanceCard">
+
+          <span className="maintenanceEyebrow">
+            POKIPO SYSTEM
+          </span>
+
+          <div className="maintenanceIcon">
+            !
+          </div>
+
+          <h1>
+            ただいま
+            <br />
+            メンテナンス中です
+          </h1>
+
+          <p className="maintenanceMessage">
+            {maintenanceMessage}
+          </p>
+
+          <div className="maintenanceDivider" />
+
+          <p className="maintenanceSubMessage">
+            復旧後、このページを再読み込みすると
+            POKIPOをご利用いただけます。
+          </p>
+
+          <div className="maintenanceBrand">
+
+            <strong>
+              POKIPO
+            </strong>
+
+            <span>
+              高安ゼミ LiPost × POCKY
+            </span>
+
+          </div>
+
+        </section>
+
+      </main>
+    );
+  }
+
+  /* ========================================
+     PARTICIPANT CHECK
+  ======================================== */
+
+  if (
+    checkingRegistration
+  ) {
+    return (
+      <main className="shell">
+
+        <section className="card startPage">
+
+          <div
+            style={{
+              padding:
+                "40px 20px",
+
+              textAlign:
+                "center",
+            }}
+          >
+            参加情報を確認中...
+          </div>
+
+        </section>
+
+      </main>
+    );
   }
 
   /* ========================================
@@ -658,756 +843,518 @@ export default function StaffPage() {
   ======================================== */
 
   return (
-    <main className="shell">
+    <>
+      <main className="shell">
 
-      <section className="staffMenuPage">
+        <section className="card startPage">
 
-        {/* =================================
-            HEADER
-        ================================= */}
+          {/* =================================
+              HERO
+          ================================= */}
 
-        <header className="staffMenuHeader">
+          <header className="startHero">
 
-          <div>
-
-            <span className="staffMenuEyebrow">
-              POKIPO STAFF
-            </span>
-
-            <h1>
-              スタッフメニュー
-            </h1>
-
-            <p>
-              管理・景品交換・お知らせ・
-              アンケート分析をここから操作できます。
+            <p className="startEyebrow">
+              高安ゼミ LiPost × POCKY
             </p>
 
-          </div>
+            <h1 className="startLogo">
+              POKIPO
+            </h1>
 
-          <button
-            type="button"
-            className="staffLogoutButton"
-            onClick={() =>
-              void logoutStaff()
-            }
-          >
-            ログアウト
-          </button>
+            <p className="startCatch">
+              キャンパスをめぐって、
+              <br />
+              ポッキーが持つ価値を知ろう。
+            </p>
 
-        </header>
+            <div className="startVisual">
 
-        {/* =================================
-            CURRENT USER
-        ================================= */}
+              <div className="startPocky pockyOne">
+                <div className="startChocolate" />
+                <div className="startBiscuit" />
+              </div>
 
-        <section className="staffCurrentUserCard">
+              <div className="startPocky pockyTwo">
+                <div className="startChocolate" />
+                <div className="startBiscuit" />
+              </div>
 
-          <div className="staffCurrentUserIcon">
-            ✓
-          </div>
+              <div className="startPocky pockyThree">
+                <div className="startChocolate" />
+                <div className="startBiscuit" />
+              </div>
 
-          <div className="staffCurrentUserText">
+            </div>
 
-            <span>
-              LOGIN USER
-            </span>
+          </header>
 
-            <strong>
+          {/* =================================
+              INTRO
+          ================================= */}
 
-              {profileLoading
-                ? "管理者名を取得中..."
-                : currentStaffName ||
-                  "管理者名未登録"}
+          <section className="startIntro">
 
-            </strong>
-
-            {currentAdminId && (
-              <small>
-                管理ID：
-                {currentAdminId}
-              </small>
-            )}
-
-          </div>
-
-          <div className="staffCurrentUserStatus">
-            LOGIN
-          </div>
-
-        </section>
-
-        {/* =================================
-            MESSAGE
-        ================================= */}
-
-        {message && (
-          <div className="staffMenuMessage">
-            {message}
-          </div>
-        )}
-
-        {/* =================================
-            MAINTENANCE
-        ================================= */}
-
-        <section className="staffMaintenanceCard">
-
-          <div className="staffMaintenanceHeader">
+            <div className="startIntroNumber">
+              5
+            </div>
 
             <div>
 
-              <span className="staffMaintenanceEyebrow">
-                SYSTEM CONTROL
-              </span>
+              <p>
+                POKIPO STAMP RALLY
+              </p>
 
               <h2>
-                メンテナンス設定
+                5つのスポットを巡って特典をゲットしよう
               </h2>
 
+              <span>
+                学内に散りばめられたQRコードを読み取って、
+                スタンプと豆知識を集めよう。
+              </span>
+
+            </div>
+
+          </section>
+
+          {/* =================================
+              FORM
+          ================================= */}
+
+          <form
+            className="startForm"
+            onSubmit={
+              submit
+            }
+          >
+
+            <div className="startFormTitle">
+
               <p>
-                POKIPO全体、または特定の機能だけを
-                一時的に停止できます。
+                PLAYER PROFILE
+              </p>
+
+              <h2>
+                プロフィールを登録
+              </h2>
+
+            </div>
+
+            <div className="field">
+
+              <label htmlFor="nickname">
+                ニックネーム
+              </label>
+
+              <input
+                id="nickname"
+                type="text"
+                value={
+                  nickname
+                }
+                onChange={(
+                  e
+                ) =>
+                  setNickname(
+                    e.target.value
+                  )
+                }
+                placeholder="例：ぽっきー"
+                maxLength={
+                  20
+                }
+                disabled={
+                  submitting
+                }
+              />
+
+            </div>
+
+            <div className="field">
+
+              <label htmlFor="grade">
+                学年
+              </label>
+
+              <select
+                id="grade"
+                value={
+                  grade
+                }
+                onChange={(
+                  e
+                ) =>
+                  setGrade(
+                    e.target.value
+                  )
+                }
+                disabled={
+                  submitting
+                }
+              >
+
+                <option value="">
+                  選択してください
+                </option>
+
+                <option value="1年">
+                  1年
+                </option>
+
+                <option value="2年">
+                  2年
+                </option>
+
+                <option value="3年">
+                  3年
+                </option>
+
+                <option value="4年">
+                  4年
+                </option>
+
+                <option value="その他">
+                  その他
+                </option>
+
+              </select>
+
+            </div>
+
+            <div className="field">
+
+              <label htmlFor="department">
+                学科
+              </label>
+
+              <select
+                id="department"
+                value={
+                  department
+                }
+                onChange={(
+                  e
+                ) =>
+                  setDepartment(
+                    e.target.value
+                  )
+                }
+                disabled={
+                  submitting
+                }
+              >
+
+                <option value="">
+                  選択してください
+                </option>
+
+                <optgroup label="外国語学部">
+
+                  <option value="ドイツ語学科">
+                    ドイツ語学科
+                  </option>
+
+                  <option value="英語学科">
+                    英語学科
+                  </option>
+
+                  <option value="フランス語学科">
+                    フランス語学科
+                  </option>
+
+                  <option value="交流文化学科">
+                    交流文化学科
+                  </option>
+
+                </optgroup>
+
+                <optgroup label="国際教養学部">
+
+                  <option value="言語文化学科">
+                    言語文化学科
+                  </option>
+
+                </optgroup>
+
+                <optgroup label="経済学部">
+
+                  <option value="経済学科">
+                    経済学科
+                  </option>
+
+                  <option value="経営学科">
+                    経営学科
+                  </option>
+
+                  <option value="国際環境経済学科">
+                    国際環境経済学科
+                  </option>
+
+                </optgroup>
+
+                <optgroup label="法学部">
+
+                  <option value="法律学科">
+                    法律学科
+                  </option>
+
+                  <option value="国際関係法学科">
+                    国際関係法学科
+                  </option>
+
+                  <option value="総合政策学科">
+                    総合政策学科
+                  </option>
+
+                </optgroup>
+
+              </select>
+
+            </div>
+
+            {/* =================================
+                SURVEY NOTICE
+            ================================= */}
+
+            <div className="startSurveyNotice">
+
+              <strong>
+                登録後、参加前アンケートがあります
+              </strong>
+
+              <p>
+                POKIPO体験による変化を確認するため、
+                簡単なアンケートへの回答をお願いします。
               </p>
 
             </div>
 
-            <div
-              className={
-                maintenanceMode
-                  ? "staffMaintenanceStatus active"
-                  : "staffMaintenanceStatus"
+            {message && (
+              <p className="error">
+                {message}
+              </p>
+            )}
+
+            {/* =================================
+                DATA WARNING
+            ================================= */}
+
+            <section className="dataWarning">
+
+              <div className="dataWarningText">
+
+                <strong>
+                  始める前にチェック！
+                </strong>
+
+                <p>
+                  スタンプや豆知識などの進捗は、
+                  この端末のブラウザにも保存されます。
+                </p>
+
+                <p>
+                  イベント終了まで、
+                  Cookie・サイトデータ・閲覧データを削除しないでください。
+                </p>
+
+                <p className="dataWarningImportant">
+                  シークレットモード・プライベートブラウズでの参加も避けてください。
+                </p>
+
+              </div>
+
+            </section>
+
+            <button
+              type="submit"
+              className="primaryButton startButton"
+              disabled={
+                submitting
               }
             >
 
-              {maintenanceMode
-                ? "ALL ON"
-                : "NORMAL"}
-
-            </div>
-
-          </div>
-
-          {maintenanceLoading ? (
-            <div className="staffMaintenanceLoading">
-              設定を読み込み中...
-            </div>
-          ) : (
-            <>
-
-              {/* =============================
-                  GLOBAL
-              ============================== */}
-
-              <button
-                type="button"
-                className={
-                  maintenanceMode
-                    ? "staffMaintenanceToggle active"
-                    : "staffMaintenanceToggle"
-                }
-                onClick={() =>
-                  setMaintenanceMode(
-                    (
-                      current
-                    ) =>
-                      !current
-                  )
-                }
-              >
-
-                <span className="staffMaintenanceToggleTrack">
-
-                  <span className="staffMaintenanceToggleKnob" />
-
-                </span>
-
-                <div>
-
-                  <strong>
-
-                    {maintenanceMode
-                      ? "全体メンテナンス ON"
-                      : "全体メンテナンス OFF"}
-
-                  </strong>
-
-                  <small>
-
-                    {maintenanceMode
-                      ? "参加者向けページをすべて停止します"
-                      : "個別チェックしたページだけ停止できます"}
-
-                  </small>
-
-                </div>
-
-              </button>
-
-              {/* =============================
-                  TARGETS
-              ============================== */}
-
-              <div className="staffMaintenanceTargets">
-
-                <div className="staffMaintenanceTargetsTitle">
-
-                  <div>
-
-                    <strong>
-                      個別に停止するページ
-                    </strong>
-
-                    <span>
-                      全体メンテナンスOFF時に使用します
-                    </span>
-
-                  </div>
-
-                  <div className="staffMaintenanceTargetActions">
-
-                    <button
-                      type="button"
-                      onClick={
-                        selectAllMaintenanceTargets
-                      }
-                    >
-                      すべて選択
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={
-                        clearAllMaintenanceTargets
-                      }
-                    >
-                      すべて解除
-                    </button>
-
-                  </div>
-
-                </div>
-
-                <div className="staffMaintenanceTargetList">
-
-                  {/* HOME */}
-
-                  <label className="staffMaintenanceTarget">
-
-                    <input
-                      type="checkbox"
-                      checked={
-                        maintenanceHome
-                      }
-                      onChange={(
-                        event
-                      ) =>
-                        setMaintenanceHome(
-                          event.target.checked
-                        )
-                      }
-                    />
-
-                    <div>
-
-                      <strong>
-                        トップ画面
-                      </strong>
-
-                      <span>
-                        /home
-                      </span>
-
-                    </div>
-
-                  </label>
-
-                  {/* STAMP */}
-
-                  <label className="staffMaintenanceTarget">
-
-                    <input
-                      type="checkbox"
-                      checked={
-                        maintenanceStamp
-                      }
-                      onChange={(
-                        event
-                      ) =>
-                        setMaintenanceStamp(
-                          event.target.checked
-                        )
-                      }
-                    />
-
-                    <div>
-
-                      <strong>
-                        QR読み取り・スタンプ
-                      </strong>
-
-                      <span>
-                        /stamp
-                      </span>
-
-                    </div>
-
-                  </label>
-
-                  {/* KNOWLEDGE */}
-
-                  <label className="staffMaintenanceTarget">
-
-                    <input
-                      type="checkbox"
-                      checked={
-                        maintenanceKnowledge
-                      }
-                      onChange={(
-                        event
-                      ) =>
-                        setMaintenanceKnowledge(
-                          event.target.checked
-                        )
-                      }
-                    />
-
-                    <div>
-
-                      <strong>
-                        豆知識
-                      </strong>
-
-                      <span>
-                        /knowledge
-                      </span>
-
-                    </div>
-
-                  </label>
-
-                  {/* PROGRESS */}
-
-                  <label className="staffMaintenanceTarget">
-
-                    <input
-                      type="checkbox"
-                      checked={
-                        maintenanceProgress
-                      }
-                      onChange={(
-                        event
-                      ) =>
-                        setMaintenanceProgress(
-                          event.target.checked
-                        )
-                      }
-                    />
-
-                    <div>
-
-                      <strong>
-                        進捗
-                      </strong>
-
-                      <span>
-                        /progress
-                      </span>
-
-                    </div>
-
-                  </label>
-
-                  {/* REWARD */}
-
-                  <label className="staffMaintenanceTarget">
-
-                    <input
-                      type="checkbox"
-                      checked={
-                        maintenanceReward
-                      }
-                      onChange={(
-                        event
-                      ) =>
-                        setMaintenanceReward(
-                          event.target.checked
-                        )
-                      }
-                    />
-
-                    <div>
-
-                      <strong>
-                        特典・景品交換
-                      </strong>
-
-                      <span>
-                        /reward
-                      </span>
-
-                    </div>
-
-                  </label>
-
-                  {/* SURVEY BEFORE */}
-
-                  <label className="staffMaintenanceTarget">
-
-                    <input
-                      type="checkbox"
-                      checked={
-                        maintenanceSurveyBefore
-                      }
-                      onChange={(
-                        event
-                      ) =>
-                        setMaintenanceSurveyBefore(
-                          event.target.checked
-                        )
-                      }
-                    />
-
-                    <div>
-
-                      <strong>
-                        参加前アンケート
-                      </strong>
-
-                      <span>
-                        /survey/before
-                      </span>
-
-                    </div>
-
-                  </label>
-
-                  {/* SURVEY AFTER */}
-
-                  <label className="staffMaintenanceTarget">
-
-                    <input
-                      type="checkbox"
-                      checked={
-                        maintenanceSurveyAfter
-                      }
-                      onChange={(
-                        event
-                      ) =>
-                        setMaintenanceSurveyAfter(
-                          event.target.checked
-                        )
-                      }
-                    />
-
-                    <div>
-
-                      <strong>
-                        参加後アンケート
-                      </strong>
-
-                      <span>
-                        /survey/after
-                      </span>
-
-                    </div>
-
-                  </label>
-
-                </div>
-
-              </div>
-
-              {/* =============================
-                  MESSAGE
-              ============================== */}
-
-              <div className="staffMaintenanceMessageField">
-
-                <label htmlFor="maintenanceMessage">
-                  参加者に表示する案内文
-                </label>
-
-                <textarea
-                  id="maintenanceMessage"
-                  value={
-                    maintenanceMessage
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    setMaintenanceMessage(
-                      event.target.value
-                    )
-                  }
-                  rows={
-                    5
-                  }
-                  maxLength={
-                    500
-                  }
-                  placeholder="例：現在システム調整を行っています。14:30頃の復旧を予定しています。"
-                />
-
-                <div className="staffMaintenanceMessageBottom">
-
-                  <span>
-                    {maintenanceMessage.length}
-                    /500
-                  </span>
-
-                </div>
-
-              </div>
-
-              {/* =============================
-                  SAVE
-              ============================== */}
-
-              <button
-                type="button"
-                className="staffMaintenanceSaveButton"
-                disabled={
-                  maintenanceSaving
-                }
-                onClick={() =>
-                  void saveMaintenanceSettings()
-                }
-              >
-
-                {maintenanceSaving
-                  ? "保存中..."
-                  : "メンテナンス設定を保存"}
-
-              </button>
-
-            </>
-          )}
-
-        </section>
-
-        {/* =================================
-            MAIN MENU
-        ================================= */}
-
-        <section className="staffMenuGrid">
-
-          {/* DASHBOARD */}
-
-          <button
-            type="button"
-            className="staffMenuCard"
-            onClick={() =>
-              router.push(
-                "/staff/dashboard"
-              )
-            }
-          >
-
-            <div className="staffMenuCardIcon">
-              LIVE
-            </div>
-
-            <div className="staffMenuCardBody">
-
               <span>
-                DASHBOARD
+
+                {submitting
+                  ? "登録中..."
+                  : "次へ進む"}
+
               </span>
 
-              <h2>
-                管理ダッシュボード
-              </h2>
-
-              <p>
-                POKIPOの現在の参加状況や
-                スタンプ進捗を確認します。
-              </p>
-
-            </div>
-
-            <div className="staffMenuCardArrow">
-              →
-            </div>
-
-          </button>
-
-          {/* REWARD */}
-
-          <button
-            type="button"
-            className="staffMenuCard reward"
-            onClick={() =>
-              router.push(
-                "/staff/reward"
-              )
-            }
-          >
-
-            <div className="staffMenuCardIcon">
-              QR
-            </div>
-
-            <div className="staffMenuCardBody">
-
               <span>
-                REWARD
+                →
               </span>
 
-              <h2>
-                景品交換
-              </h2>
+            </button>
 
-              <p>
-                参加者の特典交換QRを読み取り、
-                景品交換を記録します。
-              </p>
+          </form>
 
-            </div>
-
-            <div className="staffMenuCardArrow">
-              →
-            </div>
-
-          </button>
-
-          {/* HISTORY */}
-
-          <button
-            type="button"
-            className="staffMenuCard"
-            onClick={() =>
-              router.push(
-                "/staff/reward/history"
-              )
-            }
-          >
-
-            <div className="staffMenuCardIcon">
-              LOG
-            </div>
-
-            <div className="staffMenuCardBody">
-
-              <span>
-                HISTORY
-              </span>
-
-              <h2>
-                景品交換履歴
-              </h2>
-
-              <p>
-                過去の景品交換日時や、
-                交換を担当した管理者を確認します。
-              </p>
-
-            </div>
-
-            <div className="staffMenuCardArrow">
-              →
-            </div>
-
-          </button>
-
-          {/* NOTICE */}
-
-          <button
-            type="button"
-            className="staffMenuCard"
-            onClick={() =>
-              router.push(
-                "/staff/announcements"
-              )
-            }
-          >
-
-            <div className="staffMenuCardIcon">
-              NEWS
-            </div>
-
-            <div className="staffMenuCardBody">
-
-              <span>
-                NOTICE
-              </span>
-
-              <h2>
-                LiPostからのお知らせ
-              </h2>
-
-              <p>
-                参加者ホームに表示する
-                お知らせ内容を更新します。
-              </p>
-
-            </div>
-
-            <div className="staffMenuCardArrow">
-              →
-            </div>
-
-          </button>
-
-          {/* SURVEY */}
-
-          <button
-            type="button"
-            className="staffMenuCard"
-            onClick={() =>
-              router.push(
-                "/staff/surveys"
-              )
-            }
-          >
-
-            <div className="staffMenuCardIcon">
-              DATA
-            </div>
-
-            <div className="staffMenuCardBody">
-
-              <span>
-                SURVEY
-              </span>
-
-              <h2>
-                アンケート分析
-              </h2>
-
-              <p>
-                参加前・参加後アンケートの
-                回答結果や変化を分析します。
-              </p>
-
-            </div>
-
-            <div className="staffMenuCardArrow">
-              →
-            </div>
-
-          </button>
-
-        </section>
-
-        {/* =================================
-            SECURITY
-        ================================= */}
-
-        <section className="staffMenuSecurity">
-
-          <span>
-            STAFF ONLY
-          </span>
-
-          <p>
-            このページはPOKIPO運営管理者専用です。
-            操作終了後はログアウトしてください。
+          <p className="startFooter">
+            登録した情報は、
+            POKIPOの運営・進捗管理・企画分析に使用します。
           </p>
 
         </section>
 
-      </section>
+      </main>
 
-    </main>
+      {/* ========================================
+          INTRO VIDEO
+      ======================================== */}
+
+      {showIntro && (
+        <div className="pokipoIntroOverlay">
+
+          <video
+            ref={
+              videoRef
+            }
+            className="pokipoIntroVideo"
+            playsInline
+            preload="auto"
+            onEnded={
+              finishIntro
+            }
+            onError={(
+              event
+            ) => {
+              console.error(
+                "動画読み込みエラー:",
+                event.currentTarget.error
+              );
+
+              setVideoError(
+                "動画ファイルを読み込めませんでした。"
+              );
+            }}
+          >
+
+            <source
+              src={
+                INTRO_VIDEO_PATH
+              }
+              type="video/mp4"
+            />
+
+          </video>
+
+          <div className="pokipoIntroShade" />
+
+          {!introStarted &&
+            !curtainClosing && (
+            <div className="pokipoIntroStart">
+
+              <span className="pokipoIntroBrand">
+                獨協大学高安ゼミ LiPost × 江崎グリコ株式会社
+                <br />
+                POKIPO
+              </span>
+
+              <h2>
+                キャンパスを回って
+                <br />
+                ポッキーを知る旅に出よう。
+              </h2>
+
+              <p>
+                音声が流れます。
+                <br />
+                音量をご確認ください。
+              </p>
+
+              <button
+                type="button"
+                className="pokipoIntroStartButton"
+                onClick={() =>
+                  void startIntro()
+                }
+              >
+                <span>
+                  ▶
+                </span>
+
+                音声ありでスタート
+              </button>
+
+              {videoError && (
+                <p className="pokipoIntroError">
+                  {videoError}
+                </p>
+              )}
+
+            </div>
+          )}
+
+          {introStarted &&
+            !curtainClosing && (
+            <button
+              type="button"
+              className="pokipoIntroSkip"
+              onClick={
+                skipIntro
+              }
+            >
+              スキップ
+            </button>
+          )}
+
+          {introStarted &&
+            !curtainClosing && (
+            <div className="pokipoIntroSound">
+              🔊 SOUND ON
+            </div>
+          )}
+
+          <div
+            className={[
+              "pokipoCurtain",
+
+              curtainClosing
+                ? "closing"
+                : "",
+
+              curtainOpening
+                ? "opening"
+                : "",
+            ].join(
+              " "
+            )}
+          >
+
+            <div className="pokipoCurtainLeft">
+
+              <div className="pokipoCurtainFold fold1" />
+              <div className="pokipoCurtainFold fold2" />
+              <div className="pokipoCurtainFold fold3" />
+
+            </div>
+
+            <div className="pokipoCurtainRight">
+
+              <div className="pokipoCurtainFold fold1" />
+              <div className="pokipoCurtainFold fold2" />
+              <div className="pokipoCurtainFold fold3" />
+
+            </div>
+
+            <div className="pokipoCurtainCenterLogo">
+
+              <span>
+                POKIPO
+              </span>
+
+              <small>
+                SHARE HAPPINESS
+              </small>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+    </>
   );
 }
