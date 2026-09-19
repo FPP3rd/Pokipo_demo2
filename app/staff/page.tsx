@@ -517,7 +517,7 @@ export default function StaffPage() {
             className="staffMenuCard"
             onClick={() =>
               router.push(
-                "/staff/notices"
+                "/staff/announcements"
               )
             }
           >
