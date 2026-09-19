@@ -101,6 +101,51 @@ export default function StartPage() {
   ] = useState(true);
 
   /* ========================================
+     OLD PARTICIPANT DATA RESET
+  ======================================== */
+
+  function clearOldParticipantData() {
+    const keysToRemove = [
+      "pokipo_participant_id",
+      "pokipo_user_id",
+      "pokipo_nickname",
+      "pokipo_grade",
+      "pokipo_department",
+
+      "pokipo_scans",
+      "pokipo_progress",
+      "pokipo_knowledge",
+
+      "pokipo_completed",
+      "pokipo_completed_at",
+      "pokipo_achievement_rank",
+
+      "pokipo_reward_exchanged",
+      "pokipo_reward_exchanged_at",
+      "pokipo_reward_student_number",
+      "pokipo_reward_token",
+
+      "pokipo_pre_survey_completed",
+      "pokipo_post_survey_completed",
+
+      "pokipo_tutorial_completed",
+
+      "pokipo_secret_yuhisai",
+      "pokipo_yuhisai_pocky_skin",
+    ];
+
+    keysToRemove.forEach(
+      (
+        key
+      ) => {
+        localStorage.removeItem(
+          key
+        );
+      }
+    );
+  }
+
+  /* ========================================
      既存参加者チェック
   ======================================== */
 
@@ -139,6 +184,103 @@ export default function StartPage() {
 
         setShowIntro(
           !introSeen
+        );
+
+        setCheckingRegistration(
+          false
+        );
+
+        return;
+      }
+
+      /* --------------------------------
+         PARTICIPANTS TABLE CHECK
+
+         localStorageには参加者情報が
+         残っているが、
+         Supabaseから削除済みの場合は
+         新規参加者へ戻す
+      -------------------------------- */
+
+      const {
+        data:
+          existingParticipant,
+        error:
+          participantError,
+      } =
+        await supabase
+          .from(
+            "participants"
+          )
+          .select(
+            "id"
+          )
+          .eq(
+            "id",
+            savedParticipantId
+          )
+          .maybeSingle();
+
+      /*
+        通信エラー時は
+        データを勝手に消さない
+      */
+
+      if (
+        participantError
+      ) {
+        console.error(
+          "参加者確認エラー:",
+          participantError
+        );
+
+        router.replace(
+          "/survey/before"
+        );
+
+        return;
+      }
+
+      /*
+        DBに参加者が存在しない
+        ↓
+        テスト参加者として削除済み
+        ↓
+        端末側の古い参加情報を削除
+        ↓
+        新規登録画面へ
+      */
+
+      if (
+        !existingParticipant
+      ) {
+        clearOldParticipantData();
+
+        setNickname(
+          ""
+        );
+
+        setGrade(
+          ""
+        );
+
+        setDepartment(
+          ""
+        );
+
+        setMessage(
+          ""
+        );
+
+        /*
+          intro_seen は削除していないので、
+          過去に動画を見た人は
+          動画をもう一度見ずに
+          登録画面へ戻る
+        */
+
+        setShowIntro(
+          false
         );
 
         setCheckingRegistration(
