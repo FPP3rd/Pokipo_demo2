@@ -12,7 +12,7 @@ import {
 
 import {
   supabase,
-} from "../../lib/supabase-client";
+} from "@/lib/supabase-client";
 
 /* ========================================
    雄飛祭ポッキースキン
