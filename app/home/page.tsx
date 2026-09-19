@@ -147,6 +147,144 @@ export default function HomePage() {
 
   useEffect(() => {
     /* --------------------------------
+       参加者データ確認
+
+       Supabase上から参加者が削除済みなら
+       端末側の古いデータを消して
+       初期画面へ戻す
+    -------------------------------- */
+
+    async function validateParticipant() {
+      const participantId =
+        localStorage.getItem(
+          "pokipo_participant_id"
+        ) ??
+        localStorage.getItem(
+          "pokipo_user_id"
+        );
+
+      /*
+        ID自体がない場合
+        ↓
+        初期画面へ
+      */
+
+      if (
+        !participantId
+      ) {
+        router.replace(
+          "/"
+        );
+
+        return false;
+      }
+
+      const {
+        data,
+        error,
+      } =
+        await supabase
+          .from(
+            "participants"
+          )
+          .select(
+            "id"
+          )
+          .eq(
+            "id",
+            participantId
+          )
+          .maybeSingle();
+
+      /*
+        通信エラーの場合は
+        勝手に端末データを削除しない
+      */
+
+      if (
+        error
+      ) {
+        console.error(
+          "参加者確認エラー:",
+          error
+        );
+
+        return true;
+      }
+
+      /*
+        Supabase上に参加者が存在する
+      */
+
+      if (
+        data
+      ) {
+        return true;
+      }
+
+      /*
+        Supabase上に参加者が存在しない
+        ↓
+        テスト参加者削除済み
+        ↓
+        端末側のPOKIPOデータを削除
+      */
+
+      const keysToRemove = [
+        "pokipo_participant_id",
+        "pokipo_user_id",
+        "pokipo_nickname",
+        "pokipo_grade",
+        "pokipo_department",
+
+        "pokipo_scans",
+        "pokipo_progress",
+        "pokipo_knowledge",
+
+        "pokipo_completed",
+        "pokipo_completed_at",
+        "pokipo_achievement_rank",
+
+        "pokipo_reward_exchanged",
+        "pokipo_reward_exchanged_at",
+        "pokipo_reward_student_number",
+        "pokipo_reward_token",
+
+        "pokipo_pre_survey_completed",
+        "pokipo_post_survey_completed",
+
+        "pokipo_tutorial_completed",
+
+        "pokipo_secret_yuhisai",
+        "pokipo_yuhisai_pocky_skin",
+      ];
+
+      keysToRemove.forEach(
+        (
+          key
+        ) => {
+          localStorage.removeItem(
+            key
+          );
+        }
+      );
+
+      /*
+        pokipo_intro_seen は残す
+
+        過去に動画を見た人は
+        動画をもう一度見ずに
+        初期登録画面へ戻る
+      */
+
+      router.replace(
+        "/"
+      );
+
+      return false;
+    }
+
+    /* --------------------------------
        LOCAL DATA
     -------------------------------- */
 
@@ -535,15 +673,27 @@ export default function HomePage() {
        INITIAL LOAD
     ======================================== */
 
-    loadLocalData();
+    async function initialLoad() {
+      const valid =
+        await validateParticipant();
 
-    void loadParticipantCount();
+      if (
+        !valid
+      ) {
+        return;
+      }
 
-    void loadCompletedParticipantCount();
+      loadLocalData();
 
-    void loadStampProgress();
+      await Promise.all([
+        loadParticipantCount(),
+        loadCompletedParticipantCount(),
+        loadStampProgress(),
+        loadAnnouncements(),
+      ]);
+    }
 
-    void loadAnnouncements();
+    void initialLoad();
 
     /* ========================================
        PARTICIPANTS REALTIME
@@ -558,7 +708,7 @@ export default function HomePage() {
           "postgres_changes",
           {
             event:
-              "INSERT",
+              "*",
 
             schema:
               "public",
@@ -568,6 +718,13 @@ export default function HomePage() {
           },
           () => {
             void loadParticipantCount();
+
+            /*
+              参加者削除時も
+              自分自身が消されていないか確認
+            */
+
+            void validateParticipant();
           }
         )
         .subscribe();
@@ -631,7 +788,7 @@ export default function HomePage() {
             "postgres_changes",
             {
               event:
-                "INSERT",
+                "*",
 
               schema:
                 "public",
@@ -682,7 +839,16 @@ export default function HomePage() {
        WINDOW FOCUS
     ======================================== */
 
-    function handleFocus() {
+    async function handleFocus() {
+      const valid =
+        await validateParticipant();
+
+      if (
+        !valid
+      ) {
+        return;
+      }
+
       loadLocalData();
 
       void loadParticipantCount();
@@ -698,21 +864,32 @@ export default function HomePage() {
        TAB VISIBILITY
     ======================================== */
 
-    function handleVisibility() {
+    async function handleVisibility() {
       if (
-        document.visibilityState ===
+        document.visibilityState !==
         "visible"
       ) {
-        loadLocalData();
-
-        void loadParticipantCount();
-
-        void loadCompletedParticipantCount();
-
-        void loadStampProgress();
-
-        void loadAnnouncements();
+        return;
       }
+
+      const valid =
+        await validateParticipant();
+
+      if (
+        !valid
+      ) {
+        return;
+      }
+
+      loadLocalData();
+
+      void loadParticipantCount();
+
+      void loadCompletedParticipantCount();
+
+      void loadStampProgress();
+
+      void loadAnnouncements();
     }
 
     window.addEventListener(
@@ -912,10 +1089,9 @@ export default function HomePage() {
 
           <div className="visualHomeUserName">
 
-              {nickname
-    　　　　　? `${nickname}さん`
-    　　　　　: "ゲストさん"}
-
+            {nickname
+              ? `${nickname}さん`
+              : "ゲストさん"}
 
           </div>
 
@@ -1436,10 +1612,7 @@ export default function HomePage() {
             }
           >
 
-            {/* =============================
-                LEFT
-                現在の参加者
-            ============================== */}
+            {/* LEFT */}
 
             <div className="participantLiveStat">
 
@@ -1481,16 +1654,11 @@ export default function HomePage() {
 
             </div>
 
-            {/* =============================
-                CENTER
-            ============================== */}
+            {/* CENTER */}
 
             <div className="participantLiveDivider" />
 
-            {/* =============================
-                RIGHT
-                5/5達成者
-            ============================== */}
+            {/* RIGHT */}
 
             <div className="participantLiveStat complete">
 
