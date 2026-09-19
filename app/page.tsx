@@ -1049,9 +1049,9 @@ export default function StartPage() {
               </span>
 
               <h2>
-                キャンパスを回って、
+                キャンパスを回って
                 <br />
-                ポッキーの価値を知る旅に出よう。
+                ポッキーを知る旅に出よう。
               </h2>
 
               <p>
