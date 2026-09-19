@@ -140,8 +140,10 @@ export default function StaffDashboardPage() {
       );
     }
 
-    checkAuth();
-  }, [router]);
+    void checkAuth();
+  }, [
+    router,
+  ]);
 
   /* ========================================
      LOAD DASHBOARD
@@ -188,36 +190,27 @@ export default function StaffDashboardPage() {
           setParticipantCount(
             Number(
               participantCountData ??
-              0
+                0
             )
           );
         }
 
         /* =================================
            COMPLETION COUNT
+
+           トップ画面と同じRPCを使用
         ================================= */
 
         const {
-          count:
+          data:
             completionCountData,
 
           error:
             completionCountError,
         } =
-          await supabase
-            .from(
-              "participant_completions"
-            )
-            .select(
-              "*",
-              {
-                count:
-                  "exact",
-
-                head:
-                  true,
-              }
-            );
+          await supabase.rpc(
+            "get_completed_participant_count"
+          );
 
         if (
           completionCountError
@@ -228,8 +221,10 @@ export default function StaffDashboardPage() {
           );
         } else {
           setCompletionCount(
-            completionCountData ??
-            0
+            Number(
+              completionCountData ??
+                0
+            )
           );
         }
 
@@ -273,7 +268,7 @@ export default function StaffDashboardPage() {
         } else {
           setExchangedCount(
             exchangedCountData ??
-            0
+              0
           );
         }
 
@@ -348,7 +343,7 @@ export default function StaffDashboardPage() {
         } else {
           setTodayExchangedCount(
             todayCountData ??
-            0
+              0
           );
         }
 
@@ -506,7 +501,7 @@ export default function StaffDashboardPage() {
       }
     }
 
-    loadDashboard();
+    void loadDashboard();
 
     /* ========================================
        REALTIME
@@ -521,7 +516,7 @@ export default function StaffDashboardPage() {
           "postgres_changes",
           {
             event:
-              "INSERT",
+              "*",
 
             schema:
               "public",
@@ -530,10 +525,17 @@ export default function StaffDashboardPage() {
               "participants",
           },
           () => {
-            loadDashboard();
+            void loadDashboard();
           }
         )
         .subscribe();
+
+    /*
+      完走者数は participant_stamps を
+      基準にしているため、
+      participant_completions ではなく
+      participant_stamps を監視する
+    */
 
     const completionsChannel =
       supabase
@@ -544,16 +546,16 @@ export default function StaffDashboardPage() {
           "postgres_changes",
           {
             event:
-              "INSERT",
+              "*",
 
             schema:
               "public",
 
             table:
-              "participant_completions",
+              "participant_stamps",
           },
           () => {
-            loadDashboard();
+            void loadDashboard();
           }
         )
         .subscribe();
@@ -576,12 +578,53 @@ export default function StaffDashboardPage() {
               "reward_exchanges",
           },
           () => {
-            loadDashboard();
+            void loadDashboard();
           }
         )
         .subscribe();
 
+    /* ========================================
+       FOCUS REFRESH
+    ======================================== */
+
+    function handleFocus() {
+      void loadDashboard();
+    }
+
+    /* ========================================
+       VISIBILITY REFRESH
+    ======================================== */
+
+    function handleVisibility() {
+      if (
+        document.visibilityState ===
+        "visible"
+      ) {
+        void loadDashboard();
+      }
+    }
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
     return () => {
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+
       supabase.removeChannel(
         participantsChannel
       );
