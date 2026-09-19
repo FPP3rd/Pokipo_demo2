@@ -912,12 +912,10 @@ export default function HomePage() {
 
           <div className="visualHomeAvatar">
 
-            {nickname
-              ? nickname.slice(
-                  0,
-                  1
-                )
-              : "P"}
+              {nickname
+    　　　　　? `${nickname}さん`
+    　　　　　: "ゲストさん"}
+
 
           </div>
 
@@ -1446,7 +1444,7 @@ export default function HomePage() {
             <div className="participantLiveStat">
 
               <span className="participantTotalLabel">
-                現在の参加者
+                現在の参加している学生
               </span>
 
               <div
@@ -1497,7 +1495,7 @@ export default function HomePage() {
             <div className="participantLiveStat complete">
 
               <span className="participantTotalLabel">
-                5/5 達成者
+                5つのスタンプ全てを獲得した学生
               </span>
 
               <div
