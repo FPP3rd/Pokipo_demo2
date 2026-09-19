@@ -29076,3 +29076,56 @@ img {
     animation: none;
   }
 }
+
+.visualHomeUserName {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  max-width: 150px;
+
+  padding:
+    8px
+    12px;
+
+  border:
+    1px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.14
+    );
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    );
+
+  color: #5f514a;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  line-height: 1;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  box-shadow:
+    0
+    5px
+    14px
+    rgba(
+      55,
+      35,
+      25,
+      0.05
+    );
+}

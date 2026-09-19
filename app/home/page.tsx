@@ -1444,7 +1444,7 @@ export default function HomePage() {
             <div className="participantLiveStat">
 
               <span className="participantTotalLabel">
-                現在の参加している学生
+                現在の参加者
               </span>
 
               <div
@@ -1495,7 +1495,7 @@ export default function HomePage() {
             <div className="participantLiveStat complete">
 
               <span className="participantTotalLabel">
-                5つのスタンプ全てを獲得した学生
+                コンプリートした参加者
               </span>
 
               <div
