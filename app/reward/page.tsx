@@ -37,7 +37,7 @@ const knowledgeItems = [
     id: "knowledge2",
     number: 2,
     title:
-      "「ショートニング不使用」への挑戦と安心",
+      "名前にも込められたポッキーらしさ",
   },
   {
     id: "knowledge3",
