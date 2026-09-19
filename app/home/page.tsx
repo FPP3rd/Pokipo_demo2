@@ -910,7 +910,7 @@ export default function HomePage() {
 
           </div>
 
-          <div className="visualHomeAvatar">
+          <div className="visualHomeUserName">
 
               {nickname
     　　　　　? `${nickname}さん`
