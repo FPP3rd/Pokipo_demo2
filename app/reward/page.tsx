@@ -1566,6 +1566,8 @@ export default function RewardPage() {
 
               <p>
                 学籍番号を数字8桁で入力してください。
+                <br />
+                学籍番号は景品交換者の管理のみに使用し、個人情報の特定には使用しません。
               </p>
 
               <div className="rewardStudentNumberField">
@@ -1589,7 +1591,7 @@ export default function RewardPage() {
                       event.target.value
                     )
                   }
-                  placeholder="数字8桁"
+                  placeholder="数字8桁（間違いがないようにご注意ください）"
                 />
 
               </div>
@@ -1623,6 +1625,8 @@ export default function RewardPage() {
 
               <h3>
                 スタッフにQRを見せてください
+                <br />
+                （交換日は10月27日（火）です）
               </h3>
 
               <div className="rewardQrBox">
