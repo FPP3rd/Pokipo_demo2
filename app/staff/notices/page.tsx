@@ -23,7 +23,8 @@ type Notice = {
 };
 
 export default function StaffNoticesPage() {
-  const router = useRouter();
+  const router =
+    useRouter();
 
   const [
     loading,
@@ -34,6 +35,25 @@ export default function StaffNoticesPage() {
     saving,
     setSaving,
   ] = useState(false);
+
+  const [
+    deleting,
+    setDeleting,
+  ] = useState(false);
+
+  const [
+    notices,
+    setNotices,
+  ] = useState<Notice[]>(
+    []
+  );
+
+  const [
+    editingNotice,
+    setEditingNotice,
+  ] = useState<Notice | null>(
+    null
+  );
 
   const [
     title,
@@ -51,19 +71,12 @@ export default function StaffNoticesPage() {
   ] = useState(true);
 
   const [
-    currentNotice,
-    setCurrentNotice,
-  ] = useState<Notice | null>(
-    null
-  );
-
-  const [
     message,
     setMessage,
   ] = useState("");
 
   /* ========================================
-     AUTH + LOAD
+     LOAD
   ======================================== */
 
   useEffect(() => {
@@ -88,78 +101,7 @@ export default function StaffNoticesPage() {
           return;
         }
 
-        const {
-          data,
-          error,
-        } =
-          await supabase
-            .from(
-              "pokipo_notices"
-            )
-            .select(
-              "id, title, body, is_active, created_at, updated_at"
-            )
-            .order(
-              "created_at",
-              {
-                ascending:
-                  false,
-              }
-            )
-            .limit(
-              1
-            );
-
-        if (
-          error
-        ) {
-          console.error(
-            "お知らせ取得エラー:",
-            error
-          );
-
-          setMessage(
-            "現在のお知らせを取得できませんでした。"
-          );
-
-          return;
-        }
-
-        if (
-          data &&
-          data.length >
-            0
-        ) {
-          const notice =
-            data[0] as Notice;
-
-          setCurrentNotice(
-            notice
-          );
-
-          setTitle(
-            notice.title
-          );
-
-          setBody(
-            notice.body
-          );
-
-          setIsActive(
-            notice.is_active
-          );
-        }
-      } catch (
-        error
-      ) {
-        console.error(
-          "お知らせ画面読み込みエラー:",
-          error
-        );
-
-        setMessage(
-          "読み込み中にエラーが発生しました。"
-        );
+        await loadNotices();
       } finally {
         setLoading(
           false
@@ -171,6 +113,95 @@ export default function StaffNoticesPage() {
   }, [
     router,
   ]);
+
+  async function loadNotices() {
+    const {
+      data,
+      error,
+    } =
+      await supabase
+        .from(
+          "pokipo_notices"
+        )
+        .select(
+          "id, title, body, is_active, created_at, updated_at"
+        )
+        .order(
+          "created_at",
+          {
+            ascending:
+              false,
+          }
+        );
+
+    if (
+      error
+    ) {
+      console.error(
+        "お知らせ取得エラー:",
+        error
+      );
+
+      setMessage(
+        "お知らせを取得できませんでした。"
+      );
+
+      return;
+    }
+
+    setNotices(
+      (
+        data ??
+        []
+      ) as Notice[]
+    );
+  }
+
+  /* ========================================
+     NEW
+  ======================================== */
+
+  function startNewNotice() {
+    setEditingNotice(
+      null
+    );
+
+    setTitle("");
+
+    setBody("");
+
+    setIsActive(
+      true
+    );
+
+    setMessage("");
+  }
+
+  /* ========================================
+     EDIT
+  ======================================== */
+
+  function startEditNotice(
+    notice: Notice
+  ) {
+    setEditingNotice(
+      notice
+    );
+
+    setTitle(
+      notice.title
+    );
+
+    setBody(
+      notice.body
+    );
+
+    setIsActive(
+      notice.is_active
+    );
+
+    setMessage("");
+  }
 
   /* ========================================
      SAVE
@@ -187,7 +218,7 @@ export default function StaffNoticesPage() {
       !trimmedTitle
     ) {
       setMessage(
-        "お知らせのタイトルを入力してください。"
+        "タイトルを入力してください。"
       );
 
       return;
@@ -197,7 +228,7 @@ export default function StaffNoticesPage() {
       !trimmedBody
     ) {
       setMessage(
-        "お知らせ本文を入力してください。"
+        "本文を入力してください。"
       );
 
       return;
@@ -211,10 +242,9 @@ export default function StaffNoticesPage() {
 
     try {
       if (
-        currentNotice
+        editingNotice
       ) {
         const {
-          data,
           error,
         } =
           await supabase
@@ -236,12 +266,8 @@ export default function StaffNoticesPage() {
             })
             .eq(
               "id",
-              currentNotice.id
-            )
-            .select(
-              "id, title, body, is_active, created_at, updated_at"
-            )
-            .single();
+              editingNotice.id
+            );
 
         if (
           error
@@ -258,16 +284,11 @@ export default function StaffNoticesPage() {
           return;
         }
 
-        setCurrentNotice(
-          data as Notice
-        );
-
         setMessage(
           "お知らせを更新しました。"
         );
       } else {
         const {
-          data,
           error,
         } =
           await supabase
@@ -283,17 +304,13 @@ export default function StaffNoticesPage() {
 
               is_active:
                 isActive,
-            })
-            .select(
-              "id, title, body, is_active, created_at, updated_at"
-            )
-            .single();
+            });
 
         if (
           error
         ) {
           console.error(
-            "お知らせ登録エラー:",
+            "お知らせ作成エラー:",
             error
           );
 
@@ -304,24 +321,23 @@ export default function StaffNoticesPage() {
           return;
         }
 
-        setCurrentNotice(
-          data as Notice
-        );
-
         setMessage(
-          "お知らせを公開しました。"
+          "新しいお知らせを作成しました。"
         );
       }
-    } catch (
-      error
-    ) {
-      console.error(
-        "お知らせ保存通信エラー:",
-        error
+
+      await loadNotices();
+
+      setEditingNotice(
+        null
       );
 
-      setMessage(
-        "保存中にエラーが発生しました。"
+      setTitle("");
+
+      setBody("");
+
+      setIsActive(
+        true
       );
     } finally {
       setSaving(
@@ -331,7 +347,156 @@ export default function StaffNoticesPage() {
   }
 
   /* ========================================
-     VIEW
+     TOGGLE ACTIVE
+  ======================================== */
+
+  async function toggleNotice(
+    notice: Notice
+  ) {
+    const {
+      error,
+    } =
+      await supabase
+        .from(
+          "pokipo_notices"
+        )
+        .update({
+          is_active:
+            !notice.is_active,
+
+          updated_at:
+            new Date().toISOString(),
+        })
+        .eq(
+          "id",
+          notice.id
+        );
+
+    if (
+      error
+    ) {
+      console.error(
+        "表示状態更新エラー:",
+        error
+      );
+
+      setMessage(
+        "表示状態を変更できませんでした。"
+      );
+
+      return;
+    }
+
+    await loadNotices();
+  }
+
+  /* ========================================
+     DELETE
+  ======================================== */
+
+  async function deleteNotice(
+    notice: Notice
+  ) {
+    const confirmed =
+      window.confirm(
+        `「${notice.title}」を削除しますか？\nこの操作は取り消せません。`
+      );
+
+    if (
+      !confirmed
+    ) {
+      return;
+    }
+
+    setDeleting(
+      true
+    );
+
+    setMessage("");
+
+    try {
+      const {
+        error,
+      } =
+        await supabase
+          .from(
+            "pokipo_notices"
+          )
+          .delete()
+          .eq(
+            "id",
+            notice.id
+          );
+
+      if (
+        error
+      ) {
+        console.error(
+          "お知らせ削除エラー:",
+          error
+        );
+
+        setMessage(
+          error.message
+        );
+
+        return;
+      }
+
+      if (
+        editingNotice?.id ===
+        notice.id
+      ) {
+        startNewNotice();
+      }
+
+      await loadNotices();
+
+      setMessage(
+        "お知らせを削除しました。"
+      );
+    } finally {
+      setDeleting(
+        false
+      );
+    }
+  }
+
+  /* ========================================
+     DATE
+  ======================================== */
+
+  function formatDate(
+    value: string
+  ) {
+    return new Date(
+      value
+    ).toLocaleString(
+      "ja-JP",
+      {
+        timeZone:
+          "Asia/Tokyo",
+
+        year:
+          "numeric",
+
+        month:
+          "2-digit",
+
+        day:
+          "2-digit",
+
+        hour:
+          "2-digit",
+
+        minute:
+          "2-digit",
+      }
+    );
+  }
+
+  /* ========================================
+     LOADING
   ======================================== */
 
   if (
@@ -352,6 +517,10 @@ export default function StaffNoticesPage() {
     );
   }
 
+  /* ========================================
+     VIEW
+  ======================================== */
+
   return (
     <main className="shell">
 
@@ -371,7 +540,7 @@ export default function StaffNoticesPage() {
 
             <p>
               参加者ホームに表示する
-              お知らせを編集します。
+              お知らせを管理します。
             </p>
 
           </div>
@@ -390,34 +559,9 @@ export default function StaffNoticesPage() {
 
         </header>
 
-        <section className="staffCurrentUserCard">
-
-          <div className="staffCurrentUserIcon">
-            NEWS
-          </div>
-
-          <div className="staffCurrentUserText">
-
-            <span>
-              PARTICIPANT NOTICE
-            </span>
-
-            <strong>
-              参加者向けお知らせ
-            </strong>
-
-            <small>
-              ホーム画面の
-              「みんなの参加状況」の下に表示
-            </small>
-
-          </div>
-
-          <div className="staffCurrentUserStatus">
-            EDIT
-          </div>
-
-        </section>
+        {/* =================================
+            EDITOR
+        ================================= */}
 
         <section
           className="staffMenuSecurity"
@@ -427,17 +571,71 @@ export default function StaffNoticesPage() {
           }}
         >
 
+          <div
+            style={{
+              display:
+                "flex",
+
+              justifyContent:
+                "space-between",
+
+              alignItems:
+                "center",
+
+              gap:
+                "12px",
+            }}
+          >
+
+            <div>
+
+              <span>
+                {editingNotice
+                  ? "EDIT NOTICE"
+                  : "NEW NOTICE"}
+              </span>
+
+              <h2
+                style={{
+                  margin:
+                    "4px 0 0",
+                }}
+              >
+                {editingNotice
+                  ? "お知らせを編集"
+                  : "新しいお知らせ"}
+              </h2>
+
+            </div>
+
+            {editingNotice && (
+              <button
+                type="button"
+                className="staffLogoutButton"
+                onClick={
+                  startNewNotice
+                }
+              >
+                新規作成へ
+              </button>
+            )}
+
+          </div>
+
           <label
             htmlFor="noticeTitle"
             style={{
               display:
                 "block",
 
-              fontWeight:
-                900,
+              marginTop:
+                "16px",
 
               marginBottom:
                 "6px",
+
+              fontWeight:
+                900,
             }}
           >
             タイトル
@@ -472,9 +670,6 @@ export default function StaffNoticesPage() {
 
               borderRadius:
                 "12px",
-
-              fontSize:
-                "14px",
             }}
           />
 
@@ -484,14 +679,14 @@ export default function StaffNoticesPage() {
               display:
                 "block",
 
-              fontWeight:
-                900,
-
               marginTop:
                 "16px",
 
               marginBottom:
                 "6px",
+
+              fontWeight:
+                900,
             }}
           >
             本文
@@ -509,10 +704,10 @@ export default function StaffNoticesPage() {
                 event.target.value
               )
             }
-            placeholder="参加者に伝えたい内容を入力してください。"
             rows={
               7
             }
+            placeholder="参加者に伝えたい内容を入力"
             style={{
               width:
                 "100%",
@@ -528,9 +723,6 @@ export default function StaffNoticesPage() {
 
               borderRadius:
                 "12px",
-
-              fontSize:
-                "14px",
 
               lineHeight:
                 1.7,
@@ -577,18 +769,6 @@ export default function StaffNoticesPage() {
 
           </label>
 
-          {message && (
-            <div
-              className="staffMenuMessage"
-              style={{
-                marginTop:
-                  "14px",
-              }}
-            >
-              {message}
-            </div>
-          )}
-
           <button
             type="button"
             className="primaryButton"
@@ -608,8 +788,234 @@ export default function StaffNoticesPage() {
           >
             {saving
               ? "保存中..."
-              : "お知らせを保存する"}
+              : editingNotice
+              ? "変更を保存する"
+              : "お知らせを作成する"}
           </button>
+
+        </section>
+
+        {/* =================================
+            MESSAGE
+        ================================= */}
+
+        {message && (
+          <div
+            className="staffMenuMessage"
+            style={{
+              marginTop:
+                "14px",
+            }}
+          >
+            {message}
+          </div>
+        )}
+
+        {/* =================================
+            NOTICE LIST
+        ================================= */}
+
+        <section
+          style={{
+            marginTop:
+              "20px",
+          }}
+        >
+
+          <div
+            style={{
+              marginBottom:
+                "10px",
+            }}
+          >
+
+            <span className="staffMenuEyebrow">
+              NOTICE LIST
+            </span>
+
+            <h2
+              style={{
+                margin:
+                  "4px 0 0",
+              }}
+            >
+              お知らせ一覧
+            </h2>
+
+          </div>
+
+          {notices.length ===
+          0 ? (
+            <div className="staffLoadingCard">
+              まだお知らせはありません。
+            </div>
+          ) : (
+            <div
+              style={{
+                display:
+                  "grid",
+
+                gap:
+                  "10px",
+              }}
+            >
+
+              {notices.map(
+                (
+                  notice
+                ) => (
+                  <article
+                    key={
+                      notice.id
+                    }
+                    className="staffMenuSecurity"
+                    style={{
+                      marginTop:
+                        0,
+                    }}
+                  >
+
+                    <div
+                      style={{
+                        display:
+                          "flex",
+
+                        justifyContent:
+                          "space-between",
+
+                        alignItems:
+                          "flex-start",
+
+                        gap:
+                          "12px",
+                      }}
+                    >
+
+                      <div>
+
+                        <span
+                          style={{
+                            color:
+                              notice.is_active
+                                ? "#317a4a"
+                                : "#8a7e75",
+
+                            fontSize:
+                              "8px",
+
+                            fontWeight:
+                              900,
+                          }}
+                        >
+                          {notice.is_active
+                            ? "公開中"
+                            : "非表示"}
+                        </span>
+
+                        <h3
+                          style={{
+                            margin:
+                              "5px 0 0",
+                          }}
+                        >
+                          {notice.title}
+                        </h3>
+
+                      </div>
+
+                      <small>
+                        {formatDate(
+                          notice.updated_at ??
+                          notice.created_at
+                        )}
+                      </small>
+
+                    </div>
+
+                    <p
+                      style={{
+                        marginTop:
+                          "10px",
+
+                        whiteSpace:
+                          "pre-wrap",
+
+                        lineHeight:
+                          1.7,
+                      }}
+                    >
+                      {notice.body}
+                    </p>
+
+                    <div
+                      style={{
+                        display:
+                          "grid",
+
+                        gridTemplateColumns:
+                          "repeat(3, minmax(0, 1fr))",
+
+                        gap:
+                          "8px",
+
+                        marginTop:
+                          "14px",
+                      }}
+                    >
+
+                      <button
+                        type="button"
+                        className="staffLogoutButton"
+                        onClick={() =>
+                          startEditNotice(
+                            notice
+                          )
+                        }
+                      >
+                        編集
+                      </button>
+
+                      <button
+                        type="button"
+                        className="staffLogoutButton"
+                        onClick={() =>
+                          void toggleNotice(
+                            notice
+                          )
+                        }
+                      >
+                        {notice.is_active
+                          ? "非表示"
+                          : "再公開"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="staffLogoutButton"
+                        disabled={
+                          deleting
+                        }
+                        onClick={() =>
+                          void deleteNotice(
+                            notice
+                          )
+                        }
+                        style={{
+                          color:
+                            "#a52730",
+                        }}
+                      >
+                        削除
+                      </button>
+
+                    </div>
+
+                  </article>
+                )
+              )}
+
+            </div>
+          )}
 
         </section>
 
