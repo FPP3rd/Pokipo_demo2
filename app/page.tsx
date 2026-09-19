@@ -653,7 +653,7 @@ export default function StartPage() {
             <p className="startCatch">
               キャンパスをめぐって、
               <br />
-              ポッキーを完成させよう。
+              ポッキーが持つ価値を知ろう。
             </p>
 
             <div className="startVisual">
@@ -1049,9 +1049,9 @@ export default function StartPage() {
               </span>
 
               <h2>
-                ポッキーの旅を、
+                キャンパスを回って、
                 <br />
-                はじめよう。
+                ポッキーの価値を知る旅に出よう。
               </h2>
 
               <p>

@@ -27923,3 +27923,883 @@ img {
       1fr;
   }
 }
+
+/* ==================================================
+   KNOWLEDGE PAGE
+================================================== */
+
+.knowledgePage {
+  width: 100%;
+  max-width: 720px;
+
+  margin: 0 auto;
+
+  padding:
+    22px
+    16px
+    48px;
+
+  box-sizing: border-box;
+}
+
+
+/* ==================================================
+   HEADER
+================================================== */
+
+.knowledgeHeader {
+  display: grid;
+
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding-bottom: 16px;
+
+  border-bottom:
+    1px solid
+    #eadfd8;
+}
+
+.knowledgeHeader .backButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  padding: 0;
+
+  border:
+    1px solid
+    #e1d6cf;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  color: #665a53;
+
+  font-size: 18px;
+  font-weight: 1000;
+
+  cursor: pointer;
+
+  box-shadow:
+    0
+    5px
+    14px
+    rgba(
+      52,
+      36,
+      28,
+      0.04
+    );
+}
+
+.knowledgeHeader > div:nth-child(2) {
+  min-width: 0;
+}
+
+.knowledgeEyebrow {
+  margin: 0;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.13em;
+}
+
+.knowledgeHeader h1 {
+  margin:
+    4px
+    0
+    0;
+
+  color: #332d29;
+
+  font-size:
+    clamp(
+      22px,
+      7vw,
+      30px
+    );
+
+  font-weight: 1000;
+
+  line-height: 1.3;
+
+  letter-spacing: -0.03em;
+}
+
+.knowledgeCountBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 52px;
+  height: 34px;
+
+  padding:
+    0
+    10px;
+
+  border-radius: 999px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 1000;
+
+  letter-spacing: 0.03em;
+}
+
+
+/* ==================================================
+   HERO
+================================================== */
+
+.knowledgeHero {
+  position: relative;
+
+  margin-top: 18px;
+
+  padding:
+    24px
+    18px;
+
+  border:
+    1px solid
+    #eadfd7;
+
+  border-radius: 22px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf7,
+      #ffffff
+    );
+
+  text-align: center;
+
+  box-shadow:
+    0
+    10px
+    28px
+    rgba(
+      55,
+      36,
+      28,
+      0.055
+    );
+}
+
+.knowledgeHero.complete {
+  border-color:
+    #dfc1c4;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff4f3,
+      #ffffff
+    );
+}
+
+.knowledgeHeroMini {
+  display: block;
+
+  color: #9d8c82;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.13em;
+}
+
+.knowledgeHeroIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 50px;
+  height: 50px;
+
+  margin:
+    12px
+    auto
+    0;
+
+  border-radius: 16px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 20px;
+  font-weight: 1000;
+
+  box-shadow:
+    0
+    8px
+    20px
+    rgba(
+      138,
+      24,
+      34,
+      0.15
+    );
+}
+
+.knowledgeHero.complete
+  .knowledgeHeroIcon {
+  background: #a2212c;
+}
+
+.knowledgeHero h2 {
+  margin:
+    13px
+    0
+    0;
+
+  color: #342e2a;
+
+  font-size:
+    clamp(
+      18px,
+      5vw,
+      23px
+    );
+
+  font-weight: 1000;
+
+  line-height: 1.45;
+}
+
+.knowledgeHero p {
+  margin:
+    8px
+    auto
+    0;
+
+  max-width: 480px;
+
+  color: #7a6d65;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.75;
+}
+
+
+/* ==================================================
+   PROGRESS
+================================================== */
+
+.knowledgeProgressCard {
+  margin-top: 13px;
+
+  padding:
+    13px
+    14px;
+
+  border:
+    1px solid
+    #e8ddd6;
+
+  border-radius: 15px;
+
+  background: #ffffff;
+}
+
+.knowledgeProgressTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+}
+
+.knowledgeProgressTop span {
+  color: #96867d;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.11em;
+}
+
+.knowledgeProgressTop strong {
+  color: #8a1822;
+
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.knowledgeProgressBar {
+  height: 8px;
+
+  margin-top: 9px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #f0e7e1;
+}
+
+.knowledgeProgressFill {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      #8a1822,
+      #b52c38
+    );
+
+  transition:
+    width
+    0.35s
+    ease;
+}
+
+
+/* ==================================================
+   LOADING
+================================================== */
+
+.knowledgeLoadingCard {
+  margin-top: 16px;
+
+  padding: 22px;
+
+  border-radius: 16px;
+
+  background: #ffffff;
+
+  color: #84776f;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  text-align: center;
+}
+
+
+/* ==================================================
+   KNOWLEDGE LIST
+================================================== */
+
+.knowledgeList {
+  display: grid;
+
+  gap: 12px;
+
+  margin-top: 17px;
+}
+
+
+/* ==================================================
+   KNOWLEDGE CARD
+================================================== */
+
+.knowledgeCard {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    42px
+    minmax(0, 1fr)
+    34px;
+
+  align-items: flex-start;
+
+  gap: 12px;
+
+  padding:
+    16px;
+
+  border:
+    1px solid
+    #e5d9d2;
+
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0
+    7px
+    20px
+    rgba(
+      55,
+      36,
+      28,
+      0.04
+    );
+}
+
+.knowledgeCard.unlocked {
+  border-color:
+    #e2c8c9;
+
+  background:
+    linear-gradient(
+      145deg,
+      #ffffff,
+      #fff9f7
+    );
+}
+
+.knowledgeCard.locked {
+  background: #f8f5f2;
+
+  border-color:
+    #e9e1dc;
+
+  box-shadow: none;
+}
+
+
+/* ==================================================
+   NUMBER
+================================================== */
+
+.knowledgeNumber {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  border-radius: 14px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 13px;
+  font-weight: 1000;
+
+  box-shadow:
+    0
+    6px
+    14px
+    rgba(
+      138,
+      24,
+      34,
+      0.12
+    );
+}
+
+.knowledgeCard.locked
+  .knowledgeNumber {
+  background: #ded5cf;
+
+  color: #8e8179;
+
+  box-shadow: none;
+}
+
+
+/* ==================================================
+   CONTENT
+================================================== */
+
+.knowledgeContent {
+  min-width: 0;
+}
+
+.knowledgeStatus {
+  display: inline-flex;
+
+  padding:
+    4px
+    7px;
+
+  border-radius: 999px;
+
+  background: #f3e7e4;
+
+  color: #8a1822;
+
+  font-size: 6.5px;
+  font-weight: 1000;
+
+  letter-spacing: 0.09em;
+}
+
+.knowledgeCard.locked
+  .knowledgeStatus {
+  background: #ece7e3;
+
+  color: #91847c;
+}
+
+.knowledgeContent h2 {
+  margin:
+    7px
+    0
+    0;
+
+  color: #362f2b;
+
+  font-size:
+    clamp(
+      14px,
+      4vw,
+      17px
+    );
+
+  font-weight: 1000;
+
+  line-height: 1.55;
+
+  word-break: normal;
+
+  overflow-wrap: anywhere;
+}
+
+.knowledgeCard.locked
+  .knowledgeContent h2 {
+  color: #766b64;
+}
+
+.knowledgeContent p {
+  margin:
+    8px
+    0
+    0;
+
+  color: #71655e;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.85;
+
+  word-break: normal;
+
+  overflow-wrap: anywhere;
+}
+
+.knowledgeCard.locked
+  .knowledgeContent p {
+  color: #958a83;
+}
+
+
+/* ==================================================
+   LOCK / CHECK ICON
+================================================== */
+
+.knowledgeLockIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #eee8e4;
+
+  color: #90837c;
+
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.knowledgeLockIcon.unlocked {
+  background: #eaf5ed;
+
+  color: #317a4a;
+}
+
+
+/* ==================================================
+   COMPLETE CARD
+================================================== */
+
+.knowledgeCompleteCard {
+  margin-top: 18px;
+
+  padding:
+    22px
+    18px;
+
+  border:
+    1px solid
+    #e0c5c7;
+
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fff5f4,
+      #ffffff
+    );
+
+  text-align: center;
+}
+
+.knowledgeCompleteCard > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+
+  margin:
+    0
+    auto;
+
+  border-radius: 50%;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 18px;
+}
+
+.knowledgeCompleteCard > span {
+  display: block;
+
+  margin-top: 10px;
+
+  color: #8a1822;
+
+  font-size: 7px;
+  font-weight: 1000;
+
+  letter-spacing: 0.13em;
+}
+
+.knowledgeCompleteCard h2 {
+  margin:
+    5px
+    0
+    0;
+
+  color: #342e2a;
+
+  font-size: 18px;
+  font-weight: 1000;
+
+  line-height: 1.45;
+}
+
+.knowledgeCompleteCard p {
+  margin:
+    7px
+    0
+    0;
+
+  color: #786c65;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   MESSAGE
+================================================== */
+
+.knowledgeMessage {
+  margin:
+    14px
+    0
+    0;
+
+  padding:
+    11px
+    12px;
+
+  border:
+    1px solid
+    #e8d5d6;
+
+  border-radius: 13px;
+
+  background: #fff4f4;
+
+  color: #8e3037;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   HOME BUTTON
+================================================== */
+
+.knowledgeHomeButton {
+  width: 100%;
+
+  min-height: 50px;
+
+  margin-top: 18px;
+
+  border: 0;
+
+  border-radius: 15px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 1000;
+
+  cursor: pointer;
+
+  box-shadow:
+    0
+    9px
+    22px
+    rgba(
+      138,
+      24,
+      34,
+      0.15
+    );
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (max-width: 520px) {
+  .knowledgePage {
+    padding:
+      15px
+      10px
+      42px;
+  }
+
+  .knowledgeHeader {
+    grid-template-columns:
+      38px
+      minmax(0, 1fr)
+      auto;
+
+    gap: 9px;
+  }
+
+  .knowledgeHeader .backButton {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 12px;
+  }
+
+  .knowledgeCountBadge {
+    min-width: 46px;
+
+    height: 31px;
+
+    padding:
+      0
+      8px;
+
+    font-size: 10px;
+  }
+
+  .knowledgeHero {
+    padding:
+      20px
+      14px;
+  }
+
+  .knowledgeCard {
+    grid-template-columns:
+      38px
+      minmax(0, 1fr)
+      28px;
+
+    gap: 9px;
+
+    padding:
+      14px
+      12px;
+  }
+
+  .knowledgeNumber {
+    width: 38px;
+    height: 38px;
+
+    border-radius: 12px;
+  }
+
+  .knowledgeLockIcon {
+    width: 28px;
+    height: 28px;
+
+    font-size: 10px;
+  }
+
+  .knowledgeContent h2 {
+    font-size: 14px;
+  }
+
+  .knowledgeContent p {
+    font-size: 9px;
+
+    line-height: 1.8;
+  }
+}
+
+
+/* ==================================================
+   VERY SMALL DEVICES
+================================================== */
+
+@media (max-width: 340px) {
+  .knowledgeCard {
+    grid-template-columns:
+      34px
+      minmax(0, 1fr);
+
+    gap: 9px;
+  }
+
+  .knowledgeNumber {
+    width: 34px;
+    height: 34px;
+  }
+
+  .knowledgeLockIcon {
+    display: none;
+  }
+}
