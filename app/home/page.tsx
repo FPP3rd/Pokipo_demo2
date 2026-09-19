@@ -257,6 +257,9 @@ export default function HomePage() {
 
         "pokipo_secret_yuhisai",
         "pokipo_yuhisai_pocky_skin",
+
+        "pokipo_intro_seen",
+        
       ];
 
       keysToRemove.forEach(
