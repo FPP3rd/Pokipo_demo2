@@ -22,6 +22,9 @@ import {
   supabase,
 } from "../../lib/supabase-client";
 
+import MaintenanceGate
+  from "../../components/MaintenanceGate";
+
 /* ========================================
    SPECIAL QR
 ======================================== */
@@ -1822,118 +1825,403 @@ export default function StampPage() {
   ======================================== */
 
   return (
-    <main className="shell">
+    <MaintenanceGate>
 
-      <section className="card stampPage">
+      <main className="shell">
 
-        {/* HEADER */}
+        <section className="card stampPage">
 
-        <header className="stampHeader">
+          {/* HEADER */}
 
-          <button
-            type="button"
-            className="backButton"
-            onClick={() =>
-              router.push(
-                "/home"
-              )
-            }
-          >
-            ←
-          </button>
+          <header className="stampHeader">
 
-          <div>
-
-            <p className="stampEyebrow">
-              POCKY JOURNEY
-            </p>
-
-            <h1>
-              スタンプラリー
-            </h1>
-
-          </div>
-
-          <div className="stampCountBadge">
-            {scans.length}/5
-          </div>
-
-        </header>
-
-        {/* PROGRESS */}
-
-        <section className="stampProgressCard">
-
-          <div className="stampProgressTop">
+            <button
+              type="button"
+              className="backButton"
+              onClick={() =>
+                router.push(
+                  "/home"
+                )
+              }
+            >
+              ←
+            </button>
 
             <div>
 
-              <p>
-                現在の進捗
+              <p className="stampEyebrow">
+                POCKY JOURNEY
               </p>
 
-              <h2>
-                {completed
-                  ? "全スポット制覇！"
-                  : `あと${5 - scans.length}か所`}
-              </h2>
+              <h1>
+                スタンプラリー
+              </h1>
 
             </div>
 
-            <strong>
-              {Math.min(
-                scans.length,
-                5
-              ) * 20}
-              %
-            </strong>
+            <div className="stampCountBadge">
+              {scans.length}/5
+            </div>
 
-          </div>
+          </header>
 
-          <div className="progressBar">
+          {/* PROGRESS */}
 
-            <div
-              className="progressBarFill"
-              style={{
-                width:
-                  `${Math.min(
-                    scans.length,
-                    5
-                  ) * 20}%`,
-              }}
-            />
+          <section className="stampProgressCard">
 
-          </div>
+            <div className="stampProgressTop">
 
-        </section>
+              <div>
 
-        {/* ========================================
-            QR SCANNER
-        ======================================== */}
+                <p>
+                  現在の進捗
+                </p>
 
-        <section className="qrScannerSection">
+                <h2>
+                  {completed
+                    ? "全スポット制覇！"
+                    : `あと${5 - scans.length}か所`}
+                </h2>
 
-          {!cameraOpen ? (
+              </div>
+
+              <strong>
+                {Math.min(
+                  scans.length,
+                  5
+                ) * 20}
+                %
+              </strong>
+
+            </div>
+
+            <div className="progressBar">
+
+              <div
+                className="progressBarFill"
+                style={{
+                  width:
+                    `${Math.min(
+                      scans.length,
+                      5
+                    ) * 20}%`,
+                }}
+              />
+
+            </div>
+
+          </section>
+
+          {/* ========================================
+              QR SCANNER
+          ======================================== */}
+
+          <section className="qrScannerSection">
+
+            {!cameraOpen ? (
+              <button
+                type="button"
+                className="qrCameraButton"
+                onClick={
+                  startQrScanner
+                }
+              >
+
+                <span className="qrCameraIcon">
+                  QR
+                </span>
+
+                <span>
+
+                  <strong>
+                    QRコードを読み取る
+                  </strong>
+
+                  <small>
+                    5か所どこからでもOK
+                  </small>
+
+                </span>
+
+                <span className="buttonArrow">
+                  ›
+                </span>
+
+              </button>
+            ) : (
+              <div className="qrCameraPanel">
+
+                <div className="qrCameraHeader">
+
+                  <div>
+
+                    <p>
+                      QR SCANNER
+                    </p>
+
+                    <h2>
+                      QRコードを枠内に合わせてください
+                    </h2>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    className="qrCloseButton"
+                    onClick={
+                      stopQrScanner
+                    }
+                  >
+                    ×
+                  </button>
+
+                </div>
+
+                <div
+                  id="pokipo-qr-reader"
+                  className="qrReader"
+                />
+
+                <p className="qrCameraHelp">
+                  QRコード全体が枠内に入るようにしてください。
+                </p>
+
+              </div>
+            )}
+
+            {cameraError && (
+              <div className="qrScanMessage errorMessage">
+
+                <span className="qrScanMessageIcon">
+                  !
+                </span>
+
+                <div>
+
+                  <span>
+                    CAMERA ERROR
+                  </span>
+
+                  <strong>
+                    {cameraError}
+                  </strong>
+
+                </div>
+
+              </div>
+            )}
+
+            {message && (
+              <div className="qrScanMessage">
+
+                <span className="qrScanMessageIcon">
+                  !
+                </span>
+
+                <div>
+
+                  <span>
+                    QR MESSAGE
+                  </span>
+
+                  <strong>
+                    {message}
+                  </strong>
+
+                </div>
+
+              </div>
+            )}
+
+          </section>
+
+          {/* MAP */}
+
+          <section className="stampMapSection">
+
+            <div className="stampMapHeader">
+
+              <div>
+
+                <p className="stampMapEyebrow">
+                  CAMPUS MAP
+                </p>
+
+                <h2>
+                  スポットマップ
+                </h2>
+
+              </div>
+
+              <span className="stampMapNote">
+                ①〜⑤の掲示場所
+              </span>
+
+            </div>
+
+            <div className="stampMapCard">
+
+              <div className="stampMapImageWrap">
+
+                <img
+                  src="/images/pokipo-campus-map.png"
+                  alt="POKIPO スタンプラリーキャンパスマップ"
+                  className="stampMapImage"
+                />
+
+                {mapPins.map(
+                  (
+                    pin
+                  ) => {
+                    const collected =
+                      scans.includes(
+                        pin.id
+                      );
+
+                    return (
+                      <button
+                        key={
+                          pin.id
+                        }
+                        type="button"
+                        className={
+                          collected
+                            ? "stampMapPin collected"
+                            : "stampMapPin"
+                        }
+                        style={{
+                          top:
+                            pin.top,
+                          left:
+                            pin.left,
+                        }}
+                        onClick={() =>
+                          showMapSpot(
+                            pin.id
+                          )
+                        }
+                      >
+
+                        <span className="stampMapPinNumber">
+
+                          <span>
+                            {collected
+                              ? "✓"
+                              : pin.number}
+                          </span>
+
+                        </span>
+
+                        <span className="stampMapPinLabel">
+                          {pin.label}
+                        </span>
+
+                      </button>
+                    );
+                  }
+                )}
+
+              </div>
+
+            </div>
+
+          </section>
+
+          {/* SPOTS */}
+
+          <section className="spotList">
+
+            {pokipoSpots.map(
+              (
+                spot
+              ) => {
+                const collected =
+                  scans.includes(
+                    spot.id
+                  );
+
+                return (
+                  <article
+                    key={
+                      spot.id
+                    }
+                    className={[
+                      "spotCard",
+                      collected
+                        ? "collected"
+                        : "available",
+                    ].join(" ")}
+                  >
+
+                    <div className="spotTimeline">
+
+                      <div className="spotCircle">
+
+                        {collected
+                          ? "✓"
+                          : spot.number}
+
+                      </div>
+
+                      {spot.number <
+                        5 && (
+                        <div className="spotLine" />
+                      )}
+
+                    </div>
+
+                    <div className="spotContent">
+
+                      <p className="spotStatus">
+
+                        {collected
+                          ? "STAMP GET!"
+                          : "AVAILABLE"}
+
+                      </p>
+
+                      <h2>
+                        {spot.spotName}
+                      </h2>
+
+                      <p>
+
+                        {collected
+                          ? "このスポットはクリア済みです。"
+                          : "この場所のQRコードを見つけて読み込もう！"}
+
+                      </p>
+
+                    </div>
+
+                  </article>
+                );
+              }
+            )}
+
+          </section>
+
+          {/* COMPLETE */}
+
+          {completed && (
             <button
               type="button"
-              className="qrCameraButton"
-              onClick={
-                startQrScanner
+              className="mainActionButton"
+              onClick={() =>
+                router.push(
+                  "/home"
+                )
               }
             >
-
-              <span className="qrCameraIcon">
-                QR
-              </span>
 
               <span>
 
                 <strong>
-                  QRコードを読み取る
+                  コンプリート！
                 </strong>
 
                 <small>
-                  5か所どこからでもOK
+                  トップ画面で特典を確認しよう
                 </small>
 
               </span>
@@ -1943,28 +2231,119 @@ export default function StampPage() {
               </span>
 
             </button>
-          ) : (
-            <div className="qrCameraPanel">
+          )}
 
-              <div className="qrCameraHeader">
+        </section>
+
+        {/* ========================================
+            STAFF TEST WARNING
+        ======================================== */}
+
+        {showTestWarning && (
+          <div className="staffTestOverlay">
+
+            <section className="staffTestWarningCard">
+
+              <div className="staffTestWarningIcon">
+                !
+              </div>
+
+              <span>
+                WARNING
+              </span>
+
+              <h2>
+                スタッフテスト用QRです
+              </h2>
+
+              <p>
+                このQRはPOKIPOの
+                動作確認用テストQRです。
+              </p>
+
+              <p className="staffTestWarningImportant">
+                続けると、
+                全5スポットのクイズ・正解・ヒント・解説を表示します。
+              </p>
+
+              <p>
+                最後に
+                <strong>
+                  「5スタンプ取得状態にする」
+                </strong>
+                を押すと、
+                この参加者は5/5の状態になります。
+              </p>
+
+              <h3>
+                テスト画面を表示します。
+                続けますか？
+              </h3>
+
+              <div className="staffTestWarningActions">
+
+                <button
+                  type="button"
+                  className="cancel"
+                  onClick={
+                    cancelStaffTest
+                  }
+                >
+                  キャンセル
+                </button>
+
+                <button
+                  type="button"
+                  className="continue"
+                  onClick={
+                    openStaffTestPanel
+                  }
+                >
+                  続ける
+                </button>
+
+              </div>
+
+            </section>
+
+          </div>
+        )}
+
+        {/* ========================================
+            STAFF TEST PANEL
+        ======================================== */}
+
+        {showTestPanel && (
+          <div className="staffTestOverlay">
+
+            <section className="staffTestPanel">
+
+              <div className="staffTestPanelHeader">
 
                 <div>
 
-                  <p>
-                    QR SCANNER
-                  </p>
+                  <span>
+                    STAFF TEST MODE
+                  </span>
 
                   <h2>
-                    QRコードを枠内に合わせてください
+                    POKIPOテスト確認
                   </h2>
+
+                  <p>
+                    全スポットの内容を
+                    一覧で確認できます。
+                  </p>
 
                 </div>
 
                 <button
                   type="button"
-                  className="qrCloseButton"
                   onClick={
-                    stopQrScanner
+                    cancelStaffTest
+                  }
+                  disabled={
+                    applyingTestMode
                   }
                 >
                   ×
@@ -1972,858 +2351,482 @@ export default function StampPage() {
 
               </div>
 
-              <div
-                id="pokipo-qr-reader"
-                className="qrReader"
-              />
+              <div className="staffTestQuizList">
 
-              <p className="qrCameraHelp">
-                QRコード全体が枠内に入るようにしてください。
-              </p>
+                {pokipoSpots.map(
+                  (
+                    spot
+                  ) => (
+                    <article
+                      key={
+                        spot.id
+                      }
+                      className="staffTestQuizCard"
+                    >
 
-            </div>
-          )}
+                      <div className="staffTestQuizTop">
 
-          {/* CAMERA ERROR */}
+                        <span>
+                          SPOT {spot.number}
+                        </span>
 
-          {cameraError && (
-            <div className="qrScanMessage errorMessage">
+                        <strong>
+                          {spot.spotName}
+                        </strong>
 
-              <span className="qrScanMessageIcon">
-                !
-              </span>
+                      </div>
 
-              <div>
+                      <div className="staffTestQuizSection">
 
-                <span>
-                  CAMERA ERROR
-                </span>
+                        <span>
+                          QUESTION
+                        </span>
 
-                <strong>
-                  {cameraError}
-                </strong>
+                        <p>
+                          {spot.quizQuestion}
+                        </p>
+
+                      </div>
+
+                      <div className="staffTestQuizSection answer">
+
+                        <span>
+                          ANSWER
+                        </span>
+
+                        <strong>
+                          {spot.quizAnswer}
+                        </strong>
+
+                      </div>
+
+                      <div className="staffTestQuizSection">
+
+                        <span>
+                          HINT
+                        </span>
+
+                        <p>
+                          {spot.quizHint}
+                        </p>
+
+                      </div>
+
+                      <div className="staffTestQuizSection knowledge">
+
+                        <span>
+                          解説・豆知識
+                        </span>
+
+                        <h3>
+                          {spot.knowledgeTitle}
+                        </h3>
+
+                        <p>
+                          {spot.knowledgeText}
+                        </p>
+
+                      </div>
+
+                    </article>
+                  )
+                )}
 
               </div>
 
-            </div>
-          )}
+              {testModeError && (
+                <p className="staffTestError">
+                  {testModeError}
+                </p>
+              )}
 
-          {/* QR RESULT / ERROR */}
-
-          {message && (
-            <div className="qrScanMessage">
-
-              <span className="qrScanMessageIcon">
-                !
-              </span>
-
-              <div>
-
-                <span>
-                  QR MESSAGE
-                </span>
+              <div className="staffTestFinalNotice">
 
                 <strong>
-                  {message}
+                  テストを完了すると
                 </strong>
+
+                <p>
+                  5スポットすべての
+                  スタンプと豆知識を取得済みにして、
+                  通常のコンプリート状態にします。
+                </p>
 
               </div>
 
+              <div className="staffTestPanelActions">
+
+                <button
+                  type="button"
+                  className="cancel"
+                  disabled={
+                    applyingTestMode
+                  }
+                  onClick={
+                    cancelStaffTest
+                  }
+                >
+                  キャンセル
+                </button>
+
+                <button
+                  type="button"
+                  className="apply"
+                  disabled={
+                    applyingTestMode
+                  }
+                  onClick={() =>
+                    void completeStaffTest()
+                  }
+                >
+
+                  {applyingTestMode
+                    ? "保存中..."
+                    : "5スタンプ取得状態にする"}
+
+                </button>
+
+              </div>
+
+            </section>
+
+          </div>
+        )}
+
+        {/* ========================================
+            NORMAL STAMP GET
+        ======================================== */}
+
+        {showGetEffect && (
+          <div className="stampGetOverlay">
+
+            <div className="stampGetBurst burst1">
+              ✦
             </div>
-          )}
 
-        </section>
+            <div className="stampGetBurst burst2">
+              ✦
+            </div>
 
-        {/* MAP */}
+            <div className="stampGetBurst burst3">
+              ✦
+            </div>
 
-        <section className="stampMapSection">
+            <div className="stampGetBurst burst4">
+              ✦
+            </div>
 
-          <div className="stampMapHeader">
+            <section className="stampGetModal">
 
-            <div>
+              <div className="stampGetCircle">
+                ✓
+              </div>
 
-              <p className="stampMapEyebrow">
-                CAMPUS MAP
+              <p className="stampGetLabel">
+                STAMP GET!
               </p>
 
               <h2>
-                スポットマップ
+                スタンプ獲得！
               </h2>
 
-            </div>
-
-            <span className="stampMapNote">
-              ①〜⑤の掲示場所
-            </span>
-
-          </div>
-
-          <div className="stampMapCard">
-
-            <div className="stampMapImageWrap">
-
-              <img
-                src="/images/pokipo-campus-map.png"
-                alt="POKIPO スタンプラリーキャンパスマップ"
-                className="stampMapImage"
-              />
-
-              {mapPins.map(
-                (
-                  pin
-                ) => {
-                  const collected =
-                    scans.includes(
-                      pin.id
-                    );
-
-                  return (
-                    <button
-                      key={
-                        pin.id
-                      }
-                      type="button"
-                      className={
-                        collected
-                          ? "stampMapPin collected"
-                          : "stampMapPin"
-                      }
-                      style={{
-                        top:
-                          pin.top,
-                        left:
-                          pin.left,
-                      }}
-                      onClick={() =>
-                        showMapSpot(
-                          pin.id
-                        )
-                      }
-                    >
-
-                      <span className="stampMapPinNumber">
-
-                        <span>
-                          {collected
-                            ? "✓"
-                            : pin.number}
-                        </span>
-
-                      </span>
-
-                      <span className="stampMapPinLabel">
-                        {pin.label}
-                      </span>
-
-                    </button>
-                  );
-                }
-              )}
-
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* SPOTS */}
-
-        <section className="spotList">
-
-          {pokipoSpots.map(
-            (
-              spot
-            ) => {
-              const collected =
-                scans.includes(
-                  spot.id
-                );
-
-              return (
-                <article
-                  key={
-                    spot.id
-                  }
-                  className={[
-                    "spotCard",
-                    collected
-                      ? "collected"
-                      : "available",
-                  ].join(" ")}
-                >
-
-                  <div className="spotTimeline">
-
-                    <div className="spotCircle">
-
-                      {collected
-                        ? "✓"
-                        : spot.number}
-
-                    </div>
-
-                    {spot.number <
-                      5 && (
-                      <div className="spotLine" />
-                    )}
-
-                  </div>
-
-                  <div className="spotContent">
-
-                    <p className="spotStatus">
-
-                      {collected
-                        ? "STAMP GET!"
-                        : "AVAILABLE"}
-
-                    </p>
-
-                    <h2>
-                      {spot.spotName}
-                    </h2>
-
-                    <p>
-
-                      {collected
-                        ? "このスポットはクリア済みです。"
-                        : "この場所のQRコードを見つけて読み込もう！"}
-
-                    </p>
-
-                  </div>
-
-                </article>
-              );
-            }
-          )}
-
-        </section>
-
-        {/* COMPLETE */}
-
-        {completed && (
-          <button
-            type="button"
-            className="mainActionButton"
-            onClick={() =>
-              router.push(
-                "/home"
-              )
-            }
-          >
-
-            <span>
-
-              <strong>
-                コンプリート！
-              </strong>
-
-              <small>
-                トップ画面で特典を確認しよう
-              </small>
-
-            </span>
-
-            <span className="buttonArrow">
-              ›
-            </span>
-
-          </button>
-        )}
-
-      </section>
-
-      {/* ========================================
-          STAFF TEST WARNING
-      ======================================== */}
-
-      {showTestWarning && (
-        <div className="staffTestOverlay">
-
-          <section className="staffTestWarningCard">
-
-            <div className="staffTestWarningIcon">
-              !
-            </div>
-
-            <span>
-              WARNING
-            </span>
-
-            <h2>
-              スタッフテスト用QRです
-            </h2>
-
-            <p>
-              このQRはPOKIPOの
-              動作確認用テストQRです。
-            </p>
-
-            <p className="staffTestWarningImportant">
-              続けると、
-              全5スポットのクイズ・正解・ヒント・解説を表示します。
-            </p>
-
-            <p>
-              最後に
-              <strong>
-                「5スタンプ取得状態にする」
-              </strong>
-              を押すと、
-              この参加者は5/5の状態になります。
-            </p>
-
-            <h3>
-              テスト画面を表示します。
-              続けますか？
-            </h3>
-
-            <div className="staffTestWarningActions">
-
-              <button
-                type="button"
-                className="cancel"
-                onClick={
-                  cancelStaffTest
-                }
-              >
-                キャンセル
-              </button>
-
-              <button
-                type="button"
-                className="continue"
-                onClick={
-                  openStaffTestPanel
-                }
-              >
-                続ける
-              </button>
-
-            </div>
-
-          </section>
-
-        </div>
-      )}
-
-      {/* ========================================
-          STAFF TEST PANEL
-      ======================================== */}
-
-      {showTestPanel && (
-        <div className="staffTestOverlay">
-
-          <section className="staffTestPanel">
-
-            <div className="staffTestPanelHeader">
-
-              <div>
+              <p className="stampGetPlace">
+                {getSpotName}
+              </p>
+
+              <div className="stampGetProgress">
 
                 <span>
-                  STAFF TEST MODE
+                  {scans.length} / 5
                 </span>
 
-                <h2>
-                  POKIPOテスト確認
-                </h2>
+                <div className="stampGetProgressBar">
 
-                <p>
-                  全スポットの内容を
-                  一覧で確認できます。
+                  <div
+                    className="stampGetProgressFill"
+                    style={{
+                      width:
+                        `${Math.min(
+                          scans.length *
+                            20,
+                          100
+                        )}%`,
+                    }}
+                  />
+
+                </div>
+
+              </div>
+
+              <div className="stampGetStep">
+
+                <span>
+                  POCKY STEP
+                </span>
+
+                <small className="stampGetStepNumber">
+                  {currentPockyStep.step}
+                </small>
+
+                <strong>
+                  {currentPockyStep.title}
+                </strong>
+
+                <p className="stampGetStepDescription">
+                  {currentPockyStep.description}
+                </p>
+
+              </div>
+
+              <div
+                className={
+                  triviaReady
+                    ? "stampGetKnowledge triviaShow"
+                    : "stampGetKnowledge triviaWaiting"
+                }
+              >
+
+                <div className="stampGetKnowledgeIcon">
+                  !
+                </div>
+
+                <div className="stampGetKnowledgeBody">
+
+                  <span>
+                    TRIVIA CHALLENGE
+                  </span>
+
+                  {!triviaReady ? (
+                    <div className="triviaLoading">
+
+                      <span />
+                      <span />
+                      <span />
+
+                      <strong>
+                        トリビア問題を準備中...
+                      </strong>
+
+                    </div>
+                  ) : !quizCorrect ? (
+                    <>
+
+                      <h3>
+                        QRの下の説明から
+                        答えを探そう！
+                      </h3>
+
+                      <div className="triviaQuizQuestion">
+
+                        <span>
+                          QUESTION
+                        </span>
+
+                        <strong>
+                          {quizQuestion}
+                        </strong>
+
+                      </div>
+
+                      <p className="triviaQuizHint">
+                        🔍 {quizHint}
+                      </p>
+
+                      <div className="triviaQuizInputRow">
+
+                        <input
+                          type="text"
+                          value={
+                            quizInput
+                          }
+                          onChange={(
+                            event
+                          ) => {
+                            setQuizInput(
+                              event.target.value
+                            );
+
+                            if (
+                              quizError
+                            ) {
+                              setQuizError(
+                                false
+                              );
+                            }
+                          }}
+                          onKeyDown={(
+                            event
+                          ) => {
+                            if (
+                              event.key ===
+                              "Enter"
+                            ) {
+                              void checkTriviaAnswer();
+                            }
+                          }}
+                          placeholder="答えを入力"
+                          className="triviaQuizInput"
+                        />
+
+                        <button
+                          type="button"
+                          className="triviaQuizCheckButton"
+                          onClick={() =>
+                            void checkTriviaAnswer()
+                          }
+                          disabled={
+                            !quizInput.trim()
+                          }
+                        >
+                          答え合わせ
+                        </button>
+
+                      </div>
+
+                      {quizError && (
+                        <div className="triviaQuizWrong">
+
+                          <strong>
+                            惜しい！
+                          </strong>
+
+                          <span>
+                            QRコードの下にある説明文を
+                            もう一度探してみよう。
+                          </span>
+
+                        </div>
+                      )}
+
+                    </>
+                  ) : (
+                    <>
+
+                      <div className="triviaQuizCorrect">
+
+                        <span className="triviaCorrectMark">
+                          ✓
+                        </span>
+
+                        <div>
+
+                          <small>
+                            CORRECT!
+                          </small>
+
+                          <strong>
+                            正解！
+                          </strong>
+
+                        </div>
+
+                      </div>
+
+                      <div className="triviaUnlockedContent">
+
+                        <span>
+                          NEW KNOWLEDGE UNLOCKED
+                        </span>
+
+                        <h3>
+                          {newKnowledgeTitle}
+                        </h3>
+
+                        <p className="triviaText">
+                          {newKnowledge}
+                        </p>
+
+                      </div>
+
+                    </>
+                  )}
+
+                </div>
+
+              </div>
+
+              {triviaReady &&
+                quizCorrect && (
+                  <button
+                    type="button"
+                    className="stampGetCloseButton"
+                    onClick={
+                      closeGetEffect
+                    }
+                  >
+
+                    {scans.length >=
+                    5
+                      ? "コンプリート！"
+                      : "次のスポットへ"}
+
+                  </button>
+                )}
+
+            </section>
+
+          </div>
+        )}
+
+        {/* ========================================
+            SECRET
+        ======================================== */}
+
+        {secretGetEffect && (
+          <div className="stampGetOverlay">
+
+            <section className="stampGetModal">
+
+              <div className="stampGetCircle">
+                6
+              </div>
+
+              <p className="stampGetLabel">
+                SECRET STAMP GET!
+              </p>
+
+              <h2>
+                雄飛祭スタンプ獲得！
+              </h2>
+
+              <p className="stampGetPlace">
+                雄飛祭 LiPostブース
+              </p>
+
+              <div className="stampGetStep">
+
+                <span>
+                  SECRET MODE
+                </span>
+
+                <strong>
+                  POKIPOが変化しました！
+                </strong>
+
+                <p className="stampGetStepDescription">
+                  トップ画面で雄飛祭限定の
+                  POKIPOを確認してみよう。
                 </p>
 
               </div>
 
               <button
                 type="button"
+                className="stampGetCloseButton"
                 onClick={
-                  cancelStaffTest
-                }
-                disabled={
-                  applyingTestMode
+                  closeSecretEffect
                 }
               >
-                ×
+                雄飛祭モードを見る
               </button>
 
-            </div>
+            </section>
 
-            <div className="staffTestQuizList">
-
-              {pokipoSpots.map(
-                (
-                  spot
-                ) => (
-                  <article
-                    key={
-                      spot.id
-                    }
-                    className="staffTestQuizCard"
-                  >
-
-                    <div className="staffTestQuizTop">
-
-                      <span>
-                        SPOT {spot.number}
-                      </span>
-
-                      <strong>
-                        {spot.spotName}
-                      </strong>
-
-                    </div>
-
-                    <div className="staffTestQuizSection">
-
-                      <span>
-                        QUESTION
-                      </span>
-
-                      <p>
-                        {spot.quizQuestion}
-                      </p>
-
-                    </div>
-
-                    <div className="staffTestQuizSection answer">
-
-                      <span>
-                        ANSWER
-                      </span>
-
-                      <strong>
-                        {spot.quizAnswer}
-                      </strong>
-
-                    </div>
-
-                    <div className="staffTestQuizSection">
-
-                      <span>
-                        HINT
-                      </span>
-
-                      <p>
-                        {spot.quizHint}
-                      </p>
-
-                    </div>
-
-                    <div className="staffTestQuizSection knowledge">
-
-                      <span>
-                        解説・豆知識
-                      </span>
-
-                      <h3>
-                        {spot.knowledgeTitle}
-                      </h3>
-
-                      <p>
-                        {spot.knowledgeText}
-                      </p>
-
-                    </div>
-
-                  </article>
-                )
-              )}
-
-            </div>
-
-            {testModeError && (
-              <p className="staffTestError">
-                {testModeError}
-              </p>
-            )}
-
-            <div className="staffTestFinalNotice">
-
-              <strong>
-                テストを完了すると
-              </strong>
-
-              <p>
-                5スポットすべての
-                スタンプと豆知識を取得済みにして、
-                通常のコンプリート状態にします。
-              </p>
-
-            </div>
-
-            <div className="staffTestPanelActions">
-
-              <button
-                type="button"
-                className="cancel"
-                disabled={
-                  applyingTestMode
-                }
-                onClick={
-                  cancelStaffTest
-                }
-              >
-                キャンセル
-              </button>
-
-              <button
-                type="button"
-                className="apply"
-                disabled={
-                  applyingTestMode
-                }
-                onClick={() =>
-                  void completeStaffTest()
-                }
-              >
-
-                {applyingTestMode
-                  ? "保存中..."
-                  : "5スタンプ取得状態にする"}
-
-              </button>
-
-            </div>
-
-          </section>
-
-        </div>
-      )}
-
-      {/* ========================================
-          NORMAL STAMP GET
-      ======================================== */}
-
-      {showGetEffect && (
-        <div className="stampGetOverlay">
-
-          <div className="stampGetBurst burst1">
-            ✦
           </div>
+        )}
 
-          <div className="stampGetBurst burst2">
-            ✦
-          </div>
+      </main>
 
-          <div className="stampGetBurst burst3">
-            ✦
-          </div>
-
-          <div className="stampGetBurst burst4">
-            ✦
-          </div>
-
-          <section className="stampGetModal">
-
-            <div className="stampGetCircle">
-              ✓
-            </div>
-
-            <p className="stampGetLabel">
-              STAMP GET!
-            </p>
-
-            <h2>
-              スタンプ獲得！
-            </h2>
-
-            <p className="stampGetPlace">
-              {getSpotName}
-            </p>
-
-            <div className="stampGetProgress">
-
-              <span>
-                {scans.length} / 5
-              </span>
-
-              <div className="stampGetProgressBar">
-
-                <div
-                  className="stampGetProgressFill"
-                  style={{
-                    width:
-                      `${Math.min(
-                        scans.length *
-                          20,
-                        100
-                      )}%`,
-                  }}
-                />
-
-              </div>
-
-            </div>
-
-            <div className="stampGetStep">
-
-              <span>
-                POCKY STEP
-              </span>
-
-              <small className="stampGetStepNumber">
-                {currentPockyStep.step}
-              </small>
-
-              <strong>
-                {currentPockyStep.title}
-              </strong>
-
-              <p className="stampGetStepDescription">
-                {currentPockyStep.description}
-              </p>
-
-            </div>
-
-            <div
-              className={
-                triviaReady
-                  ? "stampGetKnowledge triviaShow"
-                  : "stampGetKnowledge triviaWaiting"
-              }
-            >
-
-              <div className="stampGetKnowledgeIcon">
-                !
-              </div>
-
-              <div className="stampGetKnowledgeBody">
-
-                <span>
-                  TRIVIA CHALLENGE
-                </span>
-
-                {!triviaReady ? (
-                  <div className="triviaLoading">
-
-                    <span />
-                    <span />
-                    <span />
-
-                    <strong>
-                      トリビア問題を準備中...
-                    </strong>
-
-                  </div>
-                ) : !quizCorrect ? (
-                  <>
-
-                    <h3>
-                      QRの下の説明から
-                      答えを探そう！
-                    </h3>
-
-                    <div className="triviaQuizQuestion">
-
-                      <span>
-                        QUESTION
-                      </span>
-
-                      <strong>
-                        {quizQuestion}
-                      </strong>
-
-                    </div>
-
-                    <p className="triviaQuizHint">
-                      🔍 {quizHint}
-                    </p>
-
-                    <div className="triviaQuizInputRow">
-
-                      <input
-                        type="text"
-                        value={
-                          quizInput
-                        }
-                        onChange={(
-                          event
-                        ) => {
-                          setQuizInput(
-                            event.target.value
-                          );
-
-                          if (
-                            quizError
-                          ) {
-                            setQuizError(
-                              false
-                            );
-                          }
-                        }}
-                        onKeyDown={(
-                          event
-                        ) => {
-                          if (
-                            event.key ===
-                            "Enter"
-                          ) {
-                            void checkTriviaAnswer();
-                          }
-                        }}
-                        placeholder="答えを入力"
-                        className="triviaQuizInput"
-                      />
-
-                      <button
-                        type="button"
-                        className="triviaQuizCheckButton"
-                        onClick={() =>
-                          void checkTriviaAnswer()
-                        }
-                        disabled={
-                          !quizInput.trim()
-                        }
-                      >
-                        答え合わせ
-                      </button>
-
-                    </div>
-
-                    {quizError && (
-                      <div className="triviaQuizWrong">
-
-                        <strong>
-                          惜しい！
-                        </strong>
-
-                        <span>
-                          QRコードの下にある説明文を
-                          もう一度探してみよう。
-                        </span>
-
-                      </div>
-                    )}
-
-                  </>
-                ) : (
-                  <>
-
-                    <div className="triviaQuizCorrect">
-
-                      <span className="triviaCorrectMark">
-                        ✓
-                      </span>
-
-                      <div>
-
-                        <small>
-                          CORRECT!
-                        </small>
-
-                        <strong>
-                          正解！
-                        </strong>
-
-                      </div>
-
-                    </div>
-
-                    <div className="triviaUnlockedContent">
-
-                      <span>
-                        NEW KNOWLEDGE UNLOCKED
-                      </span>
-
-                      <h3>
-                        {newKnowledgeTitle}
-                      </h3>
-
-                      <p className="triviaText">
-                        {newKnowledge}
-                      </p>
-
-                    </div>
-
-                  </>
-                )}
-
-              </div>
-
-            </div>
-
-            {triviaReady &&
-              quizCorrect && (
-                <button
-                  type="button"
-                  className="stampGetCloseButton"
-                  onClick={
-                    closeGetEffect
-                  }
-                >
-
-                  {scans.length >=
-                  5
-                    ? "コンプリート！"
-                    : "次のスポットへ"}
-
-                </button>
-              )}
-
-          </section>
-
-        </div>
-      )}
-
-      {/* ========================================
-          SECRET
-      ======================================== */}
-
-      {secretGetEffect && (
-        <div className="stampGetOverlay">
-
-          <section className="stampGetModal">
-
-            <div className="stampGetCircle">
-              6
-            </div>
-
-            <p className="stampGetLabel">
-              SECRET STAMP GET!
-            </p>
-
-            <h2>
-              雄飛祭スタンプ獲得！
-            </h2>
-
-            <p className="stampGetPlace">
-              雄飛祭 LiPostブース
-            </p>
-
-            <div className="stampGetStep">
-
-              <span>
-                SECRET MODE
-              </span>
-
-              <strong>
-                POKIPOが変化しました！
-              </strong>
-
-              <p className="stampGetStepDescription">
-                トップ画面で雄飛祭限定の
-                POKIPOを確認してみよう。
-              </p>
-
-            </div>
-
-            <button
-              type="button"
-              className="stampGetCloseButton"
-              onClick={
-                closeSecretEffect
-              }
-            >
-              雄飛祭モードを見る
-            </button>
-
-          </section>
-
-        </div>
-      )}
-
-    </main>
+    </MaintenanceGate>
   );
 }

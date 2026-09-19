@@ -66,7 +66,33 @@ export default function StaffPage() {
   ] = useState("");
 
   /* ========================================
-     AUTH + PROFILE
+     MAINTENANCE
+  ======================================== */
+
+  const [
+    maintenanceMode,
+    setMaintenanceMode,
+  ] = useState(false);
+
+  const [
+    maintenanceMessage,
+    setMaintenanceMessage,
+  ] = useState(
+    "現在システムメンテナンスを行っています。しばらくしてから再度アクセスしてください。"
+  );
+
+  const [
+    maintenanceLoading,
+    setMaintenanceLoading,
+  ] = useState(true);
+
+  const [
+    maintenanceSaving,
+    setMaintenanceSaving,
+  ] = useState(false);
+
+  /* ========================================
+     AUTH + PROFILE + MAINTENANCE
   ======================================== */
 
   useEffect(() => {
@@ -79,9 +105,17 @@ export default function StaffPage() {
         true
       );
 
+      setMaintenanceLoading(
+        true
+      );
+
       setMessage("");
 
       try {
+        /* =================================
+           SESSION
+        ================================= */
+
         const {
           data:
             sessionData,
@@ -107,6 +141,10 @@ export default function StaffPage() {
 
         const userId =
           sessionData.session.user.id;
+
+        /* =================================
+           STAFF PROFILE
+        ================================= */
 
         const {
           data:
@@ -138,11 +176,7 @@ export default function StaffPage() {
           setMessage(
             "ログイン中の管理者名を取得できませんでした。"
           );
-
-          return;
-        }
-
-        if (
+        } else if (
           profileData
         ) {
           const typedProfile =
@@ -154,6 +188,55 @@ export default function StaffPage() {
 
           setCurrentAdminId(
             typedProfile.admin_id
+          );
+        }
+
+        /* =================================
+           MAINTENANCE SETTINGS
+        ================================= */
+
+        const {
+          data:
+            maintenanceData,
+          error:
+            maintenanceError,
+        } =
+          await supabase
+            .from(
+              "pokipo_app_settings"
+            )
+            .select(
+              "maintenance_mode, maintenance_message"
+            )
+            .eq(
+              "id",
+              1
+            )
+            .single();
+
+        if (
+          maintenanceError
+        ) {
+          console.error(
+            "メンテナンス設定取得エラー:",
+            maintenanceError
+          );
+
+          setMessage(
+            "メンテナンス設定を取得できませんでした。"
+          );
+        } else if (
+          maintenanceData
+        ) {
+          setMaintenanceMode(
+            Boolean(
+              maintenanceData.maintenance_mode
+            )
+          );
+
+          setMaintenanceMessage(
+            maintenanceData.maintenance_message ||
+              ""
           );
         }
       } catch (
@@ -173,6 +256,10 @@ export default function StaffPage() {
         );
 
         setProfileLoading(
+          false
+        );
+
+        setMaintenanceLoading(
           false
         );
       }
@@ -209,6 +296,92 @@ export default function StaffPage() {
   }, [
     router,
   ]);
+
+  /* ========================================
+     SAVE MAINTENANCE
+  ======================================== */
+
+  async function saveMaintenanceSettings() {
+    if (
+      maintenanceSaving
+    ) {
+      return;
+    }
+
+    setMaintenanceSaving(
+      true
+    );
+
+    setMessage("");
+
+    try {
+      const finalMessage =
+        maintenanceMessage.trim() ||
+        "現在システムメンテナンスを行っています。しばらくしてから再度アクセスしてください。";
+
+      const {
+        error,
+      } =
+        await supabase
+          .from(
+            "pokipo_app_settings"
+          )
+          .update({
+            maintenance_mode:
+              maintenanceMode,
+
+            maintenance_message:
+              finalMessage,
+
+            updated_at:
+              new Date().toISOString(),
+          })
+          .eq(
+            "id",
+            1
+          );
+
+      if (
+        error
+      ) {
+        console.error(
+          "メンテナンス設定保存エラー:",
+          error
+        );
+
+        setMessage(
+          "メンテナンス設定を保存できませんでした。"
+        );
+
+        return;
+      }
+
+      setMaintenanceMessage(
+        finalMessage
+      );
+
+      setMessage(
+        maintenanceMode
+          ? "メンテナンスモードをONにしました。"
+          : "メンテナンスモードをOFFにしました。"
+      );
+    } catch (
+      error
+    ) {
+      console.error(
+        "メンテナンス設定通信エラー:",
+        error
+      );
+
+      setMessage(
+        "メンテナンス設定の保存中にエラーが発生しました。"
+      );
+    } finally {
+      setMaintenanceSaving(
+        false
+      );
+    }
+  }
 
   /* ========================================
      LOGOUT
@@ -386,6 +559,159 @@ export default function StaffPage() {
         )}
 
         {/* =================================
+            MAINTENANCE
+        ================================= */}
+
+        <section className="staffMaintenanceCard">
+
+          <div className="staffMaintenanceHeader">
+
+            <div>
+
+              <span className="staffMaintenanceEyebrow">
+                SYSTEM CONTROL
+              </span>
+
+              <h2>
+                メンテナンスモード
+              </h2>
+
+              <p>
+                参加者向けPOKIPOを一時的に
+                メンテナンス画面へ切り替えます。
+              </p>
+
+            </div>
+
+            <div
+              className={
+                maintenanceMode
+                  ? "staffMaintenanceStatus active"
+                  : "staffMaintenanceStatus"
+              }
+            >
+
+              {maintenanceMode
+                ? "ON"
+                : "OFF"}
+
+            </div>
+
+          </div>
+
+          {maintenanceLoading ? (
+            <div className="staffMaintenanceLoading">
+              設定を読み込み中...
+            </div>
+          ) : (
+            <>
+
+              <button
+                type="button"
+                className={
+                  maintenanceMode
+                    ? "staffMaintenanceToggle active"
+                    : "staffMaintenanceToggle"
+                }
+                onClick={() =>
+                  setMaintenanceMode(
+                    (
+                      current
+                    ) =>
+                      !current
+                  )
+                }
+              >
+
+                <span className="staffMaintenanceToggleTrack">
+
+                  <span className="staffMaintenanceToggleKnob" />
+
+                </span>
+
+                <div>
+
+                  <strong>
+
+                    {maintenanceMode
+                      ? "メンテナンスモード ON"
+                      : "メンテナンスモード OFF"}
+
+                  </strong>
+
+                  <small>
+
+                    {maintenanceMode
+                      ? "保存すると参加者画面を停止します"
+                      : "現在は通常通り利用できます"}
+
+                  </small>
+
+                </div>
+
+              </button>
+
+              <div className="staffMaintenanceMessageField">
+
+                <label htmlFor="maintenanceMessage">
+                  参加者に表示する案内文
+                </label>
+
+                <textarea
+                  id="maintenanceMessage"
+                  value={
+                    maintenanceMessage
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    setMaintenanceMessage(
+                      event.target.value
+                    )
+                  }
+                  rows={
+                    5
+                  }
+                  maxLength={
+                    500
+                  }
+                  placeholder="例：現在システム調整を行っています。14:30頃の復旧を予定しています。"
+                />
+
+                <div className="staffMaintenanceMessageBottom">
+
+                  <span>
+                    {maintenanceMessage.length}
+                    /500
+                  </span>
+
+                </div>
+
+              </div>
+
+              <button
+                type="button"
+                className="staffMaintenanceSaveButton"
+                disabled={
+                  maintenanceSaving
+                }
+                onClick={() =>
+                  void saveMaintenanceSettings()
+                }
+              >
+
+                {maintenanceSaving
+                  ? "保存中..."
+                  : "設定を保存"}
+
+              </button>
+
+            </>
+          )}
+
+        </section>
+
+        {/* =================================
             MAIN MENU
         ================================= */}
 
@@ -508,9 +834,7 @@ export default function StaffPage() {
 
           </button>
 
-          {/* =================================
-              NOTICE
-          ================================= */}
+          {/* NOTICE */}
 
           <button
             type="button"

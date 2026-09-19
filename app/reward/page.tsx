@@ -22,6 +22,9 @@ import {
   supabase,
 } from "../../lib/supabase-client";
 
+import MaintenanceGate
+  from "../../components/MaintenanceGate";
+
 /* ========================================
    KNOWLEDGE
 ======================================== */
@@ -1244,719 +1247,713 @@ export default function RewardPage() {
   ======================================== */
 
   return (
-    <main className="shell">
+    <MaintenanceGate>
 
-      <section className="rewardPage">
+      <main className="shell">
 
-        <header className="rewardHeader">
+        <section className="rewardPage">
 
-          <button
-            type="button"
-            className="backButton"
-            onClick={() =>
-              router.push(
-                "/home"
-              )
-            }
-          >
-            ←
-          </button>
+          <header className="rewardHeader">
 
-          <div>
+            <button
+              type="button"
+              className="backButton"
+              onClick={() =>
+                router.push(
+                  "/home"
+                )
+              }
+            >
+              ←
+            </button>
 
-            <p>
-              COMPLETE REWARD
-            </p>
+            <div>
 
-            <h1>
-              コンプリート特典
-            </h1>
+              <p>
+                COMPLETE REWARD
+              </p>
 
-          </div>
-
-        </header>
-
-        <section
-          className={
-            completed
-              ? "rewardHero complete"
-              : "rewardHero"
-          }
-        >
-
-          <span className="rewardHeroMini">
-            POCKY COMPLETE
-          </span>
-
-          <div className="rewardHeroIcon">
-            ★
-          </div>
-
-          <h2>
-
-            {completed
-              ? "ポッキー完成！"
-              : "スタンプラリー挑戦中"}
-
-          </h2>
-
-          <p>
-
-            {completed
-              ? "5つすべてのスタンプを集めました。"
-              : `現在 ${progress}/5。あと${Math.max(
-                  0,
-                  5 - progress
-                )}個で完成です。`}
-
-          </p>
-
-        </section>
-
-        {/* =================================
-            COMPLETION RECORD
-        ================================= */}
-
-        {completed && (
-          <section className="rewardCompletionInfo">
-
-            <div className="rewardSectionTitle">
-
-              <span>
-                COMPLETION RECORD
-              </span>
-
-              <h2>
-                達成記録
-              </h2>
+              <h1>
+                コンプリート特典
+              </h1>
 
             </div>
 
-            <div className="rewardCompletionStats">
+          </header>
 
-              <div>
-
-                <span>
-                  COMPLETED AT
-                </span>
-
-                <strong>
-                  {loadingCompletion
-                    ? "読み込み中..."
-                    : completedAt ||
-                      "記録確認中"}
-                </strong>
-
-              </div>
-
-              <div>
-
-                <span>
-                  RANK
-                </span>
-
-                <strong>
-                  {loadingCompletion
-                    ? "—"
-                    : achievementRank !==
-                      null
-                    ? `${achievementRank}番目`
-                    : "—"}
-                </strong>
-
-              </div>
-
-            </div>
-
-          </section>
-        )}
-
-        {/* =================================
-            EXCHANGE DATE
-        ================================= */}
-
-        {completed && (
-          <section className="rewardExchangeDateNotice">
-
-            <span>
-              REWARD EXCHANGE DAY
-            </span>
-
-            <h2>
-              特典交換日は10月27日（火）です
-            </h2>
-
-            <p>
-              当日はこの画面に表示される交換用QRをスタッフに提示してください。
-            </p>
-
-          </section>
-        )}
-
-        {/* =================================
-            POST SURVEY
-        ================================= */}
-
-        {completed &&
-          !rewardExchanged && (
           <section
             className={
-              postSurveyCompleted
-                ? "rewardSurveyGate completed"
-                : "rewardSurveyGate"
+              completed
+                ? "rewardHero complete"
+                : "rewardHero"
             }
           >
 
-            <span>
-              AFTER SURVEY
+            <span className="rewardHeroMini">
+              POCKY COMPLETE
             </span>
 
-            {loadingPostSurvey ? (
-              <>
-
-                <h2>
-                  アンケート回答状況を確認中...
-                </h2>
-
-              </>
-            ) : postSurveyCompleted ? (
-              <>
-
-                <div className="rewardSurveyCheck">
-                  ✓
-                </div>
-
-                <h2>
-                  参加後アンケート回答済み
-                </h2>
-
-                <p>
-                  ご協力ありがとうございます。
-                  特典交換用QRを発行できます。
-                </p>
-
-              </>
-            ) : (
-              <>
-
-                <h2>
-                  特典交換まであと1ステップ！
-                </h2>
-
-                <p>
-                  POKIPO参加前後の変化を確認するため、
-                  参加後アンケートへの回答をお願いします。
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    router.push(
-                      "/survey/after"
-                    )
-                  }
-                >
-                  参加後アンケートに回答する
-                  <strong>
-                    →
-                  </strong>
-                </button>
-
-              </>
-            )}
-
-          </section>
-        )}
-
-        {/* =================================
-            REWARD EXCHANGE
-        ================================= */}
-
-        <section className="rewardExchangeSection">
-
-          <div className="rewardSectionTitle">
-
-            <span>
-              REWARD EXCHANGE
-            </span>
+            <div className="rewardHeroIcon">
+              ★
+            </div>
 
             <h2>
-              景品交換
+
+              {completed
+                ? "ポッキー完成！"
+                : "スタンプラリー挑戦中"}
+
             </h2>
 
-          </div>
+            <p>
 
-          {loadingRewardStatus ? (
-            <div className="rewardExchangeCard">
+              {completed
+                ? "5つすべてのスタンプを集めました。"
+                : `現在 ${progress}/5。あと${Math.max(
+                    0,
+                    5 - progress
+                  )}個で完成です。`}
 
-              <h3>
-                交換情報を確認中...
-              </h3>
+            </p>
 
-            </div>
-          ) : rewardExchanged ? (
-            <div className="rewardExchangeComplete">
+          </section>
 
-              <div className="rewardCompleteCheck">
-                ✓
-              </div>
+          {/* COMPLETION RECORD */}
 
-              <span>
-                REWARD EXCHANGED
-              </span>
+          {completed && (
+            <section className="rewardCompletionInfo">
 
-              <h3>
-                景品交換完了！
-              </h3>
-
-              {rewardExchangedAt && (
-                <p>
-                  交換日時：
-                  {rewardExchangedAt}
-                </p>
-              )}
-
-            </div>
-          ) : !completed ? (
-            <div className="rewardExchangeCard">
-
-              <h3>
-                まだ交換できません
-              </h3>
-
-              <p>
-                5つのスタンプを集めると交換できます。
-              </p>
-
-            </div>
-          ) : !postSurveyCompleted ? (
-            <div className="rewardExchangeCard locked">
-
-              <div className="rewardExchangeIcon">
-                🔒
-              </div>
-
-              <span>
-                SURVEY REQUIRED
-              </span>
-
-              <h3>
-                アンケート回答後にQRを発行できます
-              </h3>
-
-              <p>
-                上の「参加後アンケートに回答する」から回答してください。
-              </p>
-
-            </div>
-          ) : !rewardQrIssued ? (
-            <div className="rewardExchangeCard">
-
-              <div className="rewardExchangeIcon">
-                🎁
-              </div>
-
-              <span>
-                COMPLETE REWARD
-              </span>
-
-              <h3>
-                交換用QRを発行しよう
-              </h3>
-
-              <p>
-                学籍番号を数字8桁で入力してください。
-                <br />
-                学籍番号は景品交換者の管理のみに使用し、個人情報の特定には使用しません。
-              </p>
-
-              <div className="rewardStudentNumberField">
-
-                <label htmlFor="studentNumber">
-                  学籍番号
-                </label>
-
-                <input
-                  id="studentNumber"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={8}
-                  value={
-                    studentNumber
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    changeStudentNumber(
-                      event.target.value
-                    )
-                  }
-                  placeholder="数字8桁（間違いがないようにご注意ください）"
-                />
-
-              </div>
-
-              <button
-                type="button"
-                className="rewardExchangeButton"
-                onClick={
-                  issueRewardQr
-                }
-                disabled={
-                  issuingRewardQr ||
-                  studentNumber.length !==
-                    8
-                }
-              >
-
-                {issuingRewardQr
-                  ? "QRを発行中..."
-                  : "交換用QRを発行する"}
-
-              </button>
-
-            </div>
-          ) : (
-            <div className="rewardExchangeCard rewardQrCard">
-
-              <div className="rewardQrStatus">
-                READY TO EXCHANGE
-              </div>
-
-              <h3>
-                スタッフにQRを見せてください
-                <br />
-                （交換日は10月27日（火）です）
-              </h3>
-
-              <div className="rewardQrBox">
-
-                <QRCodeSVG
-                  value={`POKIPO_REWARD:${rewardToken}`}
-                  size={190}
-                  level="H"
-                  includeMargin
-                />
-
-              </div>
-
-              <div className="rewardStudentNumberMasked">
+              <div className="rewardSectionTitle">
 
                 <span>
-                  学籍番号
-                </span>
-
-                <strong>
-                  ****
-                  {studentNumber.slice(
-                    -4
-                  )}
-                </strong>
-
-              </div>
-
-            </div>
-          )}
-
-        </section>
-
-        {/* =================================
-            CERTIFICATE
-        ================================= */}
-
-        {rewardExchanged && (
-          <section className="certificateSection">
-
-            <div className="rewardSectionTitle">
-
-              <span>
-                COMPLETION CERTIFICATE
-              </span>
-
-              <h2>
-                達成証をつくる
-              </h2>
-
-            </div>
-
-            <div className="certificateSettingCard">
-
-              <div className="certificateSettingTitle">
-
-                <strong>
-                  掲載する達成者情報
-                </strong>
-
-              </div>
-
-              <div className="certificateProfileSelect">
-
-                <button
-                  type="button"
-                  className={
-                    showNickname
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    toggleProfile(
-                      "nickname"
-                    )
-                  }
-                >
-                  ニックネーム
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    showGrade
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    toggleProfile(
-                      "grade"
-                    )
-                  }
-                >
-                  学年
-                </button>
-
-                <button
-                  type="button"
-                  className={
-                    showDepartment
-                      ? "active"
-                      : ""
-                  }
-                  onClick={() =>
-                    toggleProfile(
-                      "department"
-                    )
-                  }
-                >
-                  学科
-                </button>
-
-              </div>
-
-            </div>
-
-            <div className="certificateSettingCard">
-
-              <div className="certificateSettingTitle">
-
-                <strong>
-                  一番「へぇ！」となった豆知識
-                </strong>
-
-              </div>
-
-              <div className="certificateKnowledgeSelect">
-
-                {knowledgeItems.map(
-                  (
-                    item
-                  ) => (
-                    <button
-                      key={
-                        item.id
-                      }
-                      type="button"
-                      className={
-                        item.id ===
-                        selectedKnowledgeId
-                          ? "active"
-                          : ""
-                      }
-                      onClick={() =>
-                        selectKnowledge(
-                          item.id
-                        )
-                      }
-                    >
-
-                      <span>
-                        {item.number}
-                      </span>
-
-                      <strong>
-                        {item.title}
-                      </strong>
-
-                    </button>
-                  )
-                )}
-
-              </div>
-
-            </div>
-
-            <div
-              ref={
-                certificateRef
-              }
-              className="certificateCard"
-            >
-
-              <div className="certificateTop">
-
-                <span>
-                  DOKKYO UNIVERSITY
+                  COMPLETION RECORD
                 </span>
 
                 <h2>
-                  POKIPO
+                  達成記録
                 </h2>
-
-                <strong>
-                  COMPLETION CERTIFICATE
-                </strong>
 
               </div>
 
-              <div className="certificateStats">
+              <div className="rewardCompletionStats">
 
-                <div className="certificateStatCard">
+                <div>
 
                   <span>
-                    ACHIEVED AT
+                    COMPLETED AT
                   </span>
 
                   <strong>
-                    {completedAt}
+                    {loadingCompletion
+                      ? "読み込み中..."
+                      : completedAt ||
+                        "記録確認中"}
                   </strong>
 
                 </div>
 
-                <div className="certificateStatCard rank">
+                <div>
 
                   <span>
                     RANK
                   </span>
 
                   <strong>
-                    {achievementRank ??
-                      "—"}
-                    番目
+                    {loadingCompletion
+                      ? "—"
+                      : achievementRank !==
+                        null
+                      ? `${achievementRank}番目`
+                      : "—"}
                   </strong>
 
                 </div>
 
               </div>
 
-              <div className="certificateProfileBlock">
+            </section>
+          )}
 
-                {showNickname && (
-                  <div className="certificateProfileItem">
-                    <span>NICKNAME</span>
-                    <strong>{nickname}</strong>
+          {/* EXCHANGE DATE */}
+
+          {completed && (
+            <section className="rewardExchangeDateNotice">
+
+              <span>
+                REWARD EXCHANGE DAY
+              </span>
+
+              <h2>
+                特典交換日は10月27日（火）です
+              </h2>
+
+              <p>
+                当日はこの画面に表示される交換用QRをスタッフに提示してください。
+              </p>
+
+            </section>
+          )}
+
+          {/* POST SURVEY */}
+
+          {completed &&
+            !rewardExchanged && (
+            <section
+              className={
+                postSurveyCompleted
+                  ? "rewardSurveyGate completed"
+                  : "rewardSurveyGate"
+              }
+            >
+
+              <span>
+                AFTER SURVEY
+              </span>
+
+              {loadingPostSurvey ? (
+                <>
+
+                  <h2>
+                    アンケート回答状況を確認中...
+                  </h2>
+
+                </>
+              ) : postSurveyCompleted ? (
+                <>
+
+                  <div className="rewardSurveyCheck">
+                    ✓
                   </div>
-                )}
 
-                {showGrade && (
-                  <div className="certificateProfileItem">
-                    <span>GRADE</span>
-                    <strong>{grade}</strong>
-                  </div>
-                )}
+                  <h2>
+                    参加後アンケート回答済み
+                  </h2>
 
-                {showDepartment && (
-                  <div className="certificateProfileItem">
-                    <span>DEPARTMENT</span>
-                    <strong>{department}</strong>
-                  </div>
-                )}
+                  <p>
+                    ご協力ありがとうございます。
+                    特典交換用QRを発行できます。
+                  </p>
 
-              </div>
+                </>
+              ) : (
+                <>
 
-              <div className="certificateKnowledgeBlock">
+                  <h2>
+                    特典交換まであと1ステップ！
+                  </h2>
 
-                <span>
-                  FAVORITE KNOWLEDGE
-                </span>
+                  <p>
+                    POKIPO参加前後の変化を確認するため、
+                    参加後アンケートへの回答をお願いします。
+                  </p>
 
-                <strong>
-                  {selectedKnowledge.title}
-                </strong>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      router.push(
+                        "/survey/after"
+                      )
+                    }
+                  >
+                    参加後アンケートに回答する
+                    <strong>
+                      →
+                    </strong>
+                  </button>
 
-              </div>
+                </>
+              )}
 
-              <div className="certificateFooter">
+            </section>
+          )}
 
-                <span>
-                  高安ゼミ LiPost × POCKY
-                </span>
+          {/* REWARD EXCHANGE */}
 
-                <strong>
-                  SHARE HAPPINESS!
-                </strong>
+          <section className="rewardExchangeSection">
 
-              </div>
+            <div className="rewardSectionTitle">
+
+              <span>
+                REWARD EXCHANGE
+              </span>
+
+              <h2>
+                景品交換
+              </h2>
 
             </div>
 
-            <div className="certificateActions">
+            {loadingRewardStatus ? (
+              <div className="rewardExchangeCard">
 
-              <button
-                type="button"
-                onClick={
-                  downloadCertificate
-                }
-              >
-                達成証を保存
-              </button>
+                <h3>
+                  交換情報を確認中...
+                </h3>
 
-              <button
-                type="button"
-                className="primary"
-                onClick={
-                  shareCertificate
-                }
-              >
-                SNSで共有
-              </button>
+              </div>
+            ) : rewardExchanged ? (
+              <div className="rewardExchangeComplete">
 
-            </div>
+                <div className="rewardCompleteCheck">
+                  ✓
+                </div>
+
+                <span>
+                  REWARD EXCHANGED
+                </span>
+
+                <h3>
+                  景品交換完了！
+                </h3>
+
+                {rewardExchangedAt && (
+                  <p>
+                    交換日時：
+                    {rewardExchangedAt}
+                  </p>
+                )}
+
+              </div>
+            ) : !completed ? (
+              <div className="rewardExchangeCard">
+
+                <h3>
+                  まだ交換できません
+                </h3>
+
+                <p>
+                  5つのスタンプを集めると交換できます。
+                </p>
+
+              </div>
+            ) : !postSurveyCompleted ? (
+              <div className="rewardExchangeCard locked">
+
+                <div className="rewardExchangeIcon">
+                  🔒
+                </div>
+
+                <span>
+                  SURVEY REQUIRED
+                </span>
+
+                <h3>
+                  アンケート回答後にQRを発行できます
+                </h3>
+
+                <p>
+                  上の「参加後アンケートに回答する」から回答してください。
+                </p>
+
+              </div>
+            ) : !rewardQrIssued ? (
+              <div className="rewardExchangeCard">
+
+                <div className="rewardExchangeIcon">
+                  🎁
+                </div>
+
+                <span>
+                  COMPLETE REWARD
+                </span>
+
+                <h3>
+                  交換用QRを発行しよう
+                </h3>
+
+                <p>
+                  学籍番号を数字8桁で入力してください。
+                  <br />
+                  学籍番号は景品交換者の管理のみに使用し、個人情報の特定には使用しません。
+                </p>
+
+                <div className="rewardStudentNumberField">
+
+                  <label htmlFor="studentNumber">
+                    学籍番号
+                  </label>
+
+                  <input
+                    id="studentNumber"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={8}
+                    value={
+                      studentNumber
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      changeStudentNumber(
+                        event.target.value
+                      )
+                    }
+                    placeholder="数字8桁（間違いがないようにご注意ください）"
+                  />
+
+                </div>
+
+                <button
+                  type="button"
+                  className="rewardExchangeButton"
+                  onClick={
+                    issueRewardQr
+                  }
+                  disabled={
+                    issuingRewardQr ||
+                    studentNumber.length !==
+                      8
+                  }
+                >
+
+                  {issuingRewardQr
+                    ? "QRを発行中..."
+                    : "交換用QRを発行する"}
+
+                </button>
+
+              </div>
+            ) : (
+              <div className="rewardExchangeCard rewardQrCard">
+
+                <div className="rewardQrStatus">
+                  READY TO EXCHANGE
+                </div>
+
+                <h3>
+                  スタッフにQRを見せてください
+                  <br />
+                  （交換日は10月27日（火）です）
+                </h3>
+
+                <div className="rewardQrBox">
+
+                  <QRCodeSVG
+                    value={`POKIPO_REWARD:${rewardToken}`}
+                    size={190}
+                    level="H"
+                    includeMargin
+                  />
+
+                </div>
+
+                <div className="rewardStudentNumberMasked">
+
+                  <span>
+                    学籍番号
+                  </span>
+
+                  <strong>
+                    ****
+                    {studentNumber.slice(
+                      -4
+                    )}
+                  </strong>
+
+                </div>
+
+              </div>
+            )}
 
           </section>
-        )}
 
-        {secretStamp && (
-          <section className="rewardSecretUnlocked">
+          {/* CERTIFICATE */}
 
-            <span>
-              SECRET MODE
-            </span>
+          {rewardExchanged && (
+            <section className="certificateSection">
 
-            <h2>
-              🎆 雄飛祭モード解放済み
-            </h2>
+              <div className="rewardSectionTitle">
 
-          </section>
-        )}
+                <span>
+                  COMPLETION CERTIFICATE
+                </span>
 
-        {message && (
-          <p className="rewardMessage">
-            {message}
-          </p>
-        )}
+                <h2>
+                  達成証をつくる
+                </h2>
 
-        <button
-          type="button"
-          className="rewardBackHomeButton"
-          onClick={() =>
-            router.push(
-              "/home"
-            )
-          }
-        >
-          トップへ戻る
-        </button>
+              </div>
 
-      </section>
+              <div className="certificateSettingCard">
 
-    </main>
+                <div className="certificateSettingTitle">
+
+                  <strong>
+                    掲載する達成者情報
+                  </strong>
+
+                </div>
+
+                <div className="certificateProfileSelect">
+
+                  <button
+                    type="button"
+                    className={
+                      showNickname
+                        ? "active"
+                        : ""
+                    }
+                    onClick={() =>
+                      toggleProfile(
+                        "nickname"
+                      )
+                    }
+                  >
+                    ニックネーム
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      showGrade
+                        ? "active"
+                        : ""
+                    }
+                    onClick={() =>
+                      toggleProfile(
+                        "grade"
+                      )
+                    }
+                  >
+                    学年
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      showDepartment
+                        ? "active"
+                        : ""
+                    }
+                    onClick={() =>
+                      toggleProfile(
+                        "department"
+                      )
+                    }
+                  >
+                    学科
+                  </button>
+
+                </div>
+
+              </div>
+
+              <div className="certificateSettingCard">
+
+                <div className="certificateSettingTitle">
+
+                  <strong>
+                    一番「へぇ！」となった豆知識
+                  </strong>
+
+                </div>
+
+                <div className="certificateKnowledgeSelect">
+
+                  {knowledgeItems.map(
+                    (
+                      item
+                    ) => (
+                      <button
+                        key={
+                          item.id
+                        }
+                        type="button"
+                        className={
+                          item.id ===
+                          selectedKnowledgeId
+                            ? "active"
+                            : ""
+                        }
+                        onClick={() =>
+                          selectKnowledge(
+                            item.id
+                          )
+                        }
+                      >
+
+                        <span>
+                          {item.number}
+                        </span>
+
+                        <strong>
+                          {item.title}
+                        </strong>
+
+                      </button>
+                    )
+                  )}
+
+                </div>
+
+              </div>
+
+              <div
+                ref={
+                  certificateRef
+                }
+                className="certificateCard"
+              >
+
+                <div className="certificateTop">
+
+                  <span>
+                    DOKKYO UNIVERSITY
+                  </span>
+
+                  <h2>
+                    POKIPO
+                  </h2>
+
+                  <strong>
+                    COMPLETION CERTIFICATE
+                  </strong>
+
+                </div>
+
+                <div className="certificateStats">
+
+                  <div className="certificateStatCard">
+
+                    <span>
+                      ACHIEVED AT
+                    </span>
+
+                    <strong>
+                      {completedAt}
+                    </strong>
+
+                  </div>
+
+                  <div className="certificateStatCard rank">
+
+                    <span>
+                      RANK
+                    </span>
+
+                    <strong>
+                      {achievementRank ??
+                        "—"}
+                      番目
+                    </strong>
+
+                  </div>
+
+                </div>
+
+                <div className="certificateProfileBlock">
+
+                  {showNickname && (
+                    <div className="certificateProfileItem">
+                      <span>NICKNAME</span>
+                      <strong>{nickname}</strong>
+                    </div>
+                  )}
+
+                  {showGrade && (
+                    <div className="certificateProfileItem">
+                      <span>GRADE</span>
+                      <strong>{grade}</strong>
+                    </div>
+                  )}
+
+                  {showDepartment && (
+                    <div className="certificateProfileItem">
+                      <span>DEPARTMENT</span>
+                      <strong>{department}</strong>
+                    </div>
+                  )}
+
+                </div>
+
+                <div className="certificateKnowledgeBlock">
+
+                  <span>
+                    FAVORITE KNOWLEDGE
+                  </span>
+
+                  <strong>
+                    {selectedKnowledge.title}
+                  </strong>
+
+                </div>
+
+                <div className="certificateFooter">
+
+                  <span>
+                    高安ゼミ LiPost × POCKY
+                  </span>
+
+                  <strong>
+                    SHARE HAPPINESS!
+                  </strong>
+
+                </div>
+
+              </div>
+
+              <div className="certificateActions">
+
+                <button
+                  type="button"
+                  onClick={
+                    downloadCertificate
+                  }
+                >
+                  達成証を保存
+                </button>
+
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={
+                    shareCertificate
+                  }
+                >
+                  SNSで共有
+                </button>
+
+              </div>
+
+            </section>
+          )}
+
+          {secretStamp && (
+            <section className="rewardSecretUnlocked">
+
+              <span>
+                SECRET MODE
+              </span>
+
+              <h2>
+                🎆 雄飛祭モード解放済み
+              </h2>
+
+            </section>
+          )}
+
+          {message && (
+            <p className="rewardMessage">
+              {message}
+            </p>
+          )}
+
+          <button
+            type="button"
+            className="rewardBackHomeButton"
+            onClick={() =>
+              router.push(
+                "/home"
+              )
+            }
+          >
+            トップへ戻る
+          </button>
+
+        </section>
+
+      </main>
+
+    </MaintenanceGate>
   );
 }

@@ -13,6 +13,9 @@ import {
   supabase,
 } from "../../lib/supabase-client";
 
+import MaintenanceGate
+  from "../../components/MaintenanceGate";
+
 /* ========================================
    KNOWLEDGE DATA
 ======================================== */
@@ -298,298 +301,302 @@ export default function KnowledgePage() {
   ======================================== */
 
   return (
-    <main className="shell">
+    <MaintenanceGate>
 
-      <section className="card knowledgePage">
+      <main className="shell">
 
-        {/* =================================
-            HEADER
-        ================================= */}
+        <section className="card knowledgePage">
 
-        <header className="knowledgeHeader">
+          {/* =================================
+              HEADER
+          ================================= */}
+
+          <header className="knowledgeHeader">
+
+            <button
+              type="button"
+              className="backButton"
+              onClick={() =>
+                router.push(
+                  "/home"
+                )
+              }
+            >
+              ←
+            </button>
+
+            <div>
+
+              <p className="knowledgeEyebrow">
+                POCKY KNOWLEDGE
+              </p>
+
+              <h1>
+                ポッキー豆知識
+              </h1>
+
+            </div>
+
+            <div className="knowledgeCountBadge">
+              {unlockedCount}/5
+            </div>
+
+          </header>
+
+          {/* =================================
+              HERO
+          ================================= */}
+
+          <section
+            className={
+              complete
+                ? "knowledgeHero complete"
+                : "knowledgeHero"
+            }
+          >
+
+            <span className="knowledgeHeroMini">
+              KNOWLEDGE COLLECTION
+            </span>
+
+            <div className="knowledgeHeroIcon">
+              ?
+            </div>
+
+            <h2>
+
+              {complete
+                ? "豆知識コンプリート！"
+                : "集めた豆知識を見てみよう"}
+
+            </h2>
+
+            <p>
+
+              {complete
+                ? "5つすべての豆知識を集めました！"
+                : `現在 ${unlockedCount}/5。スタンプラリーを進めて豆知識を集めよう。`}
+
+            </p>
+
+          </section>
+
+          {/* =================================
+              PROGRESS
+          ================================= */}
+
+          <section className="knowledgeProgressCard">
+
+            <div className="knowledgeProgressTop">
+
+              <span>
+                COLLECTION
+              </span>
+
+              <strong>
+                {unlockedCount}/5
+              </strong>
+
+            </div>
+
+            <div className="knowledgeProgressBar">
+
+              <div
+                className="knowledgeProgressFill"
+                style={{
+                  width:
+                    `${Math.min(
+                      unlockedCount *
+                        20,
+                      100
+                    )}%`,
+                }}
+              />
+
+            </div>
+
+          </section>
+
+          {/* =================================
+              LOADING
+          ================================= */}
+
+          {loading && (
+            <section className="knowledgeLoadingCard">
+
+              <span>
+                読み込み中...
+              </span>
+
+            </section>
+          )}
+
+          {/* =================================
+              KNOWLEDGE LIST
+          ================================= */}
+
+          {!loading && (
+            <section className="knowledgeList">
+
+              {knowledgeItems.map(
+                (
+                  item
+                ) => {
+                  const unlocked =
+                    unlockedKnowledge.includes(
+                      item.id
+                    );
+
+                  return (
+                    <article
+                      key={
+                        item.id
+                      }
+                      className={
+                        unlocked
+                          ? "knowledgeCard unlocked"
+                          : "knowledgeCard locked"
+                      }
+                    >
+
+                      {/* =========================
+                          NUMBER
+                      ========================== */}
+
+                      <div className="knowledgeNumber">
+
+                        {unlocked
+                          ? item.number
+                          : "?"}
+
+                      </div>
+
+                      {/* =========================
+                          CONTENT
+                      ========================== */}
+
+                      <div className="knowledgeContent">
+
+                        <span className="knowledgeStatus">
+
+                          {unlocked
+                            ? "UNLOCKED"
+                            : "LOCKED"}
+
+                        </span>
+
+                        {unlocked ? (
+                          <>
+
+                            <h2>
+                              {item.title}
+                            </h2>
+
+                            <p>
+                              {item.text}
+                            </p>
+
+                          </>
+                        ) : (
+                          <>
+
+                            <h2>
+                              まだ解放されていません
+                            </h2>
+
+                            <p>
+                              QRコードを読み取って、
+                              トリビアに正解すると
+                              この豆知識が解放されます。
+                            </p>
+
+                          </>
+                        )}
+
+                      </div>
+
+                      {/* =========================
+                          ICON
+                      ========================== */}
+
+                      <div
+                        className={
+                          unlocked
+                            ? "knowledgeLockIcon unlocked"
+                            : "knowledgeLockIcon"
+                        }
+                      >
+
+                        {unlocked
+                          ? "✓"
+                          : "🔒"}
+
+                      </div>
+
+                    </article>
+                  );
+                }
+              )}
+
+            </section>
+          )}
+
+          {/* =================================
+              COMPLETE
+          ================================= */}
+
+          {complete && (
+            <section className="knowledgeCompleteCard">
+
+              <div>
+                ★
+              </div>
+
+              <span>
+                COMPLETE!
+              </span>
+
+              <h2>
+                全豆知識コンプリート！
+              </h2>
+
+              <p>
+                5つすべてのポッキー豆知識を集めました。
+              </p>
+
+            </section>
+          )}
+
+          {/* =================================
+              MESSAGE
+          ================================= */}
+
+          {message && (
+            <p className="knowledgeMessage">
+              {message}
+            </p>
+          )}
+
+          {/* =================================
+              HOME BUTTON
+          ================================= */}
 
           <button
             type="button"
-            className="backButton"
+            className="knowledgeHomeButton"
             onClick={() =>
               router.push(
                 "/home"
               )
             }
           >
-            ←
+            トップへ戻る
           </button>
 
-          <div>
-
-            <p className="knowledgeEyebrow">
-              POCKY KNOWLEDGE
-            </p>
-
-            <h1>
-              ポッキー豆知識
-            </h1>
-
-          </div>
-
-          <div className="knowledgeCountBadge">
-            {unlockedCount}/5
-          </div>
-
-        </header>
-
-        {/* =================================
-            HERO
-        ================================= */}
-
-        <section
-          className={
-            complete
-              ? "knowledgeHero complete"
-              : "knowledgeHero"
-          }
-        >
-
-          <span className="knowledgeHeroMini">
-            KNOWLEDGE COLLECTION
-          </span>
-
-          <div className="knowledgeHeroIcon">
-            ?
-          </div>
-
-          <h2>
-
-            {complete
-              ? "豆知識コンプリート！"
-              : "集めた豆知識を見てみよう"}
-
-          </h2>
-
-          <p>
-
-            {complete
-              ? "5つすべての豆知識を集めました！"
-              : `現在 ${unlockedCount}/5。スタンプラリーを進めて豆知識を集めよう。`}
-
-          </p>
-
         </section>
 
-        {/* =================================
-            PROGRESS
-        ================================= */}
+      </main>
 
-        <section className="knowledgeProgressCard">
-
-          <div className="knowledgeProgressTop">
-
-            <span>
-              COLLECTION
-            </span>
-
-            <strong>
-              {unlockedCount}/5
-            </strong>
-
-          </div>
-
-          <div className="knowledgeProgressBar">
-
-            <div
-              className="knowledgeProgressFill"
-              style={{
-                width:
-                  `${Math.min(
-                    unlockedCount *
-                      20,
-                    100
-                  )}%`,
-              }}
-            />
-
-          </div>
-
-        </section>
-
-        {/* =================================
-            LOADING
-        ================================= */}
-
-        {loading && (
-          <section className="knowledgeLoadingCard">
-
-            <span>
-              読み込み中...
-            </span>
-
-          </section>
-        )}
-
-        {/* =================================
-            KNOWLEDGE LIST
-        ================================= */}
-
-        {!loading && (
-          <section className="knowledgeList">
-
-            {knowledgeItems.map(
-              (
-                item
-              ) => {
-                const unlocked =
-                  unlockedKnowledge.includes(
-                    item.id
-                  );
-
-                return (
-                  <article
-                    key={
-                      item.id
-                    }
-                    className={
-                      unlocked
-                        ? "knowledgeCard unlocked"
-                        : "knowledgeCard locked"
-                    }
-                  >
-
-                    {/* =========================
-                        NUMBER
-                    ========================== */}
-
-                    <div className="knowledgeNumber">
-
-                      {unlocked
-                        ? item.number
-                        : "?"}
-
-                    </div>
-
-                    {/* =========================
-                        CONTENT
-                    ========================== */}
-
-                    <div className="knowledgeContent">
-
-                      <span className="knowledgeStatus">
-
-                        {unlocked
-                          ? "UNLOCKED"
-                          : "LOCKED"}
-
-                      </span>
-
-                      {unlocked ? (
-                        <>
-
-                          <h2>
-                            {item.title}
-                          </h2>
-
-                          <p>
-                            {item.text}
-                          </p>
-
-                        </>
-                      ) : (
-                        <>
-
-                          <h2>
-                            まだ解放されていません
-                          </h2>
-
-                          <p>
-                            QRコードを読み取って、
-                            トリビアに正解すると
-                            この豆知識が解放されます。
-                          </p>
-
-                        </>
-                      )}
-
-                    </div>
-
-                    {/* =========================
-                        ICON
-                    ========================== */}
-
-                    <div
-                      className={
-                        unlocked
-                          ? "knowledgeLockIcon unlocked"
-                          : "knowledgeLockIcon"
-                      }
-                    >
-
-                      {unlocked
-                        ? "✓"
-                        : "🔒"}
-
-                    </div>
-
-                  </article>
-                );
-              }
-            )}
-
-          </section>
-        )}
-
-        {/* =================================
-            COMPLETE
-        ================================= */}
-
-        {complete && (
-          <section className="knowledgeCompleteCard">
-
-            <div>
-              ★
-            </div>
-
-            <span>
-              COMPLETE!
-            </span>
-
-            <h2>
-              全豆知識コンプリート！
-            </h2>
-
-            <p>
-              5つすべてのポッキー豆知識を集めました。
-            </p>
-
-          </section>
-        )}
-
-        {/* =================================
-            MESSAGE
-        ================================= */}
-
-        {message && (
-          <p className="knowledgeMessage">
-            {message}
-          </p>
-        )}
-
-        {/* =================================
-            HOME BUTTON
-        ================================= */}
-
-        <button
-          type="button"
-          className="knowledgeHomeButton"
-          onClick={() =>
-            router.push(
-              "/home"
-            )
-          }
-        >
-          トップへ戻る
-        </button>
-
-      </section>
-
-    </main>
+    </MaintenanceGate>
   );
 }

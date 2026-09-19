@@ -13,6 +13,9 @@ import {
   supabase,
 } from "../../../lib/supabase-client";
 
+import MaintenanceGate
+  from "../../../components/MaintenanceGate";
+
 type PreSurvey = {
   gender: string;
   pocky_frequency: string;
@@ -484,353 +487,361 @@ export default function AfterSurveyPage() {
     loading
   ) {
     return (
-      <main className="shell">
+      <MaintenanceGate>
 
-        <section className="surveyPage">
+        <main className="shell">
 
-          <div className="surveyLoading">
-            アンケート情報を確認中...
-          </div>
+          <section className="surveyPage">
 
-        </section>
+            <div className="surveyLoading">
+              アンケート情報を確認中...
+            </div>
 
-      </main>
+          </section>
+
+        </main>
+
+      </MaintenanceGate>
     );
   }
 
   return (
-    <main className="shell">
+    <MaintenanceGate>
 
-      <section className="surveyPage">
+      <main className="shell">
 
-        <header className="surveyHeader">
+        <section className="surveyPage">
 
-          <span>
-            AFTER POKIPO
-          </span>
-
-          <h1>
-            参加後アンケート
-          </h1>
-
-          <p>
-            POKIPOを体験した後の、
-            現在の気持ちを教えてください。
-          </p>
-
-        </header>
-
-        {/* =================================
-            BEFORE ANSWERS
-        ================================= */}
-
-        {preSurvey && (
-          <section className="surveyBeforeSummary">
+          <header className="surveyHeader">
 
             <span>
-              YOUR BEFORE ANSWERS
+              AFTER POKIPO
+            </span>
+
+            <h1>
+              参加後アンケート
+            </h1>
+
+            <p>
+              POKIPOを体験した後の、
+              現在の気持ちを教えてください。
+            </p>
+
+          </header>
+
+          {/* =================================
+              BEFORE ANSWERS
+          ================================= */}
+
+          {preSurvey && (
+            <section className="surveyBeforeSummary">
+
+              <span>
+                YOUR BEFORE ANSWERS
+              </span>
+
+              <h2>
+                参加前のあなたの回答
+              </h2>
+
+              <p>
+                参加前の回答を参考にしながら、
+                現在の気持ちを回答してください。
+              </p>
+
+              <div className="surveyBeforeSummaryGrid">
+
+                <div>
+
+                  <span>
+                    食べる頻度
+                  </span>
+
+                  <strong>
+                    {preSurvey.pocky_frequency}
+                  </strong>
+
+                </div>
+
+                <div>
+
+                  <span>
+                    リニューアル認知
+                  </span>
+
+                  <strong>
+                    {preSurvey.knew_renewal
+                      ? "知っていた"
+                      : "知らなかった"}
+                  </strong>
+
+                </div>
+
+                <div>
+
+                  <span>
+                    シェア経験
+                  </span>
+
+                  <strong>
+                    {preSurvey.has_shared_pocky
+                      ? "あり"
+                      : "なし"}
+                  </strong>
+
+                </div>
+
+                <div>
+
+                  <span>
+                    ポッキーへの興味
+                  </span>
+
+                  <strong>
+                    {preSurvey.interest_score}/4
+                  </strong>
+
+                  <small>
+                    {scoreLabel(
+                      "interest",
+                      preSurvey.interest_score
+                    )}
+                  </small>
+
+                </div>
+
+                <div>
+
+                  <span>
+                    食べたい気持ち
+                  </span>
+
+                  <strong>
+                    {preSurvey.eat_intent_score}/4
+                  </strong>
+
+                  <small>
+                    {scoreLabel(
+                      "intent",
+                      preSurvey.eat_intent_score
+                    )}
+                  </small>
+
+                </div>
+
+                <div>
+
+                  <span>
+                    シェア意向
+                  </span>
+
+                  <strong>
+                    {preSurvey.share_intent_score}/4
+                  </strong>
+
+                  <small>
+                    {scoreLabel(
+                      "intent",
+                      preSurvey.share_intent_score
+                    )}
+                  </small>
+
+                </div>
+
+              </div>
+
+              {preSurvey.has_shared_pocky &&
+                preSurvey.share_situation && (
+                  <div className="surveyBeforeShareSituation">
+
+                    <span>
+                      シェアする場面
+                    </span>
+
+                    <p>
+                      {preSurvey.share_situation}
+                    </p>
+
+                  </div>
+                )}
+
+            </section>
+          )}
+
+          <section className="surveyComparisonIntro">
+
+            <span>
+              BEFORE / AFTER
             </span>
 
             <h2>
-              参加前のあなたの回答
+              参加後の気持ちを教えてください
             </h2>
 
             <p>
-              参加前の回答を参考にしながら、
-              現在の気持ちを回答してください。
+              次の3問は参加前と同じ質問です。
+              POKIPOを体験した現在の気持ちを選んでください。
             </p>
 
-            <div className="surveyBeforeSummaryGrid">
+          </section>
 
-              <div>
+          {/* Q1 */}
 
-                <span>
-                  食べる頻度
-                </span>
+          <section className="surveyQuestionCard">
 
-                <strong>
-                  {preSurvey.pocky_frequency}
-                </strong>
+            <div className="surveyQuestionNumber">
+              01
+            </div>
 
-              </div>
+            <h2>
+              現在、ポッキーにどの程度興味がありますか？
+            </h2>
 
-              <div>
+            {renderScoreQuestion(
+              interestOptions,
+              interestScore,
+              setInterestScore
+            )}
 
-                <span>
-                  リニューアル認知
-                </span>
+          </section>
 
-                <strong>
-                  {preSurvey.knew_renewal
-                    ? "知っていた"
-                    : "知らなかった"}
-                </strong>
+          {/* Q2 */}
 
-              </div>
+          <section className="surveyQuestionCard">
 
-              <div>
+            <div className="surveyQuestionNumber">
+              02
+            </div>
 
-                <span>
-                  シェア経験
-                </span>
+            <h2>
+              今後、ポッキーを食べたいと思いますか？
+            </h2>
 
-                <strong>
-                  {preSurvey.has_shared_pocky
-                    ? "あり"
-                    : "なし"}
-                </strong>
+            {renderScoreQuestion(
+              intentOptions,
+              eatIntentScore,
+              setEatIntentScore
+            )}
 
-              </div>
+          </section>
 
-              <div>
+          {/* Q3 */}
 
-                <span>
-                  ポッキーへの興味
-                </span>
+          <section className="surveyQuestionCard">
 
-                <strong>
-                  {preSurvey.interest_score}/4
-                </strong>
+            <div className="surveyQuestionNumber">
+              03
+            </div>
 
-                <small>
-                  {scoreLabel(
-                    "interest",
-                    preSurvey.interest_score
-                  )}
-                </small>
+            <h2>
+              今後、ポッキーを誰かとシェアして食べたいと思いますか？
+            </h2>
 
-              </div>
+            {renderScoreQuestion(
+              intentOptions,
+              shareIntentScore,
+              setShareIntentScore
+            )}
 
-              <div>
+          </section>
 
-                <span>
-                  食べたい気持ち
-                </span>
+          {/* Q4 */}
 
-                <strong>
-                  {preSurvey.eat_intent_score}/4
-                </strong>
+          <section className="surveyQuestionCard">
 
-                <small>
-                  {scoreLabel(
-                    "intent",
-                    preSurvey.eat_intent_score
-                  )}
-                </small>
+            <div className="surveyQuestionNumber">
+              04
+            </div>
 
-              </div>
+            <h2>
+              POKIPOを通じて、ポッキーのリニューアル内容をどの程度知ることができましたか？
+            </h2>
 
-              <div>
+            {renderScoreQuestion(
+              understandingOptions,
+              renewalUnderstandingScore,
+              setRenewalUnderstandingScore
+            )}
 
-                <span>
-                  シェア意向
-                </span>
+          </section>
 
-                <strong>
-                  {preSurvey.share_intent_score}/4
-                </strong>
+          {/* Q5 */}
 
-                <small>
-                  {scoreLabel(
-                    "intent",
-                    preSurvey.share_intent_score
-                  )}
-                </small>
+          <section className="surveyQuestionCard">
 
-              </div>
+            <div className="surveyQuestionNumber">
+              05
+            </div>
+
+            <h2>
+              POKIPOで一番印象に残ったことを教えてください
+            </h2>
+
+            <div className="surveyTextField">
+
+              <textarea
+                value={
+                  memorablePoint
+                }
+                onChange={(
+                  event
+                ) =>
+                  setMemorablePoint(
+                    event.target.value
+                  )
+                }
+                maxLength={
+                  500
+                }
+                rows={
+                  6
+                }
+                placeholder="自由に入力してください（任意）"
+              />
+
+              <span>
+                {memorablePoint.length}/500
+              </span>
 
             </div>
 
-            {preSurvey.has_shared_pocky &&
-              preSurvey.share_situation && (
-                <div className="surveyBeforeShareSituation">
-
-                  <span>
-                    シェアする場面
-                  </span>
-
-                  <p>
-                    {preSurvey.share_situation}
-                  </p>
-
-                </div>
-              )}
-
           </section>
-        )}
 
-        <section className="surveyComparisonIntro">
-
-          <span>
-            BEFORE / AFTER
-          </span>
-
-          <h2>
-            参加後の気持ちを教えてください
-          </h2>
-
-          <p>
-            次の3問は参加前と同じ質問です。
-            POKIPOを体験した現在の気持ちを選んでください。
-          </p>
-
-        </section>
-
-        {/* Q1 */}
-
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            01
-          </div>
-
-          <h2>
-            現在、ポッキーにどの程度興味がありますか？
-          </h2>
-
-          {renderScoreQuestion(
-            interestOptions,
-            interestScore,
-            setInterestScore
+          {message && (
+            <p className="surveyError">
+              {message}
+            </p>
           )}
 
-        </section>
-
-        {/* Q2 */}
-
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            02
-          </div>
-
-          <h2>
-            今後、ポッキーを食べたいと思いますか？
-          </h2>
-
-          {renderScoreQuestion(
-            intentOptions,
-            eatIntentScore,
-            setEatIntentScore
-          )}
-
-        </section>
-
-        {/* Q3 */}
-
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            03
-          </div>
-
-          <h2>
-            今後、ポッキーを誰かとシェアして食べたいと思いますか？
-          </h2>
-
-          {renderScoreQuestion(
-            intentOptions,
-            shareIntentScore,
-            setShareIntentScore
-          )}
-
-        </section>
-
-        {/* Q4 */}
-
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            04
-          </div>
-
-          <h2>
-            POKIPOを通じて、ポッキーのリニューアル内容をどの程度知ることができましたか？
-          </h2>
-
-          {renderScoreQuestion(
-            understandingOptions,
-            renewalUnderstandingScore,
-            setRenewalUnderstandingScore
-          )}
-
-        </section>
-
-        {/* Q5 */}
-
-        <section className="surveyQuestionCard">
-
-          <div className="surveyQuestionNumber">
-            05
-          </div>
-
-          <h2>
-            POKIPOで一番印象に残ったことを教えてください
-          </h2>
-
-          <div className="surveyTextField">
-
-            <textarea
-              value={
-                memorablePoint
-              }
-              onChange={(
-                event
-              ) =>
-                setMemorablePoint(
-                  event.target.value
-                )
-              }
-              maxLength={
-                500
-              }
-              rows={
-                6
-              }
-              placeholder="自由に入力してください（任意）"
-            />
+          <button
+            type="button"
+            className="surveySubmitButton"
+            onClick={
+              submitSurvey
+            }
+            disabled={
+              submitting
+            }
+          >
 
             <span>
-              {memorablePoint.length}/500
+
+              {submitting
+                ? "回答を保存中..."
+                : "回答して特典交換へ進む"}
+
             </span>
 
-          </div>
+            <strong>
+              →
+            </strong>
+
+          </button>
 
         </section>
 
-        {message && (
-          <p className="surveyError">
-            {message}
-          </p>
-        )}
+      </main>
 
-        <button
-          type="button"
-          className="surveySubmitButton"
-          onClick={
-            submitSurvey
-          }
-          disabled={
-            submitting
-          }
-        >
-
-          <span>
-
-            {submitting
-              ? "回答を保存中..."
-              : "回答して特典交換へ進む"}
-
-          </span>
-
-          <strong>
-            →
-          </strong>
-
-        </button>
-
-      </section>
-
-    </main>
+    </MaintenanceGate>
   );
 }

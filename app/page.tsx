@@ -25,9 +25,37 @@ const INTRO_STORAGE_KEY =
 const INTRO_VIDEO_PATH =
   "/videos/pokipo-intro.mp4";
 
+/* ========================================
+   DEFAULT MAINTENANCE MESSAGE
+======================================== */
+
+const DEFAULT_MAINTENANCE_MESSAGE =
+  "現在システムメンテナンスを行っています。しばらくしてから再度アクセスしてください。";
+
 export default function StartPage() {
   const router =
     useRouter();
+
+  /* ========================================
+     MAINTENANCE
+  ======================================== */
+
+  const [
+    maintenanceChecking,
+    setMaintenanceChecking,
+  ] = useState(true);
+
+  const [
+    maintenanceMode,
+    setMaintenanceMode,
+  ] = useState(false);
+
+  const [
+    maintenanceMessage,
+    setMaintenanceMessage,
+  ] = useState(
+    DEFAULT_MAINTENANCE_MESSAGE
+  );
 
   /* ========================================
      VIDEO INTRO
@@ -101,10 +129,170 @@ export default function StartPage() {
   ] = useState(true);
 
   /* ========================================
+     MAINTENANCE CHECK
+  ======================================== */
+
+  useEffect(() => {
+    async function loadMaintenanceSetting() {
+      const {
+        data,
+        error,
+      } =
+        await supabase
+          .from(
+            "pokipo_app_settings"
+          )
+          .select(
+            "maintenance_mode, maintenance_message"
+          )
+          .eq(
+            "id",
+            1
+          )
+          .single();
+
+      if (
+        error
+      ) {
+        console.error(
+          "メンテナンス設定取得エラー:",
+          error
+        );
+
+        /*
+          設定取得に失敗した場合は
+          通常運用を継続
+        */
+
+        setMaintenanceMode(
+          false
+        );
+
+        setMaintenanceMessage(
+          DEFAULT_MAINTENANCE_MESSAGE
+        );
+
+        setMaintenanceChecking(
+          false
+        );
+
+        return;
+      }
+
+      setMaintenanceMode(
+        Boolean(
+          data?.maintenance_mode
+        )
+      );
+
+      setMaintenanceMessage(
+        data?.maintenance_message?.trim() ||
+          DEFAULT_MAINTENANCE_MESSAGE
+      );
+
+      setMaintenanceChecking(
+        false
+      );
+    }
+
+    void loadMaintenanceSetting();
+
+    /* ========================================
+       REALTIME
+    ======================================== */
+
+    const maintenanceChannel =
+      supabase
+        .channel(
+          "pokipo-maintenance-live"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event:
+              "*",
+
+            schema:
+              "public",
+
+            table:
+              "pokipo_app_settings",
+
+            filter:
+              "id=eq.1",
+          },
+          (
+            payload
+          ) => {
+            const newData =
+              payload.new as {
+                maintenance_mode?:
+                  boolean;
+
+                maintenance_message?:
+                  string;
+              };
+
+            if (
+              typeof newData.maintenance_mode ===
+              "boolean"
+            ) {
+              setMaintenanceMode(
+                newData.maintenance_mode
+              );
+            }
+
+            if (
+              typeof newData.maintenance_message ===
+              "string"
+            ) {
+              setMaintenanceMessage(
+                newData.maintenance_message.trim() ||
+                  DEFAULT_MAINTENANCE_MESSAGE
+              );
+            }
+          }
+        )
+        .subscribe();
+
+    return () => {
+      supabase.removeChannel(
+        maintenanceChannel
+      );
+    };
+  }, []);
+
+  /* ========================================
      既存参加者チェック
   ======================================== */
 
   useEffect(() => {
+    /*
+      メンテナンス設定確認中は
+      既存参加者判定を待つ
+    */
+
+    if (
+      maintenanceChecking
+    ) {
+      return;
+    }
+
+    /*
+      メンテナンス中は
+      通常画面へ進ませない
+    */
+
+    if (
+      maintenanceMode
+    ) {
+      setCheckingRegistration(
+        false
+      );
+
+      return;
+    }
+
     async function checkExistingParticipant() {
       const savedParticipantId =
         localStorage.getItem(
@@ -127,11 +315,6 @@ export default function StartPage() {
         !savedParticipantId ||
         !savedNickname
       ) {
-        /*
-          未登録ユーザーだけ
-          初回イントロを判定
-        */
-
         const introSeen =
           localStorage.getItem(
             INTRO_STORAGE_KEY
@@ -172,11 +355,6 @@ export default function StartPage() {
           error
         );
 
-        /*
-          通信エラー時は
-          初期登録をやり直させない
-        */
-
         router.replace(
           "/survey/before"
         );
@@ -202,6 +380,8 @@ export default function StartPage() {
     void checkExistingParticipant();
   }, [
     router,
+    maintenanceChecking,
+    maintenanceMode,
   ]);
 
   /* ========================================
@@ -280,18 +460,9 @@ export default function StartPage() {
       video.pause();
     }
 
-    /*
-      1. カーテンを閉じる
-    */
-
     setCurtainClosing(
       true
     );
-
-    /*
-      2. 閉じ切ったあと
-         初回視聴済みにする
-    */
 
     window.setTimeout(
       () => {
@@ -300,17 +471,9 @@ export default function StartPage() {
           "true"
         );
 
-        /*
-          3. カーテンを開く
-        */
-
         setCurtainOpening(
           true
         );
-
-        /*
-          4. イントロ全体を消す
-        */
 
         window.setTimeout(
           () => {
@@ -360,10 +523,6 @@ export default function StartPage() {
     const name =
       nickname.trim();
 
-    /* --------------------------------
-       VALIDATION
-    -------------------------------- */
-
     if (
       name.length < 2 ||
       name.length > 20
@@ -402,16 +561,8 @@ export default function StartPage() {
     setMessage("");
 
     try {
-      /* =================================
-         PARTICIPANT ID
-      ================================= */
-
       const participantId =
         crypto.randomUUID();
-
-      /* =================================
-         SUPABASE
-      ================================= */
 
       const {
         error,
@@ -459,19 +610,10 @@ export default function StartPage() {
         return;
       }
 
-      /* =================================
-         LOCAL STORAGE
-      ================================= */
-
       localStorage.setItem(
         "pokipo_participant_id",
         participantId
       );
-
-      /*
-        既存ページとの互換性のため
-        user_idにも同じIDを保存
-      */
 
       localStorage.setItem(
         "pokipo_user_id",
@@ -493,10 +635,6 @@ export default function StartPage() {
         department
       );
 
-      /* =================================
-         スタンプ初期化
-      ================================= */
-
       localStorage.setItem(
         "pokipo_scans",
         JSON.stringify([])
@@ -507,18 +645,10 @@ export default function StartPage() {
         "0"
       );
 
-      /* =================================
-         KNOWLEDGE
-      ================================= */
-
       localStorage.setItem(
         "pokipo_knowledge",
         JSON.stringify([])
       );
-
-      /* =================================
-         COMPLETE
-      ================================= */
 
       localStorage.setItem(
         "pokipo_completed",
@@ -532,10 +662,6 @@ export default function StartPage() {
       localStorage.removeItem(
         "pokipo_achievement_rank"
       );
-
-      /* =================================
-         REWARD
-      ================================= */
 
       localStorage.setItem(
         "pokipo_reward_exchanged",
@@ -554,10 +680,6 @@ export default function StartPage() {
         "pokipo_reward_token"
       );
 
-      /* =================================
-         SURVEY
-      ================================= */
-
       localStorage.removeItem(
         "pokipo_pre_survey_completed"
       );
@@ -565,10 +687,6 @@ export default function StartPage() {
       localStorage.removeItem(
         "pokipo_post_survey_completed"
       );
-
-      /* =================================
-         NEXT
-      ================================= */
 
       router.push(
         "/survey/before"
@@ -589,6 +707,91 @@ export default function StartPage() {
         false
       );
     }
+  }
+
+  /* ========================================
+     MAINTENANCE CHECKING
+  ======================================== */
+
+  if (
+    maintenanceChecking
+  ) {
+    return (
+      <main className="shell">
+
+        <section className="card startPage">
+
+          <div
+            style={{
+              padding:
+                "40px 20px",
+
+              textAlign:
+                "center",
+            }}
+          >
+            POKIPOを読み込み中...
+          </div>
+
+        </section>
+
+      </main>
+    );
+  }
+
+  /* ========================================
+     MAINTENANCE
+  ======================================== */
+
+  if (
+    maintenanceMode
+  ) {
+    return (
+      <main className="maintenancePage">
+
+        <section className="maintenanceCard">
+
+          <span className="maintenanceEyebrow">
+            POKIPO SYSTEM
+          </span>
+
+          <div className="maintenanceIcon">
+            !
+          </div>
+
+          <h1>
+            ただいま
+            <br />
+            メンテナンス中です
+          </h1>
+
+          <p className="maintenanceMessage">
+            {maintenanceMessage}
+          </p>
+
+          <div className="maintenanceDivider" />
+
+          <p className="maintenanceSubMessage">
+            復旧後、このページを再読み込みすると
+            POKIPOをご利用いただけます。
+          </p>
+
+          <div className="maintenanceBrand">
+
+            <strong>
+              POKIPO
+            </strong>
+
+            <span>
+              高安ゼミ LiPost × POCKY
+            </span>
+
+          </div>
+
+        </section>
+
+      </main>
+    );
   }
 
   /* ========================================
@@ -627,18 +830,11 @@ export default function StartPage() {
 
   return (
     <>
-      {/* ========================================
-          ここから元の初期登録画面
-          デザイン・構造はそのまま
-      ======================================== */}
-
       <main className="shell">
 
         <section className="card startPage">
 
-          {/* =================================
-              HERO
-          ================================= */}
+          {/* HERO */}
 
           <header className="startHero">
 
@@ -677,9 +873,7 @@ export default function StartPage() {
 
           </header>
 
-          {/* =================================
-              INTRO
-          ================================= */}
+          {/* INTRO */}
 
           <section className="startIntro">
 
@@ -706,9 +900,7 @@ export default function StartPage() {
 
           </section>
 
-          {/* =================================
-              FORM
-          ================================= */}
+          {/* FORM */}
 
           <form
             className="startForm"
@@ -728,8 +920,6 @@ export default function StartPage() {
               </h2>
 
             </div>
-
-            {/* NICKNAME */}
 
             <div className="field">
 
@@ -760,8 +950,6 @@ export default function StartPage() {
               />
 
             </div>
-
-            {/* GRADE */}
 
             <div className="field">
 
@@ -813,8 +1001,6 @@ export default function StartPage() {
               </select>
 
             </div>
-
-            {/* DEPARTMENT */}
 
             <div className="field">
 
@@ -907,8 +1093,6 @@ export default function StartPage() {
 
             </div>
 
-            {/* NEXT INFO */}
-
             <div className="startSurveyNotice">
 
               <strong>
@@ -922,15 +1106,11 @@ export default function StartPage() {
 
             </div>
 
-            {/* ERROR */}
-
             {message && (
               <p className="error">
                 {message}
               </p>
             )}
-
-            {/* DATA WARNING */}
 
             <section className="dataWarning">
 
@@ -958,8 +1138,6 @@ export default function StartPage() {
 
             </section>
 
-            {/* SUBMIT */}
-
             <button
               type="submit"
               className="primaryButton startButton"
@@ -969,11 +1147,9 @@ export default function StartPage() {
             >
 
               <span>
-
                 {submitting
                   ? "登録中..."
                   : "次へ進む"}
-
               </span>
 
               <span>
@@ -993,15 +1169,10 @@ export default function StartPage() {
 
       </main>
 
-      {/* ========================================
-          動画イントロ
-          元画面の上に重ねるだけ
-      ======================================== */}
+      {/* INTRO VIDEO */}
 
       {showIntro && (
         <div className="pokipoIntroOverlay">
-
-          {/* VIDEO */}
 
           <video
             ref={
@@ -1037,8 +1208,6 @@ export default function StartPage() {
           </video>
 
           <div className="pokipoIntroShade" />
-
-          {/* START */}
 
           {!introStarted &&
             !curtainClosing && (
@@ -1085,8 +1254,6 @@ export default function StartPage() {
             </div>
           )}
 
-          {/* SKIP */}
-
           {introStarted &&
             !curtainClosing && (
             <button
@@ -1100,16 +1267,12 @@ export default function StartPage() {
             </button>
           )}
 
-          {/* SOUND */}
-
           {introStarted &&
             !curtainClosing && (
             <div className="pokipoIntroSound">
               🔊 SOUND ON
             </div>
           )}
-
-          {/* CURTAIN */}
 
           <div
             className={[
