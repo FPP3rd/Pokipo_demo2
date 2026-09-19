@@ -159,7 +159,7 @@ export default function HomePage() {
       true;
 
     /* --------------------------------
-       PARTICIPANT DATA RESET
+       端末データ初期化
     -------------------------------- */
 
     function clearParticipantData() {
@@ -191,7 +191,9 @@ export default function HomePage() {
         "pokipo_secret_yuhisai",
         "pokipo_yuhisai_pocky_skin",
 
-        /* 動画も最初から */
+        /*
+          初回動画もリセット
+        */
         "pokipo_intro_seen",
       ];
 
@@ -219,7 +221,9 @@ export default function HomePage() {
           "pokipo_user_id"
         );
 
-      /* IDなし → 完全初期化 */
+      /* =================================
+         IDがない
+      ================================= */
 
       if (
         !participantId
@@ -233,24 +237,29 @@ export default function HomePage() {
         return false;
       }
 
+      /* =================================
+         DB存在確認
+      ================================= */
+
       const {
         data,
         error,
       } =
-        await supabase
-          .from(
-            "participants"
-          )
-          .select(
-            "id"
-          )
-          .eq(
-            "id",
-            participantId
-          )
-          .maybeSingle();
+        await supabase.rpc(
+          "pokipo_participant_exists",
+          {
+            p_participant_id:
+              participantId,
+          }
+        );
 
-      /* 通信エラー時は勝手に削除しない */
+      /* =================================
+         RPCエラー
+
+         ここで止めない。
+         既存localStorageがある場合は
+         HOME表示を続行する。
+      ================================= */
 
       if (
         error
@@ -263,15 +272,27 @@ export default function HomePage() {
         return true;
       }
 
-      /* DBに存在 */
+      /* =================================
+         DBに存在する
+      ================================= */
 
       if (
-        data
+        data === true
       ) {
         return true;
       }
 
-      /* DBから削除済み */
+      /* =================================
+         DBから削除済み
+
+         ↓
+
+         全データ初期化
+
+         ↓
+
+         動画イントロへ
+      ================================= */
 
       clearParticipantData();
 
@@ -309,6 +330,10 @@ export default function HomePage() {
           ) ??
           "chocolate"
         ) as PockySkin;
+
+      /* =================================
+         ニックネームが無い場合
+      ================================= */
 
       if (
         !savedNickname
@@ -596,12 +621,19 @@ export default function HomePage() {
         )
       );
 
-      localStorage.setItem(
-        "pokipo_completed",
+      if (
         stampCount >= 5
-          ? "true"
-          : "false"
-      );
+      ) {
+        localStorage.setItem(
+          "pokipo_completed",
+          "true"
+        );
+      } else {
+        localStorage.setItem(
+          "pokipo_completed",
+          "false"
+        );
+      }
 
       const serverScans =
         (
@@ -683,46 +715,98 @@ export default function HomePage() {
     ======================================== */
 
     async function initialLoad() {
-      const valid =
-        await validateParticipant();
+      try {
+        const valid =
+          await validateParticipant();
 
-      if (
-        !valid ||
-        !mounted
+        if (
+          !mounted
+        ) {
+          return;
+        }
+
+        if (
+          !valid
+        ) {
+          return;
+        }
+
+        const localValid =
+          loadLocalData();
+
+        if (
+          !mounted
+        ) {
+          return;
+        }
+
+        if (
+          !localValid
+        ) {
+          return;
+        }
+
+        /*
+          参加者確認が終わった時点で
+          HOMEを表示する。
+
+          他のデータ取得は待たない。
+        */
+
+        setParticipantChecking(
+          false
+        );
+
+        /*
+          以下はHOME表示後に取得
+        */
+
+        void loadParticipantCount();
+
+        void loadCompletedParticipantCount();
+
+        void loadStampProgress();
+
+        void loadAnnouncements();
+      } catch (
+        error
       ) {
-        return;
+        console.error(
+          "初期読み込みエラー:",
+          error
+        );
+
+        /*
+          万一エラーが起きても
+          確認中画面で永久停止させない
+        */
+
+        const savedNickname =
+          localStorage.getItem(
+            "pokipo_nickname"
+          );
+
+        if (
+          savedNickname &&
+          mounted
+        ) {
+          setNickname(
+            savedNickname
+          );
+
+          setParticipantChecking(
+            false
+          );
+
+          return;
+        }
+
+        clearParticipantData();
+
+        router.replace(
+          "/"
+        );
       }
-
-      const localValid =
-        loadLocalData();
-
-      if (
-        !localValid ||
-        !mounted
-      ) {
-        return;
-      }
-
-      /*
-        参加者の存在確認が終わった時点で
-        HOME表示を許可する
-      */
-
-      setParticipantChecking(
-        false
-      );
-
-      /*
-        以下はHOME表示後に取得
-      */
-
-      void loadParticipantCount();
-
-      void loadCompletedParticipantCount();
-
-      void loadStampProgress();
-
-      void loadAnnouncements();
     }
 
     void initialLoad();
@@ -1095,7 +1179,7 @@ export default function HomePage() {
   }
 
   /* ========================================
-     PARTICIPANT CHECKING
+     CHECKING
   ======================================== */
 
   if (
@@ -1119,12 +1203,6 @@ export default function HomePage() {
 
               justifyContent:
                 "center",
-
-              fontSize:
-                "12px",
-
-              fontWeight:
-                800,
             }}
           >
             参加情報を確認中...
