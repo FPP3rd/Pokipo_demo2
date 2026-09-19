@@ -191,9 +191,7 @@ export default function HomePage() {
         "pokipo_secret_yuhisai",
         "pokipo_yuhisai_pocky_skin",
 
-        /*
-          動画も完全に初回状態へ戻す
-        */
+        /* 動画も最初から */
         "pokipo_intro_seen",
       ];
 
@@ -221,13 +219,7 @@ export default function HomePage() {
           "pokipo_user_id"
         );
 
-      /*
-        参加者IDがない
-        ↓
-        完全初期化
-        ↓
-        /
-      */
+      /* IDなし → 完全初期化 */
 
       if (
         !participantId
@@ -258,10 +250,7 @@ export default function HomePage() {
           )
           .maybeSingle();
 
-      /*
-        通信エラー時は
-        勝手にデータを消さない
-      */
+      /* 通信エラー時は勝手に削除しない */
 
       if (
         error
@@ -274,9 +263,7 @@ export default function HomePage() {
         return true;
       }
 
-      /*
-        Supabaseに参加者が存在する
-      */
+      /* DBに存在 */
 
       if (
         data
@@ -284,13 +271,7 @@ export default function HomePage() {
         return true;
       }
 
-      /*
-        Supabaseから参加者が削除済み
-        ↓
-        端末内データ完全リセット
-        ↓
-        初回動画へ
-      */
+      /* DBから削除済み */
 
       clearParticipantData();
 
@@ -328,11 +309,6 @@ export default function HomePage() {
           ) ??
           "chocolate"
         ) as PockySkin;
-
-      /*
-        ニックネームがない場合も
-        HOMEを表示しない
-      */
 
       if (
         !savedNickname
@@ -727,25 +703,26 @@ export default function HomePage() {
         return;
       }
 
-      await Promise.all([
-        loadParticipantCount(),
-        loadCompletedParticipantCount(),
-        loadStampProgress(),
-        loadAnnouncements(),
-      ]);
-
       /*
-        すべて正常に確認できてから
-        HOMEを表示する
+        参加者の存在確認が終わった時点で
+        HOME表示を許可する
       */
 
-      if (
-        mounted
-      ) {
-        setParticipantChecking(
-          false
-        );
-      }
+      setParticipantChecking(
+        false
+      );
+
+      /*
+        以下はHOME表示後に取得
+      */
+
+      void loadParticipantCount();
+
+      void loadCompletedParticipantCount();
+
+      void loadStampProgress();
+
+      void loadAnnouncements();
     }
 
     void initialLoad();
@@ -1119,22 +1096,43 @@ export default function HomePage() {
 
   /* ========================================
      PARTICIPANT CHECKING
-
-     確認が終わるまでは
-     HOMEを絶対に描画しない
   ======================================== */
 
   if (
     participantChecking
   ) {
     return (
-      <main
-        className="shell"
-        style={{
-          minHeight:
-            "100vh",
-        }}
-      />
+      <main className="shell">
+
+        <section className="visualHomePage">
+
+          <div
+            style={{
+              minHeight:
+                "100vh",
+
+              display:
+                "flex",
+
+              alignItems:
+                "center",
+
+              justifyContent:
+                "center",
+
+              fontSize:
+                "12px",
+
+              fontWeight:
+                800,
+            }}
+          >
+            参加情報を確認中...
+          </div>
+
+        </section>
+
+      </main>
     );
   }
 
@@ -1705,6 +1703,8 @@ export default function HomePage() {
             }
           >
 
+            {/* LEFT */}
+
             <div className="participantLiveStat">
 
               <span className="participantTotalLabel">
@@ -1745,7 +1745,11 @@ export default function HomePage() {
 
             </div>
 
+            {/* CENTER */}
+
             <div className="participantLiveDivider" />
+
+            {/* RIGHT */}
 
             <div className="participantLiveStat complete">
 
@@ -1943,7 +1947,6 @@ export default function HomePage() {
                     <strong>
                       →
                     </strong>
-
                   </button>
 
                 </>
@@ -2005,7 +2008,6 @@ export default function HomePage() {
                     <strong>
                       →
                     </strong>
-
                   </button>
 
                 </>
