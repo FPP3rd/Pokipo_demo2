@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  FormEvent,
   useEffect,
   useRef,
   useState,
@@ -13,61 +12,38 @@ import {
 
 import {
   supabase,
-} from "../lib/supabase-client";
+} from "../../lib/supabase-client";
 
 /* ========================================
-   INTRO
+   雄飛祭ポッキースキン
 ======================================== */
 
-const INTRO_STORAGE_KEY =
-  "pokipo_intro_seen";
+type PockySkin =
+  | "chocolate"
+  | "strawberry"
+  | "matcha"
+  | "white";
 
-const INTRO_VIDEO_PATH =
-  "/videos/pokipo-intro.mp4";
+/* ========================================
+   ANNOUNCEMENT
+======================================== */
 
-export default function StartPage() {
-  const router =
-    useRouter();
+type Announcement = {
+  id: string;
+  title: string;
+  body: string;
+  published_at: string;
+};
 
-  /* ========================================
-     VIDEO INTRO
-  ======================================== */
+/* ========================================
+   HOME PAGE
+======================================== */
 
-  const videoRef =
-    useRef<HTMLVideoElement | null>(
-      null
-    );
-
-  const [
-    showIntro,
-    setShowIntro,
-  ] = useState(false);
-
-  const [
-    introStarted,
-    setIntroStarted,
-  ] = useState(false);
-
-  const [
-    curtainClosing,
-    setCurtainClosing,
-  ] = useState(false);
-
-  const [
-    curtainOpening,
-    setCurtainOpening,
-  ] = useState(false);
-
-  const [
-    videoError,
-    setVideoError,
-  ] = useState("");
-
-  const introFinishingRef =
-    useRef(false);
+export default function HomePage() {
+  const router = useRouter();
 
   /* ========================================
-     FORM
+     BASIC
   ======================================== */
 
   const [
@@ -76,84 +52,156 @@ export default function StartPage() {
   ] = useState("");
 
   const [
-    grade,
-    setGrade,
-  ] = useState("");
+    progress,
+    setProgress,
+  ] = useState(0);
 
   const [
-    department,
-    setDepartment,
-  ] = useState("");
+    rewardExchanged,
+    setRewardExchanged,
+  ] = useState(false);
+
+  /* ========================================
+     PARTICIPANTS
+  ======================================== */
 
   const [
-    message,
-    setMessage,
-  ] = useState("");
+    totalParticipants,
+    setTotalParticipants,
+  ] = useState<number | null>(
+    null
+  );
 
   const [
-    submitting,
-    setSubmitting,
+    completedParticipants,
+    setCompletedParticipants,
+  ] = useState<number | null>(
+    null
+  );
+
+  const [
+    participantCountUpdating,
+    setParticipantCountUpdating,
   ] = useState(false);
 
   const [
-    checkingRegistration,
-    setCheckingRegistration,
-  ] = useState(true);
+    completedCountUpdating,
+    setCompletedCountUpdating,
+  ] = useState(false);
+
+  const previousParticipantCount =
+    useRef<number | null>(
+      null
+    );
+
+  const previousCompletedCount =
+    useRef<number | null>(
+      null
+    );
 
   /* ========================================
-     OLD PARTICIPANT DATA RESET
+     ANNOUNCEMENTS
   ======================================== */
 
-  function clearOldParticipantData() {
-    const keysToRemove = [
-      "pokipo_participant_id",
-      "pokipo_user_id",
-      "pokipo_nickname",
-      "pokipo_grade",
-      "pokipo_department",
-
-      "pokipo_scans",
-      "pokipo_progress",
-      "pokipo_knowledge",
-
-      "pokipo_completed",
-      "pokipo_completed_at",
-      "pokipo_achievement_rank",
-
-      "pokipo_reward_exchanged",
-      "pokipo_reward_exchanged_at",
-      "pokipo_reward_student_number",
-      "pokipo_reward_token",
-
-      "pokipo_pre_survey_completed",
-      "pokipo_post_survey_completed",
-
-      "pokipo_tutorial_completed",
-
-      "pokipo_secret_yuhisai",
-      "pokipo_yuhisai_pocky_skin",
-
-      "pokipo_intro_seen",
-    ];
-
-    keysToRemove.forEach(
-      (
-        key
-      ) => {
-        localStorage.removeItem(
-          key
-        );
-      }
-    );
-  }
+  const [
+    announcements,
+    setAnnouncements,
+  ] = useState<Announcement[]>(
+    []
+  );
 
   /* ========================================
-     既存参加者チェック
+     雄飛祭 MODE
+  ======================================== */
+
+  const [
+    yuhisaiMode,
+    setYuhisaiMode,
+  ] = useState(false);
+
+  const [
+    yuhisaiPockySkin,
+    setYuhisaiPockySkin,
+  ] = useState<PockySkin>(
+    "chocolate"
+  );
+
+  /* ========================================
+     FIRST TUTORIAL
+  ======================================== */
+
+  const [
+    showTutorial,
+    setShowTutorial,
+  ] = useState(false);
+
+  const [
+    tutorialStep,
+    setTutorialStep,
+  ] = useState(1);
+
+  /* ========================================
+     LOAD
   ======================================== */
 
   useEffect(() => {
-    async function checkExistingParticipant() {
-      const savedParticipantId =
+    let active = true;
+
+    /* --------------------------------
+       端末側POKIPOデータ削除
+    -------------------------------- */
+
+    function clearParticipantData() {
+      const keysToRemove = [
+        "pokipo_participant_id",
+        "pokipo_user_id",
+        "pokipo_nickname",
+        "pokipo_grade",
+        "pokipo_department",
+
+        "pokipo_scans",
+        "pokipo_progress",
+        "pokipo_knowledge",
+
+        "pokipo_completed",
+        "pokipo_completed_at",
+        "pokipo_achievement_rank",
+
+        "pokipo_reward_exchanged",
+        "pokipo_reward_exchanged_at",
+        "pokipo_reward_student_number",
+        "pokipo_reward_token",
+
+        "pokipo_pre_survey_completed",
+        "pokipo_post_survey_completed",
+
+        "pokipo_tutorial_completed",
+
+        "pokipo_secret_yuhisai",
+        "pokipo_yuhisai_pocky_skin",
+
+        /* 動画イントロも初回状態へ */
+        "pokipo_intro_seen",
+      ];
+
+      keysToRemove.forEach(
+        (key) => {
+          localStorage.removeItem(
+            key
+          );
+        }
+      );
+    }
+
+    /* --------------------------------
+       PARTICIPANT VALIDATION
+
+       participantsから削除されていたら
+       完全初期化して動画からやり直す
+    -------------------------------- */
+
+    async function validateParticipant() {
+      const participantId =
         localStorage.getItem(
           "pokipo_participant_id"
         ) ??
@@ -161,607 +209,766 @@ export default function StartPage() {
           "pokipo_user_id"
         );
 
+      /* IDがない = 未登録 */
+      if (!participantId) {
+        localStorage.removeItem(
+          "pokipo_intro_seen"
+        );
+
+        router.replace("/");
+
+        return false;
+      }
+
+      const {
+        data,
+        error,
+      } =
+        await supabase
+          .from("participants")
+          .select("id")
+          .eq(
+            "id",
+            participantId
+          )
+          .maybeSingle();
+
+      /* 通信エラーでは削除しない */
+      if (error) {
+        console.error(
+          "参加者確認エラー:",
+          error
+        );
+
+        return true;
+      }
+
+      /* DBに存在する */
+      if (data) {
+        return true;
+      }
+
+      /* DBから削除済み */
+      clearParticipantData();
+
+      router.replace("/");
+
+      return false;
+    }
+
+    /* --------------------------------
+       LOCAL DATA
+    -------------------------------- */
+
+    function loadLocalData() {
       const savedNickname =
         localStorage.getItem(
           "pokipo_nickname"
         );
 
-      /* --------------------------------
-         未登録
-      -------------------------------- */
+      const savedReward =
+        localStorage.getItem(
+          "pokipo_reward_exchanged"
+        ) === "true";
 
-      if (
-        !savedParticipantId ||
-        !savedNickname
-      ) {
-        /*
-          未登録ユーザーだけ
-          初回イントロを判定
-        */
+      const savedYuhisai =
+        localStorage.getItem(
+          "pokipo_secret_yuhisai"
+        ) === "true";
 
-        const introSeen =
+      const savedSkin =
+        (
           localStorage.getItem(
-            INTRO_STORAGE_KEY
-          ) === "true";
+            "pokipo_yuhisai_pocky_skin"
+          ) ??
+          "chocolate"
+        ) as PockySkin;
 
-        setShowIntro(
-          !introSeen
-        );
+      if (!savedNickname) {
+        clearParticipantData();
 
-        setCheckingRegistration(
-          false
-        );
+        router.replace("/");
 
         return;
       }
 
-      /* --------------------------------
-         PARTICIPANTS TABLE CHECK
+      setNickname(
+        savedNickname
+      );
 
-         localStorageには参加者情報が
-         残っているが、
-         Supabaseから削除済みの場合は
-         新規参加者へ戻す
-      -------------------------------- */
+      setRewardExchanged(
+        savedReward
+      );
 
+      setYuhisaiMode(
+        savedYuhisai
+      );
+
+      if (
+        [
+          "chocolate",
+          "strawberry",
+          "matcha",
+          "white",
+        ].includes(
+          savedSkin
+        )
+      ) {
+        setYuhisaiPockySkin(
+          savedSkin
+        );
+      } else {
+        setYuhisaiPockySkin(
+          "chocolate"
+        );
+      }
+
+      /* FIRST TUTORIAL */
+
+      const tutorialCompleted =
+        localStorage.getItem(
+          "pokipo_tutorial_completed"
+        ) === "true";
+
+      if (
+        !tutorialCompleted
+      ) {
+        setShowTutorial(
+          true
+        );
+
+        setTutorialStep(
+          1
+        );
+      }
+    }
+
+    /* --------------------------------
+       参加者数取得
+    -------------------------------- */
+
+    async function loadParticipantCount() {
       const {
-        data:
-          existingParticipant,
-        error:
-          participantError,
+        data,
+        error,
       } =
-        await supabase
-          .from(
-            "participants"
-          )
-          .select(
-            "id"
-          )
-          .eq(
-            "id",
-            savedParticipantId
-          )
-          .maybeSingle();
+        await supabase.rpc(
+          "get_participant_count"
+        );
 
-      /*
-        通信エラー時は
-        データを勝手に消さない
-      */
-
-      if (
-        participantError
-      ) {
+      if (error) {
         console.error(
-          "参加者確認エラー:",
-          participantError
-        );
-
-        router.replace(
-          "/survey/before"
+          "参加者数取得エラー:",
+          error
         );
 
         return;
       }
 
-      /*
-        DBに参加者が存在しない
-        ↓
-        テスト参加者として削除済み
-        ↓
-        端末側の古い参加情報を削除
-        ↓
-        新規登録画面へ
-      */
+      const newCount =
+        Number(
+          data ?? 0
+        );
 
       if (
-        !existingParticipant
+        previousParticipantCount.current !==
+          null &&
+        previousParticipantCount.current !==
+          newCount
       ) {
-        clearOldParticipantData();
-
-        setNickname(
-          ""
+        setParticipantCountUpdating(
+          true
         );
 
-        setGrade(
-          ""
+        window.setTimeout(
+          () => {
+            if (active) {
+              setParticipantCountUpdating(
+                false
+              );
+            }
+          },
+          650
+        );
+      }
+
+      previousParticipantCount.current =
+        newCount;
+
+      if (active) {
+        setTotalParticipants(
+          newCount
+        );
+      }
+    }
+
+    /* --------------------------------
+       5/5達成者数取得
+    -------------------------------- */
+
+    async function loadCompletedParticipantCount() {
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "get_completed_participant_count"
         );
 
-        setDepartment(
-          ""
-        );
-
-        setMessage(
-          ""
-        );
-
-        /*
-          intro_seen は削除していないので、
-          過去に動画を見た人は
-          動画をもう一度見ずに
-          登録画面へ戻る
-        */
-
-        setShowIntro(
-          false
-        );
-
-        setCheckingRegistration(
-          false
+      if (error) {
+        console.error(
+          "5/5達成者数取得エラー:",
+          error
         );
 
         return;
       }
 
-      /* --------------------------------
-         参加前アンケート確認
-      -------------------------------- */
+      const newCount =
+        Number(
+          data ?? 0
+        );
+
+      if (
+        previousCompletedCount.current !==
+          null &&
+        previousCompletedCount.current !==
+          newCount
+      ) {
+        setCompletedCountUpdating(
+          true
+        );
+
+        window.setTimeout(
+          () => {
+            if (active) {
+              setCompletedCountUpdating(
+                false
+              );
+            }
+          },
+          650
+        );
+      }
+
+      previousCompletedCount.current =
+        newCount;
+
+      if (active) {
+        setCompletedParticipants(
+          newCount
+        );
+      }
+    }
+
+    /* --------------------------------
+       スタンプ進捗取得
+    -------------------------------- */
+
+    async function loadStampProgress() {
+      const participantId =
+        localStorage.getItem(
+          "pokipo_participant_id"
+        ) ??
+        localStorage.getItem(
+          "pokipo_user_id"
+        );
+
+      if (!participantId) {
+        return;
+      }
 
       const {
         data,
         error,
       } =
         await supabase.rpc(
-          "has_completed_pokipo_pre_survey",
+          "get_pokipo_stamps",
           {
             p_participant_id:
-              savedParticipantId,
+              participantId,
           }
         );
 
-      if (
-        error
-      ) {
+      if (error) {
         console.error(
-          "参加前アンケート確認エラー:",
+          "スタンプ進捗取得エラー:",
           error
         );
 
-        /*
-          通信エラー時は
-          初期登録をやり直させない
-        */
+        const localProgress =
+          Number(
+            localStorage.getItem(
+              "pokipo_progress"
+            ) ?? "0"
+          );
 
-        router.replace(
-          "/survey/before"
-        );
+        if (active) {
+          setProgress(
+            Math.min(
+              Math.max(
+                localProgress,
+                0
+              ),
+              5
+            )
+          );
+        }
 
         return;
       }
 
-      if (
-        data === true
-      ) {
-        router.replace(
-          "/home"
+      const stampCount =
+        Math.min(
+          Array.isArray(
+            data
+          )
+            ? data.length
+            : 0,
+          5
         );
 
-        return;
+      if (active) {
+        setProgress(
+          stampCount
+        );
       }
 
-      router.replace(
-        "/survey/before"
+      localStorage.setItem(
+        "pokipo_progress",
+        String(
+          stampCount
+        )
+      );
+
+      localStorage.setItem(
+        "pokipo_completed",
+        stampCount >= 5
+          ? "true"
+          : "false"
+      );
+
+      const serverScans =
+        (
+          data ?? []
+        ).map(
+          (
+            item: {
+              spot_id: string;
+            }
+          ) =>
+            item.spot_id
+        );
+
+      localStorage.setItem(
+        "pokipo_scans",
+        JSON.stringify(
+          serverScans
+        )
       );
     }
 
-    void checkExistingParticipant();
+    /* --------------------------------
+       LiPost お知らせ取得
+    -------------------------------- */
+
+    async function loadAnnouncements() {
+      const {
+        data,
+        error,
+      } =
+        await supabase
+          .from(
+            "lipost_announcements"
+          )
+          .select(
+            "id, title, body, published_at"
+          )
+          .eq(
+            "is_published",
+            true
+          )
+          .order(
+            "published_at",
+            {
+              ascending:
+                false,
+            }
+          )
+          .limit(
+            3
+          );
+
+      if (error) {
+        console.error(
+          "お知らせ取得エラー:",
+          error
+        );
+
+        return;
+      }
+
+      if (active) {
+        setAnnouncements(
+          (
+            data ?? []
+          ) as Announcement[]
+        );
+      }
+    }
+
+    /* ========================================
+       INITIAL LOAD
+    ======================================== */
+
+    async function initialLoad() {
+      const valid =
+        await validateParticipant();
+
+      if (
+        !valid ||
+        !active
+      ) {
+        return;
+      }
+
+      loadLocalData();
+
+      await Promise.all([
+        loadParticipantCount(),
+        loadCompletedParticipantCount(),
+        loadStampProgress(),
+        loadAnnouncements(),
+      ]);
+    }
+
+    void initialLoad();
+
+    /* ========================================
+       PARTICIPANTS REALTIME
+    ======================================== */
+
+    const participantChannel =
+      supabase
+        .channel(
+          "participants-live-count"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "participants",
+          },
+          async () => {
+            const valid =
+              await validateParticipant();
+
+            if (!valid) {
+              return;
+            }
+
+            void loadParticipantCount();
+          }
+        )
+        .subscribe();
+
+    /* ========================================
+       GLOBAL STAMP REALTIME
+    ======================================== */
+
+    const completedChannel =
+      supabase
+        .channel(
+          "completed-participants-live"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table:
+              "participant_stamps",
+          },
+          () => {
+            void loadCompletedParticipantCount();
+          }
+        )
+        .subscribe();
+
+    /* ========================================
+       自分のSTAMP REALTIME
+    ======================================== */
+
+    const currentParticipantId =
+      localStorage.getItem(
+        "pokipo_participant_id"
+      ) ??
+      localStorage.getItem(
+        "pokipo_user_id"
+      );
+
+    let stampChannel:
+      ReturnType<
+        typeof supabase.channel
+      > | null =
+      null;
+
+    if (
+      currentParticipantId
+    ) {
+      stampChannel =
+        supabase
+          .channel(
+            `participant-stamps-${currentParticipantId}`
+          )
+          .on(
+            "postgres_changes",
+            {
+              event: "*",
+              schema: "public",
+              table:
+                "participant_stamps",
+              filter:
+                `participant_id=eq.${currentParticipantId}`,
+            },
+            () => {
+              void loadStampProgress();
+
+              void loadCompletedParticipantCount();
+            }
+          )
+          .subscribe();
+    }
+
+    /* ========================================
+       ANNOUNCEMENT REALTIME
+    ======================================== */
+
+    const announcementChannel =
+      supabase
+        .channel(
+          "lipost-announcements-live"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table:
+              "lipost_announcements",
+          },
+          () => {
+            void loadAnnouncements();
+          }
+        )
+        .subscribe();
+
+    /* ========================================
+       FOCUS
+    ======================================== */
+
+    async function handleFocus() {
+      const valid =
+        await validateParticipant();
+
+      if (
+        !valid ||
+        !active
+      ) {
+        return;
+      }
+
+      loadLocalData();
+
+      void loadParticipantCount();
+
+      void loadCompletedParticipantCount();
+
+      void loadStampProgress();
+
+      void loadAnnouncements();
+    }
+
+    /* ========================================
+       VISIBILITY
+    ======================================== */
+
+    async function handleVisibility() {
+      if (
+        document.visibilityState !==
+        "visible"
+      ) {
+        return;
+      }
+
+      const valid =
+        await validateParticipant();
+
+      if (
+        !valid ||
+        !active
+      ) {
+        return;
+      }
+
+      loadLocalData();
+
+      void loadParticipantCount();
+
+      void loadCompletedParticipantCount();
+
+      void loadStampProgress();
+
+      void loadAnnouncements();
+    }
+
+    window.addEventListener(
+      "focus",
+      handleFocus
+    );
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibility
+    );
+
+    /* ========================================
+       CLEANUP
+    ======================================== */
+
+    return () => {
+      active = false;
+
+      window.removeEventListener(
+        "focus",
+        handleFocus
+      );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibility
+      );
+
+      supabase.removeChannel(
+        participantChannel
+      );
+
+      supabase.removeChannel(
+        completedChannel
+      );
+
+      if (
+        stampChannel
+      ) {
+        supabase.removeChannel(
+          stampChannel
+        );
+      }
+
+      supabase.removeChannel(
+        announcementChannel
+      );
+    };
   }, [
     router,
   ]);
 
   /* ========================================
-     INTRO START
+     STATUS
   ======================================== */
 
-  async function startIntro() {
-    const video =
-      videoRef.current;
+  const completed =
+    progress >= 5;
 
-    if (
-      !video
-    ) {
-      setVideoError(
-        "動画を読み込めませんでした。"
-      );
-
-      return;
-    }
-
-    setVideoError("");
-
-    try {
-      video.currentTime =
-        0;
-
-      video.muted =
-        false;
-
-      video.volume =
-        1;
-
-      await video.play();
-
-      setIntroStarted(
-        true
-      );
-    } catch (
-      error
-    ) {
-      console.error(
-        "イントロ動画再生エラー:",
-        error
-      );
-
-      setVideoError(
-        "動画を再生できませんでした。もう一度お試しください。"
-      );
-
-      setIntroStarted(
-        false
-      );
-    }
-  }
-
-  /* ========================================
-     INTRO FINISH
-  ======================================== */
-
-  function finishIntro() {
-    if (
-      introFinishingRef.current
-    ) {
-      return;
-    }
-
-    introFinishingRef.current =
-      true;
-
-    const video =
-      videoRef.current;
-
-    if (
-      video
-    ) {
-      video.pause();
-    }
-
-    /*
-      1. カーテンを閉じる
-    */
-
-    setCurtainClosing(
-      true
+  const remaining =
+    Math.max(
+      0,
+      5 - progress
     );
 
-    /*
-      2. 閉じ切ったあと
-         初回視聴済みにする
-    */
+  /* ========================================
+     PROCESS NAME
+  ======================================== */
 
-    window.setTimeout(
-      () => {
-        localStorage.setItem(
-          INTRO_STORAGE_KEY,
-          "true"
-        );
+  function getProcessName() {
+    switch (progress) {
+      case 0:
+        return "これからポッキーづくりスタート";
 
-        /*
-          3. カーテンを開く
-        */
+      case 1:
+        return "材料をそろえる";
 
-        setCurtainOpening(
-          true
-        );
+      case 2:
+        return "生地をつくる";
 
-        /*
-          4. イントロ全体を消す
-        */
+      case 3:
+        return "プレッツェルを焼く";
 
-        window.setTimeout(
-          () => {
-            setShowIntro(
-              false
-            );
+      case 4:
+        return "チョコレートをまとわせる";
 
-            setIntroStarted(
-              false
-            );
-
-            setCurtainClosing(
-              false
-            );
-
-            setCurtainOpening(
-              false
-            );
-
-            introFinishingRef.current =
-              false;
-          },
-          1100
-        );
-      },
-      1050
-    );
+      default:
+        return "ポッキー完成！";
+    }
   }
 
   /* ========================================
-     INTRO SKIP
+     雄飛祭スキン名
   ======================================== */
 
-  function skipIntro() {
-    finishIntro();
+  function getSkinName() {
+    switch (
+      yuhisaiPockySkin
+    ) {
+      case "strawberry":
+        return "いちご";
+
+      case "matcha":
+        return "抹茶";
+
+      case "white":
+        return "ホワイト";
+
+      default:
+        return "チョコ";
+    }
   }
 
   /* ========================================
-     初回登録
+     ANNOUNCEMENT DATE
   ======================================== */
 
-  async function submit(
-    e: FormEvent<HTMLFormElement>
+  function formatAnnouncementDate(
+    value: string
   ) {
-    e.preventDefault();
-
-    const name =
-      nickname.trim();
-
-    /* --------------------------------
-       VALIDATION
-    -------------------------------- */
-
-    if (
-      name.length < 2 ||
-      name.length > 20
-    ) {
-      setMessage(
-        "ニックネームは2〜20文字で入力してください。"
-      );
-
-      return;
-    }
-
-    if (
-      !grade
-    ) {
-      setMessage(
-        "学年を選択してください。"
-      );
-
-      return;
-    }
-
-    if (
-      !department
-    ) {
-      setMessage(
-        "学科を選択してください。"
-      );
-
-      return;
-    }
-
-    setSubmitting(
-      true
-    );
-
-    setMessage("");
-
-    try {
-      /* =================================
-         PARTICIPANT ID
-      ================================= */
-
-      const participantId =
-        crypto.randomUUID();
-
-      /* =================================
-         SUPABASE
-      ================================= */
-
-      const {
-        error,
-      } =
-        await supabase
-          .from(
-            "participants"
-          )
-          .insert({
-            id:
-              participantId,
-
-            nickname:
-              name,
-
-            grade,
-
-            department,
-          });
-
-      if (
-        error
-      ) {
-        console.error(
-          "参加者登録エラー:",
-          {
-            message:
-              error.message,
-
-            details:
-              error.details,
-
-            hint:
-              error.hint,
-
-            code:
-              error.code,
-          }
-        );
-
-        setMessage(
-          "参加者情報を登録できませんでした。通信環境を確認して、もう一度お試しください。"
-        );
-
-        return;
+    return new Date(
+      value
+    ).toLocaleDateString(
+      "ja-JP",
+      {
+        timeZone:
+          "Asia/Tokyo",
+        month:
+          "numeric",
+        day:
+          "numeric",
       }
-
-      /* =================================
-         LOCAL STORAGE
-      ================================= */
-
-      localStorage.setItem(
-        "pokipo_participant_id",
-        participantId
-      );
-
-      /*
-        既存ページとの互換性のため
-        user_idにも同じIDを保存
-      */
-
-      localStorage.setItem(
-        "pokipo_user_id",
-        participantId
-      );
-
-      localStorage.setItem(
-        "pokipo_nickname",
-        name
-      );
-
-      localStorage.setItem(
-        "pokipo_grade",
-        grade
-      );
-
-      localStorage.setItem(
-        "pokipo_department",
-        department
-      );
-
-      /* =================================
-         スタンプ初期化
-      ================================= */
-
-      localStorage.setItem(
-        "pokipo_scans",
-        JSON.stringify([])
-      );
-
-      localStorage.setItem(
-        "pokipo_progress",
-        "0"
-      );
-
-      /* =================================
-         KNOWLEDGE
-      ================================= */
-
-      localStorage.setItem(
-        "pokipo_knowledge",
-        JSON.stringify([])
-      );
-
-      /* =================================
-         COMPLETE
-      ================================= */
-
-      localStorage.setItem(
-        "pokipo_completed",
-        "false"
-      );
-
-      localStorage.removeItem(
-        "pokipo_completed_at"
-      );
-
-      localStorage.removeItem(
-        "pokipo_achievement_rank"
-      );
-
-      /* =================================
-         REWARD
-      ================================= */
-
-      localStorage.setItem(
-        "pokipo_reward_exchanged",
-        "false"
-      );
-
-      localStorage.removeItem(
-        "pokipo_reward_exchanged_at"
-      );
-
-      localStorage.removeItem(
-        "pokipo_reward_student_number"
-      );
-
-      localStorage.removeItem(
-        "pokipo_reward_token"
-      );
-
-      /* =================================
-         SURVEY
-      ================================= */
-
-      localStorage.removeItem(
-        "pokipo_pre_survey_completed"
-      );
-
-      localStorage.removeItem(
-        "pokipo_post_survey_completed"
-      );
-
-      /* =================================
-         NEXT
-      ================================= */
-
-      router.push(
-        "/survey/before"
-      );
-    } catch (
-      error
-    ) {
-      console.error(
-        "参加者登録通信エラー:",
-        error
-      );
-
-      setMessage(
-        "通信中にエラーが発生しました。もう一度お試しください。"
-      );
-    } finally {
-      setSubmitting(
-        false
-      );
-    }
+    );
   }
 
   /* ========================================
-     CHECKING
+     TUTORIAL COMPLETE
   ======================================== */
 
-  if (
-    checkingRegistration
-  ) {
-    return (
-      <main className="shell">
+  function completeTutorial() {
+    localStorage.setItem(
+      "pokipo_tutorial_completed",
+      "true"
+    );
 
-        <section className="card startPage">
-
-          <div
-            style={{
-              padding:
-                "40px 20px",
-
-              textAlign:
-                "center",
-            }}
-          >
-            参加情報を確認中...
-          </div>
-
-        </section>
-
-      </main>
+    setShowTutorial(
+      false
     );
   }
 
@@ -770,540 +977,858 @@ export default function StartPage() {
   ======================================== */
 
   return (
-    <>
-      {/* ========================================
-          ここから元の初期登録画面
-          デザイン・構造はそのまま
-      ======================================== */}
+    <main
+      className={
+        yuhisaiMode
+          ? "shell yuhisaiMode"
+          : "shell"
+      }
+      style={
+        yuhisaiMode
+          ? {
+              minHeight:
+                "100vh",
+              background:
+                "linear-gradient(180deg, #63bdf5 0%, #9bd7fa 36%, #dff3ff 70%, #fff1d7 100%)",
+            }
+          : undefined
+      }
+    >
 
-      <main className="shell">
+      <section className="visualHomePage">
 
-        <section className="card startPage">
+        {/* ==================================
+            HEADER
+        ================================== */}
 
-          {/* =================================
-              HERO
-          ================================= */}
+        <header className="visualHomeHeader">
 
-          <header className="startHero">
+          <div>
 
-            <p className="startEyebrow">
+            <p className="visualHomeMini">
               高安ゼミ LiPost × POCKY
             </p>
 
-            <h1 className="startLogo">
+            <h1 className="visualHomeLogo">
               POKIPO
             </h1>
 
-            <p className="startCatch">
-              キャンパスをめぐって、
-              <br />
-              ポッキーが持つ価値を知ろう。
+          </div>
+
+          <div className="visualHomeUserName">
+
+            {nickname
+              ? `${nickname}さん`
+              : "ゲストさん"}
+
+          </div>
+
+        </header>
+
+        {/* ==================================
+            雄飛祭バナー
+        ================================== */}
+
+        {yuhisaiMode && (
+          <section className="yuhisaiFestivalBanner">
+
+            <span>
+              SECRET MODE UNLOCKED
+            </span>
+
+            <h2>
+              🎆 雄飛祭モード！ 🎆
+            </h2>
+
+            <p>
+              シークレットスタンプ
+              「雄飛祭 LiPostブース」を獲得！
+              POKIPOが雄飛祭仕様に変化しました。
             </p>
 
-            <div className="startVisual">
+            <div className="yuhisaiFestivalCurrentSkin">
 
-              <div className="startPocky pockyOne">
-                <div className="startChocolate" />
-                <div className="startBiscuit" />
-              </div>
+              <span>
+                CURRENT STYLE
+              </span>
 
-              <div className="startPocky pockyTwo">
-                <div className="startChocolate" />
-                <div className="startBiscuit" />
-              </div>
-
-              <div className="startPocky pockyThree">
-                <div className="startChocolate" />
-                <div className="startBiscuit" />
-              </div>
+              <strong>
+                {getSkinName()}
+                POKIPO
+              </strong>
 
             </div>
 
-          </header>
+            <button
+              type="button"
+              className="yuhisaiCustomizeButton"
+              onClick={() =>
+                router.push(
+                  "/yuhisai"
+                )
+              }
+            >
+              ポッキーを着せ替える →
+            </button>
 
-          {/* =================================
-              INTRO
-          ================================= */}
+          </section>
+        )}
 
-          <section className="startIntro">
+        {/* ==================================
+            POCKY HERO
+        ================================== */}
 
-            <div className="startIntroNumber">
-              5
+        <section
+          className={
+            `visualPockyHero visualStage-${progress}`
+          }
+        >
+
+          <div className="visualHeroDecoration visualDecoOne" />
+
+          <div className="visualHeroDecoration visualDecoTwo" />
+
+          {yuhisaiMode && (
+            <>
+              <span className="yuhisaiHeroDeco yuhisaiHeroDeco1">
+                🏮
+              </span>
+
+              <span className="yuhisaiHeroDeco yuhisaiHeroDeco2">
+                ✦
+              </span>
+
+              <span className="yuhisaiHeroDeco yuhisaiHeroDeco3">
+                🎪
+              </span>
+            </>
+          )}
+
+          <div className="visualStepBadge">
+
+            {yuhisaiMode
+              ? "YUHISAI MODE"
+              : `STEP ${progress}`}
+
+          </div>
+
+          <div className="visualPockyScene">
+
+            <span className="visualSpark visualSpark1">
+              ✦
+            </span>
+
+            <span className="visualSpark visualSpark2">
+              ✦
+            </span>
+
+            <span className="visualSpark visualSpark3">
+              ✦
+            </span>
+
+            <div
+              className={
+                yuhisaiMode
+                  ? `visualPocky yuhisaiPockySkin skin-${yuhisaiPockySkin}`
+                  : "visualPocky"
+              }
+            >
+
+              <div className="visualPockyCoating" />
+
+              <div className="visualPockyBiscuit" />
+
+            </div>
+
+            {completed && (
+              <>
+                <div
+                  className={
+                    yuhisaiMode
+                      ? `visualPocky visualPockySecond yuhisaiPockySkin skin-${yuhisaiPockySkin}`
+                      : "visualPocky visualPockySecond"
+                  }
+                >
+                  <div className="visualPockyCoating" />
+                  <div className="visualPockyBiscuit" />
+                </div>
+
+                <div
+                  className={
+                    yuhisaiMode
+                      ? `visualPocky visualPockyThird yuhisaiPockySkin skin-${yuhisaiPockySkin}`
+                      : "visualPocky visualPockyThird"
+                  }
+                >
+                  <div className="visualPockyCoating" />
+                  <div className="visualPockyBiscuit" />
+                </div>
+              </>
+            )}
+
+          </div>
+
+          <div className="visualHeroBottom">
+
+            <strong>
+              {yuhisaiMode
+                ? "SECRET GET!"
+                : completed
+                ? "COMPLETE!"
+                : `${progress} / 5`}
+            </strong>
+
+            <span>
+              {yuhisaiMode
+                ? `${getSkinName()} POKIPO`
+                : completed
+                ? "POCKY COMPLETE"
+                : "POCKY PROGRESS"}
+            </span>
+
+          </div>
+
+        </section>
+
+        {/* ==================================
+            PROCESS
+        ================================== */}
+
+        <div className="visualProcessLabel">
+
+          <span>
+            {yuhisaiMode
+              ? `${getSkinName()}POKIPOで雄飛祭を楽しもう！`
+              : getProcessName()}
+          </span>
+
+        </div>
+
+        {/* ==================================
+            STAMPS
+        ================================== */}
+
+        <section className="visualStampSection">
+
+          <div className="visualStampHeader">
+
+            <span>
+              STAMPS
+            </span>
+
+            <strong>
+              {progress}/5
+            </strong>
+
+          </div>
+
+          <div className="visualStampTrack">
+
+            {[1, 2, 3, 4, 5].map(
+              (number) => {
+                const active =
+                  number <=
+                  progress;
+
+                return (
+                  <div
+                    key={
+                      number
+                    }
+                    className={
+                      active
+                        ? "visualStamp active"
+                        : "visualStamp"
+                    }
+                  >
+                    {active
+                      ? "✓"
+                      : number}
+                  </div>
+                );
+              }
+            )}
+
+          </div>
+
+          {yuhisaiMode && (
+            <div className="homeSecretStamp">
+
+              <div className="homeSecretStampCircle">
+                6
+              </div>
+
+              <div>
+
+                <span>
+                  SECRET STAMP GET!
+                </span>
+
+                <strong>
+                  雄飛祭 LiPostブース
+                </strong>
+
+              </div>
+
+            </div>
+          )}
+
+        </section>
+
+        {/* ==================================
+            COMPLETE REWARD
+        ================================== */}
+
+        {completed && (
+          <button
+            type="button"
+            className="visualNextSpot complete"
+            onClick={() =>
+              router.push(
+                "/reward"
+              )
+            }
+          >
+
+            <div className="visualNextIcon">
+              ★
+            </div>
+
+            <div className="visualNextText">
+
+              <span>
+                COMPLETE
+              </span>
+
+              <strong>
+                特典をチェック
+              </strong>
+
+            </div>
+
+            <div className="visualNextArrow">
+              →
+            </div>
+
+          </button>
+        )}
+
+        {/* ==================================
+            QR
+        ================================== */}
+
+        <button
+          type="button"
+          className="visualQrButton"
+          onClick={() =>
+            router.push(
+              "/stamp"
+            )
+          }
+        >
+
+          <span className="visualQrIcon">
+            QR
+          </span>
+
+          <strong>
+            QRを読み取る
+          </strong>
+
+          <span>
+            →
+          </span>
+
+        </button>
+
+        {/* ==================================
+            雄飛祭
+        ================================== */}
+
+        {yuhisaiMode && (
+          <button
+            type="button"
+            className="yuhisaiHomeSpecialButton"
+            onClick={() =>
+              router.push(
+                "/yuhisai"
+              )
+            }
+          >
+
+            <div className="yuhisaiHomeSpecialIcon">
+              🎆
             </div>
 
             <div>
 
-              <p>
-                POKIPO STAMP RALLY
-              </p>
-
-              <h2>
-                5つのスポットを巡って特典をゲットしよう
-              </h2>
-
               <span>
-                学内に散りばめられたQRコードを読み取って、
-                スタンプと豆知識を集めよう。
+                YUHISAI SPECIAL
               </span>
 
-            </div>
-
-          </section>
-
-          {/* =================================
-              FORM
-          ================================= */}
-
-          <form
-            className="startForm"
-            onSubmit={
-              submit
-            }
-          >
-
-            <div className="startFormTitle">
-
-              <p>
-                PLAYER PROFILE
-              </p>
-
-              <h2>
-                プロフィールを登録
-              </h2>
-
-            </div>
-
-            {/* NICKNAME */}
-
-            <div className="field">
-
-              <label htmlFor="nickname">
-                ニックネーム
-              </label>
-
-              <input
-                id="nickname"
-                type="text"
-                value={
-                  nickname
-                }
-                onChange={(
-                  e
-                ) =>
-                  setNickname(
-                    e.target.value
-                  )
-                }
-                placeholder="例：ぽっきー"
-                maxLength={
-                  20
-                }
-                disabled={
-                  submitting
-                }
-              />
-
-            </div>
-
-            {/* GRADE */}
-
-            <div className="field">
-
-              <label htmlFor="grade">
-                学年
-              </label>
-
-              <select
-                id="grade"
-                value={
-                  grade
-                }
-                onChange={(
-                  e
-                ) =>
-                  setGrade(
-                    e.target.value
-                  )
-                }
-                disabled={
-                  submitting
-                }
-              >
-
-                <option value="">
-                  選択してください
-                </option>
-
-                <option value="1年">
-                  1年
-                </option>
-
-                <option value="2年">
-                  2年
-                </option>
-
-                <option value="3年">
-                  3年
-                </option>
-
-                <option value="4年">
-                  4年
-                </option>
-
-                <option value="その他">
-                  その他
-                </option>
-
-              </select>
-
-            </div>
-
-            {/* DEPARTMENT */}
-
-            <div className="field">
-
-              <label htmlFor="department">
-                学科
-              </label>
-
-              <select
-                id="department"
-                value={
-                  department
-                }
-                onChange={(
-                  e
-                ) =>
-                  setDepartment(
-                    e.target.value
-                  )
-                }
-                disabled={
-                  submitting
-                }
-              >
-
-                <option value="">
-                  選択してください
-                </option>
-
-                <optgroup label="外国語学部">
-
-                  <option value="ドイツ語学科">
-                    ドイツ語学科
-                  </option>
-
-                  <option value="英語学科">
-                    英語学科
-                  </option>
-
-                  <option value="フランス語学科">
-                    フランス語学科
-                  </option>
-
-                  <option value="交流文化学科">
-                    交流文化学科
-                  </option>
-
-                </optgroup>
-
-                <optgroup label="国際教養学部">
-
-                  <option value="言語文化学科">
-                    言語文化学科
-                  </option>
-
-                </optgroup>
-
-                <optgroup label="経済学部">
-
-                  <option value="経済学科">
-                    経済学科
-                  </option>
-
-                  <option value="経営学科">
-                    経営学科
-                  </option>
-
-                  <option value="国際環境経済学科">
-                    国際環境経済学科
-                  </option>
-
-                </optgroup>
-
-                <optgroup label="法学部">
-
-                  <option value="法律学科">
-                    法律学科
-                  </option>
-
-                  <option value="国際関係法学科">
-                    国際関係法学科
-                  </option>
-
-                  <option value="総合政策学科">
-                    総合政策学科
-                  </option>
-
-                </optgroup>
-
-              </select>
-
-            </div>
-
-            {/* NEXT INFO */}
-
-            <div className="startSurveyNotice">
-
               <strong>
-                登録後、参加前アンケートがあります
+                着せ替え＆限定フォト
               </strong>
 
               <p>
-                POKIPO体験による変化を確認するため、
-                簡単なアンケートへの回答をお願いします。
+                自分だけのPOKIPOで
+                雄飛祭限定フォトを作ろう
               </p>
 
             </div>
 
-            {/* ERROR */}
+            <span className="yuhisaiHomeSpecialArrow">
+              →
+            </span>
 
-            {message && (
-              <p className="error">
-                {message}
-              </p>
-            )}
+          </button>
+        )}
 
-            {/* DATA WARNING */}
+        {/* ==================================
+            MENU
+        ================================== */}
 
-            <section className="dataWarning">
+        <section className="visualMenuGrid">
 
-              <div className="dataWarningText">
+          <button
+            type="button"
+            className="visualMenuCard"
+            onClick={() =>
+              router.push(
+                "/knowledge"
+              )
+            }
+          >
 
-                <strong>
-                  始める前にチェック！
-                </strong>
+            <div className="visualMenuIcon bookIcon">
+              ?
+            </div>
 
-                <p>
-                  スタンプや豆知識などの進捗は、
-                  この端末のブラウザにも保存されます。
-                </p>
+            <strong>
+              豆知識
+            </strong>
 
-                <p>
-                  イベント終了まで、
-                  Cookie・サイトデータ・閲覧データを削除しないでください。
-                </p>
+            <span>
+              {progress}/5
+            </span>
 
-                <p className="dataWarningImportant">
-                  シークレットモード・プライベートブラウズでの参加も避けてください。
-                </p>
+          </button>
 
-              </div>
+          <button
+            type="button"
+            className="visualMenuCard"
+            onClick={() =>
+              router.push(
+                "/progress"
+              )
+            }
+          >
 
-            </section>
+            <div className="visualMenuIcon routeIcon">
+              ✓
+            </div>
 
-            {/* SUBMIT */}
+            <strong>
+              進捗
+            </strong>
 
-            <button
-              type="submit"
-              className="primaryButton startButton"
-              disabled={
-                submitting
-              }
-            >
+            <span>
+              {progress * 20}%
+            </span>
 
-              <span>
+          </button>
 
-                {submitting
-                  ? "登録中..."
-                  : "次へ進む"}
+          <button
+            type="button"
+            className={
+              completed &&
+              !rewardExchanged
+                ? "visualMenuCard rewardMenu unlocked"
+                : "visualMenuCard rewardMenu"
+            }
+            onClick={() =>
+              router.push(
+                "/reward"
+              )
+            }
+          >
 
-              </span>
+            <div className="visualMenuIcon rewardMenuIcon">
 
-              <span>
-                →
-              </span>
+              {rewardExchanged
+                ? "✓"
+                : completed
+                ? "★"
+                : "🎁"}
 
-            </button>
+            </div>
 
-          </form>
+            <strong>
+              特典
+            </strong>
 
-          <p className="startFooter">
-            登録した情報は、
-            POKIPOの運営・進捗管理・企画分析に使用します。
-          </p>
+            <span>
+              {rewardExchanged
+                ? "交換済"
+                : completed
+                ? "交換OK"
+                : `あと${remaining}`}
+            </span>
+
+          </button>
 
         </section>
 
-      </main>
+        {/* ==================================
+            PARTICIPANTS
+        ================================== */}
 
-      {/* ========================================
-          動画イントロ
-          元画面の上に重ねるだけ
-      ======================================== */}
+        <section className="participantStatsSection">
 
-      {showIntro && (
-        <div className="pokipoIntroOverlay">
+          <div className="participantStatsTitle">
 
-          {/* VIDEO */}
+            <div>
 
-          <video
-            ref={
-              videoRef
-            }
-            className="pokipoIntroVideo"
-            playsInline
-            preload="auto"
-            onEnded={
-              finishIntro
-            }
-            onError={(
-              event
-            ) => {
-              console.error(
-                "動画読み込みエラー:",
-                event.currentTarget.error
-              );
-
-              setVideoError(
-                "動画ファイルを読み込めませんでした。"
-              );
-            }}
-          >
-
-            <source
-              src={
-                INTRO_VIDEO_PATH
-              }
-              type="video/mp4"
-            />
-
-          </video>
-
-          <div className="pokipoIntroShade" />
-
-          {/* START */}
-
-          {!introStarted &&
-            !curtainClosing && (
-            <div className="pokipoIntroStart">
-
-              <span className="pokipoIntroBrand">
-                獨協大学高安ゼミ LiPost × 江崎グリコ株式会社
-                <br />
-                POKIPO
+              <span className="participantStatsEnglish">
+                POKIPO LIVE
               </span>
 
               <h2>
-                キャンパスを回って
-                <br />
-                ポッキーを知る旅に出よう。
+                みんなの参加状況
               </h2>
 
-              <p>
-                音声が流れます。
-                <br />
-                音量をご確認ください。
-              </p>
-
-              <button
-                type="button"
-                className="pokipoIntroStartButton"
-                onClick={() =>
-                  void startIntro()
-                }
-              >
-                <span>
-                  ▶
-                </span>
-
-                音声ありでスタート
-              </button>
-
-              {videoError && (
-                <p className="pokipoIntroError">
-                  {videoError}
-                </p>
-              )}
-
-            </div>
-          )}
-
-          {/* SKIP */}
-
-          {introStarted &&
-            !curtainClosing && (
-            <button
-              type="button"
-              className="pokipoIntroSkip"
-              onClick={
-                skipIntro
-              }
-            >
-              スキップ
-            </button>
-          )}
-
-          {/* SOUND */}
-
-          {introStarted &&
-            !curtainClosing && (
-            <div className="pokipoIntroSound">
-              🔊 SOUND ON
-            </div>
-          )}
-
-          {/* CURTAIN */}
-
-          <div
-            className={[
-              "pokipoCurtain",
-
-              curtainClosing
-                ? "closing"
-                : "",
-
-              curtainOpening
-                ? "opening"
-                : "",
-            ].join(
-              " "
-            )}
-          >
-
-            <div className="pokipoCurtainLeft">
-
-              <div className="pokipoCurtainFold fold1" />
-              <div className="pokipoCurtainFold fold2" />
-              <div className="pokipoCurtainFold fold3" />
-
             </div>
 
-            <div className="pokipoCurtainRight">
+            <div className="participantLiveBadge">
 
-              <div className="pokipoCurtainFold fold1" />
-              <div className="pokipoCurtainFold fold2" />
-              <div className="pokipoCurtainFold fold3" />
+              <span className="participantLiveDot" />
 
-            </div>
-
-            <div className="pokipoCurtainCenterLogo">
-
-              <span>
-                POKIPO
-              </span>
-
-              <small>
-                SHARE HAPPINESS
-              </small>
+              LIVE
 
             </div>
 
           </div>
 
-        </div>
-      )}
+          <div
+            className={
+              participantCountUpdating ||
+              completedCountUpdating
+                ? "participantTotalCard participantLiveRefreshing"
+                : "participantTotalCard"
+            }
+          >
 
-    </>
+            <div className="participantLiveStat">
+
+              <span className="participantTotalLabel">
+                現在の参加者
+              </span>
+
+              <div
+                className={
+                  participantCountUpdating
+                    ? "participantTotalNumber participantNumberUpdating"
+                    : "participantTotalNumber"
+                }
+              >
+
+                <strong>
+                  {totalParticipants ===
+                  null
+                    ? "—"
+                    : totalParticipants}
+                </strong>
+
+                <span>
+                  人
+                </span>
+
+              </div>
+
+              <p>
+                {totalParticipants ===
+                null
+                  ? "参加状況を読み込み中..."
+                  : "POKIPOに参加している学生"}
+              </p>
+
+            </div>
+
+            <div className="participantLiveDivider" />
+
+            <div className="participantLiveStat complete">
+
+              <span className="participantTotalLabel">
+                コンプリートした参加者
+              </span>
+
+              <div
+                className={
+                  completedCountUpdating
+                    ? "participantTotalNumber participantNumberUpdating"
+                    : "participantTotalNumber"
+                }
+              >
+
+                <strong>
+                  {completedParticipants ===
+                  null
+                    ? "—"
+                    : completedParticipants}
+                </strong>
+
+                <span>
+                  人
+                </span>
+
+              </div>
+
+              <p>
+                {completedParticipants ===
+                null
+                  ? "達成状況を読み込み中..."
+                  : "POKIPOをコンプリート！"}
+              </p>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* ==================================
+            LiPost ANNOUNCEMENTS
+        ================================== */}
+
+        <section className="homeAnnouncementSection">
+
+          <div className="homeAnnouncementHeader">
+
+            <div>
+
+              <span>
+                LiPost NEWS
+              </span>
+
+              <h2>
+                LiPostからのお知らせ
+              </h2>
+
+            </div>
+
+            <div className="homeAnnouncementMark">
+              i
+            </div>
+
+          </div>
+
+          {announcements.length ===
+          0 ? (
+            <div className="homeAnnouncementEmpty">
+
+              <p>
+                現在お知らせはありません。
+              </p>
+
+            </div>
+          ) : (
+            <div className="homeAnnouncementList">
+
+              {announcements.map(
+                (
+                  announcement
+                ) => (
+                  <article
+                    key={
+                      announcement.id
+                    }
+                    className="homeAnnouncementCard"
+                  >
+
+                    <div className="homeAnnouncementDate">
+                      {formatAnnouncementDate(
+                        announcement.published_at
+                      )}
+                    </div>
+
+                    <div className="homeAnnouncementContent">
+
+                      <h3>
+                        {announcement.title}
+                      </h3>
+
+                      <p>
+                        {announcement.body}
+                      </p>
+
+                    </div>
+
+                  </article>
+                )
+              )}
+
+            </div>
+          )}
+
+        </section>
+
+        {/* ==================================
+            FIRST TUTORIAL
+        ================================== */}
+
+        {showTutorial && (
+          <div className="pokipoTutorialOverlay">
+
+            <div className="pokipoTutorialCard">
+
+              <div className="pokipoTutorialStep">
+                {tutorialStep} / 2
+              </div>
+
+              {tutorialStep ===
+              1 ? (
+                <>
+
+                  <span className="pokipoTutorialLabel">
+                    HOW TO PLAY
+                  </span>
+
+                  <h2>
+                    QRコードを読み取ろう
+                  </h2>
+
+                  <p>
+                    学内のスポットにあるQRコードを見つけたら、
+                    ホーム画面の
+                    <strong>
+                      「QRを読み取る」
+                    </strong>
+                    を押してください。
+                  </p>
+
+                  <p>
+                    カメラを起動してQRコードを読み取ると、
+                    クイズに挑戦できます。
+                    正解するとスタンプと豆知識を獲得できます。
+                  </p>
+
+                  <div className="pokipoTutorialDemo">
+
+                    <div className="pokipoTutorialQrIcon">
+                      QR
+                    </div>
+
+                    <div>
+
+                      <span>
+                        STEP 1
+                      </span>
+
+                      <strong>
+                        QRを読み取る
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    className="pokipoTutorialNext"
+                    onClick={() =>
+                      setTutorialStep(
+                        2
+                      )
+                    }
+                  >
+                    次へ
+
+                    <strong>
+                      →
+                    </strong>
+                  </button>
+
+                </>
+              ) : (
+                <>
+
+                  <span className="pokipoTutorialLabel">
+                    REWARD
+                  </span>
+
+                  <h2>
+                    特典を確認しよう
+                  </h2>
+
+                  <p>
+                    ホーム画面の
+                    <strong>
+                      「特典」
+                    </strong>
+                    を押すと、
+                    現在の特典交換状況を確認できます。
+                  </p>
+
+                  <p>
+                    5つのスタンプをすべて集めたら、
+                    参加後アンケートに回答し、
+                    特典交換用QRを発行できます。
+                  </p>
+
+                  <div className="pokipoTutorialDemo reward">
+
+                    <div className="pokipoTutorialRewardIcon">
+                      ★
+                    </div>
+
+                    <div>
+
+                      <span>
+                        STEP 2
+                      </span>
+
+                      <strong>
+                        特典をチェック
+                      </strong>
+
+                    </div>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    className="pokipoTutorialNext"
+                    onClick={
+                      completeTutorial
+                    }
+                  >
+                    POKIPOをはじめる
+
+                    <strong>
+                      →
+                    </strong>
+                  </button>
+
+                </>
+              )}
+
+              <button
+                type="button"
+                className="pokipoTutorialSkip"
+                onClick={
+                  completeTutorial
+                }
+              >
+                スキップ
+              </button>
+
+            </div>
+
+          </div>
+        )}
+
+      </section>
+
+    </main>
   );
 }
