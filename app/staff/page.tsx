@@ -14,7 +14,7 @@ import {
 } from "../../lib/supabase-client";
 
 /* ========================================
-   STAFF PROFILE
+   TYPES
 ======================================== */
 
 type StaffProfile = {
@@ -317,8 +317,8 @@ export default function StaffPage() {
             </h1>
 
             <p>
-              管理・景品交換・アンケート分析を
-              ここから操作できます。
+              管理・景品交換・お知らせ・
+              アンケート分析をここから操作できます。
             </p>
 
           </div>
@@ -498,6 +498,47 @@ export default function StaffPage() {
               <p>
                 過去の景品交換日時や、
                 交換を担当した管理者を確認します。
+              </p>
+
+            </div>
+
+            <div className="staffMenuCardArrow">
+              →
+            </div>
+
+          </button>
+
+          {/* =================================
+              NOTICE
+          ================================= */}
+
+          <button
+            type="button"
+            className="staffMenuCard"
+            onClick={() =>
+              router.push(
+                "/staff/notices"
+              )
+            }
+          >
+
+            <div className="staffMenuCardIcon">
+              NEWS
+            </div>
+
+            <div className="staffMenuCardBody">
+
+              <span>
+                NOTICE
+              </span>
+
+              <h2>
+                LiPostからのお知らせ
+              </h2>
+
+              <p>
+                参加者ホームに表示する
+                お知らせ内容を更新します。
               </p>
 
             </div>
