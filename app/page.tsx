@@ -12,7 +12,7 @@ import {
 
 import {
   supabase,
-} from "@/lib/supabase-client";
+} from "../lib/supabase-client";
 
 /* ========================================
    雄飛祭ポッキースキン
@@ -40,7 +40,17 @@ type Announcement = {
 ======================================== */
 
 export default function HomePage() {
-  const router = useRouter();
+  const router =
+    useRouter();
+
+  /* ========================================
+     PARTICIPANT CHECK
+  ======================================== */
+
+  const [
+    participantChecking,
+    setParticipantChecking,
+  ] = useState(true);
 
   /* ========================================
      BASIC
@@ -145,10 +155,11 @@ export default function HomePage() {
   ======================================== */
 
   useEffect(() => {
-    let active = true;
+    let mounted =
+      true;
 
     /* --------------------------------
-       端末側POKIPOデータ削除
+       PARTICIPANT DATA RESET
     -------------------------------- */
 
     function clearParticipantData() {
@@ -180,12 +191,16 @@ export default function HomePage() {
         "pokipo_secret_yuhisai",
         "pokipo_yuhisai_pocky_skin",
 
-        /* 動画イントロも初回状態へ */
+        /*
+          動画も完全に初回状態へ戻す
+        */
         "pokipo_intro_seen",
       ];
 
       keysToRemove.forEach(
-        (key) => {
+        (
+          key
+        ) => {
           localStorage.removeItem(
             key
           );
@@ -195,9 +210,6 @@ export default function HomePage() {
 
     /* --------------------------------
        PARTICIPANT VALIDATION
-
-       participantsから削除されていたら
-       完全初期化して動画からやり直す
     -------------------------------- */
 
     async function validateParticipant() {
@@ -209,13 +221,22 @@ export default function HomePage() {
           "pokipo_user_id"
         );
 
-      /* IDがない = 未登録 */
-      if (!participantId) {
-        localStorage.removeItem(
-          "pokipo_intro_seen"
-        );
+      /*
+        参加者IDがない
+        ↓
+        完全初期化
+        ↓
+        /
+      */
 
-        router.replace("/");
+      if (
+        !participantId
+      ) {
+        clearParticipantData();
+
+        router.replace(
+          "/"
+        );
 
         return false;
       }
@@ -225,16 +246,26 @@ export default function HomePage() {
         error,
       } =
         await supabase
-          .from("participants")
-          .select("id")
+          .from(
+            "participants"
+          )
+          .select(
+            "id"
+          )
           .eq(
             "id",
             participantId
           )
           .maybeSingle();
 
-      /* 通信エラーでは削除しない */
-      if (error) {
+      /*
+        通信エラー時は
+        勝手にデータを消さない
+      */
+
+      if (
+        error
+      ) {
         console.error(
           "参加者確認エラー:",
           error
@@ -243,15 +274,29 @@ export default function HomePage() {
         return true;
       }
 
-      /* DBに存在する */
-      if (data) {
+      /*
+        Supabaseに参加者が存在する
+      */
+
+      if (
+        data
+      ) {
         return true;
       }
 
-      /* DBから削除済み */
+      /*
+        Supabaseから参加者が削除済み
+        ↓
+        端末内データ完全リセット
+        ↓
+        初回動画へ
+      */
+
       clearParticipantData();
 
-      router.replace("/");
+      router.replace(
+        "/"
+      );
 
       return false;
     }
@@ -284,12 +329,21 @@ export default function HomePage() {
           "chocolate"
         ) as PockySkin;
 
-      if (!savedNickname) {
+      /*
+        ニックネームがない場合も
+        HOMEを表示しない
+      */
+
+      if (
+        !savedNickname
+      ) {
         clearParticipantData();
 
-        router.replace("/");
+        router.replace(
+          "/"
+        );
 
-        return;
+        return false;
       }
 
       setNickname(
@@ -323,7 +377,9 @@ export default function HomePage() {
         );
       }
 
-      /* FIRST TUTORIAL */
+      /* =========================
+         FIRST TUTORIAL
+      ========================= */
 
       const tutorialCompleted =
         localStorage.getItem(
@@ -341,6 +397,8 @@ export default function HomePage() {
           1
         );
       }
+
+      return true;
     }
 
     /* --------------------------------
@@ -356,7 +414,9 @@ export default function HomePage() {
           "get_participant_count"
         );
 
-      if (error) {
+      if (
+        error
+      ) {
         console.error(
           "参加者数取得エラー:",
           error
@@ -382,7 +442,9 @@ export default function HomePage() {
 
         window.setTimeout(
           () => {
-            if (active) {
+            if (
+              mounted
+            ) {
               setParticipantCountUpdating(
                 false
               );
@@ -395,7 +457,9 @@ export default function HomePage() {
       previousParticipantCount.current =
         newCount;
 
-      if (active) {
+      if (
+        mounted
+      ) {
         setTotalParticipants(
           newCount
         );
@@ -415,7 +479,9 @@ export default function HomePage() {
           "get_completed_participant_count"
         );
 
-      if (error) {
+      if (
+        error
+      ) {
         console.error(
           "5/5達成者数取得エラー:",
           error
@@ -441,7 +507,9 @@ export default function HomePage() {
 
         window.setTimeout(
           () => {
-            if (active) {
+            if (
+              mounted
+            ) {
               setCompletedCountUpdating(
                 false
               );
@@ -454,7 +522,9 @@ export default function HomePage() {
       previousCompletedCount.current =
         newCount;
 
-      if (active) {
+      if (
+        mounted
+      ) {
         setCompletedParticipants(
           newCount
         );
@@ -474,7 +544,9 @@ export default function HomePage() {
           "pokipo_user_id"
         );
 
-      if (!participantId) {
+      if (
+        !participantId
+      ) {
         return;
       }
 
@@ -490,7 +562,9 @@ export default function HomePage() {
           }
         );
 
-      if (error) {
+      if (
+        error
+      ) {
         console.error(
           "スタンプ進捗取得エラー:",
           error
@@ -500,10 +574,13 @@ export default function HomePage() {
           Number(
             localStorage.getItem(
               "pokipo_progress"
-            ) ?? "0"
+            ) ??
+              "0"
           );
 
-        if (active) {
+        if (
+          mounted
+        ) {
           setProgress(
             Math.min(
               Math.max(
@@ -528,7 +605,9 @@ export default function HomePage() {
           5
         );
 
-      if (active) {
+      if (
+        mounted
+      ) {
         setProgress(
           stampCount
         );
@@ -550,7 +629,8 @@ export default function HomePage() {
 
       const serverScans =
         (
-          data ?? []
+          data ??
+          []
         ).map(
           (
             item: {
@@ -599,7 +679,9 @@ export default function HomePage() {
             3
           );
 
-      if (error) {
+      if (
+        error
+      ) {
         console.error(
           "お知らせ取得エラー:",
           error
@@ -608,10 +690,13 @@ export default function HomePage() {
         return;
       }
 
-      if (active) {
+      if (
+        mounted
+      ) {
         setAnnouncements(
           (
-            data ?? []
+            data ??
+            []
           ) as Announcement[]
         );
       }
@@ -627,12 +712,20 @@ export default function HomePage() {
 
       if (
         !valid ||
-        !active
+        !mounted
       ) {
         return;
       }
 
-      loadLocalData();
+      const localValid =
+        loadLocalData();
+
+      if (
+        !localValid ||
+        !mounted
+      ) {
+        return;
+      }
 
       await Promise.all([
         loadParticipantCount(),
@@ -640,6 +733,19 @@ export default function HomePage() {
         loadStampProgress(),
         loadAnnouncements(),
       ]);
+
+      /*
+        すべて正常に確認できてから
+        HOMEを表示する
+      */
+
+      if (
+        mounted
+      ) {
+        setParticipantChecking(
+          false
+        );
+      }
     }
 
     void initialLoad();
@@ -656,15 +762,22 @@ export default function HomePage() {
         .on(
           "postgres_changes",
           {
-            event: "*",
-            schema: "public",
-            table: "participants",
+            event:
+              "*",
+
+            schema:
+              "public",
+
+            table:
+              "participants",
           },
           async () => {
             const valid =
               await validateParticipant();
 
-            if (!valid) {
+            if (
+              !valid
+            ) {
               return;
             }
 
@@ -685,8 +798,12 @@ export default function HomePage() {
         .on(
           "postgres_changes",
           {
-            event: "*",
-            schema: "public",
+            event:
+              "*",
+
+            schema:
+              "public",
+
             table:
               "participant_stamps",
           },
@@ -725,10 +842,15 @@ export default function HomePage() {
           .on(
             "postgres_changes",
             {
-              event: "*",
-              schema: "public",
+              event:
+                "*",
+
+              schema:
+                "public",
+
               table:
                 "participant_stamps",
+
               filter:
                 `participant_id=eq.${currentParticipantId}`,
             },
@@ -753,8 +875,12 @@ export default function HomePage() {
         .on(
           "postgres_changes",
           {
-            event: "*",
-            schema: "public",
+            event:
+              "*",
+
+            schema:
+              "public",
+
             table:
               "lipost_announcements",
           },
@@ -765,7 +891,7 @@ export default function HomePage() {
         .subscribe();
 
     /* ========================================
-       FOCUS
+       WINDOW FOCUS
     ======================================== */
 
     async function handleFocus() {
@@ -774,12 +900,19 @@ export default function HomePage() {
 
       if (
         !valid ||
-        !active
+        !mounted
       ) {
         return;
       }
 
-      loadLocalData();
+      const localValid =
+        loadLocalData();
+
+      if (
+        !localValid
+      ) {
+        return;
+      }
 
       void loadParticipantCount();
 
@@ -791,7 +924,7 @@ export default function HomePage() {
     }
 
     /* ========================================
-       VISIBILITY
+       TAB VISIBILITY
     ======================================== */
 
     async function handleVisibility() {
@@ -807,12 +940,19 @@ export default function HomePage() {
 
       if (
         !valid ||
-        !active
+        !mounted
       ) {
         return;
       }
 
-      loadLocalData();
+      const localValid =
+        loadLocalData();
+
+      if (
+        !localValid
+      ) {
+        return;
+      }
 
       void loadParticipantCount();
 
@@ -838,7 +978,8 @@ export default function HomePage() {
     ======================================== */
 
     return () => {
-      active = false;
+      mounted =
+        false;
 
       window.removeEventListener(
         "focus",
@@ -892,7 +1033,9 @@ export default function HomePage() {
   ======================================== */
 
   function getProcessName() {
-    switch (progress) {
+    switch (
+      progress
+    ) {
       case 0:
         return "これからポッキーづくりスタート";
 
@@ -949,8 +1092,10 @@ export default function HomePage() {
       {
         timeZone:
           "Asia/Tokyo",
+
         month:
           "numeric",
+
         day:
           "numeric",
       }
@@ -973,6 +1118,27 @@ export default function HomePage() {
   }
 
   /* ========================================
+     PARTICIPANT CHECKING
+
+     確認が終わるまでは
+     HOMEを絶対に描画しない
+  ======================================== */
+
+  if (
+    participantChecking
+  ) {
+    return (
+      <main
+        className="shell"
+        style={{
+          minHeight:
+            "100vh",
+        }}
+      />
+    );
+  }
+
+  /* ========================================
      VIEW
   ======================================== */
 
@@ -988,6 +1154,7 @@ export default function HomePage() {
           ? {
               minHeight:
                 "100vh",
+
               background:
                 "linear-gradient(180deg, #63bdf5 0%, #9bd7fa 36%, #dff3ff 70%, #fff1d7 100%)",
             }
@@ -1017,9 +1184,7 @@ export default function HomePage() {
 
           <div className="visualHomeUserName">
 
-            {nickname
-              ? `${nickname}さん`
-              : "ゲストさん"}
+            {nickname}さん
 
           </div>
 
@@ -1090,6 +1255,7 @@ export default function HomePage() {
 
           {yuhisaiMode && (
             <>
+
               <span className="yuhisaiHeroDeco yuhisaiHeroDeco1">
                 🏮
               </span>
@@ -1101,6 +1267,7 @@ export default function HomePage() {
               <span className="yuhisaiHeroDeco yuhisaiHeroDeco3">
                 🎪
               </span>
+
             </>
           )}
 
@@ -1142,6 +1309,7 @@ export default function HomePage() {
 
             {completed && (
               <>
+
                 <div
                   className={
                     yuhisaiMode
@@ -1149,8 +1317,11 @@ export default function HomePage() {
                       : "visualPocky visualPockySecond"
                   }
                 >
+
                   <div className="visualPockyCoating" />
+
                   <div className="visualPockyBiscuit" />
+
                 </div>
 
                 <div
@@ -1160,9 +1331,13 @@ export default function HomePage() {
                       : "visualPocky visualPockyThird"
                   }
                 >
+
                   <div className="visualPockyCoating" />
+
                   <div className="visualPockyBiscuit" />
+
                 </div>
+
               </>
             )}
 
@@ -1171,19 +1346,23 @@ export default function HomePage() {
           <div className="visualHeroBottom">
 
             <strong>
+
               {yuhisaiMode
                 ? "SECRET GET!"
                 : completed
                 ? "COMPLETE!"
                 : `${progress} / 5`}
+
             </strong>
 
             <span>
+
               {yuhisaiMode
                 ? `${getSkinName()} POKIPO`
                 : completed
                 ? "POCKY COMPLETE"
                 : "POCKY PROGRESS"}
+
             </span>
 
           </div>
@@ -1197,9 +1376,11 @@ export default function HomePage() {
         <div className="visualProcessLabel">
 
           <span>
+
             {yuhisaiMode
               ? `${getSkinName()}POKIPOで雄飛祭を楽しもう！`
               : getProcessName()}
+
           </span>
 
         </div>
@@ -1225,7 +1406,9 @@ export default function HomePage() {
           <div className="visualStampTrack">
 
             {[1, 2, 3, 4, 5].map(
-              (number) => {
+              (
+                number
+              ) => {
                 const active =
                   number <=
                   progress;
@@ -1241,9 +1424,11 @@ export default function HomePage() {
                         : "visualStamp"
                     }
                   >
+
                     {active
                       ? "✓"
                       : number}
+
                   </div>
                 );
               }
@@ -1468,11 +1653,13 @@ export default function HomePage() {
             </strong>
 
             <span>
+
               {rewardExchanged
                 ? "交換済"
                 : completed
                 ? "交換OK"
                 : `あと${remaining}`}
+
             </span>
 
           </button>
@@ -1533,10 +1720,12 @@ export default function HomePage() {
               >
 
                 <strong>
+
                   {totalParticipants ===
                   null
                     ? "—"
                     : totalParticipants}
+
                 </strong>
 
                 <span>
@@ -1546,10 +1735,12 @@ export default function HomePage() {
               </div>
 
               <p>
+
                 {totalParticipants ===
                 null
                   ? "参加状況を読み込み中..."
                   : "POKIPOに参加している学生"}
+
               </p>
 
             </div>
@@ -1571,10 +1762,12 @@ export default function HomePage() {
               >
 
                 <strong>
+
                   {completedParticipants ===
                   null
                     ? "—"
                     : completedParticipants}
+
                 </strong>
 
                 <span>
@@ -1584,10 +1777,12 @@ export default function HomePage() {
               </div>
 
               <p>
+
                 {completedParticipants ===
                 null
                   ? "達成状況を読み込み中..."
                   : "POKIPOをコンプリート！"}
+
               </p>
 
             </div>
@@ -1646,9 +1841,11 @@ export default function HomePage() {
                   >
 
                     <div className="homeAnnouncementDate">
+
                       {formatAnnouncementDate(
                         announcement.published_at
                       )}
+
                     </div>
 
                     <div className="homeAnnouncementContent">
@@ -1746,6 +1943,7 @@ export default function HomePage() {
                     <strong>
                       →
                     </strong>
+
                   </button>
 
                 </>
@@ -1807,6 +2005,7 @@ export default function HomePage() {
                     <strong>
                       →
                     </strong>
+
                   </button>
 
                 </>
