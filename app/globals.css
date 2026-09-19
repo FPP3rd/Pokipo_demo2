@@ -29972,3 +29972,184 @@ img {
       1fr;
   }
 }
+
+/* ==================================================
+   STAFF MAINTENANCE TARGETS - STRONG VISUAL
+================================================== */
+
+.staffMaintenanceTargets {
+  margin-top: 22px;
+  padding: 18px;
+
+  border: 2px solid #ead0d2;
+  border-radius: 18px;
+
+  background: #fffafa;
+}
+
+.staffMaintenanceTargetsTitle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  margin-bottom: 14px;
+}
+
+.staffMaintenanceTargetsTitle > div:first-child {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.staffMaintenanceTargetsTitle strong {
+  color: #7f1720;
+
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.staffMaintenanceTargetsTitle span {
+  color: #9d777a;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.staffMaintenanceTargetActions {
+  display: flex;
+
+  gap: 6px;
+}
+
+.staffMaintenanceTargetActions button {
+  padding: 7px 10px;
+
+  border: 1px solid #d9b3b6;
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+}
+
+.staffMaintenanceTargetList {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 10px;
+}
+
+.staffMaintenanceTarget {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  min-height: 64px;
+
+  padding: 12px 14px;
+
+  border: 2px solid #eee4e0;
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  cursor: pointer;
+
+  transition:
+    0.18s ease;
+}
+
+.staffMaintenanceTarget:hover {
+  border-color: #d8a7ab;
+
+  transform:
+    translateY(-1px);
+}
+
+.staffMaintenanceTarget:has(
+  input:checked
+) {
+  border-color: #8a1822;
+
+  background: #fff0f1;
+
+  box-shadow:
+    0 8px 18px
+    rgba(138, 24, 34, 0.08);
+}
+
+.staffMaintenanceTarget input {
+  width: 20px;
+  height: 20px;
+
+  flex-shrink: 0;
+
+  accent-color: #8a1822;
+}
+
+.staffMaintenanceTarget > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.staffMaintenanceTarget strong {
+  color: #3f3733;
+
+  font-size: 10px;
+  font-weight: 1000;
+}
+
+.staffMaintenanceTarget span {
+  color: #9b8f89;
+
+  font-size: 8px;
+  font-weight: 800;
+}
+
+/* 全体メンテナンスON時を強調 */
+
+.staffMaintenanceToggle.active {
+  border: 2px solid #8a1822 !important;
+
+  background: #fff0f1 !important;
+}
+
+.staffMaintenanceStatus.active {
+  box-shadow:
+    0 0 0 4px
+    rgba(138, 24, 34, 0.08);
+}
+
+/* MOBILE */
+
+@media (max-width: 560px) {
+  .staffMaintenanceTargetsTitle {
+    flex-direction: column;
+  }
+
+  .staffMaintenanceTargetActions {
+    width: 100%;
+  }
+
+  .staffMaintenanceTargetActions button {
+    flex: 1;
+  }
+
+  .staffMaintenanceTargetList {
+    grid-template-columns: 1fr;
+  }
+}
