@@ -42,7 +42,7 @@ export default function ProgressPage() {
     progress >= 5;
 
   return (
-    <MaintenanceGate>
+    <MaintenanceGate page="progress">
 
       <main className="shell">
 

@@ -18,11 +18,38 @@ const DEFAULT_MAINTENANCE_MESSAGE =
   "現在システムメンテナンスを行っています。しばらくしてから再度アクセスしてください。";
 
 /* ========================================
-   TYPE
+   PAGE TYPE
 ======================================== */
+
+type MaintenancePage =
+  | "home"
+  | "stamp"
+  | "knowledge"
+  | "progress"
+  | "reward"
+  | "survey_before"
+  | "survey_after";
 
 type MaintenanceGateProps = {
   children: ReactNode;
+  page: MaintenancePage;
+};
+
+/* ========================================
+   SETTINGS TYPE
+======================================== */
+
+type MaintenanceSettings = {
+  maintenance_mode: boolean;
+  maintenance_message: string;
+
+  maintenance_home: boolean;
+  maintenance_stamp: boolean;
+  maintenance_knowledge: boolean;
+  maintenance_progress: boolean;
+  maintenance_reward: boolean;
+  maintenance_survey_before: boolean;
+  maintenance_survey_after: boolean;
 };
 
 /* ========================================
@@ -31,6 +58,7 @@ type MaintenanceGateProps = {
 
 export default function MaintenanceGate({
   children,
+  page,
 }: MaintenanceGateProps) {
   const [
     checking,
@@ -38,8 +66,8 @@ export default function MaintenanceGate({
   ] = useState(true);
 
   const [
-    maintenanceMode,
-    setMaintenanceMode,
+    maintenanceActive,
+    setMaintenanceActive,
   ] = useState(false);
 
   const [
@@ -48,6 +76,72 @@ export default function MaintenanceGate({
   ] = useState(
     DEFAULT_MAINTENANCE_MESSAGE
   );
+
+  /* ========================================
+     PAGE CHECK
+  ======================================== */
+
+  function isPageMaintenance(
+    settings: MaintenanceSettings
+  ) {
+    /*
+      全体メンテナンスONなら
+      無条件ですべて停止
+    */
+
+    if (
+      settings.maintenance_mode
+    ) {
+      return true;
+    }
+
+    /*
+      全体OFFなら
+      ページ別設定を見る
+    */
+
+    switch (
+      page
+    ) {
+      case "home":
+        return Boolean(
+          settings.maintenance_home
+        );
+
+      case "stamp":
+        return Boolean(
+          settings.maintenance_stamp
+        );
+
+      case "knowledge":
+        return Boolean(
+          settings.maintenance_knowledge
+        );
+
+      case "progress":
+        return Boolean(
+          settings.maintenance_progress
+        );
+
+      case "reward":
+        return Boolean(
+          settings.maintenance_reward
+        );
+
+      case "survey_before":
+        return Boolean(
+          settings.maintenance_survey_before
+        );
+
+      case "survey_after":
+        return Boolean(
+          settings.maintenance_survey_after
+        );
+
+      default:
+        return false;
+    }
+  }
 
   /* ========================================
      LOAD
@@ -67,7 +161,17 @@ export default function MaintenanceGate({
             "pokipo_app_settings"
           )
           .select(
-            "maintenance_mode, maintenance_message"
+            `
+              maintenance_mode,
+              maintenance_message,
+              maintenance_home,
+              maintenance_stamp,
+              maintenance_knowledge,
+              maintenance_progress,
+              maintenance_reward,
+              maintenance_survey_before,
+              maintenance_survey_after
+            `
           )
           .eq(
             "id",
@@ -91,7 +195,7 @@ export default function MaintenanceGate({
         if (
           mounted
         ) {
-          setMaintenanceMode(
+          setMaintenanceActive(
             false
           );
 
@@ -104,20 +208,24 @@ export default function MaintenanceGate({
       }
 
       if (
-        !mounted
+        !mounted ||
+        !data
       ) {
         return;
       }
 
-      setMaintenanceMode(
-        Boolean(
-          data?.maintenance_mode
-        )
-      );
+      const settings =
+        data as MaintenanceSettings;
 
       setMaintenanceMessage(
-        data?.maintenance_message?.trim() ||
+        settings.maintenance_message?.trim() ||
           DEFAULT_MAINTENANCE_MESSAGE
+      );
+
+      setMaintenanceActive(
+        isPageMaintenance(
+          settings
+        )
       );
 
       setChecking(
@@ -134,7 +242,7 @@ export default function MaintenanceGate({
     const channel =
       supabase
         .channel(
-          "participant-maintenance-gate"
+          `participant-maintenance-${page}`
         )
         .on(
           "postgres_changes",
@@ -155,32 +263,24 @@ export default function MaintenanceGate({
             payload
           ) => {
             const newData =
-              payload.new as {
-                maintenance_mode?:
-                  boolean;
-
-                maintenance_message?:
-                  string;
-              };
+              payload.new as MaintenanceSettings;
 
             if (
-              typeof newData.maintenance_mode ===
-              "boolean"
+              !newData
             ) {
-              setMaintenanceMode(
-                newData.maintenance_mode
-              );
+              return;
             }
 
-            if (
-              typeof newData.maintenance_message ===
-              "string"
-            ) {
-              setMaintenanceMessage(
-                newData.maintenance_message.trim() ||
-                  DEFAULT_MAINTENANCE_MESSAGE
-              );
-            }
+            setMaintenanceMessage(
+              newData.maintenance_message?.trim() ||
+                DEFAULT_MAINTENANCE_MESSAGE
+            );
+
+            setMaintenanceActive(
+              isPageMaintenance(
+                newData
+              )
+            );
           }
         )
         .subscribe();
@@ -193,7 +293,9 @@ export default function MaintenanceGate({
         channel
       );
     };
-  }, []);
+  }, [
+    page,
+  ]);
 
   /* ========================================
      CHECKING
@@ -230,7 +332,7 @@ export default function MaintenanceGate({
   ======================================== */
 
   if (
-    maintenanceMode
+    maintenanceActive
   ) {
     return (
       <main className="maintenancePage">

@@ -874,7 +874,7 @@ export default function HomePage() {
   ======================================== */
 
   return (
-    <MaintenanceGate>
+    <MaintenanceGate page="home">
 
       <main
         className={

@@ -487,7 +487,7 @@ export default function AfterSurveyPage() {
     loading
   ) {
     return (
-      <MaintenanceGate>
+      <MaintenanceGate page="survey_after">
 
         <main className="shell">
 
@@ -506,7 +506,7 @@ export default function AfterSurveyPage() {
   }
 
   return (
-    <MaintenanceGate>
+    <MaintenanceGate page="survey_after">
 
       <main className="shell">
 

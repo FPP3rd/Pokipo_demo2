@@ -1247,7 +1247,7 @@ export default function RewardPage() {
   ======================================== */
 
   return (
-    <MaintenanceGate>
+    <MaintenanceGate page="reward">
 
       <main className="shell">
 

@@ -490,7 +490,7 @@ export default function BeforeSurveyPage() {
     loading
   ) {
     return (
-      <MaintenanceGate>
+      <MaintenanceGate page="survey_before">
 
         <main className="shell">
 
@@ -513,7 +513,7 @@ export default function BeforeSurveyPage() {
   ======================================== */
 
   return (
-    <MaintenanceGate>
+    <MaintenanceGate page="survey_before">
 
       <main className="shell">
 

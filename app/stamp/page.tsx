@@ -1825,7 +1825,7 @@ export default function StampPage() {
   ======================================== */
 
   return (
-    <MaintenanceGate>
+    <MaintenanceGate page="stamp">
 
       <main className="shell">
 

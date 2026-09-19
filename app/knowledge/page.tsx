@@ -301,7 +301,7 @@ export default function KnowledgePage() {
   ======================================== */
 
   return (
-    <MaintenanceGate>
+    <MaintenanceGate page="knowledge">
 
       <main className="shell">
 
