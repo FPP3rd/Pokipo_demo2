@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -71,6 +72,33 @@ export default function HomePage() {
   ] = useState<number | null>(
     null
   );
+
+  const [
+    completedParticipants,
+    setCompletedParticipants,
+  ] = useState<number | null>(
+    null
+  );
+
+  const [
+    participantCountUpdating,
+    setParticipantCountUpdating,
+  ] = useState(false);
+
+  const [
+    completedCountUpdating,
+    setCompletedCountUpdating,
+  ] = useState(false);
+
+  const previousParticipantCount =
+    useRef<number | null>(
+      null
+    );
+
+  const previousCompletedCount =
+    useRef<number | null>(
+      null
+    );
 
   /* ========================================
      ANNOUNCEMENTS
@@ -233,10 +261,93 @@ export default function HomePage() {
         return;
       }
 
-      setTotalParticipants(
+      const newCount =
         Number(
           data ?? 0
-        )
+        );
+
+      if (
+        previousParticipantCount.current !==
+          null &&
+        previousParticipantCount.current !==
+          newCount
+      ) {
+        setParticipantCountUpdating(
+          true
+        );
+
+        window.setTimeout(
+          () => {
+            setParticipantCountUpdating(
+              false
+            );
+          },
+          650
+        );
+      }
+
+      previousParticipantCount.current =
+        newCount;
+
+      setTotalParticipants(
+        newCount
+      );
+    }
+
+    /* --------------------------------
+       5/5達成者数取得
+    -------------------------------- */
+
+    async function loadCompletedParticipantCount() {
+      const {
+        data,
+        error,
+      } =
+        await supabase.rpc(
+          "get_completed_participant_count"
+        );
+
+      if (
+        error
+      ) {
+        console.error(
+          "5/5達成者数取得エラー:",
+          error
+        );
+
+        return;
+      }
+
+      const newCount =
+        Number(
+          data ?? 0
+        );
+
+      if (
+        previousCompletedCount.current !==
+          null &&
+        previousCompletedCount.current !==
+          newCount
+      ) {
+        setCompletedCountUpdating(
+          true
+        );
+
+        window.setTimeout(
+          () => {
+            setCompletedCountUpdating(
+              false
+            );
+          },
+          650
+        );
+      }
+
+      previousCompletedCount.current =
+        newCount;
+
+      setCompletedParticipants(
+        newCount
       );
     }
 
@@ -428,6 +539,8 @@ export default function HomePage() {
 
     void loadParticipantCount();
 
+    void loadCompletedParticipantCount();
+
     void loadStampProgress();
 
     void loadAnnouncements();
@@ -460,7 +573,36 @@ export default function HomePage() {
         .subscribe();
 
     /* ========================================
+       GLOBAL STAMP REALTIME
+       5/5達成者数更新用
+    ======================================== */
+
+    const completedChannel =
+      supabase
+        .channel(
+          "completed-participants-live"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event:
+              "*",
+
+            schema:
+              "public",
+
+            table:
+              "participant_stamps",
+          },
+          () => {
+            void loadCompletedParticipantCount();
+          }
+        )
+        .subscribe();
+
+    /* ========================================
        STAMP REALTIME
+       自分の進捗更新用
     ======================================== */
 
     const currentParticipantId =
@@ -502,6 +644,8 @@ export default function HomePage() {
             },
             () => {
               void loadStampProgress();
+
+              void loadCompletedParticipantCount();
             }
           )
           .subscribe();
@@ -543,6 +687,8 @@ export default function HomePage() {
 
       void loadParticipantCount();
 
+      void loadCompletedParticipantCount();
+
       void loadStampProgress();
 
       void loadAnnouncements();
@@ -560,6 +706,8 @@ export default function HomePage() {
         loadLocalData();
 
         void loadParticipantCount();
+
+        void loadCompletedParticipantCount();
 
         void loadStampProgress();
 
@@ -594,6 +742,10 @@ export default function HomePage() {
 
       supabase.removeChannel(
         participantChannel
+      );
+
+      supabase.removeChannel(
+        completedChannel
       );
 
       if (
@@ -1277,37 +1429,110 @@ export default function HomePage() {
 
           </div>
 
-          <div className="participantTotalCard">
+          <div
+            className={
+              participantCountUpdating ||
+              completedCountUpdating
+                ? "participantTotalCard participantLiveRefreshing"
+                : "participantTotalCard"
+            }
+          >
 
-            <span className="participantTotalLabel">
-              現在の参加者
-            </span>
+            {/* =============================
+                LEFT
+                現在の参加者
+            ============================== */}
 
-            <div className="participantTotalNumber">
+            <div className="participantLiveStat">
 
-              <strong>
+              <span className="participantTotalLabel">
+                現在の参加者
+              </span>
+
+              <div
+                className={
+                  participantCountUpdating
+                    ? "participantTotalNumber participantNumberUpdating"
+                    : "participantTotalNumber"
+                }
+              >
+
+                <strong>
+
+                  {totalParticipants ===
+                  null
+                    ? "—"
+                    : totalParticipants}
+
+                </strong>
+
+                <span>
+                  人
+                </span>
+
+              </div>
+
+              <p>
 
                 {totalParticipants ===
                 null
-                  ? "—"
-                  : totalParticipants}
+                  ? "参加状況を読み込み中..."
+                  : "POKIPOに参加している学生"}
 
-              </strong>
-
-              <span>
-                人
-              </span>
+              </p>
 
             </div>
 
-            <p>
+            {/* =============================
+                CENTER
+            ============================== */}
 
-              {totalParticipants ===
-              null
-                ? "参加状況を読み込み中..."
-                : "POKIPOに参加している学生"}
+            <div className="participantLiveDivider" />
 
-            </p>
+            {/* =============================
+                RIGHT
+                5/5達成者
+            ============================== */}
+
+            <div className="participantLiveStat complete">
+
+              <span className="participantTotalLabel">
+                5/5 達成者
+              </span>
+
+              <div
+                className={
+                  completedCountUpdating
+                    ? "participantTotalNumber participantNumberUpdating"
+                    : "participantTotalNumber"
+                }
+              >
+
+                <strong>
+
+                  {completedParticipants ===
+                  null
+                    ? "—"
+                    : completedParticipants}
+
+                </strong>
+
+                <span>
+                  人
+                </span>
+
+              </div>
+
+              <p>
+
+                {completedParticipants ===
+                null
+                  ? "達成状況を読み込み中..."
+                  : "POKIPOをコンプリート！"}
+
+              </p>
+
+            </div>
 
           </div>
 

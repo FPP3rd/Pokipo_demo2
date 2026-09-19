@@ -28803,3 +28803,276 @@ img {
     display: none;
   }
 }
+
+/* ==================================================
+   POKIPO LIVE
+   2 COLUMN STATS
+================================================== */
+
+.participantTotalCard {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    1px
+    minmax(0, 1fr);
+
+  align-items: stretch;
+
+  overflow: hidden;
+}
+
+
+/* ==================================================
+   LEFT / RIGHT
+================================================== */
+
+.participantLiveStat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  min-width: 0;
+
+  padding:
+    2px
+    14px;
+}
+
+.participantLiveStat.complete {
+  min-width: 0;
+}
+
+
+/* ==================================================
+   CENTER LINE
+================================================== */
+
+.participantLiveDivider {
+  width: 1px;
+
+  min-height: 74px;
+
+  align-self: center;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.24
+    );
+}
+
+
+/* ==================================================
+   NUMBER UPDATE
+================================================== */
+
+.participantNumberUpdating {
+  animation:
+    participantNumberSnap
+    0.55s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    );
+}
+
+@keyframes participantNumberSnap {
+  0% {
+    opacity: 0.2;
+
+    transform:
+      translateY(8px)
+      scale(0.96);
+
+    filter:
+      blur(2px);
+  }
+
+  45% {
+    opacity: 1;
+
+    transform:
+      translateY(-2px)
+      scale(1.055);
+
+    filter:
+      blur(0);
+  }
+
+  100% {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+
+    filter:
+      blur(0);
+  }
+}
+
+
+/* ==================================================
+   SWEEP
+================================================== */
+
+.participantTotalCard::after {
+  content: "";
+
+  position: absolute;
+
+  top: -40%;
+  left: -42%;
+
+  width: 18%;
+  height: 180%;
+
+  pointer-events: none;
+
+  opacity: 0;
+
+  transform:
+    skewX(-18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(
+        255,
+        255,
+        255,
+        0.34
+      ),
+      transparent
+    );
+}
+
+.participantTotalCard.participantLiveRefreshing::after {
+  animation:
+    participantLiveSweep
+    0.72s
+    cubic-bezier(
+      0.22,
+      1,
+      0.36,
+      1
+    );
+}
+
+@keyframes participantLiveSweep {
+  0% {
+    left: -42%;
+
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0.9;
+  }
+
+  100% {
+    left: 122%;
+
+    opacity: 0;
+  }
+}
+
+
+/* ==================================================
+   LIVE DOT
+================================================== */
+
+.participantLiveDot {
+  animation:
+    participantLivePulse
+    1.7s
+    ease-in-out
+    infinite;
+}
+
+@keyframes participantLivePulse {
+  0%,
+  100% {
+    opacity: 0.45;
+
+    transform:
+      scale(0.86);
+  }
+
+  50% {
+    opacity: 1;
+
+    transform:
+      scale(1.08);
+  }
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (max-width: 430px) {
+  .participantLiveStat {
+    padding:
+      2px
+      8px;
+  }
+
+  .participantLiveDivider {
+    min-height: 66px;
+  }
+
+  .participantLiveStat
+    .participantTotalLabel {
+    font-size: 8px;
+  }
+
+  .participantLiveStat
+    .participantTotalNumber
+    strong {
+    font-size:
+      clamp(
+        24px,
+        8vw,
+        34px
+      );
+  }
+
+  .participantLiveStat
+    .participantTotalNumber
+    span {
+    font-size: 9px;
+  }
+
+  .participantLiveStat
+    > p {
+    font-size: 7px;
+
+    line-height: 1.5;
+  }
+}
+
+
+/* ==================================================
+   REDUCED MOTION
+================================================== */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .participantNumberUpdating,
+  .participantLiveDot,
+  .participantTotalCard.participantLiveRefreshing::after {
+    animation: none;
+  }
+}
