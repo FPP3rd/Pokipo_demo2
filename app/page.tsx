@@ -1045,6 +1045,8 @@ export default function StartPage() {
             <div className="pokipoIntroStart">
 
               <span className="pokipoIntroBrand">
+                獨協大学高安ゼミ LiPost × 江崎グリコ株式会社
+                <br />
                 POKIPO
               </span>
 
