@@ -30153,3 +30153,153 @@ img {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==================================================
+   REWARD CONFIRMATION CODE
+================================================== */
+
+.rewardConfirmationCode {
+  width: 100%;
+
+  margin-top: 18px;
+  padding: 18px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #ead8d3;
+  border-radius: 16px;
+
+  background: #fff9f7;
+
+  text-align: center;
+}
+
+.rewardConfirmationCode > span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.13em;
+}
+
+.rewardConfirmationCode > small {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #786d67;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.rewardConfirmationCode > strong {
+  display: block;
+
+  margin-top: 8px;
+
+  color: #332d29;
+
+  font-size: 32px;
+  font-weight: 1000;
+
+  letter-spacing: 0.16em;
+}
+
+.rewardConfirmationCode > p {
+  margin:
+    9px
+    0
+    0;
+
+  color: #897c75;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+/* ==================================================
+   STAFF CONFIRMATION CODE
+================================================== */
+
+.staffConfirmationCode {
+  margin:
+    18px
+    0;
+
+  padding:
+    18px
+    16px;
+
+  border:
+    1px solid
+    #ead8d3;
+
+  border-radius:
+    16px;
+
+  background:
+    #fff8f6;
+
+  text-align:
+    center;
+}
+
+.staffConfirmationCode span {
+  display:
+    block;
+
+  color:
+    #8a1822;
+
+  font-size:
+    8px;
+
+  font-weight:
+    1000;
+
+  letter-spacing:
+    0.14em;
+}
+
+.staffConfirmationCode small {
+  display:
+    block;
+
+  margin-top:
+    3px;
+
+  color:
+    #81746e;
+
+  font-size:
+    9px;
+
+  font-weight:
+    800;
+}
+
+.staffConfirmationCode strong {
+  display:
+    block;
+
+  margin-top:
+    8px;
+
+  color:
+    #332d29;
+
+  font-size:
+    32px;
+
+  font-weight:
+    1000;
+
+  letter-spacing:
+    0.16em;
+}

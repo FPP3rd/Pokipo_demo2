@@ -21,7 +21,7 @@ import {
 type RewardExchange = {
   id: string;
   participant_id: string;
-  student_number: string;
+  confirmation_code: string;
   status: string;
   created_at: string;
   exchanged_at: string | null;
@@ -43,7 +43,7 @@ type StaffProfile = {
 type HistoryRow = {
   id: string;
   nickname: string;
-  studentNumber: string;
+  confirmationCode: string;
   grade: string | null;
   department: string | null;
   exchangedAt: string | null;
@@ -172,7 +172,7 @@ export default function RewardHistoryPage() {
               "reward_exchanges"
             )
             .select(
-              "id, participant_id, student_number, status, created_at, exchanged_at, exchanged_by"
+              "id, participant_id, confirmation_code, status, created_at, exchanged_at, exchanged_by"
             )
             .eq(
               "status",
@@ -212,7 +212,7 @@ export default function RewardHistoryPage() {
             new Set(
               typedExchanges.map(
                 (
-                  item: RewardExchange
+                  item
                 ) =>
                   item.participant_id
               )
@@ -264,14 +264,13 @@ export default function RewardHistoryPage() {
               typedExchanges
                 .map(
                   (
-                    item: RewardExchange
+                    item
                   ) =>
                     item.exchanged_by
                 )
                 .filter(
                   (
-                    value:
-                      string | null
+                    value
                   ): value is string =>
                     Boolean(
                       value
@@ -390,8 +389,8 @@ export default function RewardHistoryPage() {
                 participant?.nickname ??
                 "不明",
 
-              studentNumber:
-                exchange.student_number,
+              confirmationCode:
+                exchange.confirmation_code,
 
               grade:
                 participant?.grade ??
@@ -449,7 +448,7 @@ export default function RewardHistoryPage() {
           ) =>
             [
               row.nickname,
-              row.studentNumber,
+              row.confirmationCode,
               row.grade ?? "",
               row.department ?? "",
               row.staffName,
@@ -552,7 +551,7 @@ export default function RewardHistoryPage() {
             </h1>
 
             <p>
-              景品交換日時と担当管理者を確認できます。
+              景品交換日時・確認番号・担当管理者を確認できます。
             </p>
 
           </div>
@@ -659,7 +658,7 @@ export default function RewardHistoryPage() {
                 event.target.value
               )
             }
-            placeholder="名前・学籍番号・担当管理者で検索"
+            placeholder="名前・確認番号・担当管理者で検索"
           />
 
         </section>
@@ -726,11 +725,11 @@ export default function RewardHistoryPage() {
                     <div>
 
                       <span>
-                        学籍番号
+                        確認番号
                       </span>
 
                       <strong>
-                        {row.studentNumber}
+                        {row.confirmationCode}
                       </strong>
 
                     </div>

@@ -679,11 +679,11 @@ export default function StartPage() {
       );
 
       localStorage.removeItem(
-        "pokipo_reward_student_number"
+        "pokipo_reward_token"
       );
 
       localStorage.removeItem(
-        "pokipo_reward_token"
+        "pokipo_reward_confirmation_code"
       );
 
       /* =================================

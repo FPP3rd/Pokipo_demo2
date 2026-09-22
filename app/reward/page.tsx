@@ -67,7 +67,7 @@ const knowledgeItems = [
 ======================================== */
 
 type RewardStatusRow = {
-  student_number: string;
+  confirmation_code: string;
   exchange_token: string;
   status: string;
   exchanged_at: string | null;
@@ -78,6 +78,11 @@ type CompletionRow = {
   achievement_rank:
     | number
     | null;
+};
+
+type IssuedRewardRow = {
+  exchange_token: string;
+  confirmation_code: string;
 };
 
 /* ========================================
@@ -92,6 +97,9 @@ export default function RewardPage() {
     useRef<HTMLDivElement | null>(
       null
     );
+
+  const issuingRef =
+    useRef(false);
 
   /* ========================================
      USER
@@ -155,8 +163,8 @@ export default function RewardPage() {
   ] = useState("");
 
   const [
-    studentNumber,
-    setStudentNumber,
+    confirmationCode,
+    setConfirmationCode,
   ] = useState("");
 
   const [
@@ -353,6 +361,16 @@ export default function RewardPage() {
         "pokipo_post_survey_completed"
       ) === "true";
 
+    const savedConfirmationCode =
+      localStorage.getItem(
+        "pokipo_reward_confirmation_code"
+      ) ?? "";
+
+    const savedRewardToken =
+      localStorage.getItem(
+        "pokipo_reward_token"
+      ) ?? "";
+
     setNickname(
       savedNickname
     );
@@ -399,6 +417,23 @@ export default function RewardPage() {
       savedPostSurvey
     );
 
+    setConfirmationCode(
+      savedConfirmationCode
+    );
+
+    setRewardToken(
+      savedRewardToken
+    );
+
+    if (
+      savedConfirmationCode &&
+      savedRewardToken
+    ) {
+      setRewardQrIssued(
+        true
+      );
+    }
+
     if (
       savedRank !== null
     ) {
@@ -432,6 +467,14 @@ export default function RewardPage() {
         savedKnowledge
       );
     }
+
+    /*
+      旧仕様の学籍番号データが残っていた場合は削除
+    */
+
+    localStorage.removeItem(
+      "pokipo_reward_student_number"
+    );
   }, []);
 
   /* ========================================
@@ -493,14 +536,12 @@ export default function RewardPage() {
         )
       );
 
-      if (
+      localStorage.setItem(
+        "pokipo_completed",
         stampCount >= 5
-      ) {
-        localStorage.setItem(
-          "pokipo_completed",
-          "true"
-        );
-      }
+          ? "true"
+          : "false"
+      );
     }
 
     void loadProgress();
@@ -726,7 +767,7 @@ export default function RewardPage() {
         );
       }
 
-      return;
+      return false;
     }
 
     if (
@@ -758,7 +799,7 @@ export default function RewardPage() {
           error
         );
 
-        return;
+        return false;
       }
 
       if (
@@ -766,14 +807,14 @@ export default function RewardPage() {
         data.length ===
           0
       ) {
-        return;
+        return false;
       }
 
       const reward =
         data[0] as RewardStatusRow;
 
-      setStudentNumber(
-        reward.student_number
+      setConfirmationCode(
+        reward.confirmation_code
       );
 
       setRewardToken(
@@ -785,8 +826,8 @@ export default function RewardPage() {
       );
 
       localStorage.setItem(
-        "pokipo_reward_student_number",
-        reward.student_number
+        "pokipo_reward_confirmation_code",
+        reward.confirmation_code
       );
 
       localStorage.setItem(
@@ -836,6 +877,8 @@ export default function RewardPage() {
           );
         }
       }
+
+      return true;
     } finally {
       if (
         showLoading
@@ -852,6 +895,10 @@ export default function RewardPage() {
       true
     );
   }, []);
+
+  /* ========================================
+     STATUS POLLING
+  ======================================== */
 
   useEffect(() => {
     const currentParticipantId =
@@ -912,69 +959,20 @@ export default function RewardPage() {
     knowledgeItems[0];
 
   /* ========================================
-     STUDENT NUMBER
-  ======================================== */
-
-  function changeStudentNumber(
-    value: string
-  ) {
-    const onlyNumbers =
-      value.replace(
-        /\D/g,
-        ""
-      );
-
-    setStudentNumber(
-      onlyNumbers.slice(
-        0,
-        8
-      )
-    );
-
-    if (
-      message
-    ) {
-      setMessage("");
-    }
-  }
-
-  /* ========================================
      ISSUE REWARD QR
   ======================================== */
 
   async function issueRewardQr() {
     if (
-      !completed
+      issuingRef.current
     ) {
-      setMessage(
-        "5つのスタンプをすべて集めると交換できます。"
-      );
-
       return;
     }
 
     if (
+      !completed ||
       !postSurveyCompleted
     ) {
-      setMessage(
-        "参加後アンケートに回答してから交換用QRを発行してください。"
-      );
-
-      return;
-    }
-
-    const normalizedStudentNumber =
-      studentNumber.trim();
-
-    if (
-      !/^[0-9]{8}$/.test(
-        normalizedStudentNumber
-      )
-    ) {
-      setMessage(
-        "学籍番号は数字8桁で入力してください。"
-      );
-
       return;
     }
 
@@ -992,6 +990,9 @@ export default function RewardPage() {
       return;
     }
 
+    issuingRef.current =
+      true;
+
     setIssuingRewardQr(
       true
     );
@@ -1008,9 +1009,6 @@ export default function RewardPage() {
           {
             p_participant_id:
               currentParticipantId,
-
-            p_student_number:
-              normalizedStudentNumber,
           }
         );
 
@@ -1023,17 +1021,16 @@ export default function RewardPage() {
         );
 
         setMessage(
-          `交換用QRを発行できませんでした。${error.message}`
+          "交換用QRを発行できませんでした。画面を再読み込みしてもう一度お試しください。"
         );
 
         return;
       }
 
-      const issuedToken =
-        data?.[0]?.exchange_token;
-
       if (
-        !issuedToken
+        !data ||
+        data.length ===
+          0
       ) {
         setMessage(
           "交換用QR情報を取得できませんでした。"
@@ -1042,12 +1039,26 @@ export default function RewardPage() {
         return;
       }
 
-      setStudentNumber(
-        normalizedStudentNumber
-      );
+      const issued =
+        data[0] as IssuedRewardRow;
+
+      if (
+        !issued.exchange_token ||
+        !issued.confirmation_code
+      ) {
+        setMessage(
+          "交換用QR情報を取得できませんでした。"
+        );
+
+        return;
+      }
 
       setRewardToken(
-        issuedToken
+        issued.exchange_token
+      );
+
+      setConfirmationCode(
+        issued.confirmation_code
       );
 
       setRewardQrIssued(
@@ -1055,20 +1066,70 @@ export default function RewardPage() {
       );
 
       localStorage.setItem(
-        "pokipo_reward_student_number",
-        normalizedStudentNumber
+        "pokipo_reward_token",
+        issued.exchange_token
       );
 
       localStorage.setItem(
-        "pokipo_reward_token",
-        issuedToken
+        "pokipo_reward_confirmation_code",
+        issued.confirmation_code
+      );
+    } catch (
+      error
+    ) {
+      console.error(
+        "特典QR発行通信エラー:",
+        error
+      );
+
+      setMessage(
+        "交換用QRの発行中に通信エラーが発生しました。"
       );
     } finally {
+      issuingRef.current =
+        false;
+
       setIssuingRewardQr(
         false
       );
     }
   }
+
+  /* ========================================
+     AUTO ISSUE QR
+
+     5スタンプ完了
+     ＋参加後アンケート回答済み
+     → 自動発行
+  ======================================== */
+
+  useEffect(() => {
+    if (
+      loadingRewardStatus ||
+      loadingPostSurvey
+    ) {
+      return;
+    }
+
+    if (
+      !completed ||
+      !postSurveyCompleted ||
+      rewardQrIssued ||
+      rewardExchanged
+    ) {
+      return;
+    }
+
+    void issueRewardQr();
+  }, [
+    completed,
+    postSurveyCompleted,
+    rewardQrIssued,
+    rewardExchanged,
+    loadingRewardStatus,
+    loadingPostSurvey,
+    participantId,
+  ]);
 
   /* ========================================
      CERTIFICATE
@@ -1253,6 +1314,10 @@ export default function RewardPage() {
 
         <section className="rewardPage">
 
+          {/* =================================
+              HEADER
+          ================================= */}
+
           <header className="rewardHeader">
 
             <button
@@ -1280,6 +1345,10 @@ export default function RewardPage() {
             </div>
 
           </header>
+
+          {/* =================================
+              HERO
+          ================================= */}
 
           <section
             className={
@@ -1318,7 +1387,9 @@ export default function RewardPage() {
 
           </section>
 
-          {/* COMPLETION RECORD */}
+          {/* =================================
+              COMPLETION RECORD
+          ================================= */}
 
           {completed && (
             <section className="rewardCompletionInfo">
@@ -1374,7 +1445,9 @@ export default function RewardPage() {
             </section>
           )}
 
-          {/* EXCHANGE DATE */}
+          {/* =================================
+              EXCHANGE DATE
+          ================================= */}
 
           {completed && (
             <section className="rewardExchangeDateNotice">
@@ -1388,13 +1461,16 @@ export default function RewardPage() {
               </h2>
 
               <p>
-                当日はこの画面に表示される交換用QRをスタッフに提示してください。
+                当日はこの画面に表示されるQRコードと
+                確認番号をスタッフに提示してください。
               </p>
 
             </section>
           )}
 
-          {/* POST SURVEY */}
+          {/* =================================
+              POST SURVEY
+          ================================= */}
 
           {completed &&
             !rewardExchanged && (
@@ -1431,7 +1507,7 @@ export default function RewardPage() {
 
                   <p>
                     ご協力ありがとうございます。
-                    特典交換用QRを発行できます。
+                    特典交換用QRを自動で発行します。
                   </p>
 
                 </>
@@ -1456,6 +1532,7 @@ export default function RewardPage() {
                     }
                   >
                     参加後アンケートに回答する
+
                     <strong>
                       →
                     </strong>
@@ -1467,7 +1544,9 @@ export default function RewardPage() {
             </section>
           )}
 
-          {/* REWARD EXCHANGE */}
+          {/* =================================
+              REWARD EXCHANGE
+          ================================= */}
 
           <section className="rewardExchangeSection">
 
@@ -1506,6 +1585,13 @@ export default function RewardPage() {
                   景品交換完了！
                 </h3>
 
+                {confirmationCode && (
+                  <p>
+                    確認番号：
+                    {confirmationCode}
+                  </p>
+                )}
+
                 {rewardExchangedAt && (
                   <p>
                     交換日時：
@@ -1538,7 +1624,7 @@ export default function RewardPage() {
                 </span>
 
                 <h3>
-                  アンケート回答後にQRを発行できます
+                  アンケート回答後にQRを表示します
                 </h3>
 
                 <p>
@@ -1546,74 +1632,27 @@ export default function RewardPage() {
                 </p>
 
               </div>
-            ) : !rewardQrIssued ? (
+            ) : issuingRewardQr ? (
               <div className="rewardExchangeCard">
 
                 <div className="rewardExchangeIcon">
-                  🎁
+                  QR
                 </div>
 
                 <span>
-                  COMPLETE REWARD
+                  ISSUING
                 </span>
 
                 <h3>
-                  交換用QRを発行しよう
+                  交換用QRを発行しています...
                 </h3>
 
                 <p>
-                  学籍番号を数字8桁で入力してください。
-                  <br />
-                  学籍番号は景品交換者の管理のみに使用し、個人情報の特定には使用しません。
+                  そのまま少しお待ちください。
                 </p>
 
-                <div className="rewardStudentNumberField">
-
-                  <label htmlFor="studentNumber">
-                    学籍番号
-                  </label>
-
-                  <input
-                    id="studentNumber"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={8}
-                    value={
-                      studentNumber
-                    }
-                    onChange={(
-                      event
-                    ) =>
-                      changeStudentNumber(
-                        event.target.value
-                      )
-                    }
-                    placeholder="数字8桁（間違いがないようにご注意ください）"
-                  />
-
-                </div>
-
-                <button
-                  type="button"
-                  className="rewardExchangeButton"
-                  onClick={
-                    issueRewardQr
-                  }
-                  disabled={
-                    issuingRewardQr ||
-                    studentNumber.length !==
-                      8
-                  }
-                >
-
-                  {issuingRewardQr
-                    ? "QRを発行中..."
-                    : "交換用QRを発行する"}
-
-                </button>
-
               </div>
-            ) : (
+            ) : rewardQrIssued ? (
               <div className="rewardExchangeCard rewardQrCard">
 
                 <div className="rewardQrStatus">
@@ -1637,27 +1676,48 @@ export default function RewardPage() {
 
                 </div>
 
-                <div className="rewardStudentNumberMasked">
+                <div className="rewardConfirmationCode">
 
                   <span>
-                    学籍番号
+                    CONFIRMATION NUMBER
                   </span>
 
+                  <small>
+                    確認番号
+                  </small>
+
                   <strong>
-                    ****
-                    {studentNumber.slice(
-                      -4
-                    )}
+                    {confirmationCode}
                   </strong>
 
+                  <p>
+                    QRコードとあわせて
+                    スタッフに提示してください。
+                  </p>
+
                 </div>
+
+              </div>
+            ) : (
+              <div className="rewardExchangeCard">
+
+                <h3>
+                  QRコードを準備中です
+                </h3>
+
+                <p>
+                  画面を再読み込みしても表示されない場合は、
+                  スタッフまでお声がけください。
+                </p>
 
               </div>
             )}
 
           </section>
 
-          {/* CERTIFICATE */}
+          {/* =================================
+              CERTIFICATE
+          ================================= */}
 
           {rewardExchanged && (
             <section className="certificateSection">
@@ -1845,22 +1905,43 @@ export default function RewardPage() {
 
                   {showNickname && (
                     <div className="certificateProfileItem">
-                      <span>NICKNAME</span>
-                      <strong>{nickname}</strong>
+
+                      <span>
+                        NICKNAME
+                      </span>
+
+                      <strong>
+                        {nickname}
+                      </strong>
+
                     </div>
                   )}
 
                   {showGrade && (
                     <div className="certificateProfileItem">
-                      <span>GRADE</span>
-                      <strong>{grade}</strong>
+
+                      <span>
+                        GRADE
+                      </span>
+
+                      <strong>
+                        {grade}
+                      </strong>
+
                     </div>
                   )}
 
                   {showDepartment && (
                     <div className="certificateProfileItem">
-                      <span>DEPARTMENT</span>
-                      <strong>{department}</strong>
+
+                      <span>
+                        DEPARTMENT
+                      </span>
+
+                      <strong>
+                        {department}
+                      </strong>
+
                     </div>
                   )}
 
@@ -1899,8 +1980,13 @@ export default function RewardPage() {
                   onClick={
                     downloadCertificate
                   }
+                  disabled={
+                    creatingImage
+                  }
                 >
-                  達成証を保存
+                  {creatingImage
+                    ? "作成中..."
+                    : "達成証を保存"}
                 </button>
 
                 <button
@@ -1908,6 +1994,9 @@ export default function RewardPage() {
                   className="primary"
                   onClick={
                     shareCertificate
+                  }
+                  disabled={
+                    creatingImage
                   }
                 >
                   SNSで共有
@@ -1917,6 +2006,10 @@ export default function RewardPage() {
 
             </section>
           )}
+
+          {/* =================================
+              SECRET
+          ================================= */}
 
           {secretStamp && (
             <section className="rewardSecretUnlocked">
@@ -1932,11 +2025,19 @@ export default function RewardPage() {
             </section>
           )}
 
+          {/* =================================
+              MESSAGE
+          ================================= */}
+
           {message && (
             <p className="rewardMessage">
               {message}
             </p>
           )}
+
+          {/* =================================
+              HOME
+          ================================= */}
 
           <button
             type="button"
