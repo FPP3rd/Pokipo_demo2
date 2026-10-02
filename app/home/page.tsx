@@ -780,6 +780,20 @@ export default function HomePage() {
       5 - progress
     );
 
+  const progressPercent =
+    Math.min(
+      Math.max(
+        progress,
+        0
+      ),
+      5
+    ) * 20;
+
+  const progressPockyImage =
+    progressPercent > 0
+      ? `/images/pocky/pocky-${progressPercent}.png`
+      : "";
+
   /* ========================================
      PROCESS NAME
   ======================================== */
@@ -789,22 +803,22 @@ export default function HomePage() {
       progress
     ) {
       case 0:
-        return "これからポッキーづくりスタート";
+        return "POKIPOをはじめよう！";
 
       case 1:
-        return "材料をそろえる";
+        return "1つ目のスタンプを獲得！";
 
       case 2:
-        return "生地をつくる";
+        return "2つ目のスタンプを獲得！";
 
       case 3:
-        return "プレッツェルを焼く";
+        return "3つ目のスタンプを獲得！";
 
       case 4:
-        return "チョコレートをまとわせる";
+        return "あと1つでコンプリート！";
 
       default:
-        return "ポッキー完成！";
+        return "5つのスタンプをコンプリート！";
     }
   }
 
@@ -1014,7 +1028,7 @@ export default function HomePage() {
 
             </div>
 
-            <div className="visualPockyScene">
+            <div className="visualPockyScene approvedPockyScene">
 
               <span className="visualSpark visualSpark1">
                 ✦
@@ -1028,53 +1042,104 @@ export default function HomePage() {
                 ✦
               </span>
 
-              <div
-                className={
-                  yuhisaiMode
-                    ? `visualPocky yuhisaiPockySkin skin-${yuhisaiPockySkin}`
-                    : "visualPocky"
-                }
-              >
+              {yuhisaiMode ? (
+                <div
+                  className={
+                    `visualPocky yuhisaiPockySkin skin-${yuhisaiPockySkin}`
+                  }
+                >
 
-                <div className="visualPockyCoating" />
+                  <div className="visualPockyCoating" />
 
-                <div className="visualPockyBiscuit" />
+                  <div className="visualPockyBiscuit" />
+
+                </div>
+              ) : progressPercent > 0 ? (
+                <img
+                  key={
+                    progressPercent
+                  }
+                  src={
+                    progressPockyImage
+                  }
+                  alt={
+                    `ポッキー進捗 ${progressPercent}%`
+                  }
+                  className="approvedPockyProgressImage"
+                  draggable={
+                    false
+                  }
+                />
+              ) : (
+                <div className="approvedPockyZeroState">
+
+                  <span>
+                    まだスタンプはありません
+                  </span>
+
+                </div>
+              )}
+
+            </div>
+
+            {/* ==================================
+                PROGRESS BAR
+            ================================== */}
+
+            <div className="approvedPockyProgressPanel">
+
+              <div className="approvedPockyProgressTop">
+
+                <span>
+                  POCKY PROGRESS
+                </span>
+
+                <strong>
+                  {progressPercent}%
+                </strong>
 
               </div>
 
-              {completed && (
-                <>
+              <div
+                className="approvedPockyProgressBar"
+                role="progressbar"
+                aria-label="POKIPO進捗"
+                aria-valuemin={
+                  0
+                }
+                aria-valuemax={
+                  100
+                }
+                aria-valuenow={
+                  progressPercent
+                }
+              >
 
-                  <div
-                    className={
-                      yuhisaiMode
-                        ? `visualPocky visualPockySecond yuhisaiPockySkin skin-${yuhisaiPockySkin}`
-                        : "visualPocky visualPockySecond"
-                    }
-                  >
+                <div
+                  className="approvedPockyProgressBarFill"
+                  style={{
+                    width:
+                      `${progressPercent}%`,
+                  }}
+                />
 
-                    <div className="visualPockyCoating" />
+              </div>
 
-                    <div className="visualPockyBiscuit" />
+              <div className="approvedPockyProgressBottom">
 
-                  </div>
+                <span>
+                  {progress} / 5 STEP
+                </span>
 
-                  <div
-                    className={
-                      yuhisaiMode
-                        ? `visualPocky visualPockyThird yuhisaiPockySkin skin-${yuhisaiPockySkin}`
-                        : "visualPocky visualPockyThird"
-                    }
-                  >
+                <span>
 
-                    <div className="visualPockyCoating" />
+                  {completed
+                    ? "COMPLETE"
+                    : `あと${remaining}つ`}
 
-                    <div className="visualPockyBiscuit" />
+                </span>
 
-                  </div>
-
-                </>
-              )}
+              </div>
 
             </div>
 
@@ -1353,7 +1418,7 @@ export default function HomePage() {
               </strong>
 
               <span>
-                {progress * 20}%
+                {progressPercent}%
               </span>
 
             </button>
@@ -1718,7 +1783,7 @@ export default function HomePage() {
                     <p>
                       5つのスタンプをすべて集めたら、
                       参加後アンケートに回答し、
-                      特典交換用QRを発行できます。
+                      特典交換用QRが表示されます。
                     </p>
 
                     <div className="pokipoTutorialDemo reward">
