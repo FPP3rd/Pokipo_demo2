@@ -1106,7 +1106,7 @@ export default function HomePage() {
                 <div className="homePromotionBannerContent">
 
                   <span>
-                    LiPost EVENT
+                    LiPost information
                   </span>
 
                   <h2>
