@@ -821,7 +821,7 @@ export default function BeforeSurveyPage() {
             </h2>
 
             <p>
-              次の3問は、POKIPO体験後にも同じ質問をします。
+              最初の3問は、POKIPO体験後にも同じ質問をします。
               今の気持ちに最も近いものを選んでください。
             </p>
 

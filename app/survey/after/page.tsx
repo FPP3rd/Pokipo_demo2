@@ -679,7 +679,7 @@ export default function AfterSurveyPage() {
             </h2>
 
             <p>
-              次の3問は参加前と同じ質問です。
+              最初の3問は参加前と同じ質問です。
               POKIPOを体験した現在の気持ちを選んでください。
             </p>
 
