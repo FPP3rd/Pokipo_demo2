@@ -17,6 +17,9 @@ import {
 import MaintenanceGate
   from "../../components/MaintenanceGate";
 
+import PromotionGate
+  from "../../components/PromotionGate";
+
 /* ========================================
    雄飛祭ポッキースキン
 ======================================== */
@@ -133,15 +136,9 @@ export default function HomePage() {
   const [
     bannerPromotion,
     setBannerPromotion,
-  ] =
-    useState<BannerPromotion | null>(
-      null
-    );
-
-  const [
-    bannerLoading,
-    setBannerLoading,
-  ] = useState(true);
+  ] = useState<BannerPromotion | null>(
+    null
+  );
 
   /* ========================================
      雄飛祭 MODE
@@ -568,10 +565,6 @@ export default function HomePage() {
     -------------------------------- */
 
     async function loadBannerPromotion() {
-      setBannerLoading(
-        true
-      );
-
       try {
         const {
           data,
@@ -643,10 +636,6 @@ export default function HomePage() {
         setBannerPromotion(
           null
         );
-      } finally {
-        setBannerLoading(
-          false
-        );
       }
     }
 
@@ -695,6 +684,7 @@ export default function HomePage() {
 
     /* ========================================
        GLOBAL STAMP REALTIME
+       5/5達成者数更新用
     ======================================== */
 
     const completedChannel =
@@ -722,6 +712,7 @@ export default function HomePage() {
 
     /* ========================================
        STAMP REALTIME
+       自分の進捗更新用
     ======================================== */
 
     const currentParticipantId =
@@ -1041,985 +1032,988 @@ export default function HomePage() {
   return (
     <MaintenanceGate page="home">
 
-      <main
-        className={
-          yuhisaiMode
-            ? "shell yuhisaiMode"
-            : "shell"
-        }
-        style={
-          yuhisaiMode
-            ? {
-                minHeight:
-                  "100vh",
+      <PromotionGate>
 
-                background:
-                  "linear-gradient(180deg, #63bdf5 0%, #9bd7fa 36%, #dff3ff 70%, #fff1d7 100%)",
-              }
-            : undefined
-        }
-      >
+        <main
+          className={
+            yuhisaiMode
+              ? "shell yuhisaiMode"
+              : "shell"
+          }
+          style={
+            yuhisaiMode
+              ? {
+                  minHeight:
+                    "100vh",
 
-        <section className="visualHomePage">
+                  background:
+                    "linear-gradient(180deg, #63bdf5 0%, #9bd7fa 36%, #dff3ff 70%, #fff1d7 100%)",
+                }
+              : undefined
+          }
+        >
 
-          {/* ==================================
-              HEADER
-          ================================== */}
+          <section className="visualHomePage">
 
-          <header className="visualHomeHeader">
+            {/* ==================================
+                HEADER
+            ================================== */}
 
-            <div>
+            <header className="visualHomeHeader">
 
-              <p className="visualHomeMini">
-                高安ゼミ LiPost × POCKY
-              </p>
+              <div>
 
-              <h1 className="visualHomeLogo">
-                POKIPO
-              </h1>
+                <p className="visualHomeMini">
+                  高安ゼミ LiPost × POCKY
+                </p>
 
-            </div>
+                <h1 className="visualHomeLogo">
+                  POKIPO
+                </h1>
 
-            <div className="visualHomeUserName">
+              </div>
 
-              {nickname
-                ? `${nickname}さん`
-                : "ゲストさん"}
+              <div className="visualHomeUserName">
 
-            </div>
+                {nickname
+                  ? `${nickname}さん`
+                  : "ゲストさん"}
 
-          </header>
+              </div>
 
-          {/* ==================================
-              PROMOTION BANNER
-          ================================== */}
+            </header>
 
-          {!bannerLoading &&
-            bannerPromotion && (
-            <section className="homePromotionBanner">
+            {/* ==================================
+                PROMOTION BANNER
+            ================================== */}
 
-              {bannerPromotion.image_url && (
-                <div className="homePromotionBannerImage">
+            {bannerPromotion && (
+              <section className="homePromotionBanner">
 
-                  <img
-                    src={
-                      bannerPromotion.image_url
-                    }
-                    alt=""
-                  />
+                {bannerPromotion.image_url && (
+                  <div className="homePromotionBannerImage">
+
+                    <img
+                      src={
+                        bannerPromotion.image_url
+                      }
+                      alt=""
+                    />
+
+                  </div>
+                )}
+
+                <div className="homePromotionBannerContent">
+
+                  <span>
+                    LiPost EVENT
+                  </span>
+
+                  <h2>
+                    {bannerPromotion.title}
+                  </h2>
+
+                  {bannerPromotion.body && (
+                    <p>
+                      {bannerPromotion.body}
+                    </p>
+                  )}
 
                 </div>
-              )}
 
-              <div className="homePromotionBannerContent">
+              </section>
+            )}
+
+            {/* ==================================
+                雄飛祭バナー
+            ================================== */}
+
+            {yuhisaiMode && (
+              <section className="yuhisaiFestivalBanner">
 
                 <span>
-                  LiPost EVENT
+                  SECRET MODE UNLOCKED
                 </span>
 
                 <h2>
-                  {bannerPromotion.title}
+                  🎆 雄飛祭モード！ 🎆
                 </h2>
 
-                {bannerPromotion.body && (
-                  <p>
-                    {bannerPromotion.body}
-                  </p>
+                <p>
+                  シークレットスタンプ
+                  「雄飛祭 LiPostブース」を獲得！
+                  POKIPOが雄飛祭仕様に変化しました。
+                </p>
+
+                <div className="yuhisaiFestivalCurrentSkin">
+
+                  <span>
+                    CURRENT STYLE
+                  </span>
+
+                  <strong>
+                    {getSkinName()}
+                    POKIPO
+                  </strong>
+
+                </div>
+
+                <button
+                  type="button"
+                  className="yuhisaiCustomizeButton"
+                  onClick={() =>
+                    router.push(
+                      "/yuhisai"
+                    )
+                  }
+                >
+                  ポッキーを着せ替える →
+                </button>
+
+              </section>
+            )}
+
+            {/* ==================================
+                POCKY HERO
+            ================================== */}
+
+            <section
+              className={
+                `visualPockyHero visualStage-${progress}`
+              }
+            >
+
+              <div className="visualHeroDecoration visualDecoOne" />
+
+              <div className="visualHeroDecoration visualDecoTwo" />
+
+              {yuhisaiMode && (
+                <>
+
+                  <span className="yuhisaiHeroDeco yuhisaiHeroDeco1">
+                    🏮
+                  </span>
+
+                  <span className="yuhisaiHeroDeco yuhisaiHeroDeco2">
+                    ✦
+                  </span>
+
+                  <span className="yuhisaiHeroDeco yuhisaiHeroDeco3">
+                    🎪
+                  </span>
+
+                </>
+              )}
+
+              <div className="visualStepBadge">
+
+                {yuhisaiMode
+                  ? "YUHISAI MODE"
+                  : `STEP ${progress}`}
+
+              </div>
+
+              <div className="visualPockyScene approvedPockyScene">
+
+                <span className="visualSpark visualSpark1">
+                  ✦
+                </span>
+
+                <span className="visualSpark visualSpark2">
+                  ✦
+                </span>
+
+                <span className="visualSpark visualSpark3">
+                  ✦
+                </span>
+
+                {yuhisaiMode ? (
+                  <div
+                    className={
+                      `visualPocky yuhisaiPockySkin skin-${yuhisaiPockySkin}`
+                    }
+                  >
+
+                    <div className="visualPockyCoating" />
+
+                    <div className="visualPockyBiscuit" />
+
+                  </div>
+                ) : progressPercent > 0 ? (
+                  <img
+                    key={
+                      progressPercent
+                    }
+                    src={
+                      progressPockyImage
+                    }
+                    alt={
+                      `ポッキー進捗 ${progressPercent}%`
+                    }
+                    className="approvedPockyProgressImage"
+                    draggable={
+                      false
+                    }
+                  />
+                ) : (
+                  <div className="approvedPockyZeroState">
+
+                    <span>
+                      まだスタンプはありません
+                    </span>
+
+                  </div>
                 )}
 
               </div>
 
-            </section>
-          )}
+              {/* ==================================
+                  PROGRESS BAR
+              ================================== */}
 
-          {/* ==================================
-              雄飛祭バナー
-          ================================== */}
+              <div className="approvedPockyProgressPanel">
 
-          {yuhisaiMode && (
-            <section className="yuhisaiFestivalBanner">
+                <div className="approvedPockyProgressTop">
 
-              <span>
-                SECRET MODE UNLOCKED
-              </span>
+                  <span>
+                    POCKY PROGRESS
+                  </span>
 
-              <h2>
-                🎆 雄飛祭モード！ 🎆
-              </h2>
+                  <strong>
+                    {progressPercent}%
+                  </strong>
 
-              <p>
-                シークレットスタンプ
-                「雄飛祭 LiPostブース」を獲得！
-                POKIPOが雄飛祭仕様に変化しました。
-              </p>
+                </div>
 
-              <div className="yuhisaiFestivalCurrentSkin">
+                <div
+                  className="approvedPockyProgressBar"
+                  role="progressbar"
+                  aria-label="POKIPO進捗"
+                  aria-valuemin={
+                    0
+                  }
+                  aria-valuemax={
+                    100
+                  }
+                  aria-valuenow={
+                    progressPercent
+                  }
+                >
+
+                  <div
+                    className="approvedPockyProgressBarFill"
+                    style={{
+                      width:
+                        `${progressPercent}%`,
+                    }}
+                  />
+
+                </div>
+
+                <div className="approvedPockyProgressBottom">
+
+                  <span>
+                    {progress} / 5 STEP
+                  </span>
+
+                  <span>
+
+                    {completed
+                      ? "COMPLETE"
+                      : `あと${remaining}つ`}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+              <div className="visualHeroBottom">
+
+                <strong>
+
+                  {yuhisaiMode
+                    ? "SECRET GET!"
+                    : completed
+                    ? "COMPLETE!"
+                    : `${progress} / 5`}
+
+                </strong>
 
                 <span>
-                  CURRENT STYLE
+
+                  {yuhisaiMode
+                    ? `${getSkinName()} POKIPO`
+                    : completed
+                    ? "POCKY COMPLETE"
+                    : "POCKY PROGRESS"}
+
+                </span>
+
+              </div>
+
+            </section>
+
+            {/* ==================================
+                PROCESS
+            ================================== */}
+
+            <div className="visualProcessLabel">
+
+              <span>
+
+                {yuhisaiMode
+                  ? `${getSkinName()}POKIPOで雄飛祭を楽しもう！`
+                  : getProcessName()}
+
+              </span>
+
+            </div>
+
+            {/* ==================================
+                STAMPS
+            ================================== */}
+
+            <section className="visualStampSection">
+
+              <div className="visualStampHeader">
+
+                <span>
+                  STAMPS
                 </span>
 
                 <strong>
-                  {getSkinName()}
-                  POKIPO
+                  {progress}/5
                 </strong>
 
               </div>
 
+              <div className="visualStampTrack">
+
+                {[1, 2, 3, 4, 5].map(
+                  (
+                    number
+                  ) => {
+                    const active =
+                      number <=
+                      progress;
+
+                    return (
+                      <div
+                        key={
+                          number
+                        }
+                        className={
+                          active
+                            ? "visualStamp active"
+                            : "visualStamp"
+                        }
+                      >
+
+                        {active
+                          ? "✓"
+                          : number}
+
+                      </div>
+                    );
+                  }
+                )}
+
+              </div>
+
+              {yuhisaiMode && (
+                <div className="homeSecretStamp">
+
+                  <div className="homeSecretStampCircle">
+                    6
+                  </div>
+
+                  <div>
+
+                    <span>
+                      SECRET STAMP GET!
+                    </span>
+
+                    <strong>
+                      雄飛祭 LiPostブース
+                    </strong>
+
+                  </div>
+
+                </div>
+              )}
+
+            </section>
+
+            {/* ==================================
+                COMPLETE REWARD
+            ================================== */}
+
+            {completed && (
               <button
                 type="button"
-                className="yuhisaiCustomizeButton"
+                className="visualNextSpot complete"
+                onClick={() =>
+                  router.push(
+                    "/reward"
+                  )
+                }
+              >
+
+                <div className="visualNextIcon">
+                  ★
+                </div>
+
+                <div className="visualNextText">
+
+                  <span>
+                    COMPLETE
+                  </span>
+
+                  <strong>
+                    特典をチェック
+                  </strong>
+
+                </div>
+
+                <div className="visualNextArrow">
+                  →
+                </div>
+
+              </button>
+            )}
+
+            {/* ==================================
+                QR
+            ================================== */}
+
+            <button
+              type="button"
+              className="visualQrButton"
+              onClick={() =>
+                router.push(
+                  "/stamp"
+                )
+              }
+            >
+
+              <span className="visualQrIcon">
+                QR
+              </span>
+
+              <strong>
+                QRを読み取る
+              </strong>
+
+              <span>
+                →
+              </span>
+
+            </button>
+
+            {/* ==================================
+                雄飛祭
+            ================================== */}
+
+            {yuhisaiMode && (
+              <button
+                type="button"
+                className="yuhisaiHomeSpecialButton"
                 onClick={() =>
                   router.push(
                     "/yuhisai"
                   )
                 }
               >
-                ポッキーを着せ替える →
-              </button>
 
-            </section>
-          )}
-
-          {/* ==================================
-              POCKY HERO
-          ================================== */}
-
-          <section
-            className={
-              `visualPockyHero visualStage-${progress}`
-            }
-          >
-
-            <div className="visualHeroDecoration visualDecoOne" />
-
-            <div className="visualHeroDecoration visualDecoTwo" />
-
-            {yuhisaiMode && (
-              <>
-
-                <span className="yuhisaiHeroDeco yuhisaiHeroDeco1">
-                  🏮
-                </span>
-
-                <span className="yuhisaiHeroDeco yuhisaiHeroDeco2">
-                  ✦
-                </span>
-
-                <span className="yuhisaiHeroDeco yuhisaiHeroDeco3">
-                  🎪
-                </span>
-
-              </>
-            )}
-
-            <div className="visualStepBadge">
-
-              {yuhisaiMode
-                ? "YUHISAI MODE"
-                : `STEP ${progress}`}
-
-            </div>
-
-            <div className="visualPockyScene approvedPockyScene">
-
-              <span className="visualSpark visualSpark1">
-                ✦
-              </span>
-
-              <span className="visualSpark visualSpark2">
-                ✦
-              </span>
-
-              <span className="visualSpark visualSpark3">
-                ✦
-              </span>
-
-              {yuhisaiMode ? (
-                <div
-                  className={
-                    `visualPocky yuhisaiPockySkin skin-${yuhisaiPockySkin}`
-                  }
-                >
-
-                  <div className="visualPockyCoating" />
-
-                  <div className="visualPockyBiscuit" />
-
-                </div>
-              ) : progressPercent > 0 ? (
-                <img
-                  key={
-                    progressPercent
-                  }
-                  src={
-                    progressPockyImage
-                  }
-                  alt={
-                    `ポッキー進捗 ${progressPercent}%`
-                  }
-                  className="approvedPockyProgressImage"
-                  draggable={
-                    false
-                  }
-                />
-              ) : (
-                <div className="approvedPockyZeroState">
-
-                  <span>
-                    まだスタンプはありません
-                  </span>
-
-                </div>
-              )}
-
-            </div>
-
-            {/* ==================================
-                PROGRESS BAR
-            ================================== */}
-
-            <div className="approvedPockyProgressPanel">
-
-              <div className="approvedPockyProgressTop">
-
-                <span>
-                  POCKY PROGRESS
-                </span>
-
-                <strong>
-                  {progressPercent}%
-                </strong>
-
-              </div>
-
-              <div
-                className="approvedPockyProgressBar"
-                role="progressbar"
-                aria-label="POKIPO進捗"
-                aria-valuemin={
-                  0
-                }
-                aria-valuemax={
-                  100
-                }
-                aria-valuenow={
-                  progressPercent
-                }
-              >
-
-                <div
-                  className="approvedPockyProgressBarFill"
-                  style={{
-                    width:
-                      `${progressPercent}%`,
-                  }}
-                />
-
-              </div>
-
-              <div className="approvedPockyProgressBottom">
-
-                <span>
-                  {progress} / 5 STEP
-                </span>
-
-                <span>
-
-                  {completed
-                    ? "COMPLETE"
-                    : `あと${remaining}つ`}
-
-                </span>
-
-              </div>
-
-            </div>
-
-            <div className="visualHeroBottom">
-
-              <strong>
-
-                {yuhisaiMode
-                  ? "SECRET GET!"
-                  : completed
-                  ? "COMPLETE!"
-                  : `${progress} / 5`}
-
-              </strong>
-
-              <span>
-
-                {yuhisaiMode
-                  ? `${getSkinName()} POKIPO`
-                  : completed
-                  ? "POCKY COMPLETE"
-                  : "POCKY PROGRESS"}
-
-              </span>
-
-            </div>
-
-          </section>
-
-          {/* ==================================
-              PROCESS
-          ================================== */}
-
-          <div className="visualProcessLabel">
-
-            <span>
-
-              {yuhisaiMode
-                ? `${getSkinName()}POKIPOで雄飛祭を楽しもう！`
-                : getProcessName()}
-
-            </span>
-
-          </div>
-
-          {/* ==================================
-              STAMPS
-          ================================== */}
-
-          <section className="visualStampSection">
-
-            <div className="visualStampHeader">
-
-              <span>
-                STAMPS
-              </span>
-
-              <strong>
-                {progress}/5
-              </strong>
-
-            </div>
-
-            <div className="visualStampTrack">
-
-              {[1, 2, 3, 4, 5].map(
-                (
-                  number
-                ) => {
-                  const active =
-                    number <=
-                    progress;
-
-                  return (
-                    <div
-                      key={
-                        number
-                      }
-                      className={
-                        active
-                          ? "visualStamp active"
-                          : "visualStamp"
-                      }
-                    >
-
-                      {active
-                        ? "✓"
-                        : number}
-
-                    </div>
-                  );
-                }
-              )}
-
-            </div>
-
-            {yuhisaiMode && (
-              <div className="homeSecretStamp">
-
-                <div className="homeSecretStampCircle">
-                  6
+                <div className="yuhisaiHomeSpecialIcon">
+                  🎆
                 </div>
 
                 <div>
 
                   <span>
-                    SECRET STAMP GET!
+                    YUHISAI SPECIAL
                   </span>
 
                   <strong>
-                    雄飛祭 LiPostブース
+                    着せ替え＆限定フォト
                   </strong>
+
+                  <p>
+                    自分だけのPOKIPOで
+                    雄飛祭限定フォトを作ろう
+                  </p>
+
+                </div>
+
+                <span className="yuhisaiHomeSpecialArrow">
+                  →
+                </span>
+
+              </button>
+            )}
+
+            {/* ==================================
+                MENU
+            ================================== */}
+
+            <section className="visualMenuGrid">
+
+              <button
+                type="button"
+                className="visualMenuCard"
+                onClick={() =>
+                  router.push(
+                    "/knowledge"
+                  )
+                }
+              >
+
+                <div className="visualMenuIcon bookIcon">
+                  ?
+                </div>
+
+                <strong>
+                  豆知識
+                </strong>
+
+                <span>
+                  {progress}/5
+                </span>
+
+              </button>
+
+              <button
+                type="button"
+                className="visualMenuCard"
+                onClick={() =>
+                  router.push(
+                    "/progress"
+                  )
+                }
+              >
+
+                <div className="visualMenuIcon routeIcon">
+                  ✓
+                </div>
+
+                <strong>
+                  進捗
+                </strong>
+
+                <span>
+                  {progressPercent}%
+                </span>
+
+              </button>
+
+              <button
+                type="button"
+                className={
+                  completed &&
+                  !rewardExchanged
+                    ? "visualMenuCard rewardMenu unlocked"
+                    : "visualMenuCard rewardMenu"
+                }
+                onClick={() =>
+                  router.push(
+                    "/reward"
+                  )
+                }
+              >
+
+                <div className="visualMenuIcon rewardMenuIcon">
+
+                  {rewardExchanged
+                    ? "✓"
+                    : completed
+                    ? "★"
+                    : "🎁"}
+
+                </div>
+
+                <strong>
+                  特典
+                </strong>
+
+                <span>
+
+                  {rewardExchanged
+                    ? "交換済"
+                    : completed
+                    ? "交換OK"
+                    : `あと${remaining}`}
+
+                </span>
+
+              </button>
+
+            </section>
+
+            {/* ==================================
+                PARTICIPANTS
+            ================================== */}
+
+            <section className="participantStatsSection">
+
+              <div className="participantStatsTitle">
+
+                <div>
+
+                  <span className="participantStatsEnglish">
+                    POKIPO LIVE
+                  </span>
+
+                  <h2>
+                    みんなの参加状況
+                  </h2>
+
+                </div>
+
+                <div className="participantLiveBadge">
+
+                  <span className="participantLiveDot" />
+
+                  LIVE
 
                 </div>
 
               </div>
-            )}
 
-          </section>
+              <div
+                className={
+                  participantCountUpdating ||
+                  completedCountUpdating
+                    ? "participantTotalCard participantLiveRefreshing"
+                    : "participantTotalCard"
+                }
+              >
 
-          {/* ==================================
-              COMPLETE REWARD
-          ================================== */}
+                <div className="participantLiveStat">
 
-          {completed && (
-            <button
-              type="button"
-              className="visualNextSpot complete"
-              onClick={() =>
-                router.push(
-                  "/reward"
-                )
-              }
-            >
+                  <span className="participantTotalLabel">
+                    現在の参加者
+                  </span>
 
-              <div className="visualNextIcon">
-                ★
-              </div>
+                  <div
+                    className={
+                      participantCountUpdating
+                        ? "participantTotalNumber participantNumberUpdating"
+                        : "participantTotalNumber"
+                    }
+                  >
 
-              <div className="visualNextText">
+                    <strong>
 
-                <span>
-                  COMPLETE
-                </span>
+                      {totalParticipants ===
+                      null
+                        ? "—"
+                        : totalParticipants}
 
-                <strong>
-                  特典をチェック
-                </strong>
+                    </strong>
 
-              </div>
+                    <span>
+                      人
+                    </span>
 
-              <div className="visualNextArrow">
-                →
-              </div>
+                  </div>
 
-            </button>
-          )}
-
-          {/* ==================================
-              QR
-          ================================== */}
-
-          <button
-            type="button"
-            className="visualQrButton"
-            onClick={() =>
-              router.push(
-                "/stamp"
-              )
-            }
-          >
-
-            <span className="visualQrIcon">
-              QR
-            </span>
-
-            <strong>
-              QRを読み取る
-            </strong>
-
-            <span>
-              →
-            </span>
-
-          </button>
-
-          {/* ==================================
-              雄飛祭
-          ================================== */}
-
-          {yuhisaiMode && (
-            <button
-              type="button"
-              className="yuhisaiHomeSpecialButton"
-              onClick={() =>
-                router.push(
-                  "/yuhisai"
-                )
-              }
-            >
-
-              <div className="yuhisaiHomeSpecialIcon">
-                🎆
-              </div>
-
-              <div>
-
-                <span>
-                  YUHISAI SPECIAL
-                </span>
-
-                <strong>
-                  着せ替え＆限定フォト
-                </strong>
-
-                <p>
-                  自分だけのPOKIPOで
-                  雄飛祭限定フォトを作ろう
-                </p>
-
-              </div>
-
-              <span className="yuhisaiHomeSpecialArrow">
-                →
-              </span>
-
-            </button>
-          )}
-
-          {/* ==================================
-              MENU
-          ================================== */}
-
-          <section className="visualMenuGrid">
-
-            <button
-              type="button"
-              className="visualMenuCard"
-              onClick={() =>
-                router.push(
-                  "/knowledge"
-                )
-              }
-            >
-
-              <div className="visualMenuIcon bookIcon">
-                ?
-              </div>
-
-              <strong>
-                豆知識
-              </strong>
-
-              <span>
-                {progress}/5
-              </span>
-
-            </button>
-
-            <button
-              type="button"
-              className="visualMenuCard"
-              onClick={() =>
-                router.push(
-                  "/progress"
-                )
-              }
-            >
-
-              <div className="visualMenuIcon routeIcon">
-                ✓
-              </div>
-
-              <strong>
-                進捗
-              </strong>
-
-              <span>
-                {progressPercent}%
-              </span>
-
-            </button>
-
-            <button
-              type="button"
-              className={
-                completed &&
-                !rewardExchanged
-                  ? "visualMenuCard rewardMenu unlocked"
-                  : "visualMenuCard rewardMenu"
-              }
-              onClick={() =>
-                router.push(
-                  "/reward"
-                )
-              }
-            >
-
-              <div className="visualMenuIcon rewardMenuIcon">
-
-                {rewardExchanged
-                  ? "✓"
-                  : completed
-                  ? "★"
-                  : "🎁"}
-
-              </div>
-
-              <strong>
-                特典
-              </strong>
-
-              <span>
-
-                {rewardExchanged
-                  ? "交換済"
-                  : completed
-                  ? "交換OK"
-                  : `あと${remaining}`}
-
-              </span>
-
-            </button>
-
-          </section>
-
-          {/* ==================================
-              PARTICIPANTS
-          ================================== */}
-
-          <section className="participantStatsSection">
-
-            <div className="participantStatsTitle">
-
-              <div>
-
-                <span className="participantStatsEnglish">
-                  POKIPO LIVE
-                </span>
-
-                <h2>
-                  みんなの参加状況
-                </h2>
-
-              </div>
-
-              <div className="participantLiveBadge">
-
-                <span className="participantLiveDot" />
-
-                LIVE
-
-              </div>
-
-            </div>
-
-            <div
-              className={
-                participantCountUpdating ||
-                completedCountUpdating
-                  ? "participantTotalCard participantLiveRefreshing"
-                  : "participantTotalCard"
-              }
-            >
-
-              <div className="participantLiveStat">
-
-                <span className="participantTotalLabel">
-                  現在の参加者
-                </span>
-
-                <div
-                  className={
-                    participantCountUpdating
-                      ? "participantTotalNumber participantNumberUpdating"
-                      : "participantTotalNumber"
-                  }
-                >
-
-                  <strong>
+                  <p>
 
                     {totalParticipants ===
                     null
-                      ? "—"
-                      : totalParticipants}
+                      ? "参加状況を読み込み中..."
+                      : "POKIPOに参加している学生"}
 
-                  </strong>
-
-                  <span>
-                    人
-                  </span>
+                  </p>
 
                 </div>
 
-                <p>
+                <div className="participantLiveDivider" />
 
-                  {totalParticipants ===
-                  null
-                    ? "参加状況を読み込み中..."
-                    : "POKIPOに参加している学生"}
+                <div className="participantLiveStat complete">
 
-                </p>
+                  <span className="participantTotalLabel">
+                    コンプリートした参加者
+                  </span>
 
-              </div>
+                  <div
+                    className={
+                      completedCountUpdating
+                        ? "participantTotalNumber participantNumberUpdating"
+                        : "participantTotalNumber"
+                    }
+                  >
 
-              <div className="participantLiveDivider" />
+                    <strong>
 
-              <div className="participantLiveStat complete">
+                      {completedParticipants ===
+                      null
+                        ? "—"
+                        : completedParticipants}
 
-                <span className="participantTotalLabel">
-                  コンプリートした参加者
-                </span>
+                    </strong>
 
-                <div
-                  className={
-                    completedCountUpdating
-                      ? "participantTotalNumber participantNumberUpdating"
-                      : "participantTotalNumber"
-                  }
-                >
+                    <span>
+                      人
+                    </span>
 
-                  <strong>
+                  </div>
+
+                  <p>
 
                     {completedParticipants ===
                     null
-                      ? "—"
-                      : completedParticipants}
+                      ? "達成状況を読み込み中..."
+                      : "POKIPOをコンプリート！"}
 
-                  </strong>
-
-                  <span>
-                    人
-                  </span>
+                  </p>
 
                 </div>
 
-                <p>
+              </div>
 
-                  {completedParticipants ===
-                  null
-                    ? "達成状況を読み込み中..."
-                    : "POKIPOをコンプリート！"}
+            </section>
 
-                </p>
+            {/* ==================================
+                LiPost ANNOUNCEMENTS
+            ================================== */}
+
+            <section className="homeAnnouncementSection">
+
+              <div className="homeAnnouncementHeader">
+
+                <div>
+
+                  <span>
+                    LiPost NEWS
+                  </span>
+
+                  <h2>
+                    LiPostからのお知らせ
+                  </h2>
+
+                </div>
+
+                <div className="homeAnnouncementMark">
+                  i
+                </div>
 
               </div>
 
-            </div>
+              {announcements.length ===
+              0 ? (
+                <div className="homeAnnouncementEmpty">
 
-          </section>
+                  <p>
+                    現在お知らせはありません。
+                  </p>
 
-          {/* ==================================
-              LiPost ANNOUNCEMENTS
-          ================================== */}
+                </div>
+              ) : (
+                <div className="homeAnnouncementList">
 
-          <section className="homeAnnouncementSection">
+                  {announcements.map(
+                    (
+                      announcement
+                    ) => (
+                      <article
+                        key={
+                          announcement.id
+                        }
+                        className="homeAnnouncementCard"
+                      >
 
-            <div className="homeAnnouncementHeader">
+                        <div className="homeAnnouncementDate">
 
-              <div>
+                          {formatAnnouncementDate(
+                            announcement.published_at
+                          )}
 
-                <span>
-                  LiPost NEWS
-                </span>
+                        </div>
 
-                <h2>
-                  LiPostからのお知らせ
-                </h2>
+                        <div className="homeAnnouncementContent">
 
-              </div>
+                          <h3>
+                            {announcement.title}
+                          </h3>
 
-              <div className="homeAnnouncementMark">
-                i
-              </div>
+                          <p>
+                            {announcement.body}
+                          </p>
 
-            </div>
+                        </div>
 
-            {announcements.length ===
-            0 ? (
-              <div className="homeAnnouncementEmpty">
+                      </article>
+                    )
+                  )}
 
-                <p>
-                  現在お知らせはありません。
-                </p>
+                </div>
+              )}
 
-              </div>
-            ) : (
-              <div className="homeAnnouncementList">
+            </section>
 
-                {announcements.map(
-                  (
-                    announcement
-                  ) => (
-                    <article
-                      key={
-                        announcement.id
-                      }
-                      className="homeAnnouncementCard"
-                    >
+            {/* ==================================
+                FIRST TUTORIAL
+            ================================== */}
 
-                      <div className="homeAnnouncementDate">
+            {showTutorial && (
+              <div className="pokipoTutorialOverlay">
 
-                        {formatAnnouncementDate(
-                          announcement.published_at
-                        )}
+                <div className="pokipoTutorialCard">
+
+                  <div className="pokipoTutorialStep">
+                    {tutorialStep} / 2
+                  </div>
+
+                  {tutorialStep ===
+                  1 ? (
+                    <>
+
+                      <span className="pokipoTutorialLabel">
+                        HOW TO PLAY
+                      </span>
+
+                      <h2>
+                        QRコードを読み取ろう
+                      </h2>
+
+                      <p>
+                        学内のスポットにあるQRコードを見つけたら、
+                        ホーム画面の
+                        <strong>
+                          「QRを読み取る」
+                        </strong>
+                        を押してください。
+                      </p>
+
+                      <p>
+                        カメラを起動してQRコードを読み取ると、
+                        クイズに挑戦できます。
+                        正解するとスタンプと豆知識を獲得できます。
+                      </p>
+
+                      <div className="pokipoTutorialDemo">
+
+                        <div className="pokipoTutorialQrIcon">
+                          QR
+                        </div>
+
+                        <div>
+
+                          <span>
+                            STEP 1
+                          </span>
+
+                          <strong>
+                            QRを読み取る
+                          </strong>
+
+                        </div>
 
                       </div>
 
-                      <div className="homeAnnouncementContent">
+                      <button
+                        type="button"
+                        className="pokipoTutorialNext"
+                        onClick={() =>
+                          setTutorialStep(
+                            2
+                          )
+                        }
+                      >
+                        次へ
 
-                        <h3>
-                          {announcement.title}
-                        </h3>
+                        <strong>
+                          →
+                        </strong>
+                      </button>
 
-                        <p>
-                          {announcement.body}
-                        </p>
+                    </>
+                  ) : (
+                    <>
+
+                      <span className="pokipoTutorialLabel">
+                        REWARD
+                      </span>
+
+                      <h2>
+                        特典を確認しよう
+                      </h2>
+
+                      <p>
+                        ホーム画面の
+                        <strong>
+                          「特典」
+                        </strong>
+                        を押すと、
+                        現在の特典交換状況を確認できます。
+                      </p>
+
+                      <p>
+                        5つのスタンプをすべて集めたら、
+                        参加後アンケートに回答し、
+                        特典交換用QRが表示されます。
+                      </p>
+
+                      <div className="pokipoTutorialDemo reward">
+
+                        <div className="pokipoTutorialRewardIcon">
+                          ★
+                        </div>
+
+                        <div>
+
+                          <span>
+                            STEP 2
+                          </span>
+
+                          <strong>
+                            特典をチェック
+                          </strong>
+
+                        </div>
 
                       </div>
 
-                    </article>
-                  )
-                )}
+                      <button
+                        type="button"
+                        className="pokipoTutorialNext"
+                        onClick={
+                          completeTutorial
+                        }
+                      >
+                        POKIPOをはじめる
+
+                        <strong>
+                          →
+                        </strong>
+                      </button>
+
+                    </>
+                  )}
+
+                  <button
+                    type="button"
+                    className="pokipoTutorialSkip"
+                    onClick={
+                      completeTutorial
+                    }
+                  >
+                    スキップ
+                  </button>
+
+                </div>
 
               </div>
             )}
 
           </section>
 
-          {/* ==================================
-              FIRST TUTORIAL
-          ================================== */}
+        </main>
 
-          {showTutorial && (
-            <div className="pokipoTutorialOverlay">
-
-              <div className="pokipoTutorialCard">
-
-                <div className="pokipoTutorialStep">
-                  {tutorialStep} / 2
-                </div>
-
-                {tutorialStep ===
-                1 ? (
-                  <>
-
-                    <span className="pokipoTutorialLabel">
-                      HOW TO PLAY
-                    </span>
-
-                    <h2>
-                      QRコードを読み取ろう
-                    </h2>
-
-                    <p>
-                      学内のスポットにあるQRコードを見つけたら、
-                      ホーム画面の
-                      <strong>
-                        「QRを読み取る」
-                      </strong>
-                      を押してください。
-                    </p>
-
-                    <p>
-                      カメラを起動してQRコードを読み取ると、
-                      クイズに挑戦できます。
-                      正解するとスタンプと豆知識を獲得できます。
-                    </p>
-
-                    <div className="pokipoTutorialDemo">
-
-                      <div className="pokipoTutorialQrIcon">
-                        QR
-                      </div>
-
-                      <div>
-
-                        <span>
-                          STEP 1
-                        </span>
-
-                        <strong>
-                          QRを読み取る
-                        </strong>
-
-                      </div>
-
-                    </div>
-
-                    <button
-                      type="button"
-                      className="pokipoTutorialNext"
-                      onClick={() =>
-                        setTutorialStep(
-                          2
-                        )
-                      }
-                    >
-                      次へ
-
-                      <strong>
-                        →
-                      </strong>
-                    </button>
-
-                  </>
-                ) : (
-                  <>
-
-                    <span className="pokipoTutorialLabel">
-                      REWARD
-                    </span>
-
-                    <h2>
-                      特典を確認しよう
-                    </h2>
-
-                    <p>
-                      ホーム画面の
-                      <strong>
-                        「特典」
-                      </strong>
-                      を押すと、
-                      現在の特典交換状況を確認できます。
-                    </p>
-
-                    <p>
-                      5つのスタンプをすべて集めたら、
-                      参加後アンケートに回答し、
-                      特典交換用QRが表示されます。
-                    </p>
-
-                    <div className="pokipoTutorialDemo reward">
-
-                      <div className="pokipoTutorialRewardIcon">
-                        ★
-                      </div>
-
-                      <div>
-
-                        <span>
-                          STEP 2
-                        </span>
-
-                        <strong>
-                          特典をチェック
-                        </strong>
-
-                      </div>
-
-                    </div>
-
-                    <button
-                      type="button"
-                      className="pokipoTutorialNext"
-                      onClick={
-                        completeTutorial
-                      }
-                    >
-                      POKIPOをはじめる
-
-                      <strong>
-                        →
-                      </strong>
-                    </button>
-
-                  </>
-                )}
-
-                <button
-                  type="button"
-                  className="pokipoTutorialSkip"
-                  onClick={
-                    completeTutorial
-                  }
-                >
-                  スキップ
-                </button>
-
-              </div>
-
-            </div>
-          )}
-
-        </section>
-
-      </main>
+      </PromotionGate>
 
     </MaintenanceGate>
   );

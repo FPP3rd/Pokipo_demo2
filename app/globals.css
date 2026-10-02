@@ -32112,3 +32112,48 @@ img {
   line-clamp:
     3;
 }
+
+/* ==================================================
+   FULLSCREEN PROMOTION
+   DON'T SHOW AGAIN - COMPACT
+================================================== */
+
+.pokipoPromotionDontShow {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 5px;
+
+  margin-top: 12px;
+
+  padding:
+    5px
+    7px;
+
+  border-radius: 8px;
+
+  background:
+    transparent;
+
+  cursor: pointer;
+}
+
+.pokipoPromotionDontShow input {
+  width: 13px;
+  height: 13px;
+
+  margin: 0;
+
+  flex-shrink: 0;
+
+  accent-color: #8a1822;
+}
+
+.pokipoPromotionDontShow span {
+  color: #8a817c;
+
+  font-size: 7px;
+  font-weight: 700;
+
+  line-height: 1.2;
+}
