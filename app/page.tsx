@@ -33,6 +33,18 @@ const DEFAULT_MAINTENANCE_MESSAGE =
   "現在システムメンテナンスを行っています。しばらくしてから再度アクセスしてください。";
 
 /* ========================================
+   FULLSCREEN PROMOTION
+======================================== */
+
+type FullscreenPromotion = {
+  id: string;
+  title: string;
+  body: string;
+  image_url: string | null;
+  updated_at: string;
+};
+
+/* ========================================
    PAGE
 ======================================== */
 
@@ -60,6 +72,43 @@ export default function StartPage() {
   ] = useState(
     DEFAULT_MAINTENANCE_MESSAGE
   );
+
+  /* ========================================
+     FULLSCREEN PROMOTION
+  ======================================== */
+
+  const [
+    promotionChecking,
+    setPromotionChecking,
+  ] = useState(true);
+
+  const [
+    fullscreenPromotion,
+    setFullscreenPromotion,
+  ] =
+    useState<FullscreenPromotion | null>(
+      null
+    );
+
+  const [
+    showFullscreenPromotion,
+    setShowFullscreenPromotion,
+  ] = useState(false);
+
+  const [
+    dontShowPromotionAgain,
+    setDontShowPromotionAgain,
+  ] = useState(false);
+
+  const [
+    pendingDestination,
+    setPendingDestination,
+  ] = useState("");
+
+  const [
+    pendingIntro,
+    setPendingIntro,
+  ] = useState(false);
 
   /* ========================================
      VIDEO INTRO
@@ -163,11 +212,6 @@ export default function StartPage() {
           error
         );
 
-        /*
-          設定取得に失敗した場合は
-          通常画面を表示
-        */
-
         setMaintenanceMode(
           false
         );
@@ -267,12 +311,187 @@ export default function StartPage() {
   }, []);
 
   /* ========================================
+     FULLSCREEN PROMOTION LOAD
+  ======================================== */
+
+  useEffect(() => {
+    async function loadFullscreenPromotion() {
+      setPromotionChecking(
+        true
+      );
+
+      try {
+        const {
+          data,
+          error,
+        } =
+          await supabase
+            .from(
+              "pokipo_promotions"
+            )
+            .select(
+              "id, title, body, image_url, updated_at"
+            )
+            .eq(
+              "placement",
+              "fullscreen"
+            )
+            .eq(
+              "is_active",
+              true
+            )
+            .order(
+              "updated_at",
+              {
+                ascending:
+                  false,
+              }
+            )
+            .limit(
+              1
+            )
+            .maybeSingle();
+
+        if (
+          error
+        ) {
+          console.error(
+            "全画面広告取得エラー:",
+            error
+          );
+
+          setFullscreenPromotion(
+            null
+          );
+
+          setShowFullscreenPromotion(
+            false
+          );
+
+          return;
+        }
+
+        if (
+          !data
+        ) {
+          setFullscreenPromotion(
+            null
+          );
+
+          setShowFullscreenPromotion(
+            false
+          );
+
+          return;
+        }
+
+        const promotion =
+          data as FullscreenPromotion;
+
+        setFullscreenPromotion(
+          promotion
+        );
+
+        const hiddenKey =
+          `pokipo_promotion_hidden:${promotion.id}:${promotion.updated_at}`;
+
+        const hidden =
+          localStorage.getItem(
+            hiddenKey
+          ) === "true";
+
+        setShowFullscreenPromotion(
+          !hidden
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          "全画面広告通信エラー:",
+          error
+        );
+
+        setFullscreenPromotion(
+          null
+        );
+
+        setShowFullscreenPromotion(
+          false
+        );
+      } finally {
+        setPromotionChecking(
+          false
+        );
+      }
+    }
+
+    void loadFullscreenPromotion();
+  }, []);
+
+  /* ========================================
+     CLOSE PROMOTION
+  ======================================== */
+
+  function closeFullscreenPromotion() {
+    if (
+      fullscreenPromotion &&
+      dontShowPromotionAgain
+    ) {
+      const hiddenKey =
+        `pokipo_promotion_hidden:${fullscreenPromotion.id}:${fullscreenPromotion.updated_at}`;
+
+      localStorage.setItem(
+        hiddenKey,
+        "true"
+      );
+    }
+
+    setShowFullscreenPromotion(
+      false
+    );
+
+    setDontShowPromotionAgain(
+      false
+    );
+
+    if (
+      pendingDestination
+    ) {
+      const destination =
+        pendingDestination;
+
+      setPendingDestination(
+        ""
+      );
+
+      router.replace(
+        destination
+      );
+
+      return;
+    }
+
+    if (
+      pendingIntro
+    ) {
+      setPendingIntro(
+        false
+      );
+
+      setShowIntro(
+        true
+      );
+    }
+  }
+
+  /* ========================================
      EXISTING PARTICIPANT CHECK
   ======================================== */
 
   useEffect(() => {
     if (
-      maintenanceChecking
+      maintenanceChecking ||
+      promotionChecking
     ) {
       return;
     }
@@ -314,9 +533,21 @@ export default function StartPage() {
             INTRO_STORAGE_KEY
           ) === "true";
 
-        setShowIntro(
-          !introSeen
-        );
+        if (
+          showFullscreenPromotion
+        ) {
+          setPendingIntro(
+            !introSeen
+          );
+
+          setShowIntro(
+            false
+          );
+        } else {
+          setShowIntro(
+            !introSeen
+          );
+        }
 
         setCheckingRegistration(
           false
@@ -341,6 +572,9 @@ export default function StartPage() {
           }
         );
 
+      let destination =
+        "/survey/before";
+
       if (
         error
       ) {
@@ -348,26 +582,29 @@ export default function StartPage() {
           "参加前アンケート確認エラー:",
           error
         );
-
-        router.replace(
-          "/survey/before"
-        );
-
-        return;
+      } else if (
+        data === true
+      ) {
+        destination =
+          "/home";
       }
 
       if (
-        data === true
+        showFullscreenPromotion
       ) {
-        router.replace(
-          "/home"
+        setPendingDestination(
+          destination
+        );
+
+        setCheckingRegistration(
+          false
         );
 
         return;
       }
 
       router.replace(
-        "/survey/before"
+        destination
       );
     }
 
@@ -376,6 +613,8 @@ export default function StartPage() {
     router,
     maintenanceChecking,
     maintenanceMode,
+    promotionChecking,
+    showFullscreenPromotion,
   ]);
 
   /* ========================================
@@ -724,11 +963,12 @@ export default function StartPage() {
   }
 
   /* ========================================
-     MAINTENANCE LOADING
+     LOADING
   ======================================== */
 
   if (
-    maintenanceChecking
+    maintenanceChecking ||
+    promotionChecking
   ) {
     return (
       <main className="shell">
@@ -1200,10 +1440,96 @@ export default function StartPage() {
       </main>
 
       {/* ========================================
+          FULLSCREEN PROMOTION
+      ======================================== */}
+
+      {showFullscreenPromotion &&
+        fullscreenPromotion && (
+        <div className="pokipoPromotionOverlay">
+
+          <section
+            className="pokipoPromotionCard"
+            role="dialog"
+            aria-modal="true"
+            aria-label={
+              fullscreenPromotion.title
+            }
+          >
+
+            {fullscreenPromotion.image_url && (
+              <div className="pokipoPromotionImage">
+
+                <img
+                  src={
+                    fullscreenPromotion.image_url
+                  }
+                  alt=""
+                />
+
+              </div>
+            )}
+
+            <div className="pokipoPromotionContent">
+
+              <span className="pokipoPromotionEyebrow">
+                LiPost INFORMATION
+              </span>
+
+              <h2>
+                {fullscreenPromotion.title}
+              </h2>
+
+              {fullscreenPromotion.body && (
+                <p>
+                  {fullscreenPromotion.body}
+                </p>
+              )}
+
+              <label className="pokipoPromotionDontShow">
+
+                <input
+                  type="checkbox"
+                  checked={
+                    dontShowPromotionAgain
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    setDontShowPromotionAgain(
+                      event.target.checked
+                    )
+                  }
+                />
+
+                <span>
+                  次回から表示しない
+                </span>
+
+              </label>
+
+              <button
+                type="button"
+                className="pokipoPromotionCloseButton"
+                onClick={
+                  closeFullscreenPromotion
+                }
+              >
+                閉じる
+              </button>
+
+            </div>
+
+          </section>
+
+        </div>
+      )}
+
+      {/* ========================================
           INTRO VIDEO
       ======================================== */}
 
-      {showIntro && (
+      {showIntro &&
+        !showFullscreenPromotion && (
         <div className="pokipoIntroOverlay">
 
           <video

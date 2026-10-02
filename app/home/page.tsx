@@ -39,6 +39,18 @@ type Announcement = {
 };
 
 /* ========================================
+   PROMOTION BANNER
+======================================== */
+
+type BannerPromotion = {
+  id: string;
+  title: string;
+  body: string;
+  image_url: string | null;
+  updated_at: string;
+};
+
+/* ========================================
    HOME PAGE
 ======================================== */
 
@@ -113,6 +125,23 @@ export default function HomePage() {
   ] = useState<Announcement[]>(
     []
   );
+
+  /* ========================================
+     PROMOTION BANNER
+  ======================================== */
+
+  const [
+    bannerPromotion,
+    setBannerPromotion,
+  ] =
+    useState<BannerPromotion | null>(
+      null
+    );
+
+  const [
+    bannerLoading,
+    setBannerLoading,
+  ] = useState(true);
 
   /* ========================================
      雄飛祭 MODE
@@ -534,6 +563,93 @@ export default function HomePage() {
       );
     }
 
+    /* --------------------------------
+       PROMOTION BANNER取得
+    -------------------------------- */
+
+    async function loadBannerPromotion() {
+      setBannerLoading(
+        true
+      );
+
+      try {
+        const {
+          data,
+          error,
+        } =
+          await supabase
+            .from(
+              "pokipo_promotions"
+            )
+            .select(
+              "id, title, body, image_url, updated_at"
+            )
+            .eq(
+              "placement",
+              "banner"
+            )
+            .eq(
+              "is_active",
+              true
+            )
+            .order(
+              "updated_at",
+              {
+                ascending:
+                  false,
+              }
+            )
+            .limit(
+              1
+            )
+            .maybeSingle();
+
+        if (
+          error
+        ) {
+          console.error(
+            "トップバナー取得エラー:",
+            error
+          );
+
+          setBannerPromotion(
+            null
+          );
+
+          return;
+        }
+
+        if (
+          !data
+        ) {
+          setBannerPromotion(
+            null
+          );
+
+          return;
+        }
+
+        setBannerPromotion(
+          data as BannerPromotion
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          "トップバナー通信エラー:",
+          error
+        );
+
+        setBannerPromotion(
+          null
+        );
+      } finally {
+        setBannerLoading(
+          false
+        );
+      }
+    }
+
     /* ========================================
        INITIAL LOAD
     ======================================== */
@@ -547,6 +663,8 @@ export default function HomePage() {
     void loadStampProgress();
 
     void loadAnnouncements();
+
+    void loadBannerPromotion();
 
     /* ========================================
        PARTICIPANTS REALTIME
@@ -577,7 +695,6 @@ export default function HomePage() {
 
     /* ========================================
        GLOBAL STAMP REALTIME
-       5/5達成者数更新用
     ======================================== */
 
     const completedChannel =
@@ -605,7 +722,6 @@ export default function HomePage() {
 
     /* ========================================
        STAMP REALTIME
-       自分の進捗更新用
     ======================================== */
 
     const currentParticipantId =
@@ -682,6 +798,33 @@ export default function HomePage() {
         .subscribe();
 
     /* ========================================
+       PROMOTION REALTIME
+    ======================================== */
+
+    const promotionChannel =
+      supabase
+        .channel(
+          "pokipo-promotions-banner-live"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event:
+              "*",
+
+            schema:
+              "public",
+
+            table:
+              "pokipo_promotions",
+          },
+          () => {
+            void loadBannerPromotion();
+          }
+        )
+        .subscribe();
+
+    /* ========================================
        WINDOW FOCUS
     ======================================== */
 
@@ -695,6 +838,8 @@ export default function HomePage() {
       void loadStampProgress();
 
       void loadAnnouncements();
+
+      void loadBannerPromotion();
     }
 
     /* ========================================
@@ -715,6 +860,8 @@ export default function HomePage() {
         void loadStampProgress();
 
         void loadAnnouncements();
+
+        void loadBannerPromotion();
       }
     }
 
@@ -761,6 +908,10 @@ export default function HomePage() {
 
       supabase.removeChannel(
         announcementChannel
+      );
+
+      supabase.removeChannel(
+        promotionChannel
       );
     };
   }, [
@@ -938,6 +1089,48 @@ export default function HomePage() {
             </div>
 
           </header>
+
+          {/* ==================================
+              PROMOTION BANNER
+          ================================== */}
+
+          {!bannerLoading &&
+            bannerPromotion && (
+            <section className="homePromotionBanner">
+
+              {bannerPromotion.image_url && (
+                <div className="homePromotionBannerImage">
+
+                  <img
+                    src={
+                      bannerPromotion.image_url
+                    }
+                    alt=""
+                  />
+
+                </div>
+              )}
+
+              <div className="homePromotionBannerContent">
+
+                <span>
+                  LiPost EVENT
+                </span>
+
+                <h2>
+                  {bannerPromotion.title}
+                </h2>
+
+                {bannerPromotion.body && (
+                  <p>
+                    {bannerPromotion.body}
+                  </p>
+                )}
+
+              </div>
+
+            </section>
+          )}
 
           {/* ==================================
               雄飛祭バナー
@@ -1505,11 +1698,6 @@ export default function HomePage() {
               }
             >
 
-              {/* =============================
-                  LEFT
-                  現在の参加者
-              ============================== */}
-
               <div className="participantLiveStat">
 
                 <span className="participantTotalLabel">
@@ -1550,16 +1738,7 @@ export default function HomePage() {
 
               </div>
 
-              {/* =============================
-                  CENTER
-              ============================== */}
-
               <div className="participantLiveDivider" />
-
-              {/* =============================
-                  RIGHT
-                  5/5達成者
-              ============================== */}
 
               <div className="participantLiveStat complete">
 

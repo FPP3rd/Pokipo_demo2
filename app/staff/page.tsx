@@ -676,7 +676,7 @@ export default function StaffPage() {
 
             <p>
               管理・景品交換・お知らせ・
-              アンケート分析をここから操作できます。
+              広告・アンケート分析をここから操作できます。
             </p>
 
           </div>
@@ -894,7 +894,48 @@ export default function StaffPage() {
 
               <p>
                 参加者ホームに表示する
-                お知らせ内容を更新します。
+                通常のお知らせ内容を更新します。
+              </p>
+
+            </div>
+
+            <div className="staffMenuCardArrow">
+              →
+            </div>
+
+          </button>
+
+          {/* =================================
+              PROMOTIONS
+          ================================= */}
+
+          <button
+            type="button"
+            className="staffMenuCard promotion"
+            onClick={() =>
+              router.push(
+                "/staff/promotions"
+              )
+            }
+          >
+
+            <div className="staffMenuCardIcon">
+              AD
+            </div>
+
+            <div className="staffMenuCardBody">
+
+              <span>
+                PROMOTION
+              </span>
+
+              <h2>
+                イベント・広告管理
+              </h2>
+
+              <p>
+                トップ画面のイベントバナーや、
+                アプリ起動時の全画面広告を設定します。
               </p>
 
             </div>

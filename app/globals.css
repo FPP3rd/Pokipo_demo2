@@ -30827,3 +30827,1288 @@ img {
     margin-top: 14px;
   }
 }
+
+/* ==================================================
+   STAFF PROMOTION PAGE
+================================================== */
+
+.staffPromotionPage {
+  width: 100%;
+  max-width: 760px;
+
+  margin: 0 auto;
+  padding: 24px 16px 60px;
+
+  box-sizing: border-box;
+}
+
+
+/* ==================================================
+   HEADER
+================================================== */
+
+.staffPromotionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 20px;
+}
+
+.staffPromotionHeader > div {
+  min-width: 0;
+}
+
+.staffPromotionHeader span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.staffPromotionHeader h1 {
+  margin: 0;
+
+  color: #332d29;
+
+  font-size: 24px;
+  font-weight: 1000;
+}
+
+.staffPromotionHeader p {
+  margin: 7px 0 0;
+
+  color: #81756f;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.staffPromotionHeader > button {
+  flex-shrink: 0;
+
+  padding: 9px 12px;
+
+  border: 1px solid #ded4cf;
+  border-radius: 999px;
+
+  background: #ffffff;
+
+  color: #695e58;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   TABS
+================================================== */
+
+.staffPromotionTabs {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 9px;
+
+  margin-bottom: 18px;
+}
+
+.staffPromotionTabs button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  gap: 3px;
+
+  padding: 14px;
+
+  border: 1px solid #e5dcd7;
+  border-radius: 15px;
+
+  background: #ffffff;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.staffPromotionTabs button.active {
+  border-color: #8a1822;
+
+  background: #fff4f5;
+}
+
+.staffPromotionTabs span {
+  color: #9b8d86;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.staffPromotionTabs button.active span {
+  color: #8a1822;
+}
+
+.staffPromotionTabs strong {
+  color: #3d3531;
+
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+
+/* ==================================================
+   MESSAGE
+================================================== */
+
+.staffPromotionSuccess,
+.staffPromotionError {
+  margin: 0 0 14px;
+
+  padding: 11px 13px;
+
+  border-radius: 12px;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  line-height: 1.6;
+}
+
+.staffPromotionSuccess {
+  background: #eff9f1;
+
+  color: #367142;
+}
+
+.staffPromotionError {
+  background: #fff0f1;
+
+  color: #9b2630;
+}
+
+.staffPromotionLoading {
+  padding: 40px 20px;
+
+  text-align: center;
+
+  color: #8d817a;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+
+/* ==================================================
+   EDITOR
+================================================== */
+
+.staffPromotionEditor {
+  padding: 18px;
+
+  border: 1px solid #e8dfda;
+  border-radius: 18px;
+
+  background: #ffffff;
+}
+
+.staffPromotionEditorTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  margin-bottom: 18px;
+}
+
+.staffPromotionEditorTitle span {
+  display: block;
+
+  margin-bottom: 3px;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.staffPromotionEditorTitle h2 {
+  margin: 0;
+
+  color: #332d29;
+
+  font-size: 17px;
+  font-weight: 1000;
+}
+
+
+/* ==================================================
+   PUBLISH TOGGLE
+================================================== */
+
+.staffPromotionPublishToggle {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 7px 10px;
+
+  border-radius: 999px;
+
+  background: #f5efec;
+
+  cursor: pointer;
+}
+
+.staffPromotionPublishToggle input {
+  width: 17px;
+  height: 17px;
+
+  accent-color: #8a1822;
+}
+
+.staffPromotionPublishToggle span {
+  margin: 0;
+
+  color: #5d524d;
+
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+
+/* ==================================================
+   FORM
+================================================== */
+
+.staffPromotionField {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+
+  margin-top: 15px;
+}
+
+.staffPromotionField > label {
+  color: #514843;
+
+  font-size: 9px;
+  font-weight: 1000;
+}
+
+.staffPromotionField input[type="text"],
+.staffPromotionField textarea {
+  width: 100%;
+
+  padding: 12px 13px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #ded5d0;
+  border-radius: 12px;
+
+  background: #fffdfc;
+
+  color: #332d29;
+
+  font: inherit;
+
+  font-size: 11px;
+
+  outline: none;
+}
+
+.staffPromotionField textarea {
+  resize: vertical;
+
+  line-height: 1.7;
+}
+
+.staffPromotionField input[type="text"]:focus,
+.staffPromotionField textarea:focus {
+  border-color: #a85159;
+}
+
+.staffPromotionField > small {
+  align-self: flex-end;
+
+  color: #a0958f;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+
+/* ==================================================
+   IMAGE UPLOAD
+================================================== */
+
+.staffPromotionImageUpload {
+  padding: 14px;
+
+  border: 1px dashed #cfc2bc;
+  border-radius: 13px;
+
+  background: #faf7f5;
+}
+
+.staffPromotionImageUpload input {
+  width: 100%;
+
+  font-size: 9px;
+}
+
+.staffPromotionImageUpload p {
+  margin: 8px 0 0;
+
+  color: #93867f;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  line-height: 1.6;
+}
+
+.staffPromotionImagePreview {
+  margin-top: 14px;
+
+  overflow: hidden;
+
+  border: 1px solid #e3d9d4;
+  border-radius: 14px;
+
+  background: #faf8f7;
+}
+
+.staffPromotionImagePreview img {
+  display: block;
+
+  width: 100%;
+  max-height: 320px;
+
+  object-fit: contain;
+
+  background: #f4efec;
+}
+
+.staffPromotionImagePreview button {
+  width: 100%;
+
+  padding: 10px;
+
+  border: 0;
+  border-top: 1px solid #e3d9d4;
+
+  background: #ffffff;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   SAVE
+================================================== */
+
+.staffPromotionSaveButton {
+  width: 100%;
+
+  margin-top: 18px;
+  padding: 13px;
+
+  border: 0;
+  border-radius: 13px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 1000;
+
+  cursor: pointer;
+}
+
+.staffPromotionSaveButton:disabled {
+  opacity: 0.55;
+
+  cursor: default;
+}
+
+
+/* ==================================================
+   PREVIEW
+================================================== */
+
+.staffPromotionPreviewSection {
+  margin-top: 22px;
+}
+
+.staffPromotionPreviewTitle {
+  margin-bottom: 10px;
+}
+
+.staffPromotionPreviewTitle span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.staffPromotionPreviewTitle h2 {
+  margin: 3px 0 0;
+
+  color: #332d29;
+
+  font-size: 16px;
+  font-weight: 1000;
+}
+
+
+/* ==================================================
+   BANNER PREVIEW
+================================================== */
+
+.staffPromotionBannerPreview {
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 13px;
+
+  border: 1px solid #eadbd7;
+  border-radius: 16px;
+
+  background: #fff7f5;
+}
+
+.staffPromotionBannerPreviewImage {
+  width: 90px;
+  height: 90px;
+
+  flex-shrink: 0;
+
+  overflow: hidden;
+
+  border-radius: 12px;
+
+  background: #eee6e2;
+}
+
+.staffPromotionBannerPreviewImage img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.staffPromotionBannerPreview > div:last-child {
+  min-width: 0;
+}
+
+.staffPromotionBannerPreview span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+}
+
+.staffPromotionBannerPreview strong {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #332d29;
+
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.staffPromotionBannerPreview p {
+  margin: 5px 0 0;
+
+  color: #796d67;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.6;
+}
+
+
+/* ==================================================
+   FULLSCREEN PREVIEW
+================================================== */
+
+.staffPromotionFullscreenPreview {
+  padding: 24px 14px;
+
+  border-radius: 16px;
+
+  background:
+    rgba(
+      32,
+      26,
+      24,
+      0.78
+    );
+}
+
+.staffPromotionFullscreenPreviewCard {
+  max-width: 360px;
+
+  margin: 0 auto;
+  padding: 16px;
+
+  border-radius: 18px;
+
+  background: #ffffff;
+
+  text-align: center;
+}
+
+.staffPromotionFullscreenPreviewImage {
+  margin-bottom: 14px;
+
+  overflow: hidden;
+
+  border-radius: 13px;
+
+  background: #f1ece9;
+}
+
+.staffPromotionFullscreenPreviewImage img {
+  display: block;
+
+  width: 100%;
+  max-height: 240px;
+
+  object-fit: cover;
+}
+
+.staffPromotionFullscreenPreviewCard > span {
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.staffPromotionFullscreenPreviewCard h3 {
+  margin: 7px 0 0;
+
+  color: #332d29;
+
+  font-size: 18px;
+  font-weight: 1000;
+}
+
+.staffPromotionFullscreenPreviewCard p {
+  margin: 9px 0 15px;
+
+  color: #796d67;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.staffPromotionFullscreenPreviewCard label {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  margin-top: 10px;
+
+  color: #887b75;
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.staffPromotionFullscreenPreviewCard > button {
+  width: 100%;
+
+  margin-top: 12px;
+  padding: 11px;
+
+  border: 0;
+  border-radius: 11px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 1000;
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (
+  max-width: 560px
+) {
+  .staffPromotionPage {
+    padding:
+      18px
+      12px
+      50px;
+  }
+
+  .staffPromotionHeader {
+    flex-direction: column;
+  }
+
+  .staffPromotionHeader > button {
+    align-self: flex-start;
+  }
+
+  .staffPromotionEditorTitle {
+    align-items: flex-start;
+  }
+
+  .staffPromotionBannerPreview {
+    align-items: flex-start;
+  }
+
+  .staffPromotionBannerPreviewImage {
+    width: 76px;
+    height: 76px;
+  }
+}
+
+/* ==================================================
+   HOME PROMOTION BANNER
+================================================== */
+
+.homePromotionBanner {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  width: 100%;
+
+  margin:
+    12px
+    0
+    18px;
+
+  padding: 14px;
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.14
+    );
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff5f5 0%,
+      #fffdf9 100%
+    );
+
+  box-shadow:
+    0
+    7px
+    22px
+    rgba(
+      90,
+      49,
+      43,
+      0.08
+    );
+
+  animation:
+    homePromotionBannerAppear
+    0.3s
+    ease-out;
+}
+
+
+/* ==================================================
+   IMAGE
+================================================== */
+
+.homePromotionBannerImage {
+  position: relative;
+
+  width: 110px;
+  height: 94px;
+
+  flex-shrink: 0;
+
+  overflow: hidden;
+
+  border-radius: 13px;
+
+  background:
+    #eee8e4;
+}
+
+.homePromotionBannerImage img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+/* ==================================================
+   CONTENT
+================================================== */
+
+.homePromotionBannerContent {
+  min-width: 0;
+}
+
+.homePromotionBannerContent > span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.14em;
+}
+
+.homePromotionBannerContent h2 {
+  margin: 0;
+
+  color: #332d29;
+
+  font-size: 15px;
+  font-weight: 1000;
+
+  line-height: 1.35;
+}
+
+.homePromotionBannerContent p {
+  display:
+    -webkit-box;
+
+  margin:
+    6px
+    0
+    0;
+
+  overflow: hidden;
+
+  color: #746963;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.6;
+
+  -webkit-box-orient:
+    vertical;
+
+  -webkit-line-clamp:
+    3;
+    line-clamp: 3;
+}
+
+
+/* ==================================================
+   NO IMAGE
+================================================== */
+
+.homePromotionBanner:not(
+  :has(
+    .homePromotionBannerImage
+  )
+)
+.homePromotionBannerContent {
+  width: 100%;
+}
+
+
+/* ==================================================
+   APPEAR
+================================================== */
+
+@keyframes homePromotionBannerAppear {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (
+  max-width: 560px
+) {
+  .homePromotionBanner {
+    gap: 11px;
+
+    margin-top: 10px;
+
+    padding: 11px;
+  }
+
+  .homePromotionBannerImage {
+    width: 86px;
+    height: 82px;
+  }
+
+  .homePromotionBannerContent h2 {
+    font-size: 13px;
+  }
+
+  .homePromotionBannerContent p {
+    font-size: 8px;
+
+    -webkit-line-clamp:
+      3;
+    line-clamp:
+      3;
+  }
+}
+
+
+/* ==================================================
+   SMALL MOBILE
+================================================== */
+
+@media (
+  max-width: 380px
+) {
+  .homePromotionBannerImage {
+    width: 74px;
+    height: 74px;
+  }
+
+  .homePromotionBannerContent h2 {
+    font-size: 12px;
+  }
+}
+
+/* ==================================================
+   FULLSCREEN PROMOTION
+================================================== */
+
+.pokipoPromotionOverlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 18px;
+
+  box-sizing: border-box;
+
+  background:
+    rgba(
+      28,
+      22,
+      20,
+      0.76
+    );
+
+  backdrop-filter:
+    blur(8px);
+
+  -webkit-backdrop-filter:
+    blur(8px);
+
+  overflow-y: auto;
+}
+
+
+/* ==================================================
+   CARD
+================================================== */
+
+.pokipoPromotionCard {
+  width: min(
+    100%,
+    460px
+  );
+
+  max-height: calc(
+    100vh - 36px
+  );
+
+  overflow-y: auto;
+
+  border-radius: 22px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0
+    24px
+    70px
+    rgba(
+      0,
+      0,
+      0,
+      0.28
+    );
+
+  animation:
+    pokipoPromotionAppear
+    0.28s
+    ease-out;
+}
+
+
+/* ==================================================
+   IMAGE
+================================================== */
+
+.pokipoPromotionImage {
+  width: 100%;
+
+  overflow: hidden;
+
+  border-radius:
+    22px
+    22px
+    0
+    0;
+
+  background:
+    #f2ece8;
+}
+
+.pokipoPromotionImage img {
+  display: block;
+
+  width: 100%;
+
+  max-height: 360px;
+
+  object-fit: cover;
+}
+
+
+/* ==================================================
+   CONTENT
+================================================== */
+
+.pokipoPromotionContent {
+  padding:
+    20px
+    20px
+    18px;
+
+  box-sizing: border-box;
+}
+
+.pokipoPromotionEyebrow {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.15em;
+}
+
+.pokipoPromotionContent h2 {
+  margin: 0;
+
+  color: #332d29;
+
+  font-size: 22px;
+  font-weight: 1000;
+
+  line-height: 1.35;
+}
+
+.pokipoPromotionContent > p {
+  margin:
+    11px
+    0
+    0;
+
+  color: #746963;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.8;
+
+  white-space: pre-wrap;
+}
+
+
+/* ==================================================
+   DON'T SHOW AGAIN
+================================================== */
+
+.pokipoPromotionDontShow {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-top: 18px;
+
+  padding:
+    10px
+    11px;
+
+  border-radius: 12px;
+
+  background:
+    #f8f4f2;
+
+  cursor: pointer;
+}
+
+.pokipoPromotionDontShow input {
+  width: 17px;
+  height: 17px;
+
+  flex-shrink: 0;
+
+  accent-color: #8a1822;
+}
+
+.pokipoPromotionDontShow span {
+  color: #776b65;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+
+/* ==================================================
+   CLOSE BUTTON
+================================================== */
+
+.pokipoPromotionCloseButton {
+  width: 100%;
+
+  margin-top: 14px;
+
+  padding:
+    13px
+    16px;
+
+  border: 0;
+  border-radius: 13px;
+
+  background:
+    #8a1822;
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 1000;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   ANIMATION
+================================================== */
+
+@keyframes pokipoPromotionAppear {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(12px)
+      scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      scale(1);
+  }
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (
+  max-width: 560px
+) {
+  .pokipoPromotionOverlay {
+    align-items: flex-end;
+
+    padding:
+      12px;
+  }
+
+  .pokipoPromotionCard {
+    width: 100%;
+
+    max-height: calc(
+      100vh - 24px
+    );
+
+    border-radius:
+      20px
+      20px
+      16px
+      16px;
+  }
+
+  .pokipoPromotionImage {
+    border-radius:
+      20px
+      20px
+      0
+      0;
+  }
+
+  .pokipoPromotionImage img {
+    max-height: 300px;
+  }
+
+  .pokipoPromotionContent {
+    padding:
+      18px
+      16px
+      16px;
+  }
+
+  .pokipoPromotionContent h2 {
+    font-size: 19px;
+  }
+}
+
+
+/* ==================================================
+   SMALL MOBILE
+================================================== */
+
+@media (
+  max-width: 380px
+) {
+  .pokipoPromotionContent h2 {
+    font-size: 17px;
+  }
+
+  .pokipoPromotionContent > p {
+    font-size: 9px;
+  }
+}
+
+.homePromotionBannerContent p {
+  display:
+    -webkit-box;
+
+  margin:
+    6px
+    0
+    0;
+
+  overflow: hidden;
+
+  color: #746963;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.6;
+
+  -webkit-box-orient:
+    vertical;
+
+  -webkit-line-clamp:
+    3;
+
+  line-clamp:
+    3;
+}
+
+.homePromotionBannerContent p {
+  font-size: 8px;
+
+  -webkit-line-clamp:
+    3;
+
+  line-clamp:
+    3;
+}
