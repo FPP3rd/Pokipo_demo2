@@ -32157,3 +32157,203 @@ img {
 
   line-height: 1.2;
 }
+
+/* ==================================================
+   FULLSCREEN PROMOTION
+   IMAGE / POSITION FIX
+================================================== */
+
+.pokipoPromotionOverlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 12px;
+
+  box-sizing: border-box;
+
+  background:
+    rgba(
+      28,
+      22,
+      20,
+      0.76
+    );
+
+  backdrop-filter:
+    blur(8px);
+
+  -webkit-backdrop-filter:
+    blur(8px);
+
+  overflow-y: auto;
+}
+
+
+/* ==================================================
+   CARD
+================================================== */
+
+.pokipoPromotionCard {
+  width: min(
+    100%,
+    460px
+  );
+
+  max-height: calc(
+    100dvh - 24px
+  );
+
+  margin: auto;
+
+  overflow-y: auto;
+
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0
+    24px
+    70px
+    rgba(
+      0,
+      0,
+      0,
+      0.28
+    );
+}
+
+
+/* ==================================================
+   IMAGE
+   切り抜かず画像全体を表示
+================================================== */
+
+.pokipoPromotionImage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+
+  padding: 0;
+
+  overflow: hidden;
+
+  border-radius:
+    20px
+    20px
+    0
+    0;
+
+  background: #ffffff;
+}
+
+.pokipoPromotionImage img {
+  display: block;
+
+  width: 100%;
+  height: auto;
+
+  max-width: 100%;
+  max-height: 360px;
+
+  object-fit: contain;
+
+  object-position: center;
+}
+
+
+/* ==================================================
+   CONTENT
+================================================== */
+
+.pokipoPromotionContent {
+  padding:
+    18px
+    18px
+    16px;
+
+  box-sizing: border-box;
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (
+  max-width: 560px
+) {
+  .pokipoPromotionOverlay {
+    align-items: center;
+
+    padding:
+      8px;
+  }
+
+  .pokipoPromotionCard {
+    width: 100%;
+
+    max-height: calc(
+      100dvh - 16px
+    );
+
+    margin: auto;
+
+    border-radius: 18px;
+  }
+
+  .pokipoPromotionImage {
+    border-radius:
+      18px
+      18px
+      0
+      0;
+  }
+
+  .pokipoPromotionImage img {
+    width: 100%;
+    height: auto;
+
+    max-height: 300px;
+
+    object-fit: contain;
+  }
+
+  .pokipoPromotionContent {
+    padding:
+      16px
+      14px
+      14px;
+  }
+}
+
+
+/* ==================================================
+   SMALL MOBILE
+================================================== */
+
+@media (
+  max-width: 380px
+) {
+  .pokipoPromotionOverlay {
+    padding: 6px;
+  }
+
+  .pokipoPromotionCard {
+    max-height: calc(
+      100dvh - 12px
+    );
+  }
+
+  .pokipoPromotionImage img {
+    max-height: 260px;
+  }
+}
