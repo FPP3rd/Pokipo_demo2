@@ -30678,3 +30678,152 @@ img {
     font-size: 7px;
   }
 }
+
+/* ==================================================
+   POCKY PROGRESS POSITION FIX
+   イラストの下に進捗パネルを分離
+================================================== */
+
+.approvedPockyScene {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 280px;
+
+  padding:
+    22px
+    18px
+    18px;
+
+  box-sizing: border-box;
+
+  overflow: visible;
+}
+
+.approvedPockyProgressImage {
+  display: block;
+
+  width: auto;
+  height: 260px;
+
+  max-width: 100%;
+
+  object-fit: contain;
+}
+
+
+/* ==================================================
+   PROGRESS PANEL
+   イラストの下に配置
+================================================== */
+
+.approvedPockyProgressPanel {
+  position: relative;
+  z-index: 5;
+
+  width: calc(100% - 28px);
+
+  margin:
+    18px
+    auto
+    16px;
+
+  padding:
+    13px
+    14px
+    12px;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.1
+    );
+
+  border-radius: 15px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    );
+
+  backdrop-filter:
+    blur(8px);
+
+  -webkit-backdrop-filter:
+    blur(8px);
+}
+
+
+/* ==================================================
+   HERO BOTTOM
+   進捗パネルとの間隔確保
+================================================== */
+
+.visualHeroBottom {
+  position: relative;
+  z-index: 4;
+
+  margin-top: 10px;
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (
+  max-width: 560px
+) {
+  .approvedPockyScene {
+    min-height: 250px;
+
+    padding:
+      18px
+      12px
+      16px;
+  }
+
+  .approvedPockyProgressImage {
+    height: 230px;
+  }
+
+  .approvedPockyProgressPanel {
+    width: calc(100% - 20px);
+
+    margin:
+      16px
+      auto
+      14px;
+  }
+}
+
+
+/* ==================================================
+   SMALL MOBILE
+================================================== */
+
+@media (
+  max-width: 380px
+) {
+  .approvedPockyScene {
+    min-height: 225px;
+  }
+
+  .approvedPockyProgressImage {
+    height: 205px;
+  }
+
+  .approvedPockyProgressPanel {
+    margin-top: 14px;
+  }
+}
