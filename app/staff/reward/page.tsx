@@ -141,6 +141,13 @@ export default function StaffRewardPage() {
     useRef(false);
 
   /* ========================================
+     MONITOR CONTROL
+  ======================================== */
+
+  const monitorPresentationActiveRef =
+    useRef(false);
+
+  /* ========================================
      REWARD
   ======================================== */
 
@@ -316,6 +323,38 @@ export default function StaffRewardPage() {
   ]);
 
   /* ========================================
+     PAGE LEAVE SAFETY
+  ======================================== */
+
+  useEffect(() => {
+    function handlePageHide() {
+      if (
+        monitorPresentationActiveRef.current
+      ) {
+        void setMonitorIdle();
+      }
+    }
+
+    window.addEventListener(
+      "pagehide",
+      handlePageHide
+    );
+
+    return () => {
+      window.removeEventListener(
+        "pagehide",
+        handlePageHide
+      );
+
+      if (
+        monitorPresentationActiveRef.current
+      ) {
+        void setMonitorIdle();
+      }
+    };
+  }, []);
+
+  /* ========================================
      LOGIN
   ======================================== */
 
@@ -401,6 +440,8 @@ export default function StaffRewardPage() {
   async function logoutStaff() {
     await stopQrScanner();
 
+    await clearPendingMonitorPresentation();
+
     sessionStorage.removeItem(
       DEVICE_MODE_KEY
     );
@@ -469,10 +510,6 @@ export default function StaffRewardPage() {
       "monitor"
     );
 
-    /*
-     * モニター選択というユーザー操作を
-     * 全画面表示開始のトリガーに使う。
-     */
     try {
       if (
         !document.fullscreenElement
@@ -500,6 +537,8 @@ export default function StaffRewardPage() {
   async function changeDeviceMode() {
     await stopQrScanner();
 
+    await clearPendingMonitorPresentation();
+
     sessionStorage.removeItem(
       DEVICE_MODE_KEY
     );
@@ -526,10 +565,27 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
+     GO STAFF MENU
+  ======================================== */
+
+  async function goStaffMenu() {
+    await stopQrScanner();
+
+    await clearPendingMonitorPresentation();
+
+    router.push(
+      "/staff"
+    );
+  }
+
+  /* ========================================
      MONITOR IDLE
   ======================================== */
 
   async function setMonitorIdle() {
+    monitorPresentationActiveRef.current =
+      false;
+
     try {
       const {
         error,
@@ -583,6 +639,20 @@ export default function StaffRewardPage() {
         error
       );
     }
+  }
+
+  /* ========================================
+     CLEAR PENDING PRESENTATION
+  ======================================== */
+
+  async function clearPendingMonitorPresentation() {
+    if (
+      !monitorPresentationActiveRef.current
+    ) {
+      return;
+    }
+
+    await setMonitorIdle();
   }
 
   /* ========================================
@@ -711,11 +781,6 @@ export default function StaffRewardPage() {
       );
     }
 
-    setMonitorProfile({
-      achievementRank,
-      routeTitle,
-    });
-
     /* --------------------------------
        SEND
     -------------------------------- */
@@ -764,7 +829,29 @@ export default function StaffRewardPage() {
           "モニター表示送信エラー:",
           error
         );
+
+        setMonitorProfile(
+          null
+        );
+
+        monitorPresentationActiveRef.current =
+          false;
+
+        return;
       }
+
+      /*
+       * DB更新に成功してから
+       * 「モニターに送信済み」を表示する
+       */
+
+      monitorPresentationActiveRef.current =
+        true;
+
+      setMonitorProfile({
+        achievementRank,
+        routeTitle,
+      });
     } catch (
       error
     ) {
@@ -772,6 +859,13 @@ export default function StaffRewardPage() {
         "モニター表示通信エラー:",
         error
       );
+
+      setMonitorProfile(
+        null
+      );
+
+      monitorPresentationActiveRef.current =
+        false;
     }
   }
 
@@ -832,7 +926,20 @@ export default function StaffRewardPage() {
           "モニター完了表示送信エラー:",
           error
         );
+
+        return;
       }
+
+      /*
+       * 交換完了後は
+       * QR端末がidleへ戻さない。
+       *
+       * モニター側で10秒後に
+       * 自動的にidleへ戻す。
+       */
+
+      monitorPresentationActiveRef.current =
+        false;
     } catch (
       error
     ) {
@@ -1204,10 +1311,6 @@ export default function StaffRewardPage() {
         typedParticipant
       );
 
-      /* =================================
-         MONITOR SEND
-      ================================= */
-
       if (
         typedReward.status !==
         "exchanged"
@@ -1381,10 +1484,6 @@ export default function StaffRewardPage() {
           adminUserId,
       });
 
-      /* =================================
-         MONITOR COMPLETED
-      ================================= */
-
       await sendCompletedToMonitor();
 
       setMessage(
@@ -1412,13 +1511,22 @@ export default function StaffRewardPage() {
      RESET SCANNER
   ======================================== */
 
-  function resetScanner() {
+  async function resetScanner() {
     /*
-     * ここではモニターをidleにしない。
+     * 未交換状態なら
+     * presented → idle
      *
-     * THANK YOU画面はモニター側で
-     * 10秒間表示してから自動的に待機へ戻す。
+     * 交換済みなら
+     * completedを維持し、
+     * モニター側の10秒タイマーに任せる
      */
+
+    if (
+      reward?.status !==
+      "exchanged"
+    ) {
+      await clearPendingMonitorPresentation();
+    }
 
     setReward(
       null
@@ -1680,10 +1788,6 @@ export default function StaffRewardPage() {
 
             <div className="staffDeviceModeGrid">
 
-              {/* =========================
-                  SCANNER
-              ========================= */}
-
               <button
                 type="button"
                 className="staffDeviceModeCard scanner"
@@ -1735,10 +1839,6 @@ export default function StaffRewardPage() {
 
               </button>
 
-              {/* =========================
-                  MONITOR
-              ========================= */}
-
               <button
                 type="button"
                 className="staffDeviceModeCard monitor"
@@ -1763,8 +1863,8 @@ export default function StaffRewardPage() {
 
                   <p>
                     QR読み取り端末と連携し、
-                    ゴール順位・POKIPOタイプ・
-                    お礼画面を大きく表示します。
+                    ゴール順位・回った順番・
+                    POKIPOタイプ・お礼画面を表示します。
                   </p>
 
                   <div className="staffDeviceModeFeature">
@@ -1775,6 +1875,10 @@ export default function StaffRewardPage() {
 
                     <span>
                       ✓ ゴール演出
+                    </span>
+
+                    <span>
+                      ✓ YOUR ROUTE
                     </span>
 
                     <span>
@@ -1859,10 +1963,6 @@ export default function StaffRewardPage() {
 
       <section className="staffRewardPage">
 
-        {/* =================================
-            HEADER
-        ================================= */}
-
         <header className="staffRewardHeader">
 
           <div>
@@ -1891,9 +1991,7 @@ export default function StaffRewardPage() {
             <button
               type="button"
               onClick={() =>
-                router.push(
-                  "/staff"
-                )
+                void goStaffMenu()
               }
             >
               メニュー
@@ -1901,8 +1999,8 @@ export default function StaffRewardPage() {
 
             <button
               type="button"
-              onClick={
-                logoutStaff
+              onClick={() =>
+                void logoutStaff()
               }
             >
               ログアウト
@@ -1912,19 +2010,17 @@ export default function StaffRewardPage() {
 
         </header>
 
-        {/* =================================
-            QUICK NAV
-        ================================= */}
-
         <section className="staffRewardQuickNav">
 
           <button
             type="button"
-            onClick={() =>
+            onClick={async () => {
+              await clearPendingMonitorPresentation();
+
               router.push(
                 "/staff/dashboard"
-              )
-            }
+              );
+            }}
           >
 
             <span>
@@ -1939,11 +2035,13 @@ export default function StaffRewardPage() {
 
           <button
             type="button"
-            onClick={() =>
+            onClick={async () => {
+              await clearPendingMonitorPresentation();
+
               router.push(
                 "/staff/reward/history"
-              )
-            }
+              );
+            }}
           >
 
             <span>
@@ -1957,10 +2055,6 @@ export default function StaffRewardPage() {
           </button>
 
         </section>
-
-        {/* =================================
-            SCANNER
-        ================================= */}
 
         {!reward &&
           !participant && (
@@ -2035,10 +2129,6 @@ export default function StaffRewardPage() {
             </section>
           )}
 
-        {/* =================================
-            PARTICIPANT
-        ================================= */}
-
         {reward &&
           participant && (
             <section className="staffParticipantCard">
@@ -2071,10 +2161,6 @@ export default function StaffRewardPage() {
                 </small>
               </h2>
 
-              {/* =================================
-                  MONITOR INFO
-              ================================= */}
-
               {monitorProfile &&
                 reward.status !==
                   "exchanged" && (
@@ -2104,10 +2190,6 @@ export default function StaffRewardPage() {
                 </div>
               )}
 
-              {/* =================================
-                  CONFIRMATION CODE
-              ================================= */}
-
               <div className="staffConfirmationCode">
 
                 <span>
@@ -2123,10 +2205,6 @@ export default function StaffRewardPage() {
                 </strong>
 
               </div>
-
-              {/* =================================
-                  PARTICIPANT INFO
-              ================================= */}
 
               <div className="staffParticipantInfo">
 
@@ -2157,10 +2235,6 @@ export default function StaffRewardPage() {
                 </div>
 
               </div>
-
-              {/* =================================
-                  EXCHANGE
-              ================================= */}
 
               {reward.status ===
               "exchanged" ? (
@@ -2219,8 +2293,8 @@ export default function StaffRewardPage() {
               <button
                 type="button"
                 className="staffNextScanButton"
-                onClick={
-                  resetScanner
+                onClick={() =>
+                  void resetScanner()
                 }
               >
                 次のQRを読み取る

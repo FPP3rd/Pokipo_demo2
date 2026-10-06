@@ -37369,3 +37369,397 @@ img {
     animation: none !important;
   }
 }
+
+/* ==================================================
+   REWARD MONITOR - YOUR ROUTE
+================================================== */
+
+.rewardMonitorRoute {
+  width: min(
+    1180px,
+    94%
+  );
+
+  margin-top: 28px;
+  padding: 20px 22px;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.12
+    );
+
+  border-radius: 22px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+
+  box-shadow:
+    0
+    14px
+    45px
+    rgba(
+      75,
+      45,
+      38,
+      0.07
+    );
+
+  backdrop-filter:
+    blur(10px);
+
+  -webkit-backdrop-filter:
+    blur(10px);
+
+  animation:
+    rewardMonitorRoutePanelIn
+    0.8s
+    0.25s
+    both
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+
+/* ==================================================
+   ROUTE TITLE
+================================================== */
+
+.rewardMonitorRouteTitle {
+  text-align: center;
+}
+
+.rewardMonitorRouteTitle span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: clamp(
+    9px,
+    0.9vw,
+    14px
+  );
+
+  font-weight: 1000;
+
+  letter-spacing: 0.15em;
+}
+
+.rewardMonitorRouteTitle strong {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #332d29;
+
+  font-size: clamp(
+    16px,
+    1.7vw,
+    27px
+  );
+
+  font-weight: 1000;
+}
+
+
+/* ==================================================
+   ROUTE TRACK
+================================================== */
+
+.rewardMonitorRouteTrack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+
+  gap: 8px;
+
+  margin-top: 18px;
+}
+
+
+/* ==================================================
+   ROUTE GROUP
+================================================== */
+
+.rewardMonitorRouteGroup {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+
+  gap: 8px;
+
+  opacity: 0;
+
+  animation:
+    rewardMonitorRouteStopIn
+    0.65s
+    forwards
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+
+/* ==================================================
+   ROUTE STOP
+================================================== */
+
+.rewardMonitorRouteStop {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+
+  gap: 9px;
+
+  padding:
+    10px
+    12px;
+
+  border-radius: 14px;
+
+  background: #fff8f6;
+}
+
+.rewardMonitorRouteStop > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 1000;
+}
+
+.rewardMonitorRouteStop > div {
+  min-width: 0;
+}
+
+.rewardMonitorRouteStop small {
+  display: block;
+
+  color: #a36d71;
+
+  font-size: clamp(
+    7px,
+    0.7vw,
+    10px
+  );
+
+  font-weight: 1000;
+
+  letter-spacing: 0.08em;
+}
+
+.rewardMonitorRouteStop strong {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #332d29;
+
+  font-size: clamp(
+    10px,
+    1vw,
+    15px
+  );
+
+  font-weight: 1000;
+
+  line-height: 1.35;
+
+  white-space: nowrap;
+}
+
+
+/* ==================================================
+   ROUTE ARROW
+================================================== */
+
+.rewardMonitorRouteArrow {
+  flex-shrink: 0;
+
+  color: #8a1822;
+
+  font-size: clamp(
+    15px,
+    1.6vw,
+    25px
+  );
+
+  font-weight: 1000;
+
+  animation:
+    rewardMonitorRouteArrowPulse
+    1.5s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   ROUTE LOADING
+================================================== */
+
+.rewardMonitorRouteLoading {
+  padding:
+    18px
+    10px
+    6px;
+
+  color: #8b7e77;
+
+  text-align: center;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+
+/* ==================================================
+   ROUTE ANIMATIONS
+================================================== */
+
+@keyframes rewardMonitorRoutePanelIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(
+        20px
+      )
+      scale(
+        0.97
+      );
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(
+        0
+      )
+      scale(
+        1
+      );
+  }
+}
+
+@keyframes rewardMonitorRouteStopIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateX(
+        -18px
+      )
+      scale(
+        0.94
+      );
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateX(
+        0
+      )
+      scale(
+        1
+      );
+  }
+}
+
+@keyframes rewardMonitorRouteArrowPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+
+    transform:
+      translateX(
+        -2px
+      );
+  }
+
+  50% {
+    opacity: 1;
+
+    transform:
+      translateX(
+        3px
+      );
+  }
+}
+
+
+/* ==================================================
+   ROUTE - NARROW SCREEN
+================================================== */
+
+@media (
+  max-width: 900px
+) {
+  .rewardMonitorRouteTrack {
+    flex-wrap: wrap;
+
+    gap: 7px;
+  }
+
+  .rewardMonitorRouteGroup {
+    gap: 7px;
+  }
+
+  .rewardMonitorRouteStop strong {
+    white-space: normal;
+  }
+}
+
+
+/* ==================================================
+   REDUCED MOTION
+================================================== */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .rewardMonitorRoute,
+  .rewardMonitorRouteGroup,
+  .rewardMonitorRouteArrow {
+    animation: none !important;
+
+    opacity: 1;
+  }
+}

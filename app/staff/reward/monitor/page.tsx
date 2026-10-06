@@ -37,6 +37,17 @@ type MonitorState = {
   updated_at: string;
 };
 
+type StampRow = {
+  spot_id: string;
+  acquired_at: string;
+};
+
+type RouteStop = {
+  spotId: string;
+  number: number;
+  name: string;
+};
+
 /* ========================================
    SETTINGS
 ======================================== */
@@ -49,6 +60,28 @@ const THANK_YOU_SECONDS =
 
 const DEVICE_MODE_KEY =
   "pokipo_staff_reward_device_mode";
+
+/* ========================================
+   SPOT NAMES
+======================================== */
+
+const SPOT_NAMES:
+  Record<string, string> = {
+    spot1:
+      "学生センター",
+
+    spot2:
+      "東棟2階",
+
+    spot3:
+      "ラーニングスクエア",
+
+    spot4:
+      "ゆうちょ銀行ATM",
+
+    spot5:
+      "セブンイレブン付近掲示板",
+  };
 
 /* ========================================
    PAGE
@@ -100,6 +133,23 @@ export default function RewardMonitorPage() {
   ] = useState(
     THANK_YOU_SECONDS
   );
+
+  /* ========================================
+     ROUTE
+  ======================================== */
+
+  const [
+    routeStops,
+    setRouteStops,
+  ] =
+    useState<RouteStop[]>(
+      []
+    );
+
+  const [
+    routeLoading,
+    setRouteLoading,
+  ] = useState(false);
 
   /* ========================================
      FULLSCREEN
@@ -335,6 +385,154 @@ export default function RewardMonitorPage() {
   ]);
 
   /* ========================================
+     LOAD PARTICIPANT ROUTE
+  ======================================== */
+
+  useEffect(() => {
+    const participantId =
+      monitorState?.participant_id;
+
+    if (
+      monitorState?.state !==
+        "presented" ||
+      !participantId
+    ) {
+      if (
+        monitorState?.state ===
+        "idle"
+      ) {
+        setRouteStops(
+          []
+        );
+      }
+
+      return;
+    }
+
+    let cancelled =
+      false;
+
+    async function loadRoute() {
+      setRouteLoading(
+        true
+      );
+
+      try {
+        const {
+          data,
+          error,
+        } =
+          await supabase.rpc(
+            "get_pokipo_stamps",
+            {
+              p_participant_id:
+                participantId,
+            }
+          );
+
+        if (
+          error
+        ) {
+          console.error(
+            "モニタールート取得エラー:",
+            error
+          );
+
+          if (
+            !cancelled
+          ) {
+            setRouteStops(
+              []
+            );
+          }
+
+          return;
+        }
+
+        const stamps =
+          (
+            data ?? []
+          ) as StampRow[];
+
+        const route =
+          stamps.map(
+            (
+              stamp
+            ) => {
+              const number =
+                Number(
+                  stamp.spot_id.replace(
+                    "spot",
+                    ""
+                  )
+                );
+
+              return {
+                spotId:
+                  stamp.spot_id,
+
+                number:
+                  Number.isFinite(
+                    number
+                  )
+                    ? number
+                    : 0,
+
+                name:
+                  SPOT_NAMES[
+                    stamp.spot_id
+                  ] ??
+                  stamp.spot_id,
+              };
+            }
+          );
+
+        if (
+          !cancelled
+        ) {
+          setRouteStops(
+            route
+          );
+        }
+      } catch (
+        error
+      ) {
+        console.error(
+          "モニタールート通信エラー:",
+          error
+        );
+
+        if (
+          !cancelled
+        ) {
+          setRouteStops(
+            []
+          );
+        }
+      } finally {
+        if (
+          !cancelled
+        ) {
+          setRouteLoading(
+            false
+          );
+        }
+      }
+    }
+
+    void loadRoute();
+
+    return () => {
+      cancelled =
+        true;
+    };
+  }, [
+    monitorState?.state,
+    monitorState?.participant_id,
+    monitorState?.updated_at,
+  ]);
+
+  /* ========================================
      COMPLETED COUNTDOWN
   ======================================== */
 
@@ -549,7 +747,7 @@ export default function RewardMonitorPage() {
   }
 
   /* ========================================
-     DOUBLE TAP / DOUBLE CLICK
+     DOUBLE TAP
   ======================================== */
 
   function handleMonitorPointerUp() {
@@ -720,11 +918,6 @@ export default function RewardMonitorPage() {
       }
     >
 
-      {/* ========================================
-          CONTROL
-          全画面中は非表示
-      ======================================== */}
-
       {!fullscreen && (
         <div className="rewardMonitorControl">
 
@@ -801,7 +994,7 @@ export default function RewardMonitorPage() {
           <h2>
             5つのスポットを巡って
             <br />
-            POKIPOを完成させよう
+            ポッキーの持つ価値を知ろう
           </h2>
 
           <p>
@@ -872,6 +1065,98 @@ export default function RewardMonitorPage() {
             </div>
           )}
 
+          {/* ========================================
+              YOUR ROUTE
+          ======================================== */}
+
+          <section className="rewardMonitorRoute">
+
+            <div className="rewardMonitorRouteTitle">
+
+              <span>
+                YOUR ROUTE
+              </span>
+
+              <strong>
+                あなたが回った順番
+              </strong>
+
+            </div>
+
+            {routeLoading ? (
+              <div className="rewardMonitorRouteLoading">
+                ルートを読み込み中...
+              </div>
+            ) : routeStops.length >
+              0 ? (
+              <div className="rewardMonitorRouteTrack">
+
+                {routeStops.map(
+                  (
+                    stop,
+                    index
+                  ) => (
+                    <div
+                      key={
+                        `${stop.spotId}-${index}`
+                      }
+                      className="rewardMonitorRouteGroup"
+                      style={{
+                        animationDelay:
+                          `${index * 0.12}s`,
+                      }}
+                    >
+
+                      <div className="rewardMonitorRouteStop">
+
+                        <span>
+                          {String(
+                            index + 1
+                          ).padStart(
+                            2,
+                            "0"
+                          )}
+                        </span>
+
+                        <div>
+
+                          <small>
+                            SPOT {stop.number}
+                          </small>
+
+                          <strong>
+                            {stop.name}
+                          </strong>
+
+                        </div>
+
+                      </div>
+
+                      {index <
+                        routeStops.length -
+                          1 && (
+                        <div className="rewardMonitorRouteArrow">
+                          →
+                        </div>
+                      )}
+
+                    </div>
+                  )
+                )}
+
+              </div>
+            ) : (
+              <div className="rewardMonitorRouteLoading">
+                ルート情報を確認できませんでした
+              </div>
+            )}
+
+          </section>
+
+          {/* ========================================
+              DIAGNOSIS
+          ======================================== */}
+
           <div className="rewardMonitorDiagnosis">
 
             <span>
@@ -879,7 +1164,7 @@ export default function RewardMonitorPage() {
             </span>
 
             <p>
-              あなたのPOKIPOタイプは...
+              あなたのスタンプラリータイプは...
             </p>
 
             <strong>
@@ -887,12 +1172,6 @@ export default function RewardMonitorPage() {
             </strong>
 
           </div>
-
-          <p className="rewardMonitorPresentedMessage">
-            5つのスポットを巡って、
-            <br />
-            POKIPOを完成させました！
-          </p>
 
           <div className="rewardMonitorExchangeWaiting">
 
