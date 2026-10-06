@@ -136,6 +136,20 @@ export default function StartPage() {
   ] = useState(true);
 
   /* ========================================
+     TERMS
+  ======================================== */
+
+  const [
+    termsAccepted,
+    setTermsAccepted,
+  ] = useState(false);
+
+  const [
+    showTerms,
+    setShowTerms,
+  ] = useState(false);
+
+  /* ========================================
      MAINTENANCE CHECK
   ======================================== */
 
@@ -546,6 +560,16 @@ export default function StartPage() {
       return;
     }
 
+    if (
+      !termsAccepted
+    ) {
+      setMessage(
+        "利用規約・プライバシーポリシーへの同意が必要です。"
+      );
+
+      return;
+    }
+
     setSubmitting(
       true
     );
@@ -629,6 +653,11 @@ export default function StartPage() {
       localStorage.setItem(
         "pokipo_department",
         department
+      );
+
+      localStorage.setItem(
+        "pokipo_terms_accepted",
+        "true"
       );
 
       /* =================================
@@ -1131,12 +1160,6 @@ export default function StartPage() {
 
               </div>
 
-              {message && (
-                <p className="error">
-                  {message}
-                </p>
-              )}
-
               {/* =================================
                   DATA WARNING
               ================================= */}
@@ -1167,11 +1190,81 @@ export default function StartPage() {
 
               </section>
 
+              {/* =================================
+                  TERMS
+              ================================= */}
+
+              <section className="pokipoTermsAgreement">
+
+                <div className="pokipoTermsAgreementHeader">
+
+                  <div>
+
+                    <span>
+                      PRIVACY & TERMS
+                    </span>
+
+                    <strong>
+                      利用規約・プライバシーポリシー
+                    </strong>
+
+                  </div>
+
+                  <button
+                    type="button"
+                    className="pokipoTermsOpenButton"
+                    onClick={() =>
+                      setShowTerms(
+                        true
+                      )
+                    }
+                  >
+                    内容を確認
+                  </button>
+
+                </div>
+
+                <p>
+                  POKIPOで取得する情報や、
+                  利用目的・管理方法についてご確認ください。
+                </p>
+
+                <label className="pokipoTermsCheck">
+
+                  <input
+                    type="checkbox"
+                    checked={
+                      termsAccepted
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setTermsAccepted(
+                        event.target.checked
+                      )
+                    }
+                  />
+
+                  <span>
+                    利用規約・プライバシーポリシーに同意します
+                  </span>
+
+                </label>
+
+              </section>
+
+              {message && (
+                <p className="error">
+                  {message}
+                </p>
+              )}
+
               <button
                 type="submit"
                 className="primaryButton startButton"
                 disabled={
-                  submitting
+                  submitting ||
+                  !termsAccepted
                 }
               >
 
@@ -1179,7 +1272,9 @@ export default function StartPage() {
 
                   {submitting
                     ? "登録中..."
-                    : "次へ進む"}
+                    : termsAccepted
+                    ? "次へ進む"
+                    : "規約への同意が必要です"}
 
                 </span>
 
@@ -1199,6 +1294,349 @@ export default function StartPage() {
           </section>
 
         </main>
+
+        {/* ========================================
+            TERMS MODAL
+        ======================================== */}
+
+        {showTerms && (
+          <div className="pokipoTermsOverlay">
+
+            <section
+              className="pokipoTermsModal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="POKIPO 利用規約・プライバシーポリシー"
+            >
+
+              <header className="pokipoTermsModalHeader">
+
+                <div>
+
+                  <span>
+                    POKIPO PRIVACY & TERMS
+                  </span>
+
+                  <h2>
+                    利用規約・
+                    <br />
+                    プライバシーポリシー
+                  </h2>
+
+                </div>
+
+                <button
+                  type="button"
+                  className="pokipoTermsCloseIcon"
+                  onClick={() =>
+                    setShowTerms(
+                      false
+                    )
+                  }
+                  aria-label="閉じる"
+                >
+                  ×
+                </button>
+
+              </header>
+
+              <div className="pokipoTermsModalBody">
+
+                <section>
+
+                  <h3>
+                    1. POKIPOについて
+                  </h3>
+
+                  <p>
+                    POKIPOは、獨協大学内で実施するスタンプラリー企画の運営、
+                    参加状況の確認、企画効果の分析などを目的として提供するWebサービスです。
+                  </p>
+
+                </section>
+
+                <section>
+
+                  <h3>
+                    2. 取得する情報
+                  </h3>
+
+                  <p>
+                    POKIPOでは、企画運営に必要な範囲で以下の情報を取得します。
+                  </p>
+
+                  <ul>
+
+                    <li>
+                      ニックネーム
+                    </li>
+
+                    <li>
+                      学年
+                    </li>
+
+                    <li>
+                      学科
+                    </li>
+
+                    <li>
+                      スタンプの取得状況
+                    </li>
+
+                    <li>
+                      豆知識の取得状況
+                    </li>
+
+                    <li>
+                      POKIPOの達成状況
+                    </li>
+
+                    <li>
+                      参加前・参加後アンケートの回答内容
+                    </li>
+
+                    <li>
+                      特典交換に必要な確認番号、QRコードに関する情報
+                    </li>
+
+                    <li>
+                      特典交換の実施状況
+                    </li>
+
+                  </ul>
+
+                </section>
+
+                <section className="pokipoTermsImportant">
+
+                  <strong>
+                    POKIPOでは学籍番号を取得しません
+                  </strong>
+
+                  <p>
+                    また、住所、電話番号、個人のメールアドレスなど、
+                    参加者本人を直接特定することを目的とした情報は取得しません。
+                  </p>
+
+                </section>
+
+                <section>
+
+                  <h3>
+                    3. 情報の利用目的
+                  </h3>
+
+                  <p>
+                    取得した情報は、以下の目的で利用します。
+                  </p>
+
+                  <ul>
+
+                    <li>
+                      POKIPOの運営
+                    </li>
+
+                    <li>
+                      参加状況やスタンプ進捗の確認
+                    </li>
+
+                    <li>
+                      特典交換の確認
+                    </li>
+
+                    <li>
+                      アンケート結果の分析
+                    </li>
+
+                    <li>
+                      企画の効果測定
+                    </li>
+
+                    <li>
+                      運営上必要なトラブル対応
+                    </li>
+
+                  </ul>
+
+                  <p>
+                    取得した情報を、これらの目的と関係のない用途で利用することはありません。
+                  </p>
+
+                </section>
+
+                <section>
+
+                  <h3>
+                    4. ブラウザ内に保存される情報
+                  </h3>
+
+                  <p>
+                    POKIPOでは、スタンプや豆知識などの一部の進捗情報を、
+                    利用している端末のブラウザ内にも保存します。
+                  </p>
+
+                  <p>
+                    Cookie、サイトデータ、閲覧データなどを削除した場合や、
+                    シークレットモード・プライベートブラウズを利用した場合、
+                    進捗情報が正しく引き継がれない場合があります。
+                  </p>
+
+                </section>
+
+                <section>
+
+                  <h3>
+                    5. 情報の保存・管理
+                  </h3>
+
+                  <p>
+                    参加情報、スタンプ取得状況、アンケート回答、
+                    特典交換状況などの一部の情報は、
+                    POKIPOのシステム上に保存されます。
+                  </p>
+
+                  <p>
+                    これらの情報は、POKIPOの運営メンバーが、
+                    企画運営上必要な範囲で確認する場合があります。
+                  </p>
+
+                  <p>
+                    情報の漏えい、紛失、不正アクセスなどを防止するため、
+                    適切な管理に努めます。
+                  </p>
+
+                </section>
+
+                <section>
+
+                  <h3>
+                    6. 第三者への提供
+                  </h3>
+
+                  <p>
+                    取得した情報を、参加者本人の同意なく、
+                    POKIPOの運営目的と関係のない第三者へ提供することはありません。
+                  </p>
+
+                  <p>
+                    ただし、法令に基づく場合や、
+                    システムの安全確保のために必要な場合を除きます。
+                  </p>
+
+                </section>
+
+                <section>
+
+                  <h3>
+                    7. 情報の保管期間
+                  </h3>
+
+                  <p>
+                    取得した情報は、企画終了後も、
+                    企画結果の分析や報告に必要な範囲で一定期間保管する場合があります。
+                  </p>
+
+                  <p>
+                    企画運営上の必要性がなくなった情報については、
+                    適切に削除または管理します。
+                  </p>
+
+                </section>
+
+                <section>
+
+                  <h3>
+                    8. セキュリティについて
+                  </h3>
+
+                  <p>
+                    POKIPOでは、取得した情報を安全に取り扱うため、
+                    適切なセキュリティ対策と管理に努めます。
+                  </p>
+
+                  <p>
+                    ただし、インターネットを利用したサービスであるため、
+                    通信環境や利用端末の状態などにより、
+                    完全な安全性を保証できない場合があります。
+                  </p>
+
+                </section>
+
+                <section>
+
+                  <h3>
+                    9. 利用について
+                  </h3>
+
+                  <p>
+                    参加者は、本規約およびプライバシーポリシーの内容を確認し、
+                    同意したうえでPOKIPOを利用するものとします。
+                  </p>
+
+                </section>
+
+              </div>
+
+              <div className="pokipoTermsModalFooter">
+
+                <label className="pokipoTermsModalCheck">
+
+                  <input
+                    type="checkbox"
+                    checked={
+                      termsAccepted
+                    }
+                    onChange={(
+                      event
+                    ) =>
+                      setTermsAccepted(
+                        event.target.checked
+                      )
+                    }
+                  />
+
+                  <span>
+                    内容を確認し、同意します
+                  </span>
+
+                </label>
+
+                <button
+                  type="button"
+                  className="pokipoTermsAgreeButton"
+                  onClick={() => {
+                    setTermsAccepted(
+                      true
+                    );
+
+                    setShowTerms(
+                      false
+                    );
+
+                    setMessage("");
+                  }}
+                >
+                  同意して閉じる
+                </button>
+
+                <button
+                  type="button"
+                  className="pokipoTermsBackButton"
+                  onClick={() =>
+                    setShowTerms(
+                      false
+                    )
+                  }
+                >
+                  閉じる
+                </button>
+
+              </div>
+
+            </section>
+
+          </div>
+        )}
 
         {/* ========================================
             INTRO VIDEO
