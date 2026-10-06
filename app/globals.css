@@ -38919,3 +38919,138 @@ img {
     margin-top: 9px;
   }
 }
+
+/* ==================================================
+   REWARD MONITOR - RESTORE ORIGINAL SCALE
+================================================== */
+
+.rewardMonitorPresented {
+  min-height: 100dvh;
+
+  padding:
+    50px
+    35px;
+
+  overflow: hidden;
+}
+
+.rewardMonitorPresentedEyebrow {
+  font-size:
+    clamp(
+      12px,
+      1.2vw,
+      19px
+    );
+}
+
+.rewardMonitorPresented > h1 {
+  margin:
+    8px
+    0
+    24px;
+
+  font-size:
+    clamp(
+      38px,
+      5vw,
+      82px
+    );
+}
+
+.rewardMonitorParticipantName strong {
+  font-size:
+    clamp(
+      50px,
+      7vw,
+      115px
+    );
+
+  line-height: 1;
+}
+
+.rewardMonitorParticipantName span {
+  font-size:
+    clamp(
+      18px,
+      2vw,
+      32px
+    );
+}
+
+.rewardMonitorRank {
+  margin-top: 26px;
+}
+
+.rewardMonitorRank span {
+  font-size:
+    clamp(
+      18px,
+      2vw,
+      30px
+    );
+}
+
+.rewardMonitorRank strong {
+  font-size:
+    clamp(
+      45px,
+      6vw,
+      95px
+    );
+
+  line-height: 1;
+}
+
+.rewardMonitorRoute {
+  margin-top: 28px;
+
+  padding:
+    20px
+    22px;
+}
+
+.rewardMonitorRouteTitle strong {
+  font-size:
+    clamp(
+      16px,
+      1.7vw,
+      27px
+    );
+}
+
+.rewardMonitorDiagnosis {
+  width:
+    min(
+      760px,
+      90%
+    );
+
+  margin-top: 32px;
+
+  padding:
+    22px
+    26px;
+}
+
+.rewardMonitorDiagnosis p {
+  margin:
+    7px
+    0
+    10px;
+
+  font-size:
+    clamp(
+      14px,
+      1.4vw,
+      22px
+    );
+}
+
+.rewardMonitorDiagnosis strong {
+  font-size:
+    clamp(
+      28px,
+      4vw,
+      60px
+    );
+}

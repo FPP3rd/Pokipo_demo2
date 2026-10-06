@@ -1160,7 +1160,7 @@ export default function RewardMonitorPage() {
           <div className="rewardMonitorDiagnosis">
 
             <span>
-              YOUR POKIPO TYPE
+              YOUR STAMPRALLY TYPE
             </span>
 
             <p>
@@ -1170,14 +1170,6 @@ export default function RewardMonitorPage() {
             <strong>
               「{routeType}」
             </strong>
-
-          </div>
-
-          <div className="rewardMonitorExchangeWaiting">
-
-            <span />
-
-            特典交換を確認しています...
 
           </div>
 
