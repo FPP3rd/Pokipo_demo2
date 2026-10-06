@@ -37763,3 +37763,644 @@ img {
     opacity: 1;
   }
 }
+
+/* ==================================================
+   REWARD MONITOR - FULL SCREEN FIT FIX
+   スクロールなしで1画面に収める
+================================================== */
+
+.rewardMonitorScreen {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+
+  overflow: hidden;
+
+  box-sizing: border-box;
+}
+
+
+/* ==================================================
+   PRESENTED SCREEN
+================================================== */
+
+.rewardMonitorPresented {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+
+  padding:
+    clamp(20px, 2.6vh, 34px)
+    clamp(20px, 2.4vw, 40px);
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+
+  text-align: center;
+}
+
+
+/* ==================================================
+   PRESENTED EYEBROW
+================================================== */
+
+.rewardMonitorPresentedEyebrow {
+  flex-shrink: 0;
+
+  font-size:
+    clamp(
+      10px,
+      1.4vh,
+      17px
+    );
+
+  line-height: 1.2;
+}
+
+
+/* ==================================================
+   CONGRATULATIONS
+================================================== */
+
+.rewardMonitorPresented > h1 {
+  flex-shrink: 0;
+
+  margin:
+    clamp(
+      4px,
+      0.8vh,
+      8px
+    )
+    0
+    clamp(
+      8px,
+      1.3vh,
+      16px
+    );
+
+  font-size:
+    clamp(
+      28px,
+      5vh,
+      64px
+    );
+
+  line-height: 1;
+}
+
+
+/* ==================================================
+   PARTICIPANT NAME
+================================================== */
+
+.rewardMonitorParticipantName {
+  flex-shrink: 0;
+
+  margin: 0;
+}
+
+.rewardMonitorParticipantName strong {
+  font-size:
+    clamp(
+      38px,
+      8vh,
+      92px
+    );
+
+  line-height: 0.95;
+}
+
+.rewardMonitorParticipantName span {
+  font-size:
+    clamp(
+      14px,
+      2.2vh,
+      28px
+    );
+}
+
+
+/* ==================================================
+   RANK
+================================================== */
+
+.rewardMonitorRank {
+  flex-shrink: 0;
+
+  margin-top:
+    clamp(
+      8px,
+      1.6vh,
+      18px
+    );
+}
+
+.rewardMonitorRank span {
+  font-size:
+    clamp(
+      13px,
+      2vh,
+      24px
+    );
+}
+
+.rewardMonitorRank strong {
+  font-size:
+    clamp(
+      32px,
+      6.4vh,
+      74px
+    );
+
+  line-height: 0.95;
+}
+
+
+/* ==================================================
+   ROUTE
+================================================== */
+
+.rewardMonitorRoute {
+  flex-shrink: 1;
+
+  width:
+    min(
+      1180px,
+      96%
+    );
+
+  margin-top:
+    clamp(
+      8px,
+      1.4vh,
+      16px
+    );
+
+  padding:
+    clamp(
+      10px,
+      1.4vh,
+      16px
+    )
+    clamp(
+      12px,
+      1.6vw,
+      20px
+    );
+
+  box-sizing: border-box;
+
+  overflow: hidden;
+}
+
+
+/* ==================================================
+   ROUTE TITLE
+================================================== */
+
+.rewardMonitorRouteTitle span {
+  font-size:
+    clamp(
+      7px,
+      1vh,
+      11px
+    );
+
+  line-height: 1.2;
+}
+
+.rewardMonitorRouteTitle strong {
+  margin-top: 2px;
+
+  font-size:
+    clamp(
+      13px,
+      2vh,
+      21px
+    );
+
+  line-height: 1.25;
+}
+
+
+/* ==================================================
+   ROUTE TRACK
+================================================== */
+
+.rewardMonitorRouteTrack {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap:
+    clamp(
+      4px,
+      0.6vw,
+      8px
+    );
+
+  margin-top:
+    clamp(
+      8px,
+      1.2vh,
+      13px
+    );
+
+  flex-wrap: nowrap;
+
+  width: 100%;
+}
+
+
+/* ==================================================
+   ROUTE GROUP
+================================================== */
+
+.rewardMonitorRouteGroup {
+  display: flex;
+  align-items: center;
+
+  gap:
+    clamp(
+      3px,
+      0.5vw,
+      7px
+    );
+
+  min-width: 0;
+
+  flex: 1 1 0;
+}
+
+
+/* ==================================================
+   ROUTE STOP
+================================================== */
+
+.rewardMonitorRouteStop {
+  display: flex;
+  align-items: center;
+
+  min-width: 0;
+
+  flex: 1 1 auto;
+
+  gap:
+    clamp(
+      5px,
+      0.6vw,
+      8px
+    );
+
+  padding:
+    clamp(
+      6px,
+      0.9vh,
+      9px
+    )
+    clamp(
+      7px,
+      0.8vw,
+      11px
+    );
+
+  border-radius: 12px;
+}
+
+.rewardMonitorRouteStop > span {
+  width:
+    clamp(
+      26px,
+      3.5vh,
+      32px
+    );
+
+  height:
+    clamp(
+      26px,
+      3.5vh,
+      32px
+    );
+
+  font-size:
+    clamp(
+      7px,
+      1vh,
+      9px
+    );
+}
+
+.rewardMonitorRouteStop small {
+  font-size:
+    clamp(
+      6px,
+      0.8vh,
+      8px
+    );
+
+  line-height: 1.1;
+}
+
+.rewardMonitorRouteStop strong {
+  margin-top: 1px;
+
+  font-size:
+    clamp(
+      8px,
+      1.25vh,
+      12px
+    );
+
+  line-height: 1.2;
+
+  white-space: normal;
+}
+
+
+/* ==================================================
+   ROUTE ARROW
+================================================== */
+
+.rewardMonitorRouteArrow {
+  font-size:
+    clamp(
+      12px,
+      1.8vh,
+      20px
+    );
+
+  flex-shrink: 0;
+}
+
+
+/* ==================================================
+   DIAGNOSIS
+================================================== */
+
+.rewardMonitorDiagnosis {
+  flex-shrink: 0;
+
+  width:
+    min(
+      760px,
+      88%
+    );
+
+  margin-top:
+    clamp(
+      8px,
+      1.3vh,
+      15px
+    );
+
+  padding:
+    clamp(
+      10px,
+      1.3vh,
+      15px
+    )
+    clamp(
+      14px,
+      1.8vw,
+      20px
+    );
+
+  box-sizing: border-box;
+}
+
+.rewardMonitorDiagnosis > span {
+  font-size:
+    clamp(
+      7px,
+      1vh,
+      10px
+    );
+
+  line-height: 1.1;
+}
+
+.rewardMonitorDiagnosis p {
+  margin:
+    3px
+    0
+    4px;
+
+  font-size:
+    clamp(
+      10px,
+      1.5vh,
+      15px
+    );
+
+  line-height: 1.25;
+}
+
+.rewardMonitorDiagnosis strong {
+  font-size:
+    clamp(
+      20px,
+      3.6vh,
+      38px
+    );
+
+  line-height: 1.15;
+}
+
+
+/* ==================================================
+   EXCHANGE WAITING
+================================================== */
+
+.rewardMonitorExchangeWaiting {
+  flex-shrink: 0;
+
+  margin-top:
+    clamp(
+      8px,
+      1.3vh,
+      14px
+    );
+
+  padding:
+    clamp(
+      7px,
+      1vh,
+      10px
+    )
+    clamp(
+      12px,
+      1.3vw,
+      18px
+    );
+
+  font-size:
+    clamp(
+      8px,
+      1.2vh,
+      12px
+    );
+
+  line-height: 1.2;
+}
+
+
+/* ==================================================
+   SHORT HEIGHT MONITORS
+================================================== */
+
+@media (max-height: 760px) {
+  .rewardMonitorPresented {
+    justify-content: center;
+
+    padding:
+      14px
+      24px;
+  }
+
+  .rewardMonitorPresented > h1 {
+    margin:
+      4px
+      0
+      8px;
+
+    font-size:
+      clamp(
+        26px,
+        4.5vh,
+        46px
+      );
+  }
+
+  .rewardMonitorParticipantName strong {
+    font-size:
+      clamp(
+        34px,
+        7vh,
+        64px
+      );
+  }
+
+  .rewardMonitorRank {
+    margin-top: 8px;
+  }
+
+  .rewardMonitorRank strong {
+    font-size:
+      clamp(
+        30px,
+        5.6vh,
+        52px
+      );
+  }
+
+  .rewardMonitorRoute {
+    margin-top: 8px;
+
+    padding:
+      9px
+      12px;
+  }
+
+  .rewardMonitorDiagnosis {
+    margin-top: 8px;
+
+    padding:
+      9px
+      12px;
+  }
+
+  .rewardMonitorExchangeWaiting {
+    margin-top: 8px;
+  }
+}
+
+
+/* ==================================================
+   VERY SHORT HEIGHT MONITORS
+================================================== */
+
+@media (max-height: 650px) {
+  .rewardMonitorPresentedEyebrow {
+    font-size: 9px;
+  }
+
+  .rewardMonitorPresented > h1 {
+    font-size:
+      clamp(
+        24px,
+        4vh,
+        38px
+      );
+  }
+
+  .rewardMonitorParticipantName strong {
+    font-size:
+      clamp(
+        30px,
+        6.4vh,
+        54px
+      );
+  }
+
+  .rewardMonitorRank span {
+    font-size:
+      clamp(
+        11px,
+        1.7vh,
+        17px
+      );
+  }
+
+  .rewardMonitorRank strong {
+    font-size:
+      clamp(
+        28px,
+        5.2vh,
+        46px
+      );
+  }
+
+  .rewardMonitorRouteTitle strong {
+    font-size:
+      clamp(
+        12px,
+        1.7vh,
+        16px
+      );
+  }
+
+  .rewardMonitorRouteStop strong {
+    font-size:
+      clamp(
+        7px,
+        1.1vh,
+        10px
+      );
+  }
+
+  .rewardMonitorDiagnosis strong {
+    font-size:
+      clamp(
+        18px,
+        3.2vh,
+        30px
+      );
+  }
+
+  .rewardMonitorExchangeWaiting {
+    font-size:
+      clamp(
+        7px,
+        1vh,
+        10px
+      );
+  }
+}
