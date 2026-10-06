@@ -675,8 +675,8 @@ export default function StaffPage() {
             </h1>
 
             <p>
-              管理・景品交換・お知らせ・
-              広告・アンケート分析をここから操作できます。
+              管理・景品交換・お知らせ・広告・
+              プレビュー・アンケート分析をここから操作できます。
             </p>
 
           </div>
@@ -905,9 +905,7 @@ export default function StaffPage() {
 
           </button>
 
-          {/* =================================
-              PROMOTIONS
-          ================================= */}
+          {/* PROMOTIONS */}
 
           <button
             type="button"
@@ -936,6 +934,48 @@ export default function StaffPage() {
               <p>
                 トップ画面のイベントバナーや、
                 アプリ起動時の全画面広告を設定します。
+              </p>
+
+            </div>
+
+            <div className="staffMenuCardArrow">
+              →
+            </div>
+
+          </button>
+
+          {/* =================================
+              PREVIEW
+          ================================= */}
+
+          <button
+            type="button"
+            className="staffMenuCard preview"
+            onClick={() =>
+              router.push(
+                "/preview"
+              )
+            }
+          >
+
+            <div className="staffMenuCardIcon">
+              TEST
+            </div>
+
+            <div className="staffMenuCardBody">
+
+              <span>
+                PREVIEW
+              </span>
+
+              <h2>
+                プレビューモード
+              </h2>
+
+              <p>
+                参加者数やランキングなどの
+                本番データに影響を与えず、
+                参加者画面を確認します。
               </p>
 
             </div>

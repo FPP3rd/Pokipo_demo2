@@ -33720,3 +33720,982 @@ img {
     font-size: 9px;
   }
 }
+
+/* ==================================================
+   PREVIEW ENTRY PAGE
+================================================== */
+
+.previewEntryPage {
+  width: 100%;
+  max-width: 620px;
+
+  margin: 0 auto;
+  padding: 28px 16px 60px;
+
+  box-sizing: border-box;
+}
+
+
+/* ==================================================
+   HEADER
+================================================== */
+
+.previewEntryHeader {
+  margin-bottom: 22px;
+}
+
+.previewEntryHeader > span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 1000;
+
+  letter-spacing: 0.14em;
+}
+
+.previewEntryHeader h1 {
+  margin: 0;
+
+  color: #332d29;
+
+  font-size: 27px;
+  font-weight: 1000;
+
+  line-height: 1.25;
+}
+
+.previewEntryHeader p {
+  margin: 9px 0 0;
+
+  color: #756a64;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+
+/* ==================================================
+   WARNING
+================================================== */
+
+.previewEntryWarning {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 13px;
+
+  padding: 16px;
+
+  border: 1px solid #dbc66f;
+  border-radius: 16px;
+
+  background: #fff9dc;
+}
+
+.previewEntryWarningIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 67px;
+  height: 30px;
+
+  padding: 0 8px;
+
+  border-radius: 999px;
+
+  background: #332d29;
+
+  color: #ffffff;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.08em;
+}
+
+.previewEntryWarning > div:last-child {
+  min-width: 0;
+}
+
+.previewEntryWarning strong {
+  display: block;
+
+  color: #453d31;
+
+  font-size: 12px;
+  font-weight: 1000;
+
+  line-height: 1.5;
+}
+
+.previewEntryWarning p {
+  margin: 6px 0 0;
+
+  color: #746a50;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   INFO
+================================================== */
+
+.previewEntryInfo {
+  margin-top: 20px;
+  padding: 18px;
+
+  border: 1px solid #e5dcd7;
+  border-radius: 18px;
+
+  background: #ffffff;
+}
+
+.previewEntryInfo > span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.13em;
+}
+
+.previewEntryInfo h2 {
+  margin: 4px 0 15px;
+
+  color: #332d29;
+
+  font-size: 17px;
+  font-weight: 1000;
+}
+
+
+/* ==================================================
+   INFO LIST
+================================================== */
+
+.previewEntryInfoList {
+  display: grid;
+
+  gap: 9px;
+}
+
+.previewEntryInfoList > div {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 11px;
+
+  border-radius: 12px;
+
+  background: #f8f5f3;
+}
+
+.previewEntryInfoList strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 8px;
+  font-weight: 1000;
+}
+
+.previewEntryInfoList p {
+  margin: 0;
+
+  color: #514843;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  line-height: 1.5;
+}
+
+
+/* ==================================================
+   IMPORTANT
+================================================== */
+
+.previewEntryImportant {
+  margin-top: 16px;
+  padding: 15px;
+
+  border-radius: 15px;
+
+  background: #f6f1ee;
+}
+
+.previewEntryImportant strong {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #443b36;
+
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.previewEntryImportant p {
+  margin: 0 0 7px;
+
+  color: #796e68;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.previewEntryImportant p:last-child {
+  margin-bottom: 0;
+}
+
+
+/* ==================================================
+   START BUTTON
+================================================== */
+
+.previewEntryStartButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  width: 100%;
+
+  gap: 12px;
+
+  margin-top: 20px;
+  padding: 15px 17px;
+
+  border: 0;
+  border-radius: 15px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.previewEntryStartButton > span:first-child {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.previewEntryStartButton strong {
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.previewEntryStartButton small {
+  color: rgba(255, 255, 255, 0.72);
+
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.previewEntryStartButton > span:last-child {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+
+/* ==================================================
+   BACK BUTTON
+================================================== */
+
+.previewEntryBackButton {
+  width: 100%;
+
+  margin-top: 8px;
+  padding: 10px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #887c76;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   LOADING
+================================================== */
+
+.previewEntryLoading {
+  padding: 50px 20px;
+
+  text-align: center;
+
+  color: #837871;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (max-width: 560px) {
+  .previewEntryPage {
+    padding: 20px 12px 50px;
+  }
+
+  .previewEntryHeader h1 {
+    font-size: 23px;
+  }
+
+  .previewEntryWarning {
+    gap: 10px;
+
+    padding: 13px;
+  }
+
+  .previewEntryWarningIcon {
+    min-width: 58px;
+
+    font-size: 7px;
+  }
+}
+
+/* ==================================================
+   PREVIEW MODE SHELL
+================================================== */
+
+.previewModeShell {
+  padding-top: 70px;
+  padding-bottom: 240px;
+}
+
+
+/* ==================================================
+   PREVIEW TOP BAR
+================================================== */
+
+.previewModeTopBar {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+  right: 0;
+
+  z-index: 15000;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  min-height: 54px;
+
+  padding:
+    8px
+    14px;
+
+  box-sizing: border-box;
+
+  background: #2c2927;
+
+  color: #ffffff;
+
+  box-shadow:
+    0
+    3px
+    14px
+    rgba(
+      0,
+      0,
+      0,
+      0.18
+    );
+}
+
+.previewModeTopBar > div {
+  min-width: 0;
+}
+
+.previewModeTopBar span {
+  display: block;
+
+  color: #ffd970;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.previewModeTopBar strong {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  line-height: 1.4;
+}
+
+.previewModeTopBar button {
+  flex-shrink: 0;
+
+  padding:
+    7px
+    12px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.25
+    );
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.1
+    );
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   PREVIEW NOTICE
+================================================== */
+
+.previewHomeNotice {
+  margin:
+    10px
+    0
+    16px;
+
+  padding: 14px;
+
+  border:
+    1px solid
+    #e7ce70;
+
+  border-radius: 15px;
+
+  background:
+    #fff9dd;
+}
+
+.previewHomeNotice > span {
+  display: block;
+
+  color: #8a6b00;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.previewHomeNotice > strong {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #40392a;
+
+  font-size: 13px;
+  font-weight: 1000;
+}
+
+.previewHomeNotice p {
+  margin:
+    6px
+    0
+    0;
+
+  color: #72684e;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   COMPLETE CARD
+================================================== */
+
+.previewCompleteCard {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  margin-top: 15px;
+  padding: 14px;
+
+  border:
+    1px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.14
+    );
+
+  border-radius: 15px;
+
+  background:
+    #fff5f5;
+}
+
+.previewCompleteIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 18px;
+}
+
+.previewCompleteCard > div:last-child {
+  min-width: 0;
+}
+
+.previewCompleteCard span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.1em;
+}
+
+.previewCompleteCard strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #332d29;
+
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.previewCompleteCard p {
+  margin:
+    5px
+    0
+    0;
+
+  color: #776b65;
+
+  font-size: 8px;
+  font-weight: 700;
+
+  line-height: 1.6;
+}
+
+
+/* ==================================================
+   CONTROL PANEL
+================================================== */
+
+.previewControlPanel {
+  position: fixed;
+
+  left: 50%;
+  bottom: 12px;
+
+  z-index: 14900;
+
+  width: min(
+    calc(100% - 24px),
+    620px
+  );
+
+  padding: 14px;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.15
+    );
+
+  border-radius: 18px;
+
+  background:
+    rgba(
+      40,
+      36,
+      34,
+      0.96
+    );
+
+  color: #ffffff;
+
+  box-shadow:
+    0
+    14px
+    45px
+    rgba(
+      0,
+      0,
+      0,
+      0.32
+    );
+
+  backdrop-filter:
+    blur(12px);
+
+  -webkit-backdrop-filter:
+    blur(12px);
+
+  transform:
+    translateX(-50%);
+}
+
+
+/* ==================================================
+   CONTROL HEADER
+================================================== */
+
+.previewControlHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+}
+
+.previewControlHeader span {
+  display: block;
+
+  color: #ffd970;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.12em;
+}
+
+.previewControlHeader strong {
+  display: block;
+
+  margin-top: 2px;
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 1000;
+}
+
+.previewControlStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 56px;
+
+  padding:
+    7px
+    10px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.1
+    );
+
+  color: #ffffff;
+
+  font-size: 10px;
+  font-weight: 1000;
+}
+
+
+/* ==================================================
+   DESCRIPTION
+================================================== */
+
+.previewControlDescription {
+  margin:
+    8px
+    0
+    10px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.65
+    );
+
+  font-size: 8px;
+  font-weight: 700;
+
+  line-height: 1.5;
+}
+
+
+/* ==================================================
+   CONTROL BUTTONS
+================================================== */
+
+.previewControlButtons {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 7px;
+}
+
+.previewControlButtons button {
+  min-height: 38px;
+
+  padding:
+    8px
+    6px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.16
+    );
+
+  border-radius: 10px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.previewControlButtons button.complete {
+  background:
+    #8a1822;
+
+  border-color:
+    #8a1822;
+}
+
+.previewControlButtons button.reset {
+  color: #ffd7d7;
+}
+
+.previewControlButtons button:disabled {
+  opacity: 0.3;
+
+  cursor: default;
+}
+
+
+/* ==================================================
+   CONTROL FOOTER
+================================================== */
+
+.previewControlFooter {
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1fr;
+
+  gap: 7px;
+
+  margin-top: 8px;
+}
+
+.previewControlFooter button {
+  padding:
+    9px
+    8px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.14
+    );
+
+  border-radius: 10px;
+
+  background:
+    transparent;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.8
+    );
+
+  font-size: 8px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.previewControlFooter button.exit {
+  background: #ffffff;
+
+  color: #332d29;
+}
+
+
+/* ==================================================
+   LOADING
+================================================== */
+
+.previewHomeLoading {
+  padding:
+    60px
+    20px;
+
+  text-align: center;
+
+  color: #80746e;
+
+  font-size: 10px;
+  font-weight: 800;
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (
+  max-width: 560px
+) {
+  .previewModeShell {
+    padding-top: 64px;
+    padding-bottom: 230px;
+  }
+
+  .previewModeTopBar {
+    min-height: 50px;
+
+    padding:
+      7px
+      10px;
+  }
+
+  .previewControlPanel {
+    bottom: 8px;
+
+    width:
+      calc(
+        100% - 16px
+      );
+
+    padding: 11px;
+
+    border-radius: 15px;
+  }
+
+  .previewControlButtons {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+  }
+}
