@@ -34699,3 +34699,2673 @@ img {
       );
   }
 }
+
+/* ==================================================
+   REWARD MONITOR
+================================================== */
+
+.rewardMonitorScreen {
+  position: relative;
+
+  width: 100%;
+  min-height: 100dvh;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      145deg,
+      #fffaf7 0%,
+      #fff3f1 50%,
+      #ffffff 100%
+    );
+
+  color: #332d29;
+
+  font-family: inherit;
+}
+
+
+/* ==================================================
+   CONTROL
+================================================== */
+
+.rewardMonitorControl {
+  position: fixed;
+
+  top: 14px;
+  right: 14px;
+
+  z-index: 100;
+
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  padding: 7px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      35,
+      30,
+      28,
+      0.78
+    );
+
+  backdrop-filter:
+    blur(10px);
+
+  -webkit-backdrop-filter:
+    blur(10px);
+}
+
+.rewardMonitorControl button {
+  padding:
+    7px
+    11px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.16
+    );
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.08
+    );
+
+  color: #ffffff;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   CONNECTION
+================================================== */
+
+.rewardMonitorConnection {
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  padding:
+    7px
+    8px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.7
+    );
+
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.rewardMonitorConnection span {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+
+  background: #998e88;
+}
+
+.rewardMonitorConnection.connected span {
+  background: #60d487;
+
+  box-shadow:
+    0
+    0
+    10px
+    rgba(
+      96,
+      212,
+      135,
+      0.85
+    );
+}
+
+
+/* ==================================================
+   IDLE
+================================================== */
+
+.rewardMonitorIdle {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 100dvh;
+
+  padding:
+    50px
+    30px;
+
+  box-sizing: border-box;
+
+  text-align: center;
+}
+
+.rewardMonitorEyebrow {
+  color: #8a1822;
+
+  font-size: clamp(
+    12px,
+    1.3vw,
+    20px
+  );
+
+  font-weight: 900;
+
+  letter-spacing: 0.16em;
+}
+
+.rewardMonitorIdle h1 {
+  margin:
+    12px
+    0
+    0;
+
+  color: #8a1822;
+
+  font-size: clamp(
+    72px,
+    11vw,
+    180px
+  );
+
+  font-weight: 1000;
+
+  line-height: 0.95;
+
+  letter-spacing: -0.06em;
+}
+
+.rewardMonitorIdleLine {
+  width: min(
+    160px,
+    30vw
+  );
+
+  height: 4px;
+
+  margin:
+    30px
+    0;
+
+  border-radius: 999px;
+
+  background: #8a1822;
+}
+
+.rewardMonitorIdle h2 {
+  margin: 0;
+
+  font-size: clamp(
+    25px,
+    3.2vw,
+    52px
+  );
+
+  font-weight: 1000;
+
+  line-height: 1.45;
+}
+
+.rewardMonitorIdle p {
+  margin:
+    20px
+    0
+    0;
+
+  color: #81736d;
+
+  font-size: clamp(
+    14px,
+    1.5vw,
+    24px
+  );
+
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+.rewardMonitorWaiting {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 34px;
+
+  padding:
+    12px
+    20px;
+
+  border-radius: 999px;
+
+  background: #332d29;
+
+  color: #ffffff;
+
+  font-size: clamp(
+    10px,
+    1vw,
+    15px
+  );
+
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+}
+
+.rewardMonitorWaitingDot {
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: #e84e58;
+
+  animation:
+    rewardMonitorPulse
+    1.3s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   IDLE DECORATION
+================================================== */
+
+.rewardMonitorIdleDecor {
+  position: absolute;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      138,
+      24,
+      34,
+      0.055
+    );
+}
+
+.rewardMonitorIdleDecor.decorOne {
+  width: 420px;
+  height: 420px;
+
+  top: -180px;
+  left: -100px;
+}
+
+.rewardMonitorIdleDecor.decorTwo {
+  width: 320px;
+  height: 320px;
+
+  right: -100px;
+  bottom: -100px;
+}
+
+.rewardMonitorIdleDecor.decorThree {
+  width: 120px;
+  height: 120px;
+
+  right: 14%;
+  top: 19%;
+}
+
+
+/* ==================================================
+   PRESENTED
+================================================== */
+
+.rewardMonitorPresented {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 100dvh;
+
+  padding:
+    50px
+    35px;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  animation:
+    rewardMonitorPresentedIn
+    0.7s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+.rewardMonitorPresentedEyebrow {
+  color: #8a1822;
+
+  font-size: clamp(
+    12px,
+    1.2vw,
+    19px
+  );
+
+  font-weight: 1000;
+
+  letter-spacing: 0.16em;
+}
+
+.rewardMonitorPresented > h1 {
+  margin:
+    8px
+    0
+    24px;
+
+  color: #8a1822;
+
+  font-size: clamp(
+    38px,
+    5vw,
+    82px
+  );
+
+  font-weight: 1000;
+
+  line-height: 1;
+}
+
+.rewardMonitorParticipantName {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+
+  gap: 10px;
+}
+
+.rewardMonitorParticipantName strong {
+  font-size: clamp(
+    50px,
+    7vw,
+    115px
+  );
+
+  font-weight: 1000;
+
+  line-height: 1;
+}
+
+.rewardMonitorParticipantName span {
+  font-size: clamp(
+    18px,
+    2vw,
+    32px
+  );
+
+  font-weight: 900;
+}
+
+
+/* ==================================================
+   RANK
+================================================== */
+
+.rewardMonitorRank {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+
+  gap: 9px;
+
+  margin-top: 26px;
+}
+
+.rewardMonitorRank span {
+  font-size: clamp(
+    18px,
+    2vw,
+    30px
+  );
+
+  font-weight: 900;
+}
+
+.rewardMonitorRank strong {
+  color: #8a1822;
+
+  font-size: clamp(
+    45px,
+    6vw,
+    95px
+  );
+
+  font-weight: 1000;
+
+  line-height: 1;
+}
+
+
+/* ==================================================
+   DIAGNOSIS
+================================================== */
+
+.rewardMonitorDiagnosis {
+  width: min(
+    760px,
+    90%
+  );
+
+  margin-top: 32px;
+  padding:
+    22px
+    26px;
+
+  box-sizing: border-box;
+
+  border:
+    2px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.14
+    );
+
+  border-radius: 24px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.82
+    );
+
+  box-shadow:
+    0
+    15px
+    50px
+    rgba(
+      80,
+      40,
+      35,
+      0.08
+    );
+}
+
+.rewardMonitorDiagnosis > span {
+  color: #8a1822;
+
+  font-size: clamp(
+    10px,
+    1vw,
+    15px
+  );
+
+  font-weight: 1000;
+
+  letter-spacing: 0.14em;
+}
+
+.rewardMonitorDiagnosis p {
+  margin:
+    7px
+    0
+    10px;
+
+  color: #7c6f69;
+
+  font-size: clamp(
+    14px,
+    1.4vw,
+    22px
+  );
+
+  font-weight: 700;
+}
+
+.rewardMonitorDiagnosis strong {
+  display: block;
+
+  color: #332d29;
+
+  font-size: clamp(
+    28px,
+    4vw,
+    60px
+  );
+
+  font-weight: 1000;
+
+  line-height: 1.35;
+}
+
+.rewardMonitorPresentedMessage {
+  margin:
+    22px
+    0
+    0;
+
+  color: #756862;
+
+  font-size: clamp(
+    14px,
+    1.5vw,
+    24px
+  );
+
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   EXCHANGE WAITING
+================================================== */
+
+.rewardMonitorExchangeWaiting {
+  display: flex;
+  align-items: center;
+
+  gap: 9px;
+
+  margin-top: 26px;
+
+  padding:
+    10px
+    16px;
+
+  border-radius: 999px;
+
+  background: #332d29;
+
+  color: #ffffff;
+
+  font-size: clamp(
+    10px,
+    1vw,
+    15px
+  );
+
+  font-weight: 900;
+}
+
+.rewardMonitorExchangeWaiting span {
+  width: 8px;
+  height: 8px;
+
+  border-radius: 50%;
+
+  background: #ffd863;
+
+  animation:
+    rewardMonitorPulse
+    1.2s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   COMPLETED
+================================================== */
+
+.rewardMonitorCompleted {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 100dvh;
+
+  padding:
+    45px
+    30px;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  background:
+    radial-gradient(
+      circle at center,
+      #fff7f5 0%,
+      #ffe8e6 48%,
+      #f8d9d7 100%
+    );
+
+  animation:
+    rewardMonitorCompletedIn
+    0.8s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+.rewardMonitorCompleted > span {
+  color: #8a1822;
+
+  font-size: clamp(
+    18px,
+    2vw,
+    32px
+  );
+
+  font-weight: 1000;
+
+  letter-spacing: 0.14em;
+}
+
+.rewardMonitorCompleted h1 {
+  margin:
+    14px
+    0
+    0;
+
+  color: #8a1822;
+
+  font-size: clamp(
+    55px,
+    8vw,
+    130px
+  );
+
+  font-weight: 1000;
+
+  line-height: 1;
+}
+
+.rewardMonitorCompleted h1 small {
+  margin-left: 8px;
+
+  color: #332d29;
+
+  font-size: 0.3em;
+}
+
+.rewardMonitorCompleted h2 {
+  margin:
+    28px
+    0
+    0;
+
+  color: #332d29;
+
+  font-size: clamp(
+    28px,
+    4vw,
+    64px
+  );
+
+  font-weight: 1000;
+
+  line-height: 1.4;
+}
+
+.rewardMonitorCompleted p {
+  margin:
+    20px
+    0
+    0;
+
+  color: #786962;
+
+  font-size: clamp(
+    15px,
+    1.6vw,
+    25px
+  );
+
+  font-weight: 800;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   COUNTDOWN
+================================================== */
+
+.rewardMonitorCountdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 48px;
+  height: 48px;
+
+  margin-top: 28px;
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      138,
+      24,
+      34,
+      0.09
+    );
+
+  color: #8a1822;
+
+  font-size: 15px;
+  font-weight: 1000;
+}
+
+
+/* ==================================================
+   CONFETTI
+================================================== */
+
+.rewardMonitorConfetti {
+  position: absolute;
+
+  color: #8a1822;
+
+  font-weight: 1000;
+
+  animation:
+    rewardMonitorConfetti
+    2.5s
+    ease-in-out
+    infinite;
+}
+
+.rewardMonitorConfetti.confetti1 {
+  top: 18%;
+  left: 12%;
+
+  font-size: 34px;
+}
+
+.rewardMonitorConfetti.confetti2 {
+  top: 25%;
+  right: 13%;
+
+  font-size: 22px;
+
+  animation-delay: 0.3s;
+}
+
+.rewardMonitorConfetti.confetti3 {
+  bottom: 20%;
+  left: 17%;
+
+  font-size: 28px;
+
+  animation-delay: 0.6s;
+}
+
+.rewardMonitorConfetti.confetti4 {
+  bottom: 15%;
+  right: 18%;
+
+  font-size: 40px;
+
+  animation-delay: 0.9s;
+}
+
+.rewardMonitorConfetti.confetti5 {
+  top: 12%;
+  right: 34%;
+
+  font-size: 16px;
+
+  animation-delay: 1.2s;
+}
+
+
+/* ==================================================
+   LOADING
+================================================== */
+
+.rewardMonitorLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 100dvh;
+
+  text-align: center;
+}
+
+.rewardMonitorLoading span {
+  color: #8a1822;
+
+  font-size: 60px;
+  font-weight: 1000;
+}
+
+.rewardMonitorLoading p {
+  color: #7c706a;
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+
+/* ==================================================
+   ANIMATIONS
+================================================== */
+
+@keyframes rewardMonitorPulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes rewardMonitorPresentedIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(
+        30px
+      )
+      scale(
+        0.97
+      );
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(
+        0
+      )
+      scale(
+        1
+      );
+  }
+}
+
+@keyframes rewardMonitorCompletedIn {
+  from {
+    opacity: 0;
+
+    transform:
+      scale(
+        0.92
+      );
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      scale(
+        1
+      );
+  }
+}
+
+@keyframes rewardMonitorConfetti {
+  0%,
+  100% {
+    transform:
+      translateY(
+        0
+      )
+      rotate(
+        0deg
+      );
+  }
+
+  50% {
+    transform:
+      translateY(
+        -16px
+      )
+      rotate(
+        18deg
+      );
+  }
+}
+
+
+/* ==================================================
+   SMALL SCREEN
+================================================== */
+
+@media (max-width: 700px) {
+  .rewardMonitorControl {
+    top: 8px;
+    right: 8px;
+
+    gap: 4px;
+
+    padding: 5px;
+  }
+
+  .rewardMonitorControl button {
+    padding:
+      6px
+      8px;
+
+    font-size: 7px;
+  }
+
+  .rewardMonitorConnection {
+    font-size: 7px;
+  }
+
+  .rewardMonitorDiagnosis {
+    padding:
+      17px
+      18px;
+  }
+}
+
+/* ==================================================
+   STAFF DEVICE MODE
+================================================== */
+
+.staffDeviceModePage {
+  width: 100%;
+  max-width: 720px;
+
+  margin: 0 auto;
+
+  padding:
+    32px
+    16px
+    60px;
+
+  box-sizing: border-box;
+}
+
+
+/* ==================================================
+   HEADER
+================================================== */
+
+.staffDeviceModeHeader {
+  margin-bottom: 24px;
+}
+
+.staffDeviceModeHeader > span {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color: #8a1822;
+
+  font-size: 9px;
+  font-weight: 1000;
+
+  letter-spacing: 0.14em;
+}
+
+.staffDeviceModeHeader h1 {
+  margin: 0;
+
+  color: #332d29;
+
+  font-size: 28px;
+  font-weight: 1000;
+
+  line-height: 1.35;
+}
+
+.staffDeviceModeHeader p {
+  margin:
+    10px
+    0
+    0;
+
+  color: #766a64;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.8;
+}
+
+
+/* ==================================================
+   GRID
+================================================== */
+
+.staffDeviceModeGrid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(
+        0,
+        1fr
+      )
+    );
+
+  gap: 14px;
+}
+
+
+/* ==================================================
+   CARD
+================================================== */
+
+.staffDeviceModeCard {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+  min-height: 300px;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  border:
+    1px solid
+    #e8dfda;
+
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  text-align: left;
+
+  box-shadow:
+    0
+    10px
+    30px
+    rgba(
+      70,
+      45,
+      38,
+      0.07
+    );
+
+  cursor: pointer;
+
+  transition:
+    transform
+    0.18s
+    ease,
+    box-shadow
+    0.18s
+    ease;
+}
+
+.staffDeviceModeCard:hover {
+  transform:
+    translateY(
+      -3px
+    );
+
+  box-shadow:
+    0
+    16px
+    40px
+    rgba(
+      70,
+      45,
+      38,
+      0.12
+    );
+}
+
+.staffDeviceModeCard.monitor {
+  background:
+    linear-gradient(
+      145deg,
+      #332d29 0%,
+      #241f1d 100%
+    );
+
+  border-color:
+    #332d29;
+}
+
+
+/* ==================================================
+   ICON
+================================================== */
+
+.staffDeviceModeIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 52px;
+  height: 52px;
+
+  padding:
+    0
+    10px;
+
+  border-radius: 15px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 1000;
+
+  letter-spacing: 0.08em;
+}
+
+.staffDeviceModeCard.monitor
+.staffDeviceModeIcon {
+  background: #ffffff;
+
+  color: #332d29;
+}
+
+
+/* ==================================================
+   BODY
+================================================== */
+
+.staffDeviceModeBody {
+  margin-top: 18px;
+}
+
+.staffDeviceModeBody > span {
+  display: block;
+
+  color: #8a1822;
+
+  font-size: 8px;
+  font-weight: 1000;
+
+  letter-spacing: 0.13em;
+}
+
+.staffDeviceModeBody h2 {
+  margin:
+    5px
+    0
+    0;
+
+  color: #332d29;
+
+  font-size: 19px;
+  font-weight: 1000;
+
+  line-height: 1.4;
+}
+
+.staffDeviceModeBody p {
+  margin:
+    9px
+    0
+    0;
+
+  color: #786d67;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  line-height: 1.75;
+}
+
+.staffDeviceModeCard.monitor
+.staffDeviceModeBody > span {
+  color: #ffd96d;
+}
+
+.staffDeviceModeCard.monitor
+.staffDeviceModeBody h2 {
+  color: #ffffff;
+}
+
+.staffDeviceModeCard.monitor
+.staffDeviceModeBody p {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.68
+    );
+}
+
+
+/* ==================================================
+   FEATURES
+================================================== */
+
+.staffDeviceModeFeature {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  margin-top: 15px;
+}
+
+.staffDeviceModeFeature span {
+  color: #605650;
+
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.staffDeviceModeCard.monitor
+.staffDeviceModeFeature span {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.82
+    );
+}
+
+
+/* ==================================================
+   ARROW
+================================================== */
+
+.staffDeviceModeArrow {
+  position: absolute;
+
+  right: 18px;
+  bottom: 16px;
+
+  color: #8a1822;
+
+  font-size: 22px;
+  font-weight: 1000;
+}
+
+.staffDeviceModeCard.monitor
+.staffDeviceModeArrow {
+  color: #ffffff;
+}
+
+
+/* ==================================================
+   NOTE
+================================================== */
+
+.staffDeviceModeNote {
+  margin-top: 16px;
+
+  padding: 15px;
+
+  border-radius: 15px;
+
+  background: #f7f2ef;
+}
+
+.staffDeviceModeNote strong {
+  display: block;
+
+  color: #443a35;
+
+  font-size: 11px;
+  font-weight: 1000;
+}
+
+.staffDeviceModeNote p {
+  margin:
+    6px
+    0
+    0;
+
+  color: #786c65;
+
+  font-size: 9px;
+  font-weight: 700;
+
+  line-height: 1.7;
+}
+
+
+/* ==================================================
+   BACK
+================================================== */
+
+.staffDeviceModeBack {
+  width: 100%;
+
+  margin-top: 12px;
+  padding: 10px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #857972;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (
+  max-width: 620px
+) {
+  .staffDeviceModePage {
+    padding:
+      22px
+      12px
+      50px;
+  }
+
+  .staffDeviceModeGrid {
+    grid-template-columns:
+      1fr;
+  }
+
+  .staffDeviceModeCard {
+    min-height: 0;
+
+    padding:
+      17px;
+  }
+
+  .staffDeviceModeHeader h1 {
+    font-size: 23px;
+  }
+}
+
+/* ==================================================
+   REWARD MONITOR - DYNAMIC UPGRADE
+================================================== */
+
+.rewardMonitorScreen {
+  position: relative;
+
+  width: 100%;
+  min-height: 100dvh;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      130deg,
+      #fffaf7 0%,
+      #fff2ef 30%,
+      #fffaf8 60%,
+      #fbe6e3 100%
+    );
+
+  background-size:
+    240%
+    240%;
+
+  animation:
+    rewardMonitorBackgroundShift
+    14s
+    ease-in-out
+    infinite;
+
+  color: #332d29;
+}
+
+
+/* ==================================================
+   IDLE - MAIN
+================================================== */
+
+.rewardMonitorIdle {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 100dvh;
+
+  padding:
+    50px
+    30px;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  isolation: isolate;
+}
+
+
+/* ==================================================
+   IDLE - GLOW
+================================================== */
+
+.rewardMonitorIdle::before {
+  content: "";
+
+  position: absolute;
+
+  width: 70vw;
+  height: 70vw;
+
+  max-width: 900px;
+  max-height: 900px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        138,
+        24,
+        34,
+        0.11
+      )
+      0%,
+      rgba(
+        138,
+        24,
+        34,
+        0.045
+      )
+      38%,
+      rgba(
+        138,
+        24,
+        34,
+        0
+      )
+      72%
+    );
+
+  filter:
+    blur(
+      6px
+    );
+
+  z-index: -2;
+
+  animation:
+    rewardMonitorGlowPulse
+    6s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   IDLE - SCAN LINE
+================================================== */
+
+.rewardMonitorIdle::after {
+  content: "";
+
+  position: absolute;
+
+  left: 8%;
+  right: 8%;
+
+  height: 2px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(
+        138,
+        24,
+        34,
+        0.1
+      ),
+      rgba(
+        138,
+        24,
+        34,
+        0.65
+      ),
+      rgba(
+        138,
+        24,
+        34,
+        0.1
+      ),
+      transparent
+    );
+
+  box-shadow:
+    0
+    0
+    20px
+    rgba(
+      138,
+      24,
+      34,
+      0.28
+    );
+
+  opacity: 0.7;
+
+  animation:
+    rewardMonitorScanLine
+    7s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   IDLE DECORATIONS
+================================================== */
+
+.rewardMonitorIdleDecor {
+  position: absolute;
+
+  border-radius: 50%;
+
+  pointer-events: none;
+
+  z-index: -1;
+}
+
+.rewardMonitorIdleDecor.decorOne {
+  width: 460px;
+  height: 460px;
+
+  top: -190px;
+  left: -120px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        138,
+        24,
+        34,
+        0.13
+      ),
+      rgba(
+        138,
+        24,
+        34,
+        0
+      )
+      70%
+    );
+
+  animation:
+    rewardMonitorFloatOne
+    13s
+    ease-in-out
+    infinite;
+}
+
+.rewardMonitorIdleDecor.decorTwo {
+  width: 360px;
+  height: 360px;
+
+  right: -100px;
+  bottom: -100px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        214,
+        77,
+        84,
+        0.12
+      ),
+      rgba(
+        214,
+        77,
+        84,
+        0
+      )
+      70%
+    );
+
+  animation:
+    rewardMonitorFloatTwo
+    11s
+    ease-in-out
+    infinite;
+}
+
+.rewardMonitorIdleDecor.decorThree {
+  width: 150px;
+  height: 150px;
+
+  right: 14%;
+  top: 18%;
+
+  border:
+    2px solid
+    rgba(
+      138,
+      24,
+      34,
+      0.1
+    );
+
+  background:
+    transparent;
+
+  animation:
+    rewardMonitorRingFloat
+    9s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   EYEBROW
+================================================== */
+
+.rewardMonitorEyebrow {
+  position: relative;
+
+  color: #8a1822;
+
+  font-size: clamp(
+    12px,
+    1.3vw,
+    20px
+  );
+
+  font-weight: 1000;
+
+  letter-spacing: 0.16em;
+
+  animation:
+    rewardMonitorEyebrowFade
+    4s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   POKIPO LOGO
+================================================== */
+
+.rewardMonitorIdle h1 {
+  margin:
+    12px
+    0
+    0;
+
+  color: #8a1822;
+
+  font-size: clamp(
+    72px,
+    11vw,
+    180px
+  );
+
+  font-weight: 1000;
+
+  line-height: 0.95;
+
+  letter-spacing: -0.06em;
+
+  text-shadow:
+    0
+    10px
+    30px
+    rgba(
+      138,
+      24,
+      34,
+      0.1
+    );
+
+  animation:
+    rewardMonitorLogoBreath
+    5s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   LINE
+================================================== */
+
+.rewardMonitorIdleLine {
+  position: relative;
+
+  width: min(
+    180px,
+    32vw
+  );
+
+  height: 4px;
+
+  margin:
+    30px
+    0;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      138,
+      24,
+      34,
+      0.13
+    );
+}
+
+.rewardMonitorIdleLine::before {
+  content: "";
+
+  position: absolute;
+
+  top: 0;
+  bottom: 0;
+
+  width: 45%;
+
+  border-radius: inherit;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #8a1822,
+      transparent
+    );
+
+  animation:
+    rewardMonitorLineSweep
+    3s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   IDLE COPY
+================================================== */
+
+.rewardMonitorIdle h2 {
+  margin: 0;
+
+  font-size: clamp(
+    25px,
+    3.2vw,
+    52px
+  );
+
+  font-weight: 1000;
+
+  line-height: 1.45;
+
+  animation:
+    rewardMonitorCopyFloat
+    5.5s
+    ease-in-out
+    infinite;
+}
+
+.rewardMonitorIdle p {
+  margin:
+    20px
+    0
+    0;
+
+  color: #81736d;
+
+  font-size: clamp(
+    14px,
+    1.5vw,
+    24px
+  );
+
+  font-weight: 700;
+
+  line-height: 1.7;
+
+  opacity: 0.92;
+}
+
+
+/* ==================================================
+   WAITING BADGE
+================================================== */
+
+.rewardMonitorWaiting {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 34px;
+
+  padding:
+    12px
+    22px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background:
+    rgba(
+      51,
+      45,
+      41,
+      0.96
+    );
+
+  color: #ffffff;
+
+  font-size: clamp(
+    10px,
+    1vw,
+    15px
+  );
+
+  font-weight: 900;
+
+  letter-spacing: 0.12em;
+
+  box-shadow:
+    0
+    10px
+    35px
+    rgba(
+      35,
+      30,
+      28,
+      0.18
+    );
+
+  animation:
+    rewardMonitorWaitingFloat
+    4s
+    ease-in-out
+    infinite;
+}
+
+.rewardMonitorWaiting::after {
+  content: "";
+
+  position: absolute;
+
+  top: -60%;
+  bottom: -60%;
+
+  width: 40px;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      rgba(
+        255,
+        255,
+        255,
+        0.22
+      ),
+      transparent
+    );
+
+  transform:
+    skewX(
+      -20deg
+    );
+
+  animation:
+    rewardMonitorWaitingShine
+    3.8s
+    ease-in-out
+    infinite;
+}
+
+.rewardMonitorWaitingDot {
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+
+  background: #e84e58;
+
+  box-shadow:
+    0
+    0
+    14px
+    rgba(
+      232,
+      78,
+      88,
+      0.75
+    );
+
+  animation:
+    rewardMonitorPulse
+    1.3s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   PRESENTED - EXTRA DYNAMIC
+================================================== */
+
+.rewardMonitorPresented {
+  position: relative;
+
+  overflow: hidden;
+}
+
+.rewardMonitorPresented::before {
+  content: "";
+
+  position: absolute;
+
+  width: 80vw;
+  height: 80vw;
+
+  max-width: 1000px;
+  max-height: 1000px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(
+        138,
+        24,
+        34,
+        0.12
+      ),
+      transparent
+      68%
+    );
+
+  z-index: -1;
+
+  animation:
+    rewardMonitorPresentedGlow
+    5s
+    ease-in-out
+    infinite;
+}
+
+.rewardMonitorPresented > h1 {
+  animation:
+    rewardMonitorTitlePop
+    0.8s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+.rewardMonitorParticipantName {
+  animation:
+    rewardMonitorNameIn
+    0.9s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+.rewardMonitorRank {
+  animation:
+    rewardMonitorRankIn
+    1s
+    0.15s
+    both
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+.rewardMonitorDiagnosis {
+  animation:
+    rewardMonitorDiagnosisIn
+    1s
+    0.3s
+    both
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+.rewardMonitorExchangeWaiting {
+  animation:
+    rewardMonitorWaitingFloat
+    3s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   COMPLETED - EXTRA DYNAMIC
+================================================== */
+
+.rewardMonitorCompleted {
+  background:
+    radial-gradient(
+      circle at center,
+      #fff8f6 0%,
+      #ffe9e6 40%,
+      #f4d4d1 100%
+    );
+
+  background-size:
+    160%
+    160%;
+
+  animation:
+    rewardMonitorCompletedBackground
+    6s
+    ease-in-out
+    infinite;
+}
+
+.rewardMonitorCompleted h1 {
+  animation:
+    rewardMonitorThankYouName
+    0.9s
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+.rewardMonitorCompleted h2 {
+  animation:
+    rewardMonitorThankYouCopy
+    1s
+    0.15s
+    both
+    cubic-bezier(
+      0.16,
+      1,
+      0.3,
+      1
+    );
+}
+
+.rewardMonitorCountdown {
+  animation:
+    rewardMonitorCountdownPulse
+    1s
+    ease-in-out
+    infinite;
+}
+
+
+/* ==================================================
+   ANIMATION KEYFRAMES
+================================================== */
+
+@keyframes rewardMonitorBackgroundShift {
+  0% {
+    background-position:
+      0%
+      50%;
+  }
+
+  50% {
+    background-position:
+      100%
+      50%;
+  }
+
+  100% {
+    background-position:
+      0%
+      50%;
+  }
+}
+
+@keyframes rewardMonitorGlowPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+
+    transform:
+      scale(
+        0.94
+      );
+  }
+
+  50% {
+    opacity: 1;
+
+    transform:
+      scale(
+        1.06
+      );
+  }
+}
+
+@keyframes rewardMonitorScanLine {
+  0% {
+    top: 15%;
+
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+
+  85% {
+    opacity: 0.7;
+  }
+
+  100% {
+    top: 85%;
+
+    opacity: 0;
+  }
+}
+
+@keyframes rewardMonitorFloatOne {
+  0%,
+  100% {
+    transform:
+      translate(
+        0,
+        0
+      )
+      scale(
+        1
+      );
+  }
+
+  50% {
+    transform:
+      translate(
+        35px,
+        25px
+      )
+      scale(
+        1.08
+      );
+  }
+}
+
+@keyframes rewardMonitorFloatTwo {
+  0%,
+  100% {
+    transform:
+      translate(
+        0,
+        0
+      )
+      scale(
+        1
+      );
+  }
+
+  50% {
+    transform:
+      translate(
+        -30px,
+        -22px
+      )
+      scale(
+        1.1
+      );
+  }
+}
+
+@keyframes rewardMonitorRingFloat {
+  0%,
+  100% {
+    transform:
+      translateY(
+        0
+      )
+      rotate(
+        0deg
+      )
+      scale(
+        1
+      );
+
+    opacity: 0.4;
+  }
+
+  50% {
+    transform:
+      translateY(
+        -25px
+      )
+      rotate(
+        90deg
+      )
+      scale(
+        1.15
+      );
+
+    opacity: 0.8;
+  }
+}
+
+@keyframes rewardMonitorEyebrowFade {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes rewardMonitorLogoBreath {
+  0%,
+  100% {
+    transform:
+      scale(
+        1
+      );
+
+    text-shadow:
+      0
+      10px
+      30px
+      rgba(
+        138,
+        24,
+        34,
+        0.08
+      );
+  }
+
+  50% {
+    transform:
+      scale(
+        1.035
+      );
+
+    text-shadow:
+      0
+      18px
+      45px
+      rgba(
+        138,
+        24,
+        34,
+        0.18
+      );
+  }
+}
+
+@keyframes rewardMonitorLineSweep {
+  0% {
+    left: -50%;
+  }
+
+  100% {
+    left: 110%;
+  }
+}
+
+@keyframes rewardMonitorCopyFloat {
+  0%,
+  100% {
+    transform:
+      translateY(
+        0
+      );
+  }
+
+  50% {
+    transform:
+      translateY(
+        -5px
+      );
+  }
+}
+
+@keyframes rewardMonitorWaitingFloat {
+  0%,
+  100% {
+    transform:
+      translateY(
+        0
+      );
+  }
+
+  50% {
+    transform:
+      translateY(
+        -6px
+      );
+  }
+}
+
+@keyframes rewardMonitorWaitingShine {
+  0% {
+    left: -25%;
+
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  70% {
+    opacity: 0;
+  }
+
+  100% {
+    left: 125%;
+
+    opacity: 0;
+  }
+}
+
+@keyframes rewardMonitorPresentedGlow {
+  0%,
+  100% {
+    transform:
+      scale(
+        0.92
+      );
+
+    opacity: 0.55;
+  }
+
+  50% {
+    transform:
+      scale(
+        1.08
+      );
+
+    opacity: 1;
+  }
+}
+
+@keyframes rewardMonitorTitlePop {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(
+        -25px
+      )
+      scale(
+        0.9
+      );
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(
+        0
+      )
+      scale(
+        1
+      );
+  }
+}
+
+@keyframes rewardMonitorNameIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(
+        35px
+      )
+      scale(
+        0.9
+      );
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(
+        0
+      )
+      scale(
+        1
+      );
+  }
+}
+
+@keyframes rewardMonitorRankIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(
+        20px
+      );
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(
+        0
+      );
+  }
+}
+
+@keyframes rewardMonitorDiagnosisIn {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(
+        25px
+      )
+      scale(
+        0.96
+      );
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(
+        0
+      )
+      scale(
+        1
+      );
+  }
+}
+
+@keyframes rewardMonitorCompletedBackground {
+  0%,
+  100% {
+    background-position:
+      50%
+      50%;
+  }
+
+  50% {
+    background-position:
+      55%
+      45%;
+  }
+}
+
+@keyframes rewardMonitorThankYouName {
+  from {
+    opacity: 0;
+
+    transform:
+      scale(
+        0.72
+      )
+      rotate(
+        -2deg
+      );
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      scale(
+        1
+      )
+      rotate(
+        0deg
+      );
+  }
+}
+
+@keyframes rewardMonitorThankYouCopy {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(
+        25px
+      );
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(
+        0
+      );
+  }
+}
+
+@keyframes rewardMonitorCountdownPulse {
+  0%,
+  100% {
+    transform:
+      scale(
+        1
+      );
+  }
+
+  50% {
+    transform:
+      scale(
+        1.1
+      );
+  }
+}
+
+
+/* ==================================================
+   ACCESSIBILITY
+================================================== */
+
+@media (
+  prefers-reduced-motion:
+  reduce
+) {
+  .rewardMonitorScreen,
+  .rewardMonitorIdle::before,
+  .rewardMonitorIdle::after,
+  .rewardMonitorIdleDecor,
+  .rewardMonitorEyebrow,
+  .rewardMonitorIdle h1,
+  .rewardMonitorIdleLine::before,
+  .rewardMonitorIdle h2,
+  .rewardMonitorWaiting,
+  .rewardMonitorWaiting::after,
+  .rewardMonitorWaitingDot,
+  .rewardMonitorPresented::before,
+  .rewardMonitorPresented > h1,
+  .rewardMonitorParticipantName,
+  .rewardMonitorRank,
+  .rewardMonitorDiagnosis,
+  .rewardMonitorExchangeWaiting,
+  .rewardMonitorCompleted,
+  .rewardMonitorCompleted h1,
+  .rewardMonitorCompleted h2,
+  .rewardMonitorCountdown {
+    animation: none !important;
+  }
+}

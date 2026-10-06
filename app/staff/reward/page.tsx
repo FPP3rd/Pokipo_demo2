@@ -41,6 +41,26 @@ type Participant = {
   created_at: string;
 };
 
+type MonitorProfile = {
+  achievementRank: number | null;
+  routeTitle: string;
+};
+
+type DeviceMode =
+  | "scanner"
+  | "monitor"
+  | null;
+
+/* ========================================
+   SETTINGS
+======================================== */
+
+const MONITOR_STATION_ID =
+  "main";
+
+const DEVICE_MODE_KEY =
+  "pokipo_staff_reward_device_mode";
+
 /* ========================================
    PAGE
 ======================================== */
@@ -76,6 +96,23 @@ export default function StaffRewardPage() {
   const [
     loginLoading,
     setLoginLoading,
+  ] = useState(false);
+
+  /* ========================================
+     DEVICE MODE
+  ======================================== */
+
+  const [
+    deviceMode,
+    setDeviceMode,
+  ] =
+    useState<DeviceMode>(
+      null
+    );
+
+  const [
+    deviceModeLoaded,
+    setDeviceModeLoaded,
   ] = useState(false);
 
   /* ========================================
@@ -120,6 +157,14 @@ export default function StaffRewardPage() {
     setParticipant,
   ] =
     useState<Participant | null>(
+      null
+    );
+
+  const [
+    monitorProfile,
+    setMonitorProfile,
+  ] =
+    useState<MonitorProfile | null>(
       null
     );
 
@@ -194,6 +239,18 @@ export default function StaffRewardPage() {
               session
             )
           );
+
+          if (
+            !session
+          ) {
+            setDeviceMode(
+              null
+            );
+
+            setDeviceModeLoaded(
+              false
+            );
+          }
         }
       );
 
@@ -201,6 +258,62 @@ export default function StaffRewardPage() {
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  /* ========================================
+     DEVICE MODE LOAD
+  ======================================== */
+
+  useEffect(() => {
+    if (
+      !authenticated
+    ) {
+      setDeviceMode(
+        null
+      );
+
+      setDeviceModeLoaded(
+        false
+      );
+
+      return;
+    }
+
+    const savedMode =
+      sessionStorage.getItem(
+        DEVICE_MODE_KEY
+      );
+
+    if (
+      savedMode ===
+      "scanner"
+    ) {
+      setDeviceMode(
+        "scanner"
+      );
+    } else if (
+      savedMode ===
+      "monitor"
+    ) {
+      setDeviceMode(
+        "monitor"
+      );
+
+      router.replace(
+        "/staff/reward/monitor"
+      );
+    } else {
+      setDeviceMode(
+        null
+      );
+    }
+
+    setDeviceModeLoaded(
+      true
+    );
+  }, [
+    authenticated,
+    router,
+  ]);
 
   /* ========================================
      LOGIN
@@ -263,10 +376,6 @@ export default function StaffRewardPage() {
       );
 
       setPassword("");
-
-      router.replace(
-        "/staff"
-      );
     } catch (
       error
     ) {
@@ -292,9 +401,21 @@ export default function StaffRewardPage() {
   async function logoutStaff() {
     await stopQrScanner();
 
+    sessionStorage.removeItem(
+      DEVICE_MODE_KEY
+    );
+
     await supabase.auth.signOut();
 
     setAuthenticated(
+      false
+    );
+
+    setDeviceMode(
+      null
+    );
+
+    setDeviceModeLoaded(
       false
     );
 
@@ -306,11 +427,420 @@ export default function StaffRewardPage() {
       null
     );
 
+    setMonitorProfile(
+      null
+    );
+
     setMessage("");
 
     router.replace(
       "/staff/reward"
     );
+  }
+
+  /* ========================================
+     SELECT SCANNER MODE
+  ======================================== */
+
+  function selectScannerMode() {
+    sessionStorage.setItem(
+      DEVICE_MODE_KEY,
+      "scanner"
+    );
+
+    setDeviceMode(
+      "scanner"
+    );
+
+    setMessage("");
+  }
+
+  /* ========================================
+     SELECT MONITOR MODE
+  ======================================== */
+
+  async function selectMonitorMode() {
+    sessionStorage.setItem(
+      DEVICE_MODE_KEY,
+      "monitor"
+    );
+
+    setDeviceMode(
+      "monitor"
+    );
+
+    /*
+     * モニター選択というユーザー操作を
+     * 全画面表示開始のトリガーに使う。
+     */
+    try {
+      if (
+        !document.fullscreenElement
+      ) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (
+      error
+    ) {
+      console.warn(
+        "全画面表示を開始できませんでした:",
+        error
+      );
+    }
+
+    router.push(
+      "/staff/reward/monitor"
+    );
+  }
+
+  /* ========================================
+     CHANGE DEVICE MODE
+  ======================================== */
+
+  async function changeDeviceMode() {
+    await stopQrScanner();
+
+    sessionStorage.removeItem(
+      DEVICE_MODE_KEY
+    );
+
+    setDeviceMode(
+      null
+    );
+
+    setReward(
+      null
+    );
+
+    setParticipant(
+      null
+    );
+
+    setMonitorProfile(
+      null
+    );
+
+    setMessage("");
+
+    setCameraError("");
+  }
+
+  /* ========================================
+     MONITOR IDLE
+  ======================================== */
+
+  async function setMonitorIdle() {
+    try {
+      const {
+        error,
+      } =
+        await supabase
+          .from(
+            "reward_monitor_state"
+          )
+          .upsert(
+            {
+              station_id:
+                MONITOR_STATION_ID,
+
+              state:
+                "idle",
+
+              participant_id:
+                null,
+
+              nickname:
+                null,
+
+              achievement_rank:
+                null,
+
+              route_type:
+                null,
+
+              updated_at:
+                new Date().toISOString(),
+            },
+            {
+              onConflict:
+                "station_id",
+            }
+          );
+
+      if (
+        error
+      ) {
+        console.error(
+          "モニター待機状態更新エラー:",
+          error
+        );
+      }
+    } catch (
+      error
+    ) {
+      console.error(
+        "モニター待機状態通信エラー:",
+        error
+      );
+    }
+  }
+
+  /* ========================================
+     MONITOR PRESENTED
+  ======================================== */
+
+  async function sendPresentedToMonitor(
+    participantData: Participant
+  ) {
+    let achievementRank:
+      number | null =
+      null;
+
+    let routeTitle =
+      "自由気まま型";
+
+    /* --------------------------------
+       ACHIEVEMENT RANK
+    -------------------------------- */
+
+    try {
+      const {
+        data:
+          completionData,
+        error:
+          completionError,
+      } =
+        await supabase
+          .from(
+            "participant_completions"
+          )
+          .select(
+            "achievement_rank"
+          )
+          .eq(
+            "participant_id",
+            participantData.id
+          )
+          .maybeSingle();
+
+      if (
+        completionError
+      ) {
+        console.error(
+          "達成順位取得エラー:",
+          completionError
+        );
+      } else if (
+        completionData
+      ) {
+        const rank =
+          Number(
+            completionData.achievement_rank
+          );
+
+        if (
+          Number.isFinite(
+            rank
+          )
+        ) {
+          achievementRank =
+            rank;
+        }
+      }
+    } catch (
+      error
+    ) {
+      console.error(
+        "達成順位通信エラー:",
+        error
+      );
+    }
+
+    /* --------------------------------
+       ROUTE TYPE
+    -------------------------------- */
+
+    try {
+      const {
+        data:
+          routeData,
+        error:
+          routeError,
+      } =
+        await supabase.rpc(
+          "get_pokipo_route_type",
+          {
+            p_participant_id:
+              participantData.id,
+          }
+        );
+
+      if (
+        routeError
+      ) {
+        console.error(
+          "ルート診断取得エラー:",
+          routeError
+        );
+      } else if (
+        Array.isArray(
+          routeData
+        ) &&
+        routeData.length >
+          0
+      ) {
+        const firstRoute =
+          routeData[0] as {
+            route_title?:
+              string;
+          };
+
+        if (
+          firstRoute.route_title
+        ) {
+          routeTitle =
+            firstRoute.route_title;
+        }
+      }
+    } catch (
+      error
+    ) {
+      console.error(
+        "ルート診断通信エラー:",
+        error
+      );
+    }
+
+    setMonitorProfile({
+      achievementRank,
+      routeTitle,
+    });
+
+    /* --------------------------------
+       SEND
+    -------------------------------- */
+
+    try {
+      const {
+        error,
+      } =
+        await supabase
+          .from(
+            "reward_monitor_state"
+          )
+          .upsert(
+            {
+              station_id:
+                MONITOR_STATION_ID,
+
+              state:
+                "presented",
+
+              participant_id:
+                participantData.id,
+
+              nickname:
+                participantData.nickname,
+
+              achievement_rank:
+                achievementRank,
+
+              route_type:
+                routeTitle,
+
+              updated_at:
+                new Date().toISOString(),
+            },
+            {
+              onConflict:
+                "station_id",
+            }
+          );
+
+      if (
+        error
+      ) {
+        console.error(
+          "モニター表示送信エラー:",
+          error
+        );
+      }
+    } catch (
+      error
+    ) {
+      console.error(
+        "モニター表示通信エラー:",
+        error
+      );
+    }
+  }
+
+  /* ========================================
+     MONITOR COMPLETED
+  ======================================== */
+
+  async function sendCompletedToMonitor() {
+    if (
+      !participant
+    ) {
+      return;
+    }
+
+    try {
+      const {
+        error,
+      } =
+        await supabase
+          .from(
+            "reward_monitor_state"
+          )
+          .upsert(
+            {
+              station_id:
+                MONITOR_STATION_ID,
+
+              state:
+                "completed",
+
+              participant_id:
+                participant.id,
+
+              nickname:
+                participant.nickname,
+
+              achievement_rank:
+                monitorProfile?.achievementRank ??
+                null,
+
+              route_type:
+                monitorProfile?.routeTitle ??
+                "自由気まま型",
+
+              updated_at:
+                new Date().toISOString(),
+            },
+            {
+              onConflict:
+                "station_id",
+            }
+          );
+
+      if (
+        error
+      ) {
+        console.error(
+          "モニター完了表示送信エラー:",
+          error
+        );
+      }
+    } catch (
+      error
+    ) {
+      console.error(
+        "モニター完了表示通信エラー:",
+        error
+      );
+    }
   }
 
   /* ========================================
@@ -320,7 +850,9 @@ export default function StaffRewardPage() {
   useEffect(() => {
     if (
       !cameraOpen ||
-      !authenticated
+      !authenticated ||
+      deviceMode !==
+        "scanner"
     ) {
       return;
     }
@@ -406,7 +938,7 @@ export default function StaffRewardPage() {
           },
 
           () => {
-            // 読み取り途中エラーは無視
+            // QR探索中のエラーは無視
           }
         );
       } catch (
@@ -445,6 +977,7 @@ export default function StaffRewardPage() {
   }, [
     cameraOpen,
     authenticated,
+    deviceMode,
   ]);
 
   /* ========================================
@@ -457,6 +990,10 @@ export default function StaffRewardPage() {
     );
 
     setParticipant(
+      null
+    );
+
+    setMonitorProfile(
       null
     );
 
@@ -653,13 +1190,32 @@ export default function StaffRewardPage() {
         return;
       }
 
+      const typedReward =
+        rewardData as RewardExchange;
+
+      const typedParticipant =
+        participantData as Participant;
+
       setReward(
-        rewardData as RewardExchange
+        typedReward
       );
 
       setParticipant(
-        participantData as Participant
+        typedParticipant
       );
+
+      /* =================================
+         MONITOR SEND
+      ================================= */
+
+      if (
+        typedReward.status !==
+        "exchanged"
+      ) {
+        await sendPresentedToMonitor(
+          typedParticipant
+        );
+      }
     } catch (
       error
     ) {
@@ -825,6 +1381,12 @@ export default function StaffRewardPage() {
           adminUserId,
       });
 
+      /* =================================
+         MONITOR COMPLETED
+      ================================= */
+
+      await sendCompletedToMonitor();
+
       setMessage(
         `${participant.nickname}さんの景品交換を記録しました。`
       );
@@ -847,10 +1409,17 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     RESET
+     RESET SCANNER
   ======================================== */
 
   function resetScanner() {
+    /*
+     * ここではモニターをidleにしない。
+     *
+     * THANK YOU画面はモニター側で
+     * 10秒間表示してから自動的に待機へ戻す。
+     */
+
     setReward(
       null
     );
@@ -859,7 +1428,13 @@ export default function StaffRewardPage() {
       null
     );
 
+    setMonitorProfile(
+      null
+    );
+
     setMessage("");
+
+    setCameraError("");
 
     startQrScanner();
   }
@@ -1025,9 +1600,11 @@ export default function StaffRewardPage() {
                 loginLoading
               }
             >
+
               {loginLoading
                 ? "ログイン中..."
                 : "管理者ログイン"}
+
             </button>
 
             {message && (
@@ -1045,7 +1622,236 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     MAIN VIEW
+     DEVICE MODE LOADING
+  ======================================== */
+
+  if (
+    authenticated &&
+    !deviceModeLoaded
+  ) {
+    return (
+      <main className="shell">
+
+        <section className="staffRewardPage">
+
+          <div className="staffLoadingCard">
+            端末設定を確認中...
+          </div>
+
+        </section>
+
+      </main>
+    );
+  }
+
+  /* ========================================
+     DEVICE MODE SELECT
+  ======================================== */
+
+  if (
+    authenticated &&
+    !deviceMode
+  ) {
+    return (
+      <main className="shell">
+
+        <section className="staffRewardPage">
+
+          <div className="staffDeviceModePage">
+
+            <header className="staffDeviceModeHeader">
+
+              <span>
+                POKIPO REWARD STATION
+              </span>
+
+              <h1>
+                この端末の役割を
+                <br />
+                選択してください
+              </h1>
+
+              <p>
+                特典交換会で使用する端末ごとに、
+                QR読み取り用またはモニター用を設定します。
+              </p>
+
+            </header>
+
+            <div className="staffDeviceModeGrid">
+
+              {/* =========================
+                  SCANNER
+              ========================= */}
+
+              <button
+                type="button"
+                className="staffDeviceModeCard scanner"
+                onClick={
+                  selectScannerMode
+                }
+              >
+
+                <div className="staffDeviceModeIcon">
+                  QR
+                </div>
+
+                <div className="staffDeviceModeBody">
+
+                  <span>
+                    SCANNER
+                  </span>
+
+                  <h2>
+                    QR読み取り端末
+                  </h2>
+
+                  <p>
+                    参加者の特典交換QRを読み取り、
+                    確認番号の確認と景品交換処理を行います。
+                  </p>
+
+                  <div className="staffDeviceModeFeature">
+
+                    <span>
+                      ✓ QR読み取り
+                    </span>
+
+                    <span>
+                      ✓ 参加者確認
+                    </span>
+
+                    <span>
+                      ✓ 景品交換確定
+                    </span>
+
+                  </div>
+
+                </div>
+
+                <div className="staffDeviceModeArrow">
+                  →
+                </div>
+
+              </button>
+
+              {/* =========================
+                  MONITOR
+              ========================= */}
+
+              <button
+                type="button"
+                className="staffDeviceModeCard monitor"
+                onClick={() =>
+                  void selectMonitorMode()
+                }
+              >
+
+                <div className="staffDeviceModeIcon">
+                  TV
+                </div>
+
+                <div className="staffDeviceModeBody">
+
+                  <span>
+                    MONITOR
+                  </span>
+
+                  <h2>
+                    モニター端末
+                  </h2>
+
+                  <p>
+                    QR読み取り端末と連携し、
+                    ゴール順位・POKIPOタイプ・
+                    お礼画面を大きく表示します。
+                  </p>
+
+                  <div className="staffDeviceModeFeature">
+
+                    <span>
+                      ✓ 待機画面
+                    </span>
+
+                    <span>
+                      ✓ ゴール演出
+                    </span>
+
+                    <span>
+                      ✓ THANK YOU画面
+                    </span>
+
+                  </div>
+
+                </div>
+
+                <div className="staffDeviceModeArrow">
+                  →
+                </div>
+
+              </button>
+
+            </div>
+
+            <section className="staffDeviceModeNote">
+
+              <strong>
+                複数端末で使用できます
+              </strong>
+
+              <p>
+                スマートフォンをQR読み取り端末、
+                テレビに接続したPCをモニター端末として
+                同時に使用できます。
+              </p>
+
+            </section>
+
+            <button
+              type="button"
+              className="staffDeviceModeBack"
+              onClick={() =>
+                router.push(
+                  "/staff"
+                )
+              }
+            >
+              スタッフメニューへ戻る
+            </button>
+
+          </div>
+
+        </section>
+
+      </main>
+    );
+  }
+
+  /* ========================================
+     MONITOR TRANSITION
+  ======================================== */
+
+  if (
+    deviceMode ===
+    "monitor"
+  ) {
+    return (
+      <main className="shell">
+
+        <section className="staffRewardPage">
+
+          <div className="staffLoadingCard">
+            モニターモードへ移動中...
+          </div>
+
+        </section>
+
+      </main>
+    );
+  }
+
+  /* ========================================
+     SCANNER VIEW
   ======================================== */
 
   return (
@@ -1072,6 +1878,15 @@ export default function StaffRewardPage() {
           </div>
 
           <div className="staffRewardHeaderActions">
+
+            <button
+              type="button"
+              onClick={() =>
+                void changeDeviceMode()
+              }
+            >
+              端末設定
+            </button>
 
             <button
               type="button"
@@ -1111,6 +1926,7 @@ export default function StaffRewardPage() {
               )
             }
           >
+
             <span>
               LIVE
             </span>
@@ -1118,6 +1934,7 @@ export default function StaffRewardPage() {
             <strong>
               管理ダッシュボード
             </strong>
+
           </button>
 
           <button
@@ -1128,6 +1945,7 @@ export default function StaffRewardPage() {
               )
             }
           >
+
             <span>
               LOG
             </span>
@@ -1135,6 +1953,7 @@ export default function StaffRewardPage() {
             <strong>
               交換履歴
             </strong>
+
           </button>
 
         </section>
@@ -1232,10 +2051,12 @@ export default function StaffRewardPage() {
                     : "staffExchangeStatus ready"
                 }
               >
+
                 {reward.status ===
                 "exchanged"
                   ? "交換済み"
                   : "交換可能"}
+
               </div>
 
               <span className="staffParticipantEyebrow">
@@ -1244,10 +2065,44 @@ export default function StaffRewardPage() {
 
               <h2>
                 {participant.nickname}
+
                 <small>
                   さん
                 </small>
               </h2>
+
+              {/* =================================
+                  MONITOR INFO
+              ================================= */}
+
+              {monitorProfile &&
+                reward.status !==
+                  "exchanged" && (
+                <div className="staffMonitorInfo">
+
+                  <span>
+                    MONITOR DISPLAY
+                  </span>
+
+                  <p>
+                    モニターに送信済み
+                  </p>
+
+                  <strong>
+
+                    {monitorProfile.achievementRank !==
+                    null
+                      ? `${monitorProfile.achievementRank}番目のゴール`
+                      : "達成順位確認中"}
+
+                  </strong>
+
+                  <strong>
+                    {monitorProfile.routeTitle}
+                  </strong>
+
+                </div>
+              )}
 
               {/* =================================
                   CONFIRMATION CODE
@@ -1304,7 +2159,7 @@ export default function StaffRewardPage() {
               </div>
 
               {/* =================================
-                  EXCHANGED
+                  EXCHANGE
               ================================= */}
 
               {reward.status ===
@@ -1351,9 +2206,11 @@ export default function StaffRewardPage() {
                       confirming
                     }
                   >
+
                     {confirming
                       ? "交換を記録中..."
                       : "景品交換を確定する"}
+
                   </button>
 
                 </div>
