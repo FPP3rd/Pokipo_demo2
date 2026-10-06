@@ -33068,3 +33068,655 @@ img {
       18px;
   }
 }
+
+/* ==================================================
+   TERMS AGREEMENT - READABILITY FIX
+================================================== */
+
+.pokipoTermsAgreement {
+  width: 100%;
+
+  margin-top: 18px;
+  padding: 16px;
+
+  box-sizing: border-box;
+
+  border: 1px solid rgba(138, 24, 34, 0.12);
+  border-radius: 16px;
+
+  background: #fffaf8;
+}
+
+
+/* ==================================================
+   AGREEMENT HEADER
+================================================== */
+
+.pokipoTermsAgreementHeader {
+  display: block;
+
+  width: 100%;
+}
+
+.pokipoTermsAgreementHeader > div {
+  width: 100%;
+}
+
+.pokipoTermsAgreementHeader span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: #8a1822;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.pokipoTermsAgreementHeader strong {
+  display: block;
+
+  color: #332d29;
+
+  font-size: 14px;
+  font-weight: 1000;
+
+  line-height: 1.6;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+
+/* ==================================================
+   OPEN BUTTON
+================================================== */
+
+.pokipoTermsOpenButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: auto;
+  min-width: 110px;
+
+  margin-top: 12px;
+  padding: 9px 14px;
+
+  border: 1px solid rgba(138, 24, 34, 0.2);
+  border-radius: 10px;
+
+  background: #ffffff;
+
+  color: #8a1822;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  line-height: 1.2;
+
+  writing-mode: horizontal-tb !important;
+  white-space: nowrap;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   SUMMARY
+================================================== */
+
+.pokipoTermsAgreement > p {
+  margin: 12px 0 0;
+
+  color: #746963;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.8;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+  word-break: normal;
+}
+
+
+/* ==================================================
+   AGREEMENT CHECK
+================================================== */
+
+.pokipoTermsCheck {
+  display: flex;
+  align-items: flex-start;
+
+  width: 100%;
+
+  gap: 9px;
+
+  margin-top: 14px;
+  padding: 12px;
+
+  box-sizing: border-box;
+
+  border-radius: 12px;
+
+  background: #f7f1ee;
+
+  cursor: pointer;
+}
+
+.pokipoTermsCheck input {
+  width: 16px;
+  height: 16px;
+
+  margin: 2px 0 0;
+
+  flex: 0 0 auto;
+
+  accent-color: #8a1822;
+}
+
+.pokipoTermsCheck span {
+  flex: 1;
+
+  color: #5f5550;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  line-height: 1.7;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+
+/* ==================================================
+   TERMS OVERLAY
+================================================== */
+
+.pokipoTermsOverlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 12000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 16px;
+
+  box-sizing: border-box;
+
+  background: rgba(30, 24, 22, 0.8);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  overflow-y: auto;
+}
+
+
+/* ==================================================
+   TERMS MODAL
+================================================== */
+
+.pokipoTermsModal {
+  display: flex;
+  flex-direction: column;
+
+  width: min(100%, 620px);
+
+  max-height: calc(100dvh - 32px);
+
+  overflow: hidden;
+
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.3);
+}
+
+
+/* ==================================================
+   MODAL HEADER
+================================================== */
+
+.pokipoTermsModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  width: 100%;
+
+  gap: 16px;
+
+  padding: 18px;
+
+  box-sizing: border-box;
+
+  border-bottom: 1px solid #eee4df;
+
+  background: #fff8f6;
+}
+
+.pokipoTermsModalHeader > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.pokipoTermsModalHeader span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #8a1822;
+
+  font-size: 10px;
+  font-weight: 900;
+
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+}
+
+.pokipoTermsModalHeader h2 {
+  margin: 0;
+
+  color: #332d29;
+
+  font-size: 22px;
+  font-weight: 1000;
+
+  line-height: 1.4;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+
+/* ==================================================
+   CLOSE BUTTON
+================================================== */
+
+.pokipoTermsCloseIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  flex: 0 0 36px;
+
+  padding: 0;
+
+  border: 1px solid #e2d8d3;
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  color: #6e625c;
+
+  font-size: 22px;
+  font-weight: 600;
+
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   MODAL BODY
+================================================== */
+
+.pokipoTermsModalBody {
+  flex: 1;
+
+  width: 100%;
+
+  padding: 20px;
+
+  box-sizing: border-box;
+
+  overflow-y: auto;
+
+  -webkit-overflow-scrolling: touch;
+}
+
+
+/* ==================================================
+   BODY SECTIONS
+================================================== */
+
+.pokipoTermsModalBody section {
+  width: 100%;
+
+  margin-bottom: 24px;
+}
+
+.pokipoTermsModalBody section:last-child {
+  margin-bottom: 0;
+}
+
+.pokipoTermsModalBody h3 {
+  display: block;
+
+  width: 100%;
+
+  margin: 0 0 10px;
+
+  color: #332d29;
+
+  font-size: 14px;
+  font-weight: 1000;
+
+  line-height: 1.5;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.pokipoTermsModalBody p {
+  display: block;
+
+  width: 100%;
+
+  margin: 0 0 10px;
+
+  color: #6f645e;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.9;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.pokipoTermsModalBody p:last-child {
+  margin-bottom: 0;
+}
+
+
+/* ==================================================
+   LIST
+================================================== */
+
+.pokipoTermsModalBody ul {
+  width: 100%;
+
+  margin: 10px 0 14px;
+  padding-left: 22px;
+
+  box-sizing: border-box;
+}
+
+.pokipoTermsModalBody li {
+  margin-bottom: 7px;
+
+  color: #655a54;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  line-height: 1.8;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+  word-break: normal;
+}
+
+.pokipoTermsModalBody li:last-child {
+  margin-bottom: 0;
+}
+
+
+/* ==================================================
+   IMPORTANT BOX
+================================================== */
+
+.pokipoTermsImportant {
+  width: 100%;
+
+  padding: 15px;
+
+  box-sizing: border-box;
+
+  border: 1px solid rgba(138, 24, 34, 0.16);
+  border-radius: 14px;
+
+  background: #fff3f3;
+}
+
+.pokipoTermsImportant > strong {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #8a1822;
+
+  font-size: 12px;
+  font-weight: 1000;
+
+  line-height: 1.5;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+
+/* ==================================================
+   MODAL FOOTER
+================================================== */
+
+.pokipoTermsModalFooter {
+  width: 100%;
+
+  padding: 14px 16px 16px;
+
+  box-sizing: border-box;
+
+  border-top: 1px solid #eee4df;
+
+  background: #ffffff;
+}
+
+
+/* ==================================================
+   MODAL CHECK
+================================================== */
+
+.pokipoTermsModalCheck {
+  display: flex;
+  align-items: flex-start;
+
+  width: 100%;
+
+  gap: 8px;
+
+  margin-bottom: 12px;
+}
+
+.pokipoTermsModalCheck input {
+  width: 16px;
+  height: 16px;
+
+  margin: 2px 0 0;
+
+  flex: 0 0 auto;
+
+  accent-color: #8a1822;
+}
+
+.pokipoTermsModalCheck span {
+  flex: 1;
+
+  color: #675c56;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  line-height: 1.6;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+
+/* ==================================================
+   AGREE BUTTON
+================================================== */
+
+.pokipoTermsAgreeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+
+  padding: 13px 16px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: #8a1822;
+
+  color: #ffffff;
+
+  font-size: 11px;
+  font-weight: 1000;
+
+  line-height: 1.3;
+
+  writing-mode: horizontal-tb !important;
+  white-space: normal;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   BACK BUTTON
+================================================== */
+
+.pokipoTermsBackButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+
+  margin-top: 8px;
+  padding: 9px 12px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #8a7d76;
+
+  font-size: 9px;
+  font-weight: 800;
+
+  line-height: 1.3;
+
+  writing-mode: horizontal-tb !important;
+  white-space: nowrap;
+
+  cursor: pointer;
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (max-width: 560px) {
+  .pokipoTermsOverlay {
+    padding: 8px;
+  }
+
+  .pokipoTermsModal {
+    width: 100%;
+
+    max-height: calc(100dvh - 16px);
+
+    border-radius: 16px;
+  }
+
+  .pokipoTermsModalHeader {
+    padding: 15px 14px;
+  }
+
+  .pokipoTermsModalHeader h2 {
+    font-size: 18px;
+  }
+
+  .pokipoTermsModalBody {
+    padding: 16px 14px 18px;
+  }
+
+  .pokipoTermsModalBody h3 {
+    font-size: 13px;
+  }
+
+  .pokipoTermsModalBody p,
+  .pokipoTermsModalBody li {
+    font-size: 10px;
+  }
+
+  .pokipoTermsModalFooter {
+    padding: 12px 14px 14px;
+  }
+
+  .pokipoTermsAgreement {
+    padding: 14px;
+  }
+}
+
+
+/* ==================================================
+   SMALL MOBILE
+================================================== */
+
+@media (max-width: 380px) {
+  .pokipoTermsModalHeader h2 {
+    font-size: 17px;
+  }
+
+  .pokipoTermsModalBody {
+    padding: 14px 12px 16px;
+  }
+
+  .pokipoTermsAgreementHeader strong {
+    font-size: 13px;
+  }
+
+  .pokipoTermsCheck span {
+    font-size: 9px;
+  }
+}
