@@ -1410,7 +1410,7 @@ export default function StartPage() {
                 <section className="pokipoTermsImportant">
 
                   <strong>
-                    POKIPOでは学籍番号を取得しません
+                    POKIPOでは個人を直接特定する情報は取得しません
                   </strong>
 
                   <p>
