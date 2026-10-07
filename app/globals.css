@@ -39054,3 +39054,91 @@ img {
       60px
     );
 }
+
+/* ==================================================
+   START PAGE - APPROVED POCKY VISUAL
+================================================== */
+
+.approvedStartPockyVisual {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+
+  min-height: 245px;
+
+  margin:
+    22px
+    auto
+    8px;
+
+  overflow: visible;
+
+  box-sizing: border-box;
+}
+
+
+/* ==================================================
+   APPROVED POCKY IMAGE
+   元画像の縦横比を固定
+================================================== */
+
+.approvedStartPockyImage {
+  display: block;
+
+  width: auto;
+
+  height:
+    clamp(
+      205px,
+      34vw,
+      275px
+    );
+
+  max-width: 90%;
+
+  object-fit: contain;
+
+  object-position: center;
+
+  margin: 0 auto;
+
+  padding: 0;
+
+  transform: none;
+
+  transform-origin: center;
+
+  filter: none;
+
+  user-select: none;
+
+  -webkit-user-drag: none;
+}
+
+
+/* ==================================================
+   MOBILE
+================================================== */
+
+@media (max-width: 560px) {
+  .approvedStartPockyVisual {
+    min-height: 215px;
+
+    margin-top: 18px;
+  }
+
+  .approvedStartPockyImage {
+    height:
+      clamp(
+        190px,
+        58vw,
+        235px
+      );
+
+    max-width: 94%;
+  }
+}

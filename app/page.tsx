@@ -898,22 +898,18 @@ export default function StartPage() {
                 ポッキーが持つ価値を知ろう。
               </p>
 
-              <div className="startVisual">
+              {/* =================================
+                  APPROVED POCKY VISUAL
+              ================================= */}
 
-                <div className="startPocky pockyOne">
-                  <div className="startChocolate" />
-                  <div className="startBiscuit" />
-                </div>
+              <div className="startVisual approvedStartPockyVisual">
 
-                <div className="startPocky pockyTwo">
-                  <div className="startChocolate" />
-                  <div className="startBiscuit" />
-                </div>
-
-                <div className="startPocky pockyThree">
-                  <div className="startChocolate" />
-                  <div className="startBiscuit" />
-                </div>
+                <img
+                  src="/images/pocky/pocky-100.png"
+                  alt="ポッキー"
+                  className="approvedStartPockyImage"
+                  draggable={false}
+                />
 
               </div>
 
