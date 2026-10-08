@@ -2,8 +2,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase-client";
+import SupportQrScanner from "../../../components/SupportQrScanner";
 
 type SupportStamp = {
   spot_id: string;
@@ -44,7 +46,6 @@ const UUID_PATTERN =
 
 function extractSupportToken(value: string): string | null {
   const trimmed = value.trim();
-
   const token = trimmed.startsWith("POKIPO_SUPPORT:")
     ? trimmed.slice("POKIPO_SUPPORT:".length).trim()
     : trimmed;
@@ -72,9 +73,11 @@ export default function StaffSupportPage() {
   const router = useRouter();
 
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [authorized, setAuthorized] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+
   const [supportInput, setSupportInput] = useState("");
   const [activeToken, setActiveToken] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -83,13 +86,11 @@ export default function StaffSupportPage() {
 
   const [participant, setParticipant] =
     useState<SupportParticipant | null>(null);
-
   const [logs, setLogs] = useState<SupportLog[]>([]);
 
   const [selectedSpotId, setSelectedSpotId] = useState("");
   const [selectedAction, setSelectedAction] =
     useState<StampAction>("add");
-
   const [reason, setReason] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -101,62 +102,72 @@ export default function StaffSupportPage() {
     let active = true;
 
     async function checkAuth() {
-      const { data, error } = await supabase.auth.getSession();
+      try {
+        const { data, error } = await supabase.auth.getSession();
 
-      if (!active) return;
+        if (!active) return;
 
-      if (error || !data.session) {
-        router.replace("/staff/reward");
-        return;
+        if (error || !data.session) {
+          router.replace("/staff/reward");
+          return;
+        }
+
+        const { data: staff, error: staffError } = await supabase
+          .from("staff_profiles")
+          .select("user_id")
+          .eq("user_id", data.session.user.id)
+          .maybeSingle();
+
+        if (!active) return;
+
+        if (staffError || !staff) {
+          setAuthorized(false);
+          setErrorMessage("管理者権限を確認できませんでした。");
+          return;
+        }
+
+        setAuthorized(true);
+      } catch (error) {
+        console.error("管理者認証エラー:", error);
+        if (active) {
+          setErrorMessage("管理者認証に失敗しました。");
+        }
+      } finally {
+        if (active) setCheckingAuth(false);
       }
-
-      const { data: staff, error: staffError } = await supabase
-        .from("staff_profiles")
-        .select("user_id")
-        .eq("user_id", data.session.user.id)
-        .maybeSingle();
-
-      if (!active) return;
-
-      if (staffError || !staff) {
-        setErrorMessage("管理者権限を確認できませんでした。");
-        setCheckingAuth(false);
-        return;
-      }
-
-      setCheckingAuth(false);
     }
 
     void checkAuth();
 
-    const { data: authListener } =
-      supabase.auth.onAuthStateChange((_event, session) => {
-        if (!session && active) {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!active) return;
+
+        if (!session) {
+          setAuthorized(false);
           router.replace("/staff/reward");
         }
-      });
+      }
+    );
 
     return () => {
       active = false;
-      authListener.subscription.unsubscribe();
+      listener.subscription.unsubscribe();
     };
   }, [router]);
 
   /* ========================================
-     LOAD PARTICIPANT
+     SEARCH
   ======================================== */
 
-  async function loadParticipant(token: string) {
+  async function fetchParticipant(token: string) {
     const { data, error } = await supabase.rpc(
       "lookup_pokipo_support_participant",
       { p_support_token: token }
     );
 
     if (error) throw error;
-
-    if (!data) {
-      throw new Error("該当する参加者が見つかりません。");
-    }
+    if (!data) throw new Error("該当する参加者が見つかりません。");
 
     const result = data as SupportParticipant;
 
@@ -164,10 +175,10 @@ export default function StaffSupportPage() {
       throw new Error("参加者データが正しくありません。");
     }
 
-    setParticipant(result);
+    return result;
   }
 
-  async function loadLogs(token: string) {
+  async function fetchLogs(token: string) {
     const { data, error } = await supabase.rpc(
       "staff_get_pokipo_support_logs",
       { p_support_token: token }
@@ -175,11 +186,11 @@ export default function StaffSupportPage() {
 
     if (error) throw error;
 
-    setLogs(Array.isArray(data) ? (data as SupportLog[]) : []);
+    return Array.isArray(data) ? (data as SupportLog[]) : [];
   }
 
-  async function searchParticipant() {
-    if (loading || saving) return;
+  async function searchParticipant(rawInput?: string) {
+    if (loading || saving || !authorized) return;
 
     setErrorMessage("");
     setSuccessMessage("");
@@ -190,7 +201,7 @@ export default function StaffSupportPage() {
     setReason("");
     setShowConfirm(false);
 
-    const token = extractSupportToken(supportInput);
+    const token = extractSupportToken(rawInput ?? supportInput);
 
     if (!token) {
       setErrorMessage(
@@ -202,18 +213,16 @@ export default function StaffSupportPage() {
     setLoading(true);
 
     try {
-      await Promise.all([
-        loadParticipant(token),
-        loadLogs(token),
+      const [target, history] = await Promise.all([
+        fetchParticipant(token),
+        fetchLogs(token),
       ]);
 
+      setParticipant(target);
+      setLogs(history);
       setActiveToken(token);
     } catch (error) {
       console.error("参加者照会エラー:", error);
-
-      setParticipant(null);
-      setLogs([]);
-
       setErrorMessage(
         error instanceof Error
           ? error.message
@@ -224,8 +233,14 @@ export default function StaffSupportPage() {
     }
   }
 
+  function handleQrDetected(token: string) {
+    setScannerOpen(false);
+    setSupportInput(token);
+    void searchParticipant(token);
+  }
+
   function clearSearch() {
-    if (saving) return;
+    if (saving || loading) return;
 
     setSupportInput("");
     setActiveToken("");
@@ -255,7 +270,9 @@ export default function StaffSupportPage() {
     setErrorMessage("");
 
     if (!activeToken || !participant || !selectedSpotId) {
-      setErrorMessage("修正対象の参加者とスポットを選択してください。");
+      setErrorMessage(
+        "修正対象の参加者とスポットを選択してください。"
+      );
       return;
     }
 
@@ -268,19 +285,25 @@ export default function StaffSupportPage() {
   }
 
   async function executeCorrection() {
-    if (saving || !activeToken || !selectedSpotId) return;
+    if (saving || !authorized || !activeToken || !selectedSpotId) {
+      return;
+    }
 
     setSaving(true);
     setErrorMessage("");
     setSuccessMessage("");
 
+    const token = activeToken;
+    const spot = selectedSpotId;
+    const action = selectedAction;
+
     try {
       const { data, error } = await supabase.rpc(
         "staff_correct_pokipo_stamp",
         {
-          p_support_token: activeToken,
-          p_spot_id: selectedSpotId,
-          p_action: selectedAction,
+          p_support_token: token,
+          p_spot_id: spot,
+          p_action: action,
           p_reason: reason.trim(),
         }
       );
@@ -291,22 +314,33 @@ export default function StaffSupportPage() {
         throw new Error("スタンプ修正が完了しませんでした。");
       }
 
-      const correctedSpotName = getSpotName(selectedSpotId);
-      const actionLabel =
-        selectedAction === "add" ? "手動付与" : "削除";
-
-      await Promise.all([
-        loadParticipant(activeToken),
-        loadLogs(activeToken),
-      ]);
-
-      setSuccessMessage(
-        `${correctedSpotName}のスタンプを${actionLabel}しました。`
-      );
-
+      setShowConfirm(false);
       setSelectedSpotId("");
       setReason("");
-      setShowConfirm(false);
+
+      setSuccessMessage(
+        `${getSpotName(spot)}のスタンプを${
+          action === "add" ? "手動付与" : "削除"
+        }しました。`
+      );
+
+      try {
+        const [target, history] = await Promise.all([
+          fetchParticipant(token),
+          fetchLogs(token),
+        ]);
+
+        setParticipant(target);
+        setLogs(history);
+      } catch (refreshError) {
+        console.error("修正後の再取得エラー:", refreshError);
+        setParticipant(null);
+        setLogs([]);
+        setActiveToken("");
+        setErrorMessage(
+          "修正は完了しましたが最新情報の取得に失敗しました。再検索して確認してください。"
+        );
+      }
     } catch (error) {
       console.error("スタンプ修正エラー:", error);
 
@@ -315,7 +349,6 @@ export default function StaffSupportPage() {
           ? error.message
           : "スタンプの修正に失敗しました。"
       );
-
       setShowConfirm(false);
     } finally {
       setSaving(false);
@@ -331,7 +364,7 @@ export default function StaffSupportPage() {
   ).length;
 
   /* ========================================
-     LOADING
+     AUTH LOADING
   ======================================== */
 
   if (checkingAuth) {
@@ -341,6 +374,26 @@ export default function StaffSupportPage() {
           <div className="staffLoadingCard">
             管理者情報を確認中...
           </div>
+        </section>
+      </main>
+    );
+  }
+
+  if (!authorized) {
+    return (
+      <main className="shell">
+        <section className="staffMenuPage">
+          <p style={styles.error}>
+            {errorMessage || "管理者ログインが必要です。"}
+          </p>
+
+          <button
+            type="button"
+            style={styles.secondaryButton}
+            onClick={() => router.push("/staff/reward")}
+          >
+            ログイン画面へ
+          </button>
         </section>
       </main>
     );
@@ -359,14 +412,7 @@ export default function StaffSupportPage() {
         <button
           type="button"
           onClick={() => router.push("/staff")}
-          style={{
-            border: 0,
-            background: "transparent",
-            color: "#8a1822",
-            fontWeight: 800,
-            padding: "8px 0",
-            cursor: "pointer",
-          }}
+          style={styles.backButton}
         >
           ← スタッフメニューに戻る
         </button>
@@ -380,19 +426,21 @@ export default function StaffSupportPage() {
             参加者サポート
           </h1>
 
-          <p style={{ color: "#766d69", fontSize: 13, lineHeight: 1.8 }}>
-            問い合わせ番号から参加者を検索し、
+          <p style={styles.description}>
+            問い合わせQRから参加者を検索し、
             スタンプの手動付与・削除を行います。
           </p>
         </header>
 
-        {/* SEARCH */}
+        {/* ========================================
+            SEARCH
+        ======================================== */}
         <section style={styles.card}>
           <h2 style={styles.heading}>参加者を検索</h2>
 
           <p style={styles.description}>
-            Googleフォームに添付されたお問い合わせQRの
-            問い合わせ番号を入力してください。
+            お問い合わせ専用QRをカメラで読み取るか、
+            Googleフォームに添付された問い合わせ番号を入力してください。
           </p>
 
           <form
@@ -418,6 +466,16 @@ export default function StaffSupportPage() {
               style={styles.input}
             />
 
+            <button
+              type="button"
+              disabled={loading || saving}
+              onClick={() => setScannerOpen(true)}
+              style={styles.cameraButton}
+            >
+              <span aria-hidden="true">📷</span>
+              カメラで問い合わせQRを読み取る
+            </button>
+
             <div style={styles.buttonRow}>
               <button
                 type="submit"
@@ -429,7 +487,7 @@ export default function StaffSupportPage() {
 
               <button
                 type="button"
-                disabled={saving}
+                disabled={loading || saving}
                 onClick={clearSearch}
                 style={styles.secondaryButton}
               >
@@ -451,7 +509,9 @@ export default function StaffSupportPage() {
           </div>
         )}
 
-        {/* PARTICIPANT DETAILS */}
+        {/* ========================================
+            PARTICIPANT DETAILS
+        ======================================== */}
         {participant && (
           <>
             <section style={styles.card}>
@@ -479,7 +539,9 @@ export default function StaffSupportPage() {
                 </div>
 
                 <div>
-                  <span style={styles.mutedLabel}>スタンプ</span>
+                  <span style={styles.mutedLabel}>
+                    スタンプ
+                  </span>
                   <p style={styles.infoValue}>
                     {stampCount} / 5
                   </p>
@@ -539,7 +601,9 @@ export default function StaffSupportPage() {
                           }}
                         >
                           {stamp
-                            ? `取得済み：${formatDate(stamp.acquired_at)}`
+                            ? `取得済み：${formatDate(
+                                stamp.acquired_at
+                              )}`
                             : "未取得"}
                         </span>
                       </div>
@@ -577,8 +641,7 @@ export default function StaffSupportPage() {
                   </span>
 
                   <h3 style={{ margin: "8px 0" }}>
-                    {getSpotName(selectedSpotId)}
-                    ：
+                    {getSpotName(selectedSpotId)}：
                     {selectedAction === "add"
                       ? "手動付与"
                       : "スタンプ削除"}
@@ -662,9 +725,13 @@ export default function StaffSupportPage() {
                           : "STAMP REMOVED"}
                       </span>
 
-                      <strong style={{ display: "block", marginTop: 6 }}>
-                        {getSpotName(log.spot_id)}
-                        ：
+                      <strong
+                        style={{
+                          display: "block",
+                          marginTop: 6,
+                        }}
+                      >
+                        {getSpotName(log.spot_id)}：
                         {log.action_type === "stamp_add"
                           ? "手動付与"
                           : "削除"}
@@ -752,6 +819,12 @@ export default function StaffSupportPage() {
           </div>
         )}
       </section>
+
+      <SupportQrScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={handleQrDetected}
+      />
     </main>
   );
 }
@@ -760,13 +833,21 @@ export default function StaffSupportPage() {
    PAGE STYLES
 ======================================== */
 
-const styles: Record<string, React.CSSProperties> = {
+const styles: Record<string, CSSProperties> = {
   card: {
     padding: 22,
     background: "#fff",
     border: "1px solid #e8ded8",
     borderRadius: 18,
     marginBottom: 20,
+  },
+  backButton: {
+    border: 0,
+    background: "transparent",
+    color: "#8a1822",
+    fontWeight: 800,
+    padding: "8px 0",
+    cursor: "pointer",
   },
   heading: {
     margin: "0 0 12px",
@@ -786,12 +867,28 @@ const styles: Record<string, React.CSSProperties> = {
   },
   input: {
     width: "100%",
-    padding: "13px",
+    padding: 13,
     border: "1px solid #d6c9c2",
     borderRadius: 10,
     fontSize: 14,
     boxSizing: "border-box",
     fontFamily: "inherit",
+  },
+  cameraButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    width: "100%",
+    marginTop: 13,
+    padding: "13px 15px",
+    border: "1px solid #b93e4a",
+    borderRadius: 10,
+    background: "#fff2f2",
+    color: "#96232d",
+    fontSize: 13,
+    fontWeight: 900,
+    cursor: "pointer",
   },
   buttonRow: {
     display: "flex",
@@ -842,7 +939,8 @@ const styles: Record<string, React.CSSProperties> = {
   },
   infoGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+    gridTemplateColumns:
+      "repeat(auto-fit, minmax(130px, 1fr))",
     gap: 12,
   },
   stampRow: {

@@ -39746,3 +39746,57 @@ img {
     padding: 18px;
   }
 }
+
+
+/* ========================================
+   STAFF PARTICIPANT SUPPORT MENU
+   既存管理メニューとのデザイン統一
+======================================== */
+
+/* 参加者サポート全体 */
+.staffMenuCategory[aria-labelledby="staff-category-support"] {
+  width: 100%;
+}
+
+/* 既存カテゴリーと同じカード配置 */
+.staffMenuCategory[aria-labelledby="staff-category-support"]
+.staffMenuCategoryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* 既存の管理カードに合わせる */
+.staffMenuCategory[aria-labelledby="staff-category-support"]
+.staffMenuCard {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+/* タイトル・説明文の折り返し */
+.staffMenuCategory[aria-labelledby="staff-category-support"]
+.staffMenuCardBody {
+  min-width: 0;
+}
+
+.staffMenuCategory[aria-labelledby="staff-category-support"]
+.staffMenuCardBody h3 {
+  overflow-wrap: anywhere;
+}
+
+.staffMenuCategory[aria-labelledby="staff-category-support"]
+.staffMenuCardBody p {
+  line-height: 1.65;
+}
+
+/* スマートフォン表示 */
+@media (max-width: 640px) {
+  .staffMenuCategory[aria-labelledby="staff-category-support"]
+  .staffMenuCategoryGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}

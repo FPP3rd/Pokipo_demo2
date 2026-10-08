@@ -2,8 +2,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../../lib/supabase-client";
+import SupportQrScanner from "../../../../components/SupportQrScanner";
 
 type RewardRecord = {
   exchange_id: string;
@@ -28,13 +30,16 @@ type Participant = {
   nickname: string;
   grade: string | null;
   department: string | null;
-  stamps: { spot_id: string; acquired_at: string }[];
+  stamps: {
+    spot_id: string;
+    acquired_at: string;
+  }[];
 };
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function extractToken(text: string) {
+function extractToken(text: string): string | null {
   const value = text.trim();
   const token = value.startsWith("POKIPO_SUPPORT:")
     ? value.slice("POKIPO_SUPPORT:".length).trim()
@@ -68,6 +73,7 @@ export default function StaffSupportRewardPage() {
 
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const [input, setInput] = useState("");
   const [activeToken, setActiveToken] = useState("");
@@ -118,6 +124,7 @@ export default function StaffSupportRewardPage() {
         if (!mounted) return;
 
         if (staffError || !staff) {
+          setAuthorized(false);
           setErrorMessage(
             "スタッフ権限を確認できませんでした。"
           );
@@ -127,6 +134,7 @@ export default function StaffSupportRewardPage() {
         setAuthorized(true);
       } catch (error) {
         console.error("認証確認エラー:", error);
+
         if (mounted) {
           setErrorMessage("認証確認に失敗しました。");
         }
@@ -138,14 +146,16 @@ export default function StaffSupportRewardPage() {
     void checkAuth();
 
     const { data: listener } =
-      supabase.auth.onAuthStateChange((_event, session) => {
-        if (!mounted) return;
+      supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          if (!mounted) return;
 
-        if (!session) {
-          setAuthorized(false);
-          router.replace("/staff/reward");
+          if (!session) {
+            setAuthorized(false);
+            router.replace("/staff/reward");
+          }
         }
-      });
+      );
 
     return () => {
       mounted = false;
@@ -158,18 +168,21 @@ export default function StaffSupportRewardPage() {
   ======================================== */
 
   async function fetchSupportData(token: string) {
-    const [participantResult, rewardResult, logResult] =
-      await Promise.all([
-        supabase.rpc("lookup_pokipo_support_participant", {
-          p_support_token: token,
-        }),
-        supabase.rpc("staff_get_support_reward_status", {
-          p_support_token: token,
-        }),
-        supabase.rpc("staff_get_reward_rollback_logs", {
-          p_support_token: token,
-        }),
-      ]);
+    const [
+      participantResult,
+      rewardResult,
+      logResult,
+    ] = await Promise.all([
+      supabase.rpc("lookup_pokipo_support_participant", {
+        p_support_token: token,
+      }),
+      supabase.rpc("staff_get_support_reward_status", {
+        p_support_token: token,
+      }),
+      supabase.rpc("staff_get_reward_rollback_logs", {
+        p_support_token: token,
+      }),
+    ]);
 
     if (participantResult.error) {
       throw participantResult.error;
@@ -183,7 +196,8 @@ export default function StaffSupportRewardPage() {
       throw logResult.error;
     }
 
-    const target = participantResult.data as Participant | null;
+    const target =
+      participantResult.data as Participant | null;
 
     if (!target || !target.participant_id) {
       throw new Error("該当する参加者が見つかりません。");
@@ -200,7 +214,7 @@ export default function StaffSupportRewardPage() {
     };
   }
 
-  async function searchParticipant() {
+  async function searchParticipant(rawInput?: string) {
     if (loading || saving || !authorized) return;
 
     setErrorMessage("");
@@ -213,7 +227,7 @@ export default function StaffSupportRewardPage() {
     setReason("");
     setConfirmOpen(false);
 
-    const token = extractToken(input);
+    const token = extractToken(rawInput ?? input);
 
     if (!token) {
       setErrorMessage(
@@ -233,6 +247,7 @@ export default function StaffSupportRewardPage() {
       setActiveToken(token);
     } catch (error) {
       console.error("景品交換照会エラー:", error);
+
       setErrorMessage(
         error instanceof Error
           ? error.message
@@ -243,8 +258,14 @@ export default function StaffSupportRewardPage() {
     }
   }
 
+  function handleQrDetected(token: string) {
+    setScannerOpen(false);
+    setInput(token);
+    void searchParticipant(token);
+  }
+
   function clearSearch() {
-    if (saving) return;
+    if (saving || loading) return;
 
     setInput("");
     setActiveToken("");
@@ -257,6 +278,10 @@ export default function StaffSupportRewardPage() {
     setReason("");
     setConfirmOpen(false);
   }
+
+  /* ========================================
+     REWARD ROLLBACK
+  ======================================== */
 
   function selectRollback(reward: RewardRecord) {
     if (saving || reward.status !== "exchanged") return;
@@ -272,7 +297,9 @@ export default function StaffSupportRewardPage() {
     if (!selectedExchange || !participant || !activeToken) return;
 
     if (reason.trim().length < 5 || reason.trim().length > 500) {
-      setErrorMessage("取消理由を5〜500文字で入力してください。");
+      setErrorMessage(
+        "取消理由を5〜500文字で入力してください。"
+      );
       return;
     }
 
@@ -286,9 +313,12 @@ export default function StaffSupportRewardPage() {
       !selectedExchange ||
       !activeToken ||
       !authorized
-    ) return;
+    ) {
+      return;
+    }
 
     const exchangeId = selectedExchange.exchange_id;
+    const token = activeToken;
 
     setSaving(true);
     setErrorMessage("");
@@ -298,7 +328,7 @@ export default function StaffSupportRewardPage() {
       const { data, error } = await supabase.rpc(
         "staff_rollback_reward_exchange",
         {
-          p_support_token: activeToken,
+          p_support_token: token,
           p_exchange_id: exchangeId,
           p_reason: reason.trim(),
         }
@@ -318,20 +348,22 @@ export default function StaffSupportRewardPage() {
         "景品交換を取り消しました。交換状態は「未交換」に戻りました。"
       );
 
-      // サーバーの最新状態を再取得
       try {
-        const refreshed = await fetchSupportData(activeToken);
+        const refreshed = await fetchSupportData(token);
+
         setParticipant(refreshed.participant);
         setRewards(refreshed.rewards);
         setLogs(refreshed.logs);
       } catch (refreshError) {
         console.error("取消後の再取得エラー:", refreshError);
+
         setParticipant(null);
         setRewards([]);
         setLogs([]);
         setActiveToken("");
+
         setErrorMessage(
-          "取消処理は成功しましたが、最新情報を取得できませんでした。再検索して確認してください。"
+          "取消処理は成功しましたが最新情報を取得できませんでした。再検索して確認してください。"
         );
       }
     } catch (error) {
@@ -350,7 +382,7 @@ export default function StaffSupportRewardPage() {
   }
 
   /* ========================================
-     LOADING / AUTH
+     AUTH LOADING
   ======================================== */
 
   if (checkingAuth) {
@@ -372,6 +404,7 @@ export default function StaffSupportRewardPage() {
           <p style={styles.error}>
             {errorMessage || "ログインが必要です。"}
           </p>
+
           <button
             type="button"
             style={styles.secondaryButton}
@@ -412,20 +445,22 @@ export default function StaffSupportRewardPage() {
           </h1>
 
           <p style={styles.description}>
-            問い合わせ番号から景品交換状況を照会し、
+            問い合わせQRから景品交換状況を照会し、
             誤って交換済みになった記録を未交換に戻します。
           </p>
         </header>
 
-        {/* SEARCH */}
+        {/* ========================================
+            SEARCH
+        ======================================== */}
         <section style={styles.card}>
           <h2 style={styles.heading}>
             問い合わせ番号で検索
           </h2>
 
           <p style={styles.description}>
-            参加者のお問い合わせ専用QRに表示された
-            問い合わせ番号を入力してください。
+            お問い合わせ専用QRをカメラで読み取るか、
+            問い合わせ番号を手入力してください。
           </p>
 
           <form
@@ -451,6 +486,16 @@ export default function StaffSupportRewardPage() {
               style={styles.input}
             />
 
+            <button
+              type="button"
+              disabled={loading || saving}
+              onClick={() => setScannerOpen(true)}
+              style={styles.cameraButton}
+            >
+              <span aria-hidden="true">📷</span>
+              カメラで問い合わせQRを読み取る
+            </button>
+
             <div style={styles.buttonRow}>
               <button
                 type="submit"
@@ -462,7 +507,7 @@ export default function StaffSupportRewardPage() {
 
               <button
                 type="button"
-                disabled={saving}
+                disabled={loading || saving}
                 onClick={clearSearch}
                 style={styles.secondaryButton}
               >
@@ -503,12 +548,14 @@ export default function StaffSupportRewardPage() {
                     {participant.grade ?? "未登録"}
                   </p>
                 </div>
+
                 <div>
                   <span style={styles.muted}>学科</span>
                   <p style={styles.infoValue}>
                     {participant.department ?? "未登録"}
                   </p>
                 </div>
+
                 <div>
                   <span style={styles.muted}>スタンプ</span>
                   <p style={styles.infoValue}>
@@ -516,7 +563,8 @@ export default function StaffSupportRewardPage() {
                       participant.stamps.map(
                         (stamp) => stamp.spot_id
                       )
-                    ).size} / 5
+                    ).size}{" "}
+                    / 5
                   </p>
                 </div>
               </div>
@@ -573,18 +621,21 @@ export default function StaffSupportRewardPage() {
                               {reward.confirmation_code}
                             </strong>
                           </div>
+
                           <div>
                             <span>QR発行日時</span>
                             <strong>
                               {formatDate(reward.created_at)}
                             </strong>
                           </div>
+
                           <div>
                             <span>景品交換日時</span>
                             <strong>
                               {formatDate(reward.exchanged_at)}
                             </strong>
                           </div>
+
                           <div>
                             <span>交換担当者</span>
                             <strong>
@@ -689,7 +740,10 @@ export default function StaffSupportRewardPage() {
               ) : (
                 <div style={{ display: "grid", gap: 12 }}>
                   {logs.map((log) => (
-                    <article key={log.id} style={styles.logCard}>
+                    <article
+                      key={log.id}
+                      style={styles.logCard}
+                    >
                       <span style={styles.eyebrow}>
                         REWARD ROLLBACK
                       </span>
@@ -710,13 +764,16 @@ export default function StaffSupportRewardPage() {
                       <div style={styles.logMeta}>
                         <span>
                           元の交換日時：
-                          {formatDate(log.original_exchanged_at)}
+                          {formatDate(
+                            log.original_exchanged_at
+                          )}
                         </span>
                         <span>
                           取消担当：{log.staff_name}
                         </span>
                         <span>
-                          取消日時：{formatDate(log.created_at)}
+                          取消日時：
+                          {formatDate(log.created_at)}
                         </span>
                       </div>
                     </article>
@@ -755,7 +812,9 @@ export default function StaffSupportRewardPage() {
 
               <p style={styles.description}>
                 変更内容：
-                <strong>交換済み → 未交換</strong>
+                <strong>
+                  交換済み → 未交換
+                </strong>
               </p>
 
               <p style={styles.description}>
@@ -792,11 +851,21 @@ export default function StaffSupportRewardPage() {
           </div>
         )}
       </section>
+
+      <SupportQrScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={handleQrDetected}
+      />
     </main>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
+/* ========================================
+   PAGE STYLES
+======================================== */
+
+const styles: Record<string, CSSProperties> = {
   card: {
     padding: 22,
     background: "#fff",
@@ -842,6 +911,22 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
     fontFamily: "inherit",
     boxSizing: "border-box",
+  },
+  cameraButton: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    width: "100%",
+    marginTop: 13,
+    padding: "13px 15px",
+    border: "1px solid #b93e4a",
+    borderRadius: 10,
+    background: "#fff2f2",
+    color: "#96232d",
+    fontSize: 13,
+    fontWeight: 900,
+    cursor: "pointer",
   },
   buttonRow: {
     display: "flex",
