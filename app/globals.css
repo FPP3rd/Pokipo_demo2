@@ -39800,3 +39800,241 @@ img {
     gap: 12px;
   }
 }
+
+
+/* ========================================
+   POKIPO STAFF SUPPORT DESIGN FIX
+   スタンプ修正・景品交換取消画面
+======================================== */
+
+/* 2つのサポート画面のみ対象 */
+main.shell > section.staffMenuPage[style*="max-width"] {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ========================================
+   1. ヘッダーを最上部へ
+======================================== */
+
+main.shell > section.staffMenuPage[style*="max-width"] > header {
+  order: -2;
+  width: 100%;
+  margin: 12px 0 14px !important;
+  padding: 4px 0 12px;
+  box-sizing: border-box;
+}
+
+/* タイトルを黒色に統一 */
+main.shell > section.staffMenuPage[style*="max-width"] > header h1 {
+  color: #242424 !important;
+  font-size: clamp(24px, 5vw, 30px) !important;
+  font-weight: 900 !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.02em;
+  margin: 8px 0 10px !important;
+}
+
+/* 英語サブタイトル */
+main.shell > section.staffMenuPage[style*="max-width"]
+> header .staffMenuEyebrow {
+  display: block;
+  color: #89817e !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.11em;
+}
+
+/* タイトル下の説明 */
+main.shell > section.staffMenuPage[style*="max-width"] > header p {
+  color: #716b68 !important;
+  font-size: 13px !important;
+  font-weight: 400;
+  line-height: 1.8 !important;
+  margin: 8px 0 0;
+}
+
+/* ========================================
+   2. 戻るボタンはヘッダーの下へ
+======================================== */
+
+main.shell > section.staffMenuPage[style*="max-width"]
+> button:first-child {
+  order: -1;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  align-self: flex-start;
+
+  width: auto !important;
+  max-width: 100%;
+  min-height: 38px;
+
+  margin: 0 0 24px !important;
+  padding: 9px 13px !important;
+
+  background: #f6f3f1 !important;
+  border: 1px solid #e7dfdb !important;
+  border-radius: 9px !important;
+
+  color: #504744 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap !important;
+  writing-mode: horizontal-tb !important;
+
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+main.shell > section.staffMenuPage[style*="max-width"]
+> button:first-child:hover {
+  background: #eee8e5 !important;
+  border-color: #d8cac5 !important;
+}
+
+/* ========================================
+   3. セクション見出しも黒に統一
+======================================== */
+
+main.shell > section.staffMenuPage[style*="max-width"] 
+> section h2 {
+  color: #292525 !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1.45;
+}
+
+/* 対象者のニックネーム */
+main.shell > section.staffMenuPage[style*="max-width"] 
+> section > h2 {
+  color: #292525 !important;
+}
+
+/* ========================================
+   4. カード全体の統一
+======================================== */
+
+main.shell > section.staffMenuPage[style*="max-width"]
+> section[style*="background"] {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  background: #ffffff !important;
+  border: 1px solid #e8e2df !important;
+  border-radius: 16px !important;
+
+  box-shadow: 0 3px 14px rgba(45, 28, 25, 0.035);
+}
+
+/* ========================================
+   5. スタンプの「手動付与」が縦書きになる対策
+======================================== */
+
+/* スタンプ操作ボタン */
+main.shell > section.staffMenuPage[style*="max-width"]
+button[style*="flex-shrink: 0"] {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex: 0 0 auto !important;
+
+  width: auto !important;
+  min-width: 94px !important;
+  min-height: 38px;
+
+  padding: 9px 12px !important;
+
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  font-weight: 800 !important;
+
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+
+  box-sizing: border-box;
+}
+
+/* スタンプの行：横並びを維持 */
+main.shell > section.staffMenuPage[style*="max-width"]
+div[style*="justify-content: space-between"]
+:has(> button[style*="flex-shrink: 0"]) {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* スタンプ名のエリア */
+main.shell > section.staffMenuPage[style*="max-width"]
+div:has(> button[style*="flex-shrink: 0"]) > div:first-child {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+/* ========================================
+   6. 検索・操作ボタンも横書きに
+======================================== */
+
+main.shell > section.staffMenuPage[style*="max-width"]
+button {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+}
+
+main.shell > section.staffMenuPage[style*="max-width"]
+form button,
+main.shell > section.staffMenuPage[style*="max-width"]
+textarea + div button {
+  white-space: normal;
+  word-break: keep-all;
+}
+
+/* ========================================
+   7. スマートフォン向け
+======================================== */
+
+@media (max-width: 640px) {
+  main.shell > section.staffMenuPage[style*="max-width"] {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  main.shell > section.staffMenuPage[style*="max-width"]
+  > header h1 {
+    font-size: 24px !important;
+  }
+
+  main.shell > section.staffMenuPage[style*="max-width"]
+  > section[style*="background"] {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  /* 狭い画面でもボタンを縦書きにしない */
+  main.shell > section.staffMenuPage[style*="max-width"]
+  button[style*="flex-shrink: 0"] {
+    min-width: 94px !important;
+    padding: 9px 10px !important;
+    font-size: 12px !important;
+  }
+}
