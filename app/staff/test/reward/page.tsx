@@ -28,16 +28,18 @@ import {
    TYPES
 ======================================== */
 
-type TestStamp = {
-  spot_id: string;
-  acquired_at: string;
-};
-
 type RewardData = {
   token: string | null;
   confirmationCode: string | null;
   status: PokipoRewardStatus;
   exchangedAt: string | null;
+};
+
+const EMPTY_REWARD: RewardData = {
+  token: null,
+  confirmationCode: null,
+  status: "not_issued",
+  exchangedAt: null,
 };
 
 /* ========================================
@@ -64,9 +66,12 @@ const buttonStyle: CSSProperties = {
   cursor: "pointer",
 };
 
-/* ========================================
-   HELPERS
-======================================== */
+const secondaryButtonStyle: CSSProperties = {
+  ...buttonStyle,
+  background: "#ffffff",
+  color: "#333333",
+  border: "1px solid #ded8d1",
+};
 
 function formatDate(
   value: string | null
@@ -89,16 +94,6 @@ function formatDate(
   });
 }
 
-function countUniqueStamps(
-  stamps: TestStamp[]
-): number {
-  return new Set(
-    stamps.map(
-      (stamp: TestStamp) => stamp.spot_id
-    )
-  ).size;
-}
-
 /* ========================================
    PAGE
 ======================================== */
@@ -106,17 +101,13 @@ function countUniqueStamps(
 export default function StaffTestRewardPage() {
   const router = useRouter();
 
-  /* LOADING */
   const [loading, setLoading] = useState(true);
   const [ready, setReady] = useState(false);
-
-  /* ISSUING */
   const [issuing, setIssuing] = useState(false);
+
   const issuingRef = useRef(false);
 
-  /* COMPLETION CONDITIONS */
-  const [stampCount, setStampCount] =
-    useState(0);
+  const [stampCount, setStampCount] = useState(0);
 
   const [surveyCompleted, setSurveyCompleted] =
     useState(false);
@@ -124,33 +115,35 @@ export default function StaffTestRewardPage() {
   const [completionRecorded, setCompletionRecorded] =
     useState(false);
 
-  /* REWARD */
-  const [reward, setReward] = useState<RewardData>({
-    token: null,
-    confirmationCode: null,
-    status: "not_issued",
-    exchangedAt: null,
-  });
+  const [reward, setReward] =
+    useState<RewardData>(EMPTY_REWARD);
 
-  /* ERROR */
   const [errorMessage, setErrorMessage] =
     useState("");
 
   /* ========================================
      LOAD TEST DATA
-
-     検証専用データのみ読み込む
   ======================================== */
 
   const loadRewardData = useCallback(async () => {
+    const staffId = await getVerifiedTestStaffId();
+
     const session = await getPokipoTestSession();
+    const stamps = await getPokipoTestStamps();
 
-    const stamps: TestStamp[] =
-      await getPokipoTestStamps();
+    if (session.staff_user_id !== staffId) {
+      throw new Error(
+        "検証セッションとスタッフ情報が一致しません。"
+      );
+    }
 
-    const count = countUniqueStamps(stamps);
+    const uniqueSpotIds = new Set<string>();
 
-    setStampCount(count);
+    for (const stamp of stamps) {
+      uniqueSpotIds.add(stamp.spot_id);
+    }
+
+    setStampCount(uniqueSpotIds.size);
 
     setSurveyCompleted(
       Boolean(session.post_survey)
@@ -167,12 +160,12 @@ export default function StaffTestRewardPage() {
         : "not_issued";
 
     setReward({
-      token: session.reward_token,
+      token: session.reward_token ?? null,
       confirmationCode:
-        session.reward_confirmation_code,
+        session.reward_confirmation_code ?? null,
       status,
       exchangedAt:
-        session.reward_exchanged_at,
+        session.reward_exchanged_at ?? null,
     });
 
     setReady(true);
@@ -183,7 +176,7 @@ export default function StaffTestRewardPage() {
   ======================================== */
 
   useEffect(() => {
-    let mounted = true;
+    let active = true;
 
     async function initialize() {
       try {
@@ -194,7 +187,7 @@ export default function StaffTestRewardPage() {
           error
         );
 
-        if (mounted) {
+        if (active) {
           setReady(false);
 
           setErrorMessage(
@@ -204,7 +197,7 @@ export default function StaffTestRewardPage() {
           );
         }
       } finally {
-        if (mounted) {
+        if (active) {
           setLoading(false);
         }
       }
@@ -213,21 +206,18 @@ export default function StaffTestRewardPage() {
     void initialize();
 
     return () => {
-      mounted = false;
+      active = false;
     };
   }, [loadRewardData]);
 
   /* ========================================
-     ISSUE TEST REWARD QR
+     ISSUE TEST REWARD
 
-     本番の特典発行RPCを呼ばない
+     本番のテーブルやRPCには書き込まない
   ======================================== */
 
   async function issueTestReward() {
-    if (
-      issuingRef.current ||
-      !ready
-    ) {
+    if (!ready || issuingRef.current) {
       return;
     }
 
@@ -236,76 +226,68 @@ export default function StaffTestRewardPage() {
     setErrorMessage("");
 
     try {
-      // スタッフ権限を再確認
-      const staffId =
-        await getVerifiedTestStaffId();
+      const staffId = await getVerifiedTestStaffId();
 
-      const session =
-        await getPokipoTestSession();
+      const session = await getPokipoTestSession();
+      const stamps = await getPokipoTestStamps();
 
-      const stamps: TestStamp[] =
-        await getPokipoTestStamps();
-
-      if (
-        session.staff_user_id !== staffId
-      ) {
+      if (session.staff_user_id !== staffId) {
         throw new Error(
           "スタッフ情報が一致しません。"
         );
       }
 
-      const count =
-        countUniqueStamps(stamps);
+      const uniqueSpotIds = new Set<string>();
 
-      // 発行条件は保存直前にも確認
+      for (const stamp of stamps) {
+        uniqueSpotIds.add(stamp.spot_id);
+      }
+
       if (
-        count !== 5 ||
+        uniqueSpotIds.size !== 5 ||
         !session.completed_at ||
         !session.post_survey
       ) {
         throw new Error(
-          "特典QRの発行には、5か所のスタンプ達成と参加後アンケートの回答が必要です。"
+          "特典QRの発行には、5か所のスタンプ取得と参加後アンケートの回答が必要です。"
         );
       }
 
-      if (
-        session.reward_status === "exchanged"
-      ) {
+      if (session.reward_status === "exchanged") {
         throw new Error(
-          "この特典は交換済みです。再度検証する場合は、動作確認データをリセットしてください。"
+          "すでに交換済みです。再検証する場合は、検証データをリセットしてください。"
         );
       }
 
-      // 発行済みQRがあれば再利用
       if (
-        session.reward_token &&
-        session.reward_status === "issued"
+        session.reward_status === "issued" &&
+        session.reward_token
       ) {
         await loadRewardData();
         return;
       }
 
-      // 不整合な発行状態を防ぐ
       if (
-        session.reward_token ||
-        session.reward_status !== "not_issued"
+        session.reward_status !== "not_issued" ||
+        session.reward_token
       ) {
         throw new Error(
-          "検証用QRの発行状態に不整合があります。データを確認してください。"
+          "QRの発行状態を確認できません。検証データを確認してください。"
         );
       }
 
-      // 暗号学的乱数で検証専用QRを作成
+      // 検証専用トークン
       const token = crypto.randomUUID();
 
-      const randomValues = new Uint32Array(1);
-      crypto.getRandomValues(randomValues);
+      const randomNumbers = new Uint32Array(1);
+
+      crypto.getRandomValues(randomNumbers);
 
       const confirmationCode = String(
-        100000 + (randomValues[0] % 900000)
+        100000 + (randomNumbers[0] % 900000)
       );
 
-      // pokipo_test_sessions のみ更新
+      // 検証専用テーブルだけを更新
       const { data, error } = await supabase
         .from("pokipo_test_sessions")
         .update({
@@ -326,13 +308,8 @@ export default function StaffTestRewardPage() {
         );
       }
 
-      if (
-        !data ||
-        data.length === 0
-      ) {
-        // 同時発行された場合は再読込
-        const latest =
-          await getPokipoTestSession();
+      if (!data || data.length !== 1) {
+        const latest = await getPokipoTestSession();
 
         if (
           latest.reward_status !== "issued" ||
@@ -347,14 +324,14 @@ export default function StaffTestRewardPage() {
       await loadRewardData();
     } catch (error) {
       console.error(
-        "検証用特典QR発行エラー:",
+        "検証用QR発行エラー:",
         error
       );
 
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "検証用の特典QRを発行できませんでした。"
+          : "検証用QRの発行に失敗しました。"
       );
     } finally {
       issuingRef.current = false;
@@ -372,15 +349,10 @@ export default function StaffTestRewardPage() {
     try {
       await loadRewardData();
     } catch (error) {
-      console.error(
-        "検証用特典状態更新エラー:",
-        error
-      );
-
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "交換状態を更新できませんでした。"
+          : "交換状態を取得できませんでした。"
       );
     }
   }
@@ -404,18 +376,22 @@ export default function StaffTestRewardPage() {
     reward.status === "exchanged";
 
   /* ========================================
-     VIEW
+     LOADING
   ======================================== */
 
   if (loading) {
     return (
       <main className="shell">
         <section style={{ padding: 30 }}>
-          検証用特典データを読み込み中...
+          検証用特典情報を確認中...
         </section>
       </main>
     );
   }
+
+  /* ========================================
+     VIEW
+  ======================================== */
 
   return (
     <main className="shell">
@@ -426,7 +402,6 @@ export default function StaffTestRewardPage() {
           padding: "24px 0 60px",
         }}
       >
-        {/* HEADER */}
         <header style={{ marginBottom: 20 }}>
           <span
             style={{
@@ -438,13 +413,11 @@ export default function StaffTestRewardPage() {
             POKIPO STAFF TEST
           </span>
 
-          <h1 style={{ margin: "10px 0" }}>
-            特典交換の動作確認
-          </h1>
+          <h1>特典交換の動作確認</h1>
 
           <p style={{ lineHeight: 1.8 }}>
-            本番と共通の特典交換画面を使って、
-            動作を確認します。
+            本番と共通の表示部品を使用して、
+            特典QRの発行と交換状態を確認します。
           </p>
         </header>
 
@@ -465,8 +438,8 @@ export default function StaffTestRewardPage() {
             }}
           >
             この画面で発行するQRコードは、
-            本番の景品交換には使用できません。
-            本番の交換履歴や会場モニターには
+            本番の景品交換では使用できません。
+            本番の景品交換履歴や会場モニターにも
             反映されません。
           </p>
         </section>
@@ -484,20 +457,13 @@ export default function StaffTestRewardPage() {
               TEST REWARD STATUS
             </span>
 
-            <h2
-              style={{
-                fontSize: 20,
-                margin: "12px 0",
-              }}
-            >
+            <h2 style={{ fontSize: 20 }}>
               特典交換条件
             </h2>
 
             <p>
               スタンプ：
-              <strong>
-                {stampCount} / 5
-              </strong>
+              <strong>{stampCount} / 5</strong>
             </p>
 
             <p>
@@ -518,7 +484,7 @@ export default function StaffTestRewardPage() {
               </strong>
             </p>
 
-            <p style={{ marginBottom: 0 }}>
+            <p>
               特典QR：
               <strong>
                 {exchanged
@@ -547,21 +513,15 @@ export default function StaffTestRewardPage() {
 
         {/* ISSUE BUTTON */}
         {ready &&
-          !reward.token &&
-          !exchanged && (
+          reward.status === "not_issued" && (
             <section style={cardStyle}>
-              <h2
-                style={{
-                  fontSize: 20,
-                }}
-              >
-                特典QRコードを発行する
+              <h2 style={{ fontSize: 20 }}>
+                検証用QRコードを発行
               </h2>
 
               {!eligible && (
                 <p style={{ lineHeight: 1.8 }}>
-                  5か所のスタンプ取得と
-                  参加後アンケートの回答、
+                  5か所のスタンプと参加後アンケート、
                   完走記録が必要です。
                 </p>
               )}
@@ -571,9 +531,6 @@ export default function StaffTestRewardPage() {
                 style={{
                   ...buttonStyle,
                   opacity: eligible ? 1 : 0.45,
-                  cursor: eligible
-                    ? "pointer"
-                    : "not-allowed",
                 }}
                 disabled={!eligible || issuing}
                 onClick={() =>
@@ -582,59 +539,65 @@ export default function StaffTestRewardPage() {
               >
                 {issuing
                   ? "発行中..."
-                  : "検証用特典QRを発行する"}
+                  : "検証用QRを発行する"}
               </button>
             </section>
           )}
 
-        {/* SHARED REWARD QR */}
-        {ready &&
-          (issued || exchanged) && (
-            <section>
-              <PokipoRewardQrPanel
-                mode="test"
-                status={reward.status}
-                token={reward.token}
-                confirmationCode={
-                  reward.confirmationCode
-                }
-                exchangedAt={formatDate(
-                  reward.exchangedAt
-                )}
-              />
+        {/* SHARED QR COMPONENT */}
+        {ready && (issued || exchanged) && (
+          <section>
+            <PokipoRewardQrPanel
+              mode="test"
+              status={reward.status}
+              token={reward.token}
+              confirmationCode={
+                reward.confirmationCode
+              }
+              exchangedAt={formatDate(
+                reward.exchangedAt
+              )}
+            />
 
-              <button
-                type="button"
-                style={{
-                  ...buttonStyle,
-                  background: "#ffffff",
-                  color: "#333333",
-                  border: "1px solid #ded8d1",
-                  marginBottom: 16,
-                }}
-                onClick={() =>
-                  void refreshReward()
-                }
-                disabled={issuing}
-              >
-                交換状態を更新
-              </button>
-            </section>
-          )}
+            <button
+              type="button"
+              style={{
+                ...secondaryButtonStyle,
+                marginBottom: 16,
+              }}
+              onClick={() =>
+                void refreshReward()
+              }
+              disabled={issuing}
+            >
+              交換状態を更新
+            </button>
+          </section>
+        )}
+
+        {/* TEST SCANNER */}
+        {ready && issued && (
+          <button
+            type="button"
+            style={{
+              ...buttonStyle,
+              marginBottom: 16,
+            }}
+            onClick={() =>
+              router.push("/staff/test/reward/scan")
+            }
+          >
+            検証用QR読み取り画面へ
+          </button>
+        )}
 
         {/* BACK */}
         <button
           type="button"
-          style={{
-            ...buttonStyle,
-            background: "#ffffff",
-            color: "#333333",
-            border: "1px solid #ded8d1",
-          }}
+          style={secondaryButtonStyle}
           onClick={() =>
             router.push("/staff/test")
           }
-          disabled={issuing}
         >
           動作確認メニューへ戻る
         </button>

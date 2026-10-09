@@ -1,481 +1,1557 @@
 
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../../../lib/supabase-client";
+import { Html5Qrcode } from "html5-qrcode";
+import { supabase } from "../../../lib/supabase-client";
 
-import {
-  getPokipoTestSession,
-  getPokipoTestStamps,
-  getVerifiedTestStaffId,
-} from "../../../../lib/pokipo-test-data";
+/* ========================================
+   TYPES
+======================================== */
 
-import {
-  PokipoRewardQrPanel,
-  type PokipoRewardStatus,
-} from "../../../../components/PokipoRewardShared";
-
-type RewardData = {
-  token: string | null;
-  confirmationCode: string | null;
-  status: PokipoRewardStatus;
-  exchangedAt: string | null;
+type RewardExchange = {
+  id: string;
+  participant_id: string;
+  confirmation_code: string;
+  exchange_token: string;
+  status: string;
+  created_at: string;
+  exchanged_at: string | null;
+  exchanged_by: string | null;
 };
 
-const cardStyle: React.CSSProperties = {
-  padding: 22,
-  borderRadius: 16,
-  background: "#ffffff",
-  border: "1px solid #e6e1db",
-  marginBottom: 16,
+type Participant = {
+  id: string;
+  nickname: string;
+  grade: string | null;
+  department: string | null;
+  created_at: string;
 };
 
-const buttonStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "16px 20px",
-  borderRadius: 12,
-  border: "none",
-  background: "#bd2838",
-  color: "#ffffff",
-  fontWeight: 800,
-  fontSize: 15,
-  cursor: "pointer",
+type MonitorProfile = {
+  achievementRank: number | null;
+  routeTitle: string;
 };
 
-function formatDate(value: string | null): string | null {
-  if (!value) return null;
+type DeviceMode = "scanner" | "monitor" | null;
 
-  return new Date(value).toLocaleString("ja-JP", {
-    timeZone: "Asia/Tokyo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+/* ========================================
+   SETTINGS
+======================================== */
 
-export default function StaffTestRewardPage() {
+const MONITOR_STATION_ID = "main";
+const DEVICE_MODE_KEY = "pokipo_staff_reward_device_mode";
+
+/* ========================================
+   PAGE
+======================================== */
+
+export default function StaffRewardPage() {
   const router = useRouter();
 
-  const [loading, setLoading] = useState(true);
-  const [ready, setReady] = useState(false);
-  const [issuing, setIssuing] = useState(false);
-  const issuingRef = useRef(false);
+  /* LOGIN */
+  const [adminId, setAdminId] = useState("");
+  const [password, setPassword] = useState("");
+  const [authenticated, setAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [loginLoading, setLoginLoading] = useState(false);
 
-  const [stampCount, setStampCount] = useState(0);
-  const [surveyCompleted, setSurveyCompleted] =
-    useState(false);
-  const [completionRecorded, setCompletionRecorded] =
-    useState(false);
+  /* DEVICE MODE */
+  const [deviceMode, setDeviceMode] = useState<DeviceMode>(null);
+  const [deviceModeLoaded, setDeviceModeLoaded] = useState(false);
 
-  const [reward, setReward] = useState<RewardData>({
-    token: null,
-    confirmationCode: null,
-    status: "not_issued",
-    exchangedAt: null,
-  });
+  /* CAMERA */
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState("");
 
-  const [errorMessage, setErrorMessage] = useState("");
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scanningRef = useRef(false);
+  const processingRef = useRef(false);
+
+  /* MONITOR */
+  const monitorPresentationActiveRef = useRef(false);
+
+  /* REWARD */
+  const [reward, setReward] = useState<RewardExchange | null>(null);
+  const [participant, setParticipant] = useState<Participant | null>(
+    null
+  );
+  const [monitorProfile, setMonitorProfile] =
+    useState<MonitorProfile | null>(null);
+
+  const [loadingReward, setLoadingReward] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [message, setMessage] = useState("");
 
   /* ========================================
-     LOAD TEST DATA
+     AUTH CHECK
   ======================================== */
 
-  const loadRewardData = useCallback(async () => {
-    const session = await getPokipoTestSession();
-    const stamps = await getPokipoTestStamps();
-
-    const count = new Set(
-      stamps.map((stamp) => stamp.spot_id)
-    ).size;
-
-    setStampCount(count);
-    setSurveyCompleted(Boolean(session.post_survey));
-    setCompletionRecorded(Boolean(session.completed_at));
-
-    const status: PokipoRewardStatus =
-      session.reward_status === "issued" ||
-      session.reward_status === "exchanged"
-        ? session.reward_status
-        : "not_issued";
-
-    setReward({
-      token: session.reward_token,
-      confirmationCode: session.reward_confirmation_code,
-      status,
-      exchangedAt: session.reward_exchanged_at,
-    });
-
-    setReady(true);
-  }, []);
-
   useEffect(() => {
-    let active = true;
+    let mounted = true;
 
-    async function initialize() {
+    async function checkSession() {
       try {
-        await loadRewardData();
+        const { data, error } = await supabase.auth.getSession();
+
+        if (!mounted) return;
+
+        if (error) {
+          console.error("管理者認証確認エラー:", error);
+          setAuthenticated(false);
+          return;
+        }
+
+        setAuthenticated(Boolean(data.session));
       } catch (error) {
-        if (active) {
-          setReady(false);
-          setErrorMessage(
-            error instanceof Error
-              ? error.message
-              : "検証用特典情報を取得できませんでした。"
-          );
+        console.error("管理者認証通信エラー:", error);
+
+        if (mounted) {
+          setAuthenticated(false);
         }
       } finally {
-        if (active) setLoading(false);
+        if (mounted) {
+          setAuthLoading(false);
+        }
       }
     }
 
-    void initialize();
+    void checkSession();
+
+    const { data: authListener } =
+      supabase.auth.onAuthStateChange((_event, session) => {
+        if (!mounted) return;
+
+        setAuthenticated(Boolean(session));
+
+        if (!session) {
+          setDeviceMode(null);
+          setDeviceModeLoaded(false);
+        }
+      });
 
     return () => {
-      active = false;
+      mounted = false;
+      authListener.subscription.unsubscribe();
     };
-  }, [loadRewardData]);
+  }, []);
 
   /* ========================================
-     ISSUE TEST QR
+     DEVICE MODE LOAD
   ======================================== */
 
-  async function issueTestReward() {
-    if (issuingRef.current || !ready) return;
+  useEffect(() => {
+    if (!authenticated) {
+      setDeviceMode(null);
+      setDeviceModeLoaded(false);
+      return;
+    }
 
-    issuingRef.current = true;
-    setIssuing(true);
-    setErrorMessage("");
+    const savedMode = sessionStorage.getItem(DEVICE_MODE_KEY);
+
+    if (savedMode === "scanner") {
+      setDeviceMode("scanner");
+    } else if (savedMode === "monitor") {
+      setDeviceMode("monitor");
+      router.replace("/staff/reward/monitor");
+    } else {
+      setDeviceMode(null);
+    }
+
+    setDeviceModeLoaded(true);
+  }, [authenticated, router]);
+
+  /* ========================================
+     PAGE LEAVE SAFETY
+  ======================================== */
+
+  useEffect(() => {
+    function handlePageHide() {
+      if (monitorPresentationActiveRef.current) {
+        void setMonitorIdle();
+      }
+    }
+
+    window.addEventListener("pagehide", handlePageHide);
+
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+
+      if (monitorPresentationActiveRef.current) {
+        void setMonitorIdle();
+      }
+    };
+  }, []);
+
+  /* ========================================
+     LOGIN
+     ログイン成功後はスタッフメニューへ移動
+  ======================================== */
+
+  async function loginStaff() {
+    const normalizedAdminId = adminId.trim().toLowerCase();
+
+    if (!normalizedAdminId || !password) {
+      setMessage("管理IDとパスワードを入力してください。");
+      return;
+    }
+
+    const loginEmail = `${normalizedAdminId}@pokipo.staff`;
+
+    setLoginLoading(true);
+    setMessage("");
 
     try {
-      const staffId = await getVerifiedTestStaffId();
-      const session = await getPokipoTestSession();
-      const stamps = await getPokipoTestStamps();
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email: loginEmail,
+          password,
+        });
 
-      if (staffId !== session.staff_user_id) {
-        throw new Error(
-          "スタッフ情報が一致しません。"
+      if (error || !data.user) {
+        console.error("管理者ログインエラー:", error);
+
+        setMessage(
+          "管理IDまたはパスワードが正しくありません。"
         );
-      }
-
-      const count = new Set(
-        stamps.map((stamp) => stamp.spot_id)
-      ).size;
-
-      if (
-        count !== 5 ||
-        !session.completed_at ||
-        !session.post_survey
-      ) {
-        throw new Error(
-          "特典QRの発行には5か所の達成と参加後アンケートの回答が必要です。"
-        );
-      }
-
-      if (session.reward_status === "exchanged") {
-        throw new Error(
-          "交換済みです。やり直す場合は検証データをリセットしてください。"
-        );
-      }
-
-      if (session.reward_token) {
-        await loadRewardData();
         return;
       }
 
-      // 本番では使用しない検証専用トークン
-      const token = crypto.randomUUID();
+      /* 管理者権限の確認 */
+      const {
+        data: staffProfile,
+        error: profileError,
+      } = await supabase
+        .from("staff_profiles")
+        .select("user_id")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
 
-      const randomNumber = new Uint32Array(1);
-      crypto.getRandomValues(randomNumber);
+      if (profileError || !staffProfile) {
+        console.error(
+          "スタッフ権限確認エラー:",
+          profileError
+        );
 
-      const confirmationCode = String(
-        100000 + (randomNumber[0] % 900000)
+        await supabase.auth.signOut();
+
+        setAuthenticated(false);
+        setMessage(
+          "このアカウントには管理者権限がありません。"
+        );
+        return;
+      }
+
+      /*
+       * ログイン直後に以前の端末設定が残らないようにする。
+       * 景品交換の端末選択は、スタッフメニューから
+       * 景品交換を開いたときだけ表示する。
+       */
+      sessionStorage.removeItem(DEVICE_MODE_KEY);
+
+      setDeviceMode(null);
+      setDeviceModeLoaded(false);
+
+      setAuthenticated(true);
+      setPassword("");
+
+      /*
+       * ★今回の変更箇所
+       * ログイン成功後はスタッフメニューへ移動
+       */
+      router.replace("/staff");
+    } catch (error) {
+      console.error("管理者ログイン通信エラー:", error);
+
+      setMessage(
+        "通信中にエラーが発生しました。"
       );
+    } finally {
+      setLoginLoading(false);
+    }
+  }
 
-      // 更新するのは検証専用テーブルだけ
-      const { data, error } = await supabase
-        .from("pokipo_test_sessions")
-        .update({
-          reward_token: token,
-          reward_confirmation_code: confirmationCode,
-          reward_status: "issued",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("staff_user_id", staffId)
-        .eq("reward_status", "not_issued")
-        .is("reward_token", null)
-        .select("staff_user_id");
+  /* ========================================
+     LOGOUT
+  ======================================== */
+
+  async function logoutStaff() {
+    await stopQrScanner();
+    await clearPendingMonitorPresentation();
+
+    sessionStorage.removeItem(DEVICE_MODE_KEY);
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("ログアウトエラー:", error);
+      setMessage("ログアウトできませんでした。");
+      return;
+    }
+
+    setAuthenticated(false);
+    setDeviceMode(null);
+    setDeviceModeLoaded(false);
+
+    setReward(null);
+    setParticipant(null);
+    setMonitorProfile(null);
+    setMessage("");
+
+    router.replace("/staff/reward");
+  }
+
+  /* ========================================
+     SELECT SCANNER MODE
+  ======================================== */
+
+  function selectScannerMode() {
+    sessionStorage.setItem(DEVICE_MODE_KEY, "scanner");
+
+    setDeviceMode("scanner");
+    setMessage("");
+  }
+
+  /* ========================================
+     SELECT MONITOR MODE
+  ======================================== */
+
+  async function selectMonitorMode() {
+    sessionStorage.setItem(DEVICE_MODE_KEY, "monitor");
+
+    setDeviceMode("monitor");
+
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+    } catch (error) {
+      console.warn(
+        "全画面表示を開始できませんでした:",
+        error
+      );
+    }
+
+    router.push("/staff/reward/monitor");
+  }
+
+  /* ========================================
+     CHANGE DEVICE MODE
+  ======================================== */
+
+  async function changeDeviceMode() {
+    await stopQrScanner();
+    await clearPendingMonitorPresentation();
+
+    sessionStorage.removeItem(DEVICE_MODE_KEY);
+
+    setDeviceMode(null);
+    setReward(null);
+    setParticipant(null);
+    setMonitorProfile(null);
+
+    setMessage("");
+    setCameraError("");
+  }
+
+  /* ========================================
+     GO STAFF MENU
+  ======================================== */
+
+  async function goStaffMenu() {
+    await stopQrScanner();
+    await clearPendingMonitorPresentation();
+
+    router.push("/staff");
+  }
+
+  /* ========================================
+     MONITOR IDLE
+  ======================================== */
+
+  async function setMonitorIdle() {
+    monitorPresentationActiveRef.current = false;
+
+    try {
+      const { error } = await supabase
+        .from("reward_monitor_state")
+        .upsert(
+          {
+            station_id: MONITOR_STATION_ID,
+            state: "idle",
+            participant_id: null,
+            nickname: null,
+            achievement_rank: null,
+            route_type: null,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "station_id",
+          }
+        );
 
       if (error) {
-        throw new Error(
-          `検証用QR発行エラー: ${error.message}`
+        console.error(
+          "モニター待機状態更新エラー:",
+          error
         );
       }
-
-      if (!data || data.length === 0) {
-        const latest = await getPokipoTestSession();
-
-        if (!latest.reward_token) {
-          throw new Error(
-            "QRを発行できませんでした。"
-          );
-        }
-      }
-
-      await loadRewardData();
     } catch (error) {
       console.error(
-        "検証用特典QR発行エラー:",
+        "モニター待機状態通信エラー:",
+        error
+      );
+    }
+  }
+
+  /* ========================================
+     CLEAR PENDING PRESENTATION
+  ======================================== */
+
+  async function clearPendingMonitorPresentation() {
+    if (!monitorPresentationActiveRef.current) {
+      return;
+    }
+
+    await setMonitorIdle();
+  }
+
+  /* ========================================
+     MONITOR PRESENTED
+  ======================================== */
+
+  async function sendPresentedToMonitor(
+    participantData: Participant
+  ) {
+    let achievementRank: number | null = null;
+    let routeTitle = "自由気まま型";
+
+    /* ACHIEVEMENT RANK */
+    try {
+      const {
+        data: completionData,
+        error: completionError,
+      } = await supabase
+        .from("participant_completions")
+        .select("achievement_rank")
+        .eq("participant_id", participantData.id)
+        .maybeSingle();
+
+      if (completionError) {
+        console.error(
+          "達成順位取得エラー:",
+          completionError
+        );
+      } else if (completionData) {
+        const rawRank = completionData.achievement_rank;
+
+        if (rawRank !== null && rawRank !== undefined) {
+          const rank = Number(rawRank);
+
+          if (Number.isFinite(rank) && rank > 0) {
+            achievementRank = rank;
+          }
+        }
+      }
+    } catch (error) {
+      console.error(
+        "達成順位通信エラー:",
+        error
+      );
+    }
+
+    /* ROUTE TYPE */
+    try {
+      const {
+        data: routeData,
+        error: routeError,
+      } = await supabase.rpc("get_pokipo_route_type", {
+        p_participant_id: participantData.id,
+      });
+
+      if (routeError) {
+        console.error(
+          "ルート診断取得エラー:",
+          routeError
+        );
+      } else if (
+        Array.isArray(routeData) &&
+        routeData.length > 0
+      ) {
+        const firstRoute = routeData[0] as {
+          route_title?: string;
+        };
+
+        if (firstRoute.route_title) {
+          routeTitle = firstRoute.route_title;
+        }
+      }
+    } catch (error) {
+      console.error(
+        "ルート診断通信エラー:",
+        error
+      );
+    }
+
+    /* SEND */
+    try {
+      const { error } = await supabase
+        .from("reward_monitor_state")
+        .upsert(
+          {
+            station_id: MONITOR_STATION_ID,
+            state: "presented",
+            participant_id: participantData.id,
+            nickname: participantData.nickname,
+            achievement_rank: achievementRank,
+            route_type: routeTitle,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "station_id",
+          }
+        );
+
+      if (error) {
+        console.error(
+          "モニター表示送信エラー:",
+          error
+        );
+
+        setMonitorProfile(null);
+        monitorPresentationActiveRef.current = false;
+        return;
+      }
+
+      monitorPresentationActiveRef.current = true;
+
+      setMonitorProfile({
+        achievementRank,
+        routeTitle,
+      });
+    } catch (error) {
+      console.error(
+        "モニター表示通信エラー:",
         error
       );
 
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "検証用特典QRを発行できませんでした。"
-      );
-    } finally {
-      issuingRef.current = false;
-      setIssuing(false);
+      setMonitorProfile(null);
+      monitorPresentationActiveRef.current = false;
     }
   }
 
-  async function refreshReward() {
-    setErrorMessage("");
+  /* ========================================
+     MONITOR COMPLETED
+  ======================================== */
+
+  async function sendCompletedToMonitor() {
+    if (!participant) {
+      return;
+    }
 
     try {
-      await loadRewardData();
+      const { error } = await supabase
+        .from("reward_monitor_state")
+        .upsert(
+          {
+            station_id: MONITOR_STATION_ID,
+            state: "completed",
+            participant_id: participant.id,
+            nickname: participant.nickname,
+            achievement_rank:
+              monitorProfile?.achievementRank ?? null,
+            route_type:
+              monitorProfile?.routeTitle ?? "自由気まま型",
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: "station_id",
+          }
+        );
+
+      if (error) {
+        console.error(
+          "モニター完了表示送信エラー:",
+          error
+        );
+        return;
+      }
+
+      /*
+       * 交換完了後はQR端末がidleへ戻さない。
+       * モニター側で10秒後に自動的にidleへ戻す。
+       */
+      monitorPresentationActiveRef.current = false;
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "交換状態を更新できませんでした。"
+      console.error(
+        "モニター完了表示通信エラー:",
+        error
       );
     }
   }
 
   /* ========================================
-     STATUS
+     CAMERA START
   ======================================== */
 
-  const eligible =
-    ready &&
-    stampCount === 5 &&
-    surveyCompleted &&
-    completionRecorded;
+  useEffect(() => {
+    if (
+      !cameraOpen ||
+      !authenticated ||
+      deviceMode !== "scanner"
+    ) {
+      return;
+    }
 
-  const issued =
-    reward.status === "issued" &&
-    Boolean(reward.token);
+    let cancelled = false;
 
-  const exchanged =
-    reward.status === "exchanged";
+    async function startCamera() {
+      const readerElement = document.getElementById(
+        "staff-reward-qr-reader"
+      );
+
+      if (!readerElement) {
+        setCameraError(
+          "QR読み取りエリアを表示できませんでした。"
+        );
+        setCameraOpen(false);
+        return;
+      }
+
+      try {
+        const scanner = new Html5Qrcode(
+          "staff-reward-qr-reader"
+        );
+
+        scannerRef.current = scanner;
+        scanningRef.current = true;
+        processingRef.current = false;
+
+        await scanner.start(
+          {
+            facingMode: "environment",
+          },
+          {
+            fps: 10,
+            qrbox: {
+              width: 240,
+              height: 240,
+            },
+          },
+          async (decodedText) => {
+            if (
+              cancelled ||
+              processingRef.current
+            ) {
+              return;
+            }
+
+            processingRef.current = true;
+
+            const qrValue = decodedText.trim();
+
+            await stopQrScanner();
+            await readRewardQr(qrValue);
+          },
+          () => {
+            // QR探索中のエラーは無視
+          }
+        );
+
+        if (cancelled) {
+          await stopQrScanner();
+        }
+      } catch (error) {
+        console.error(
+          "管理者QRカメラエラー:",
+          error
+        );
+
+        scannerRef.current = null;
+        scanningRef.current = false;
+        processingRef.current = false;
+
+        setCameraOpen(false);
+        setCameraError(
+          "カメラを起動できませんでした。ブラウザのカメラ使用を許可してください。"
+        );
+      }
+    }
+
+    void startCamera();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cameraOpen, authenticated, deviceMode]);
 
   /* ========================================
-     VIEW
+     START SCANNER
   ======================================== */
 
-  if (loading) {
+  function startQrScanner() {
+    setReward(null);
+    setParticipant(null);
+    setMonitorProfile(null);
+
+    setMessage("");
+    setCameraError("");
+
+    processingRef.current = false;
+    setCameraOpen(true);
+  }
+
+  /* ========================================
+     STOP SCANNER
+  ======================================== */
+
+  async function stopQrScanner() {
+    const scanner = scannerRef.current;
+    scannerRef.current = null;
+
+    if (!scanner) {
+      scanningRef.current = false;
+      setCameraOpen(false);
+      return;
+    }
+
+    try {
+      if (scanningRef.current) {
+        await scanner.stop();
+      }
+
+      scanner.clear();
+    } catch (error) {
+      console.error(
+        "管理者QR停止エラー:",
+        error
+      );
+    } finally {
+      scanningRef.current = false;
+      processingRef.current = false;
+      setCameraOpen(false);
+    }
+  }
+
+  /* ========================================
+     READ QR
+  ======================================== */
+
+  async function readRewardQr(qrValue: string) {
+    const prefix = "POKIPO_REWARD:";
+
+    if (!qrValue.startsWith(prefix)) {
+      setMessage(
+        "POKIPOの特典交換QRではありません。"
+      );
+      return;
+    }
+
+    const token = qrValue.slice(prefix.length);
+
+    if (!token) {
+      setMessage(
+        "QRコードの情報を確認できませんでした。"
+      );
+      return;
+    }
+
+    setLoadingReward(true);
+    setMessage("");
+
+    try {
+      const {
+        data: rewardData,
+        error: rewardError,
+      } = await supabase
+        .from("reward_exchanges")
+        .select(`
+          id,
+          participant_id,
+          confirmation_code,
+          exchange_token,
+          status,
+          created_at,
+          exchanged_at,
+          exchanged_by
+        `)
+        .eq("exchange_token", token)
+        .single();
+
+      if (rewardError || !rewardData) {
+        console.error(
+          "交換QR検索エラー:",
+          rewardError
+        );
+
+        setMessage(
+          "この交換用QRを確認できませんでした。"
+        );
+        return;
+      }
+
+      const {
+        data: participantData,
+        error: participantError,
+      } = await supabase
+        .from("participants")
+        .select(`
+          id,
+          nickname,
+          grade,
+          department,
+          created_at
+        `)
+        .eq("id", rewardData.participant_id)
+        .single();
+
+      if (participantError || !participantData) {
+        console.error(
+          "参加者検索エラー:",
+          participantError
+        );
+
+        setMessage(
+          "参加者情報を確認できませんでした。"
+        );
+        return;
+      }
+
+      const typedReward = rewardData as RewardExchange;
+      const typedParticipant = participantData as Participant;
+
+      setReward(typedReward);
+      setParticipant(typedParticipant);
+
+      if (typedReward.status !== "exchanged") {
+        await sendPresentedToMonitor(
+          typedParticipant
+        );
+      }
+    } catch (error) {
+      console.error("QR確認エラー:", error);
+
+      setMessage(
+        "通信中にエラーが発生しました。"
+      );
+    } finally {
+      setLoadingReward(false);
+    }
+  }
+
+  /* ========================================
+     CONFIRM
+  ======================================== */
+
+  function confirmExchange() {
+    if (!reward || !participant) {
+      return;
+    }
+
+    if (reward.status === "exchanged") {
+      setMessage(
+        "このQRはすでに景品交換済みです。"
+      );
+      return;
+    }
+
+    void performExchange();
+  }
+
+  /* ========================================
+     EXCHANGE
+  ======================================== */
+
+  async function performExchange() {
+    if (!reward || !participant || confirming) {
+      return;
+    }
+
+    if (reward.status === "exchanged") {
+      setMessage(
+        "このQRはすでに景品交換済みです。"
+      );
+      return;
+    }
+
+    setConfirming(true);
+    setMessage("");
+
+    try {
+      const { data: userData } =
+        await supabase.auth.getUser();
+
+      const adminUserId = userData.user?.id ?? null;
+      const exchangedAt = new Date().toISOString();
+
+      const {
+        data: updatedData,
+        error,
+      } = await supabase
+        .from("reward_exchanges")
+        .update({
+          status: "exchanged",
+          exchanged_at: exchangedAt,
+          exchanged_by: adminUserId,
+        })
+        .eq("id", reward.id)
+        .eq("status", "issued")
+        .select("id");
+
+      if (error) {
+        console.error(
+          "景品交換更新エラー:",
+          error
+        );
+
+        setMessage(
+          "景品交換を記録できませんでした。"
+        );
+        return;
+      }
+
+      if (!updatedData || updatedData.length === 0) {
+        setMessage(
+          "このQRはすでに交換処理されています。"
+        );
+
+        setReward({
+          ...reward,
+          status: "exchanged",
+        });
+        return;
+      }
+
+      setReward({
+        ...reward,
+        status: "exchanged",
+        exchanged_at: exchangedAt,
+        exchanged_by: adminUserId,
+      });
+
+      await sendCompletedToMonitor();
+
+      setMessage(
+        `${participant.nickname}さんの景品交換を記録しました。`
+      );
+    } catch (error) {
+      console.error(
+        "景品交換エラー:",
+        error
+      );
+
+      setMessage(
+        "通信中にエラーが発生しました。"
+      );
+    } finally {
+      setConfirming(false);
+    }
+  }
+
+  /* ========================================
+     RESET SCANNER
+  ======================================== */
+
+  async function resetScanner() {
+    /*
+     * 未交換なら presented → idle
+     * 交換済みなら completed を維持し、
+     * モニター側の10秒タイマーに任せる。
+     */
+    if (reward?.status !== "exchanged") {
+      await clearPendingMonitorPresentation();
+    }
+
+    setReward(null);
+    setParticipant(null);
+    setMonitorProfile(null);
+
+    setMessage("");
+    setCameraError("");
+
+    startQrScanner();
+  }
+
+  /* ========================================
+     DATE FORMAT
+  ======================================== */
+
+  function formatExchangeDate(value: string | null) {
+    if (!value) {
+      return "交換日時不明";
+    }
+
+    return new Date(value).toLocaleString(
+      "ja-JP",
+      {
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }
+    );
+  }
+
+  /* ========================================
+     LOADING
+  ======================================== */
+
+  if (authLoading) {
     return (
       <main className="shell">
-        <section style={{ padding: 30 }}>
-          検証用特典データを読み込み中...
+        <section className="staffRewardPage">
+          <div className="staffLoadingCard">
+            管理者情報を確認中...
+          </div>
         </section>
       </main>
     );
   }
 
-  return (
-    <main className="shell">
-      <section
-        style={{
-          maxWidth: 720,
-          margin: "0 auto",
-          padding: "24px 0 60px",
-        }}
-      >
-        <header style={{ marginBottom: 20 }}>
-          <span
-            style={{
-              color: "#bd2838",
-              fontSize: 12,
-              fontWeight: 800,
-            }}
-          >
-            POKIPO STAFF TEST
-          </span>
+  /* ========================================
+     LOGIN VIEW
+  ======================================== */
 
-          <h1 style={{ margin: "10px 0" }}>
-            特典交換の動作確認
-          </h1>
+  if (!authenticated) {
+    return (
+      <main className="shell">
+        <section className="staffRewardPage">
+          <div className="staffLoginCard">
+            <span>POKIPO STAFF</span>
 
-          <p style={{ lineHeight: 1.8 }}>
-            本番と共通の特典交換画面を使って
-            動作を確認します。
-          </p>
-        </header>
-
-        <section
-          style={{
-            ...cardStyle,
-            background: "#fff4e9",
-            borderColor: "#efc89b",
-          }}
-        >
-          <strong>検証専用モード</strong>
-
-          <p style={{ lineHeight: 1.8, marginBottom: 0 }}>
-            この画面のQRコードは本番の景品交換には
-            使用できません。交換履歴や会場モニターにも
-            反映されません。
-          </p>
-        </section>
-
-        {ready && (
-          <section style={cardStyle}>
-            <span
-              style={{
-                fontSize: 12,
-                color: "#777",
-                fontWeight: 800,
-              }}
-            >
-              TEST REWARD STATUS
-            </span>
-
-            <h2 style={{ fontSize: 20 }}>
-              特典交換条件
-            </h2>
+            <h1>管理者ログイン</h1>
 
             <p>
-              スタンプ：
-              <strong>{stampCount} / 5</strong>
+              POKIPO運営管理者専用ページです。
             </p>
 
-            <p>
-              参加後アンケート：
-              <strong>
-                {surveyCompleted
-                  ? "回答済み"
-                  : "未回答"}
-              </strong>
-            </p>
+            <div className="staffLoginField">
+              <label htmlFor="adminId">
+                管理ID
+              </label>
 
-            <p>
-              完走記録：
-              <strong>
-                {completionRecorded
-                  ? "記録済み"
-                  : "未記録"}
-              </strong>
-            </p>
+              <input
+                id="adminId"
+                type="text"
+                value={adminId}
+                onChange={(event) =>
+                  setAdminId(event.target.value)
+                }
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="管理IDを入力"
+              />
+            </div>
 
-            <p>
-              特典QR：
-              <strong>
-                {exchanged
-                  ? "交換済み"
-                  : issued
-                  ? "発行済み"
-                  : "未発行"}
-              </strong>
-            </p>
-          </section>
-        )}
+            <div className="staffLoginField">
+              <label htmlFor="staffPassword">
+                パスワード
+              </label>
 
-        {errorMessage && (
-          <section
-            role="alert"
-            style={{
-              ...cardStyle,
-              borderColor: "#d84949",
-              color: "#a52a2a",
-            }}
-          >
-            {errorMessage}
-          </section>
-        )}
-
-        {ready &&
-          !reward.token &&
-          !exchanged && (
-            <section style={cardStyle}>
-              <h2 style={{ fontSize: 20 }}>
-                特典QRコードを発行する
-              </h2>
-
-              {!eligible && (
-                <p style={{ lineHeight: 1.8 }}>
-                  5か所のスタンプと参加後アンケートを
-                  完了すると発行できます。
-                </p>
-              )}
-
-              <button
-                type="button"
-                style={{
-                  ...buttonStyle,
-                  opacity: eligible ? 1 : 0.45,
+              <input
+                id="staffPassword"
+                type="password"
+                value={password}
+                onChange={(event) =>
+                  setPassword(event.target.value)
+                }
+                autoComplete="current-password"
+                placeholder="パスワードを入力"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    void loginStaff();
+                  }
                 }}
-                disabled={!eligible || issuing}
-                onClick={() => void issueTestReward()}
-              >
-                {issuing
-                  ? "発行中..."
-                  : "検証用特典QRを発行する"}
-              </button>
-            </section>
-          )}
-
-        {/* 本番と共通のQR・交換済み表示 */}
-        {ready && (issued || exchanged) && (
-          <section>
-            <PokipoRewardQrPanel
-              mode="test"
-              status={reward.status}
-              token={reward.token}
-              confirmationCode={reward.confirmationCode}
-              exchangedAt={formatDate(reward.exchangedAt)}
-            />
+              />
+            </div>
 
             <button
               type="button"
-              style={{
-                ...buttonStyle,
-                background: "#ffffff",
-                color: "#333333",
-                border: "1px solid #ded8d1",
-                marginBottom: 16,
-              }}
-              onClick={() => void refreshReward()}
-              disabled={issuing}
+              className="staffLoginButton"
+              onClick={() => void loginStaff()}
+              disabled={loginLoading}
             >
-              交換状態を更新
+              {loginLoading
+                ? "ログイン中..."
+                : "管理者ログイン"}
             </button>
+
+            {message && (
+              <p className="staffError">
+                {message}
+              </p>
+            )}
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  /* ========================================
+     DEVICE MODE LOADING
+  ======================================== */
+
+  if (authenticated && !deviceModeLoaded) {
+    return (
+      <main className="shell">
+        <section className="staffRewardPage">
+          <div className="staffLoadingCard">
+            端末設定を確認中...
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  /* ========================================
+     DEVICE MODE SELECT
+  ======================================== */
+
+  if (authenticated && !deviceMode) {
+    return (
+      <main className="shell">
+        <section className="staffRewardPage">
+          <div className="staffDeviceModePage">
+            <header className="staffDeviceModeHeader">
+              <span>
+                POKIPO REWARD STATION
+              </span>
+
+              <h1>
+                この端末の役割を
+                <br />
+                選択してください
+              </h1>
+
+              <p>
+                特典交換会で使用する端末ごとに、
+                QR読み取り用またはモニター用を設定します。
+              </p>
+            </header>
+
+            <div className="staffDeviceModeGrid">
+              <button
+                type="button"
+                className="staffDeviceModeCard scanner"
+                onClick={selectScannerMode}
+              >
+                <div className="staffDeviceModeIcon">
+                  QR
+                </div>
+
+                <div className="staffDeviceModeBody">
+                  <span>
+                    SCANNER
+                  </span>
+
+                  <h2>
+                    QR読み取り端末
+                  </h2>
+
+                  <p>
+                    参加者の特典交換QRを読み取り、
+                    確認番号の確認と景品交換処理を行います。
+                  </p>
+
+                  <div className="staffDeviceModeFeature">
+                    <span>
+                      ✓ QR読み取り
+                    </span>
+
+                    <span>
+                      ✓ 参加者確認
+                    </span>
+
+                    <span>
+                      ✓ 景品交換確定
+                    </span>
+                  </div>
+                </div>
+
+                <div className="staffDeviceModeArrow">
+                  →
+                </div>
+              </button>
+
+              <button
+                type="button"
+                className="staffDeviceModeCard monitor"
+                onClick={() =>
+                  void selectMonitorMode()
+                }
+              >
+                <div className="staffDeviceModeIcon">
+                  TV
+                </div>
+
+                <div className="staffDeviceModeBody">
+                  <span>
+                    MONITOR
+                  </span>
+
+                  <h2>
+                    モニター端末
+                  </h2>
+
+                  <p>
+                    QR読み取り端末と連携し、
+                    ゴール順位・回った順番・
+                    POKIPOタイプ・お礼画面を表示します。
+                  </p>
+
+                  <div className="staffDeviceModeFeature">
+                    <span>
+                      ✓ 待機画面
+                    </span>
+
+                    <span>
+                      ✓ ゴール演出
+                    </span>
+
+                    <span>
+                      ✓ YOUR ROUTE
+                    </span>
+
+                    <span>
+                      ✓ THANK YOU画面
+                    </span>
+                  </div>
+                </div>
+
+                <div className="staffDeviceModeArrow">
+                  →
+                </div>
+              </button>
+            </div>
+
+            <section className="staffDeviceModeNote">
+              <strong>
+                複数端末で使用できます
+              </strong>
+
+              <p>
+                スマートフォンをQR読み取り端末、
+                テレビに接続したPCをモニター端末として
+                同時に使用できます。
+              </p>
+            </section>
+
+            <button
+              type="button"
+              className="staffDeviceModeBack"
+              onClick={() => router.push("/staff")}
+            >
+              スタッフメニューへ戻る
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  /* ========================================
+     MONITOR TRANSITION
+  ======================================== */
+
+  if (deviceMode === "monitor") {
+    return (
+      <main className="shell">
+        <section className="staffRewardPage">
+          <div className="staffLoadingCard">
+            モニターモードへ移動中...
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  /* ========================================
+     SCANNER VIEW
+  ======================================== */
+
+  return (
+    <main className="shell">
+      <section className="staffRewardPage">
+        <header className="staffRewardHeader">
+          <div>
+            <span>
+              POKIPO STAFF
+            </span>
+
+            <h1>
+              景品交換
+            </h1>
+          </div>
+
+          <div className="staffRewardHeaderActions">
+            <button
+              type="button"
+              onClick={() => void changeDeviceMode()}
+            >
+              端末設定
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void goStaffMenu()}
+            >
+              メニュー
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void logoutStaff()}
+            >
+              ログアウト
+            </button>
+          </div>
+        </header>
+
+        {/* QUICK NAV */}
+        <section className="staffRewardQuickNav">
+          <button
+            type="button"
+            onClick={async () => {
+              await clearPendingMonitorPresentation();
+              router.push("/staff/dashboard");
+            }}
+          >
+            <span>
+              LIVE
+            </span>
+
+            <strong>
+              管理ダッシュボード
+            </strong>
+          </button>
+
+          <button
+            type="button"
+            onClick={async () => {
+              await clearPendingMonitorPresentation();
+              router.push("/staff/reward/history");
+            }}
+          >
+            <span>
+              LOG
+            </span>
+
+            <strong>
+              交換履歴
+            </strong>
+          </button>
+        </section>
+
+        {/* QR SCANNER */}
+        {!reward && !participant && (
+          <section className="staffScannerCard">
+            <div className="staffScannerIcon">
+              QR
+            </div>
+
+            <span>
+              REWARD SCANNER
+            </span>
+
+            <h2>
+              参加者のQRを読み取る
+            </h2>
+
+            <p>
+              参加者の特典交換画面に表示されている
+              QRコードを読み取ってください。
+            </p>
+
+            {!cameraOpen ? (
+              <button
+                type="button"
+                className="staffScannerButton"
+                onClick={startQrScanner}
+              >
+                QRカメラを起動
+              </button>
+            ) : (
+              <>
+                <div
+                  id="staff-reward-qr-reader"
+                  className="staffQrReader"
+                />
+
+                <button
+                  type="button"
+                  className="staffScannerCancel"
+                  onClick={() => void stopQrScanner()}
+                >
+                  カメラを閉じる
+                </button>
+              </>
+            )}
+
+            {cameraError && (
+              <p className="staffError">
+                {cameraError}
+              </p>
+            )}
+
+            {message && (
+              <p className="staffError">
+                {message}
+              </p>
+            )}
+
+            {loadingReward && (
+              <p className="staffLoadingText">
+                QR情報を確認中...
+              </p>
+            )}
           </section>
         )}
 
-        <button
-          type="button"
-          style={{
-            ...buttonStyle,
-            background: "#ffffff",
-            color: "#333333",
-            border: "1px solid #ded8d1",
-          }}
-          onClick={() => router.push("/staff/test")}
-          disabled={issuing}
-        >
-          動作確認メニューへ戻る
-        </button>
+        {/* PARTICIPANT */}
+        {reward && participant && (
+          <section className="staffParticipantCard">
+            <div
+              className={
+                reward.status === "exchanged"
+                  ? "staffExchangeStatus exchanged"
+                  : "staffExchangeStatus ready"
+              }
+            >
+              {reward.status === "exchanged"
+                ? "交換済み"
+                : "交換可能"}
+            </div>
+
+            <span className="staffParticipantEyebrow">
+              PARTICIPANT
+            </span>
+
+            <h2>
+              {participant.nickname}
+              <small>さん</small>
+            </h2>
+
+            {monitorProfile &&
+              reward.status !== "exchanged" && (
+                <div className="staffMonitorInfo">
+                  <span>
+                    MONITOR DISPLAY
+                  </span>
+
+                  <p>
+                    モニターに送信済み
+                  </p>
+
+                  <strong>
+                    {monitorProfile.achievementRank !== null
+                      ? `${monitorProfile.achievementRank}番目のゴール`
+                      : "達成順位確認中"}
+                  </strong>
+
+                  <strong>
+                    {monitorProfile.routeTitle}
+                  </strong>
+                </div>
+              )}
+
+            <div className="staffConfirmationCode">
+              <span>
+                CONFIRMATION NUMBER
+              </span>
+
+              <small>
+                確認番号
+              </small>
+
+              <strong>
+                {reward.confirmation_code}
+              </strong>
+            </div>
+
+            <div className="staffParticipantInfo">
+              <div>
+                <span>
+                  学年
+                </span>
+
+                <strong>
+                  {participant.grade ?? "未設定"}
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  学科
+                </span>
+
+                <strong>
+                  {participant.department ?? "未設定"}
+                </strong>
+              </div>
+            </div>
+
+            {reward.status === "exchanged" ? (
+              <div className="staffAlreadyExchanged">
+                <div>
+                  ✓
+                </div>
+
+                <span>
+                  REWARD EXCHANGED
+                </span>
+
+                <h3>
+                  このQRは交換済みです
+                </h3>
+
+                {reward.exchanged_at && (
+                  <p>
+                    交換日時：
+                    {formatExchangeDate(
+                      reward.exchanged_at
+                    )}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="staffExchangeConfirm">
+                <p>
+                  参加者画面に表示されている
+                  確認番号と一致していることを確認し、
+                  景品を渡す直前に交換を確定してください。
+                </p>
+
+                <button
+                  type="button"
+                  onClick={confirmExchange}
+                  disabled={confirming}
+                >
+                  {confirming
+                    ? "交換を記録中..."
+                    : "景品交換を確定する"}
+                </button>
+              </div>
+            )}
+
+            <button
+              type="button"
+              className="staffNextScanButton"
+              onClick={() => void resetScanner()}
+            >
+              次のQRを読み取る
+            </button>
+
+            {message && (
+              <p className="staffMessage">
+                {message}
+              </p>
+            )}
+          </section>
+        )}
       </section>
     </main>
   );
