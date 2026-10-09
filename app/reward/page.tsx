@@ -1,29 +1,12 @@
+
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
-import {
-  useRouter,
-} from "next/navigation";
-
-import {
-  toPng,
-} from "html-to-image";
-
-import {
-  QRCodeSVG,
-} from "qrcode.react";
-
-import {
-  supabase,
-} from "../../lib/supabase-client";
-
-import MaintenanceGate
-  from "../../components/MaintenanceGate";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toPng } from "html-to-image";
+import { QRCodeSVG } from "qrcode.react";
+import { supabase } from "../../lib/supabase-client";
+import MaintenanceGate from "../../components/MaintenanceGate";
 
 /* ========================================
    KNOWLEDGE
@@ -33,32 +16,27 @@ const knowledgeItems = [
   {
     id: "knowledge1",
     number: 1,
-    title:
-      "10年ぶりの大改良！素材から見直した「究極の品質」",
+    title: "10年ぶりの大改良！素材から見直した「究極の品質」",
   },
   {
     id: "knowledge2",
     number: 2,
-    title:
-      "名前にも込められたポッキーらしさ",
+    title: "名前にも込められたポッキーらしさ",
   },
   {
     id: "knowledge3",
     number: 3,
-    title:
-      "心の距離をぐっと縮める「コミュニケーションツール」",
+    title: "心の距離をぐっと縮める「コミュニケーションツール」",
   },
   {
     id: "knowledge4",
     number: 4,
-    title:
-      "誰も取り残さない「シェアハピネス」の精神",
+    title: "誰も取り残さない「シェアハピネス」の精神",
   },
   {
     id: "knowledge5",
     number: 5,
-    title:
-      "獨協生の誇り！5年連続日本一を支える「圧倒的な団結力」",
+    title: "獨協生の誇り！5年連続日本一を支える「圧倒的な団結力」",
   },
 ];
 
@@ -75,9 +53,7 @@ type RewardStatusRow = {
 
 type CompletionRow = {
   completed_at: string;
-  achievement_rank:
-    | number
-    | null;
+  achievement_rank: number | null;
 };
 
 type IssuedRewardRow = {
@@ -90,172 +66,63 @@ type IssuedRewardRow = {
 ======================================== */
 
 export default function RewardPage() {
-  const router =
-    useRouter();
+  const router = useRouter();
 
-  const certificateRef =
-    useRef<HTMLDivElement | null>(
-      null
-    );
+  const certificateRef = useRef<HTMLDivElement | null>(null);
+  const issuingRef = useRef(false);
+  const rewardStatusCheckingRef = useRef(false);
+  const rewardExchangedRef = useRef(false);
 
-  const issuingRef =
-    useRef(false);
+  /* USER */
+  const [nickname, setNickname] = useState("");
+  const [grade, setGrade] = useState("");
+  const [department, setDepartment] = useState("");
+  const [participantId, setParticipantId] = useState("");
 
-  /* ========================================
-     USER
-  ======================================== */
+  /* PROGRESS */
+  const [progress, setProgress] = useState(0);
 
-  const [
-    nickname,
-    setNickname,
-  ] = useState("");
+  /* SURVEY */
+  const [postSurveyCompleted, setPostSurveyCompleted] =
+    useState(false);
+  const [loadingPostSurvey, setLoadingPostSurvey] =
+    useState(true);
 
-  const [
-    grade,
-    setGrade,
-  ] = useState("");
+  /* REWARD */
+  const [rewardExchanged, setRewardExchanged] =
+    useState(false);
+  const [rewardExchangedAt, setRewardExchangedAt] =
+    useState("");
+  const [confirmationCode, setConfirmationCode] =
+    useState("");
+  const [rewardToken, setRewardToken] = useState("");
+  const [rewardQrIssued, setRewardQrIssued] =
+    useState(false);
+  const [issuingRewardQr, setIssuingRewardQr] =
+    useState(false);
+  const [loadingRewardStatus, setLoadingRewardStatus] =
+    useState(true);
 
-  const [
-    department,
-    setDepartment,
-  ] = useState("");
+  /* COMPLETION */
+  const [completedAt, setCompletedAt] = useState("");
+  const [achievementRank, setAchievementRank] =
+    useState<number | null>(null);
+  const [loadingCompletion, setLoadingCompletion] =
+    useState(true);
 
-  const [
-    participantId,
-    setParticipantId,
-  ] = useState("");
+  /* SECRET */
+  const [secretStamp, setSecretStamp] = useState(false);
 
-  /* ========================================
-     PROGRESS
-  ======================================== */
+  /* CERTIFICATE */
+  const [showNickname, setShowNickname] = useState(true);
+  const [showGrade, setShowGrade] = useState(false);
+  const [showDepartment, setShowDepartment] = useState(false);
+  const [selectedKnowledgeId, setSelectedKnowledgeId] =
+    useState("knowledge1");
+  const [creatingImage, setCreatingImage] = useState(false);
 
-  const [
-    progress,
-    setProgress,
-  ] = useState(0);
-
-  /* ========================================
-     SURVEY
-  ======================================== */
-
-  const [
-    postSurveyCompleted,
-    setPostSurveyCompleted,
-  ] = useState(false);
-
-  const [
-    loadingPostSurvey,
-    setLoadingPostSurvey,
-  ] = useState(true);
-
-  /* ========================================
-     REWARD
-  ======================================== */
-
-  const [
-    rewardExchanged,
-    setRewardExchanged,
-  ] = useState(false);
-
-  const [
-    rewardExchangedAt,
-    setRewardExchangedAt,
-  ] = useState("");
-
-  const [
-    confirmationCode,
-    setConfirmationCode,
-  ] = useState("");
-
-  const [
-    rewardToken,
-    setRewardToken,
-  ] = useState("");
-
-  const [
-    rewardQrIssued,
-    setRewardQrIssued,
-  ] = useState(false);
-
-  const [
-    issuingRewardQr,
-    setIssuingRewardQr,
-  ] = useState(false);
-
-  const [
-    loadingRewardStatus,
-    setLoadingRewardStatus,
-  ] = useState(true);
-
-  /* ========================================
-     COMPLETION
-  ======================================== */
-
-  const [
-    completedAt,
-    setCompletedAt,
-  ] = useState("");
-
-  const [
-    achievementRank,
-    setAchievementRank,
-  ] = useState<number | null>(
-    null
-  );
-
-  const [
-    loadingCompletion,
-    setLoadingCompletion,
-  ] = useState(true);
-
-  /* ========================================
-     SECRET
-  ======================================== */
-
-  const [
-    secretStamp,
-    setSecretStamp,
-  ] = useState(false);
-
-  /* ========================================
-     CERTIFICATE
-  ======================================== */
-
-  const [
-    showNickname,
-    setShowNickname,
-  ] = useState(true);
-
-  const [
-    showGrade,
-    setShowGrade,
-  ] = useState(false);
-
-  const [
-    showDepartment,
-    setShowDepartment,
-  ] = useState(false);
-
-  const [
-    selectedKnowledgeId,
-    setSelectedKnowledgeId,
-  ] = useState(
-    "knowledge1"
-  );
-
-  const [
-    creatingImage,
-    setCreatingImage,
-  ] = useState(false);
-
-  /* ========================================
-     MESSAGE
-  ======================================== */
-
-  const [
-    message,
-    setMessage,
-  ] = useState("");
+  /* MESSAGE */
+  const [message, setMessage] = useState("");
 
   /* ========================================
      HELPERS
@@ -263,36 +130,21 @@ export default function RewardPage() {
 
   function getCurrentParticipantId() {
     return (
-      localStorage.getItem(
-        "pokipo_participant_id"
-      ) ??
-      localStorage.getItem(
-        "pokipo_user_id"
-      ) ??
+      localStorage.getItem("pokipo_participant_id") ??
+      localStorage.getItem("pokipo_user_id") ??
       ""
     );
   }
 
-  function formatDateTime(
-    value: string
-  ) {
-    const date =
-      new Date(value);
+  function formatDateTime(value: string) {
+    const date = new Date(value);
 
     return (
       `${date.getFullYear()}/` +
-      `${String(
-        date.getMonth() + 1
-      ).padStart(2, "0")}/` +
-      `${String(
-        date.getDate()
-      ).padStart(2, "0")} ` +
-      `${String(
-        date.getHours()
-      ).padStart(2, "0")}:` +
-      `${String(
-        date.getMinutes()
-      ).padStart(2, "0")}`
+      `${String(date.getMonth() + 1).padStart(2, "0")}/` +
+      `${String(date.getDate()).padStart(2, "0")} ` +
+      `${String(date.getHours()).padStart(2, "0")}:` +
+      `${String(date.getMinutes()).padStart(2, "0")}`
     );
   }
 
@@ -302,59 +154,32 @@ export default function RewardPage() {
 
   useEffect(() => {
     const savedNickname =
-      localStorage.getItem(
-        "pokipo_nickname"
-      ) ?? "";
+      localStorage.getItem("pokipo_nickname") ?? "";
 
     const savedGrade =
-      localStorage.getItem(
-        "pokipo_grade"
-      ) ?? "";
+      localStorage.getItem("pokipo_grade") ?? "";
 
     const savedDepartment =
-      localStorage.getItem(
-        "pokipo_department"
-      ) ?? "";
+      localStorage.getItem("pokipo_department") ?? "";
 
-    const savedParticipantId =
-      getCurrentParticipantId();
+    const savedParticipantId = getCurrentParticipantId();
 
-    const savedProgress =
-      Number(
-        localStorage.getItem(
-          "pokipo_progress"
-        ) ?? "0"
-      );
-
-    const savedReward =
-      localStorage.getItem(
-        "pokipo_reward_exchanged"
-      ) === "true";
-
-    const savedRewardExchangedAt =
-      localStorage.getItem(
-        "pokipo_reward_exchanged_at"
-      ) ?? "";
+    const savedProgress = Number(
+      localStorage.getItem("pokipo_progress") ?? "0"
+    );
 
     const savedCompletedAt =
-      localStorage.getItem(
-        "pokipo_completed_at"
-      ) ?? "";
+      localStorage.getItem("pokipo_completed_at") ?? "";
 
     const savedRank =
-      localStorage.getItem(
-        "pokipo_achievement_rank"
-      );
+      localStorage.getItem("pokipo_achievement_rank");
 
     const savedSecret =
-      localStorage.getItem(
-        "pokipo_secret_yuhisai"
-      ) === "true";
+      localStorage.getItem("pokipo_secret_yuhisai") ===
+      "true";
 
     const savedKnowledge =
-      localStorage.getItem(
-        "pokipo_certificate_knowledge"
-      );
+      localStorage.getItem("pokipo_certificate_knowledge");
 
     const savedPostSurvey =
       localStorage.getItem(
@@ -367,111 +192,64 @@ export default function RewardPage() {
       ) ?? "";
 
     const savedRewardToken =
-      localStorage.getItem(
-        "pokipo_reward_token"
-      ) ?? "";
+      localStorage.getItem("pokipo_reward_token") ?? "";
 
-    setNickname(
-      savedNickname
-    );
-
-    setGrade(
-      savedGrade
-    );
-
-    setDepartment(
-      savedDepartment
-    );
-
-    setParticipantId(
-      savedParticipantId
-    );
+    setNickname(savedNickname);
+    setGrade(savedGrade);
+    setDepartment(savedDepartment);
+    setParticipantId(savedParticipantId);
 
     setProgress(
       Math.min(
         Math.max(
-          savedProgress,
+          Number.isFinite(savedProgress)
+            ? savedProgress
+            : 0,
           0
         ),
         5
       )
     );
 
-    setRewardExchanged(
-      savedReward
+    /*
+     * 交換済みのローカル保存情報は
+     * 正しい交換状況とみなさない。
+     *
+     * Supabaseから最新状態を取得して
+     * 交換済みか未交換かを判断する。
+     */
+    rewardExchangedRef.current = false;
+    setRewardExchanged(false);
+    setRewardExchangedAt("");
+
+    setCompletedAt(savedCompletedAt);
+    setSecretStamp(savedSecret);
+    setPostSurveyCompleted(savedPostSurvey);
+    setConfirmationCode(savedConfirmationCode);
+    setRewardToken(savedRewardToken);
+
+    setRewardQrIssued(
+      Boolean(savedConfirmationCode && savedRewardToken)
     );
 
-    setRewardExchangedAt(
-      savedRewardExchangedAt
-    );
+    if (savedRank !== null) {
+      const parsedRank = Number(savedRank);
 
-    setCompletedAt(
-      savedCompletedAt
-    );
-
-    setSecretStamp(
-      savedSecret
-    );
-
-    setPostSurveyCompleted(
-      savedPostSurvey
-    );
-
-    setConfirmationCode(
-      savedConfirmationCode
-    );
-
-    setRewardToken(
-      savedRewardToken
-    );
-
-    if (
-      savedConfirmationCode &&
-      savedRewardToken
-    ) {
-      setRewardQrIssued(
-        true
-      );
-    }
-
-    if (
-      savedRank !== null
-    ) {
-      const parsedRank =
-        Number(
-          savedRank
-        );
-
-      if (
-        Number.isFinite(
-          parsedRank
-        )
-      ) {
-        setAchievementRank(
-          parsedRank
-        );
+      if (Number.isFinite(parsedRank)) {
+        setAchievementRank(parsedRank);
       }
     }
 
     if (
       savedKnowledge &&
       knowledgeItems.some(
-        (
-          item
-        ) =>
-          item.id ===
-          savedKnowledge
+        (item) => item.id === savedKnowledge
       )
     ) {
-      setSelectedKnowledgeId(
-        savedKnowledge
-      );
+      setSelectedKnowledgeId(savedKnowledge);
     }
 
-    /*
-      旧仕様の学籍番号データが残っていた場合は削除
-    */
-
+    /* 旧仕様の学籍番号データは削除 */
     localStorage.removeItem(
       "pokipo_reward_student_number"
     );
@@ -485,62 +263,39 @@ export default function RewardPage() {
     const currentParticipantId =
       getCurrentParticipantId();
 
-    if (
-      !currentParticipantId
-    ) {
-      return;
-    }
+    if (!currentParticipantId) return;
 
     async function loadProgress() {
-      const {
-        data,
-        error,
-      } =
-        await supabase.rpc(
-          "get_pokipo_stamps",
-          {
-            p_participant_id:
-              currentParticipantId,
-          }
-        );
+      const { data, error } = await supabase.rpc(
+        "get_pokipo_stamps",
+        {
+          p_participant_id: currentParticipantId,
+        }
+      );
 
-      if (
-        error
-      ) {
+      if (error) {
         console.error(
           "特典画面スタンプ取得エラー:",
           error.message
         );
-
         return;
       }
 
-      const stampCount =
-        Math.min(
-          Array.isArray(
-            data
-          )
-            ? data.length
-            : 0,
-          5
-        );
-
-      setProgress(
-        stampCount
+      const stampCount = Math.min(
+        Array.isArray(data) ? data.length : 0,
+        5
       );
+
+      setProgress(stampCount);
 
       localStorage.setItem(
         "pokipo_progress",
-        String(
-          stampCount
-        )
+        String(stampCount)
       );
 
       localStorage.setItem(
         "pokipo_completed",
-        stampCount >= 5
-          ? "true"
-          : "false"
+        stampCount >= 5 ? "true" : "false"
       );
     }
 
@@ -555,62 +310,40 @@ export default function RewardPage() {
     const currentParticipantId =
       getCurrentParticipantId();
 
-    if (
-      !currentParticipantId
-    ) {
-      setLoadingPostSurvey(
-        false
-      );
-
+    if (!currentParticipantId) {
+      setLoadingPostSurvey(false);
       return;
     }
 
     async function loadPostSurveyStatus() {
-      setLoadingPostSurvey(
-        true
-      );
+      setLoadingPostSurvey(true);
 
       try {
-        const {
-          data,
-          error,
-        } =
-          await supabase.rpc(
-            "has_completed_pokipo_post_survey",
-            {
-              p_participant_id:
-                currentParticipantId,
-            }
-          );
+        const { data, error } = await supabase.rpc(
+          "has_completed_pokipo_post_survey",
+          {
+            p_participant_id: currentParticipantId,
+          }
+        );
 
-        if (
-          error
-        ) {
+        if (error) {
           console.error(
             "参加後アンケート確認エラー:",
             error
           );
-
           return;
         }
 
-        const completedSurvey =
-          data === true;
+        const completedSurvey = data === true;
 
-        setPostSurveyCompleted(
-          completedSurvey
-        );
+        setPostSurveyCompleted(completedSurvey);
 
         localStorage.setItem(
           "pokipo_post_survey_completed",
-          completedSurvey
-            ? "true"
-            : "false"
+          completedSurvey ? "true" : "false"
         );
       } finally {
-        setLoadingPostSurvey(
-          false
-        );
+        setLoadingPostSurvey(false);
       }
     }
 
@@ -620,16 +353,10 @@ export default function RewardPage() {
       void loadPostSurveyStatus();
     }
 
-    window.addEventListener(
-      "focus",
-      handleFocus
-    );
+    window.addEventListener("focus", handleFocus);
 
     return () => {
-      window.removeEventListener(
-        "focus",
-        handleFocus
-      );
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 
@@ -641,64 +368,39 @@ export default function RewardPage() {
     const currentParticipantId =
       getCurrentParticipantId();
 
-    if (
-      !currentParticipantId
-    ) {
-      setLoadingCompletion(
-        false
-      );
-
+    if (!currentParticipantId) {
+      setLoadingCompletion(false);
       return;
     }
 
     async function loadCompletion() {
-      setLoadingCompletion(
-        true
-      );
+      setLoadingCompletion(true);
 
       try {
-        const {
-          data,
-          error,
-        } =
-          await supabase.rpc(
-            "get_pokipo_completion",
-            {
-              p_participant_id:
-                currentParticipantId,
-            }
-          );
+        const { data, error } = await supabase.rpc(
+          "get_pokipo_completion",
+          {
+            p_participant_id: currentParticipantId,
+          }
+        );
 
-        if (
-          error
-        ) {
+        if (error) {
           console.error(
             "完走情報取得エラー:",
             error.message
           );
-
           return;
         }
 
-        if (
-          data &&
-          data.length >
-            0
-        ) {
-          const completion =
-            data[0] as CompletionRow;
+        if (data && data.length > 0) {
+          const completion = data[0] as CompletionRow;
 
-          if (
-            completion.completed_at
-          ) {
-            const formatted =
-              formatDateTime(
-                completion.completed_at
-              );
-
-            setCompletedAt(
-              formatted
+          if (completion.completed_at) {
+            const formatted = formatDateTime(
+              completion.completed_at
             );
+
+            setCompletedAt(formatted);
 
             localStorage.setItem(
               "pokipo_completed_at",
@@ -707,39 +409,28 @@ export default function RewardPage() {
           }
 
           if (
-            completion.achievement_rank !==
-              null &&
-            completion.achievement_rank !==
-              undefined
+            completion.achievement_rank !== null &&
+            completion.achievement_rank !== undefined
           ) {
-            const rank =
-              Number(
-                completion.achievement_rank
-              );
-
-            setAchievementRank(
-              rank
+            const rank = Number(
+              completion.achievement_rank
             );
+
+            setAchievementRank(rank);
 
             localStorage.setItem(
               "pokipo_achievement_rank",
-              String(
-                rank
-              )
+              String(rank)
             );
           }
         }
-      } catch (
-        error
-      ) {
+      } catch (error) {
         console.error(
           "完走情報通信エラー:",
           error
         );
       } finally {
-        setLoadingCompletion(
-          false
-        );
+        setLoadingCompletion(false);
       }
     }
 
@@ -748,6 +439,12 @@ export default function RewardPage() {
 
   /* ========================================
      CHECK REWARD STATUS
+
+     修正点：
+     exchanged → 交換済み
+     issued    → 未交換
+
+     どちらの状態も必ず反映する
   ======================================== */
 
   async function checkRewardStatus(
@@ -756,44 +453,33 @@ export default function RewardPage() {
     const currentParticipantId =
       getCurrentParticipantId();
 
-    if (
-      !currentParticipantId
-    ) {
-      if (
-        showLoading
-      ) {
-        setLoadingRewardStatus(
-          false
-        );
+    if (!currentParticipantId) {
+      if (showLoading) {
+        setLoadingRewardStatus(false);
       }
-
       return false;
     }
 
-    if (
-      showLoading
-    ) {
-      setLoadingRewardStatus(
-        true
-      );
+    /* 同時に複数の状態確認を実行しない */
+    if (rewardStatusCheckingRef.current) {
+      return false;
+    }
+
+    rewardStatusCheckingRef.current = true;
+
+    if (showLoading) {
+      setLoadingRewardStatus(true);
     }
 
     try {
-      const {
-        data,
-        error,
-      } =
-        await supabase.rpc(
-          "get_reward_exchange_status",
-          {
-            p_participant_id:
-              currentParticipantId,
-          }
-        );
+      const { data, error } = await supabase.rpc(
+        "get_reward_exchange_status",
+        {
+          p_participant_id: currentParticipantId,
+        }
+      );
 
-      if (
-        error
-      ) {
+      if (error) {
         console.error(
           "特典交換状態取得エラー:",
           error
@@ -802,28 +488,51 @@ export default function RewardPage() {
         return false;
       }
 
-      if (
-        !data ||
-        data.length ===
-          0
-      ) {
+      /*
+       * 交換記録がまだ存在しない場合は
+       * 「交換済み」を解除する。
+       */
+      if (!Array.isArray(data) || data.length === 0) {
+        rewardExchangedRef.current = false;
+
+        setRewardExchanged(false);
+        setRewardExchangedAt("");
+        setRewardQrIssued(false);
+        setRewardToken("");
+        setConfirmationCode("");
+
+        localStorage.removeItem(
+          "pokipo_reward_exchanged"
+        );
+        localStorage.removeItem(
+          "pokipo_reward_exchanged_at"
+        );
+        localStorage.removeItem(
+          "pokipo_reward_token"
+        );
+        localStorage.removeItem(
+          "pokipo_reward_confirmation_code"
+        );
+
         return false;
       }
 
-      const reward =
-        data[0] as RewardStatusRow;
+      const reward = data[0] as RewardStatusRow;
 
-      setConfirmationCode(
-        reward.confirmation_code
-      );
+      if (
+        !reward.exchange_token ||
+        !reward.confirmation_code
+      ) {
+        console.error(
+          "特典交換情報が不完全です。"
+        );
+        return false;
+      }
 
-      setRewardToken(
-        reward.exchange_token
-      );
-
-      setRewardQrIssued(
-        true
-      );
+      /* 発行済みQRは交換状態にかかわらず保持 */
+      setConfirmationCode(reward.confirmation_code);
+      setRewardToken(reward.exchange_token);
+      setRewardQrIssued(true);
 
       localStorage.setItem(
         "pokipo_reward_confirmation_code",
@@ -835,186 +544,190 @@ export default function RewardPage() {
         reward.exchange_token
       );
 
-      if (
-        reward.status ===
-        "exchanged"
-      ) {
-        const wasExchanged =
-          rewardExchanged;
+      const isExchanged =
+        reward.status === "exchanged";
 
-        setRewardExchanged(
-          true
-        );
+      const wasExchanged =
+        rewardExchangedRef.current;
 
-        localStorage.setItem(
-          "pokipo_reward_exchanged",
-          "true"
-        );
+      rewardExchangedRef.current = isExchanged;
 
-        if (
-          reward.exchanged_at
-        ) {
-          const formatted =
-            formatDateTime(
-              reward.exchanged_at
-            );
+      /*
+       * 最重要修正：
+       * exchanged の場合だけでなく、
+       * issued の場合にも false を設定する。
+       */
+      setRewardExchanged(isExchanged);
 
-          setRewardExchangedAt(
-            formatted
+      localStorage.setItem(
+        "pokipo_reward_exchanged",
+        isExchanged ? "true" : "false"
+      );
+
+      if (isExchanged) {
+        if (reward.exchanged_at) {
+          const formatted = formatDateTime(
+            reward.exchanged_at
           );
+
+          setRewardExchangedAt(formatted);
 
           localStorage.setItem(
             "pokipo_reward_exchanged_at",
             formatted
           );
+        } else {
+          setRewardExchangedAt("");
+
+          localStorage.removeItem(
+            "pokipo_reward_exchanged_at"
+          );
         }
 
-        if (
-          !wasExchanged
-        ) {
+        if (!wasExchanged) {
           setMessage(
             "景品交換が完了しました！"
+          );
+        }
+      } else {
+        /*
+         * 管理者が交換を取り消したら、
+         * 交換済み表示と交換日時を解除する。
+         */
+        setRewardExchangedAt("");
+
+        localStorage.removeItem(
+          "pokipo_reward_exchanged_at"
+        );
+
+        if (wasExchanged) {
+          setMessage(
+            "景品交換の取消が反映されました。交換用QRを再び使用できます。"
           );
         }
       }
 
       return true;
+    } catch (error) {
+      console.error(
+        "特典交換状態の通信エラー:",
+        error
+      );
+
+      return false;
     } finally {
-      if (
-        showLoading
-      ) {
-        setLoadingRewardStatus(
-          false
-        );
+      rewardStatusCheckingRef.current = false;
+
+      if (showLoading) {
+        setLoadingRewardStatus(false);
       }
     }
   }
 
+  /* 初回表示時に最新情報を取得 */
   useEffect(() => {
-    void checkRewardStatus(
-      true
-    );
+    void checkRewardStatus(true);
   }, []);
 
   /* ========================================
      STATUS POLLING
+
+     2.5秒おきに状態確認
+     画面復帰時にも再確認
   ======================================== */
 
   useEffect(() => {
     const currentParticipantId =
       getCurrentParticipantId();
 
-    if (
-      !currentParticipantId
-    ) {
+    if (!currentParticipantId) {
       return;
     }
 
-    const timer =
-      window.setInterval(
-        () => {
-          void checkRewardStatus();
-        },
-        2500
-      );
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void checkRewardStatus();
+      }
+    }, 2500);
 
     function handleFocus() {
       void checkRewardStatus();
     }
 
-    window.addEventListener(
-      "focus",
-      handleFocus
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible") {
+        void checkRewardStatus();
+      }
+    }
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
     );
 
     return () => {
-      window.clearInterval(
-        timer
-      );
+      window.clearInterval(timer);
 
       window.removeEventListener(
         "focus",
         handleFocus
       );
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
     };
-  }, [
-    rewardExchanged,
-  ]);
+  }, []);
 
   /* ========================================
      STATUS
   ======================================== */
 
-  const completed =
-    progress >= 5;
+  const completed = progress >= 5;
 
   const selectedKnowledge =
     knowledgeItems.find(
-      (
-        item
-      ) =>
-        item.id ===
-        selectedKnowledgeId
-    ) ??
-    knowledgeItems[0];
+      (item) => item.id === selectedKnowledgeId
+    ) ?? knowledgeItems[0];
 
   /* ========================================
      ISSUE REWARD QR
   ======================================== */
 
   async function issueRewardQr() {
-    if (
-      issuingRef.current
-    ) {
+    if (issuingRef.current) {
       return;
     }
 
-    if (
-      !completed ||
-      !postSurveyCompleted
-    ) {
+    if (!completed || !postSurveyCompleted) {
       return;
     }
 
     const currentParticipantId =
-      participantId ||
-      getCurrentParticipantId();
+      participantId || getCurrentParticipantId();
 
-    if (
-      !currentParticipantId
-    ) {
+    if (!currentParticipantId) {
       setMessage(
         "参加者情報を確認できませんでした。"
       );
-
       return;
     }
 
-    issuingRef.current =
-      true;
-
-    setIssuingRewardQr(
-      true
-    );
-
+    issuingRef.current = true;
+    setIssuingRewardQr(true);
     setMessage("");
 
     try {
-      const {
-        data,
-        error,
-      } =
-        await supabase.rpc(
-          "issue_reward_qr",
-          {
-            p_participant_id:
-              currentParticipantId,
-          }
-        );
+      const { data, error } = await supabase.rpc(
+        "issue_reward_qr",
+        {
+          p_participant_id: currentParticipantId,
+        }
+      );
 
-      if (
-        error
-      ) {
+      if (error) {
         console.error(
           "特典QR発行エラー:",
           error
@@ -1023,24 +736,17 @@ export default function RewardPage() {
         setMessage(
           "交換用QRを発行できませんでした。画面を再読み込みしてもう一度お試しください。"
         );
-
         return;
       }
 
-      if (
-        !data ||
-        data.length ===
-          0
-      ) {
+      if (!data || data.length === 0) {
         setMessage(
           "交換用QR情報を取得できませんでした。"
         );
-
         return;
       }
 
-      const issued =
-        data[0] as IssuedRewardRow;
+      const issued = data[0] as IssuedRewardRow;
 
       if (
         !issued.exchange_token ||
@@ -1049,21 +755,15 @@ export default function RewardPage() {
         setMessage(
           "交換用QR情報を取得できませんでした。"
         );
-
         return;
       }
 
-      setRewardToken(
-        issued.exchange_token
-      );
-
+      setRewardToken(issued.exchange_token);
       setConfirmationCode(
         issued.confirmation_code
       );
 
-      setRewardQrIssued(
-        true
-      );
+      setRewardQrIssued(true);
 
       localStorage.setItem(
         "pokipo_reward_token",
@@ -1074,9 +774,7 @@ export default function RewardPage() {
         "pokipo_reward_confirmation_code",
         issued.confirmation_code
       );
-    } catch (
-      error
-    ) {
+    } catch (error) {
       console.error(
         "特典QR発行通信エラー:",
         error
@@ -1086,12 +784,8 @@ export default function RewardPage() {
         "交換用QRの発行中に通信エラーが発生しました。"
       );
     } finally {
-      issuingRef.current =
-        false;
-
-      setIssuingRewardQr(
-        false
-      );
+      issuingRef.current = false;
+      setIssuingRewardQr(false);
     }
   }
 
@@ -1136,26 +830,20 @@ export default function RewardPage() {
   ======================================== */
 
   function toggleProfile(
-    type:
-      | "nickname"
-      | "grade"
-      | "department"
+    type: "nickname" | "grade" | "department"
   ) {
     const nextNickname =
-      type ===
-      "nickname"
+      type === "nickname"
         ? !showNickname
         : showNickname;
 
     const nextGrade =
-      type ===
-      "grade"
+      type === "grade"
         ? !showGrade
         : showGrade;
 
     const nextDepartment =
-      type ===
-      "department"
+      type === "department"
         ? !showDepartment
         : showDepartment;
 
@@ -1167,29 +855,16 @@ export default function RewardPage() {
       setMessage(
         "達成証にはニックネーム・学年・学科から最低1つ選んでください。"
       );
-
       return;
     }
 
-    setShowNickname(
-      nextNickname
-    );
-
-    setShowGrade(
-      nextGrade
-    );
-
-    setShowDepartment(
-      nextDepartment
-    );
+    setShowNickname(nextNickname);
+    setShowGrade(nextGrade);
+    setShowDepartment(nextDepartment);
   }
 
-  function selectKnowledge(
-    id: string
-  ) {
-    setSelectedKnowledgeId(
-      id
-    );
+  function selectKnowledge(id: string) {
+    setSelectedKnowledgeId(id);
 
     localStorage.setItem(
       "pokipo_certificate_knowledge",
@@ -1198,34 +873,23 @@ export default function RewardPage() {
   }
 
   async function createCertificateImage() {
-    if (
-      !certificateRef.current
-    ) {
+    if (!certificateRef.current) {
       return null;
     }
 
     try {
-      setCreatingImage(
-        true
-      );
+      setCreatingImage(true);
 
       return await toPng(
         certificateRef.current,
         {
-          cacheBust:
-            true,
-
-          pixelRatio:
-            2,
-
-          backgroundColor:
-            "#fff8eb",
+          cacheBust: true,
+          pixelRatio: 2,
+          backgroundColor: "#fff8eb",
         }
       );
     } finally {
-      setCreatingImage(
-        false
-      );
+      setCreatingImage(false);
     }
   }
 
@@ -1233,23 +897,14 @@ export default function RewardPage() {
     const dataUrl =
       await createCertificateImage();
 
-    if (
-      !dataUrl
-    ) {
+    if (!dataUrl) {
       return;
     }
 
-    const link =
-      document.createElement(
-        "a"
-      );
+    const link = document.createElement("a");
 
-    link.download =
-      "POKIPO_certificate.png";
-
-    link.href =
-      dataUrl;
-
+    link.download = "POKIPO_certificate.png";
+    link.href = dataUrl;
     link.click();
   }
 
@@ -1257,29 +912,20 @@ export default function RewardPage() {
     const dataUrl =
       await createCertificateImage();
 
-    if (
-      !dataUrl
-    ) {
+    if (!dataUrl) {
       return;
     }
 
-    const response =
-      await fetch(
-        dataUrl
-      );
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
 
-    const blob =
-      await response.blob();
-
-    const file =
-      new File(
-        [blob],
-        "POKIPO_certificate.png",
-        {
-          type:
-            "image/png",
-        }
-      );
+    const file = new File(
+      [blob],
+      "POKIPO_certificate.png",
+      {
+        type: "image/png",
+      }
+    );
 
     if (
       navigator.share &&
@@ -1287,15 +933,29 @@ export default function RewardPage() {
         files: [file],
       })
     ) {
-      await navigator.share({
-        title:
-          "POKIPO 達成証",
+      try {
+        await navigator.share({
+          title: "POKIPO 達成証",
+          text: "POKIPOスタンプラリーをコンプリートしました！",
+          files: [file],
+        });
+      } catch (error) {
+        if (
+          error instanceof DOMException &&
+          error.name === "AbortError"
+        ) {
+          return;
+        }
 
-        text:
-          "POKIPOスタンプラリーをコンプリートしました！",
+        console.error(
+          "達成証共有エラー:",
+          error
+        );
 
-        files: [file],
-      });
+        setMessage(
+          "共有できませんでした。画像を保存してお試しください。"
+        );
+      }
     } else {
       setMessage(
         "この端末では直接共有できません。画像を保存してSNSから投稿してください。"
@@ -1309,9 +969,7 @@ export default function RewardPage() {
 
   return (
     <MaintenanceGate page="reward">
-
       <main className="shell">
-
         <section className="rewardPage">
 
           {/* =================================
@@ -1319,31 +977,18 @@ export default function RewardPage() {
           ================================= */}
 
           <header className="rewardHeader">
-
             <button
               type="button"
               className="backButton"
-              onClick={() =>
-                router.push(
-                  "/home"
-                )
-              }
+              onClick={() => router.push("/home")}
             >
               ←
             </button>
 
             <div>
-
-              <p>
-                COMPLETE REWARD
-              </p>
-
-              <h1>
-                コンプリート特典
-              </h1>
-
+              <p>COMPLETE REWARD</p>
+              <h1>コンプリート特典</h1>
             </div>
-
           </header>
 
           {/* =================================
@@ -1357,7 +1002,6 @@ export default function RewardPage() {
                 : "rewardHero"
             }
           >
-
             <span className="rewardHeroMini">
               POCKY COMPLETE
             </span>
@@ -1367,24 +1011,19 @@ export default function RewardPage() {
             </div>
 
             <h2>
-
               {completed
                 ? "ポッキー完成！"
                 : "スタンプラリー挑戦中"}
-
             </h2>
 
             <p>
-
               {completed
                 ? "5つすべてのスタンプを集めました。"
                 : `現在 ${progress}/5。あと${Math.max(
                     0,
                     5 - progress
                   )}個で完成です。`}
-
             </p>
-
           </section>
 
           {/* =================================
@@ -1393,55 +1032,32 @@ export default function RewardPage() {
 
           {completed && (
             <section className="rewardCompletionInfo">
-
               <div className="rewardSectionTitle">
-
-                <span>
-                  COMPLETION RECORD
-                </span>
-
-                <h2>
-                  達成記録
-                </h2>
-
+                <span>COMPLETION RECORD</span>
+                <h2>達成記録</h2>
               </div>
 
               <div className="rewardCompletionStats">
-
                 <div>
-
-                  <span>
-                    COMPLETED AT
-                  </span>
-
+                  <span>COMPLETED AT</span>
                   <strong>
                     {loadingCompletion
                       ? "読み込み中..."
-                      : completedAt ||
-                        "記録確認中"}
+                      : completedAt || "記録確認中"}
                   </strong>
-
                 </div>
 
                 <div>
-
-                  <span>
-                    RANK
-                  </span>
-
+                  <span>RANK</span>
                   <strong>
                     {loadingCompletion
                       ? "—"
-                      : achievementRank !==
-                        null
+                      : achievementRank !== null
                       ? `${achievementRank}番目`
                       : "—"}
                   </strong>
-
                 </div>
-
               </div>
-
             </section>
           )}
 
@@ -1451,10 +1067,7 @@ export default function RewardPage() {
 
           {completed && (
             <section className="rewardExchangeDateNotice">
-
-              <span>
-                REWARD EXCHANGE DAY
-              </span>
+              <span>REWARD EXCHANGE DAY</span>
 
               <h2>
                 特典交換日は10月27日（火）です
@@ -1464,7 +1077,6 @@ export default function RewardPage() {
                 当日はこの画面に表示されるQRコードと
                 確認番号をスタッフに提示してください。
               </p>
-
             </section>
           )}
 
@@ -1472,8 +1084,7 @@ export default function RewardPage() {
               POST SURVEY
           ================================= */}
 
-          {completed &&
-            !rewardExchanged && (
+          {completed && !rewardExchanged && (
             <section
               className={
                 postSurveyCompleted
@@ -1481,22 +1092,14 @@ export default function RewardPage() {
                   : "rewardSurveyGate"
               }
             >
-
-              <span>
-                AFTER SURVEY
-              </span>
+              <span>AFTER SURVEY</span>
 
               {loadingPostSurvey ? (
-                <>
-
-                  <h2>
-                    アンケート回答状況を確認中...
-                  </h2>
-
-                </>
+                <h2>
+                  アンケート回答状況を確認中...
+                </h2>
               ) : postSurveyCompleted ? (
                 <>
-
                   <div className="rewardSurveyCheck">
                     ✓
                   </div>
@@ -1509,11 +1112,9 @@ export default function RewardPage() {
                     ご協力ありがとうございます。
                     特典交換用QRを自動で発行します。
                   </p>
-
                 </>
               ) : (
                 <>
-
                   <h2>
                     特典交換まであと1ステップ！
                   </h2>
@@ -1526,21 +1127,14 @@ export default function RewardPage() {
                   <button
                     type="button"
                     onClick={() =>
-                      router.push(
-                        "/survey/after"
-                      )
+                      router.push("/survey/after")
                     }
                   >
                     参加後アンケートに回答する
-
-                    <strong>
-                      →
-                    </strong>
+                    <strong>→</strong>
                   </button>
-
                 </>
               )}
-
             </section>
           )}
 
@@ -1549,37 +1143,24 @@ export default function RewardPage() {
           ================================= */}
 
           <section className="rewardExchangeSection">
-
             <div className="rewardSectionTitle">
-
-              <span>
-                REWARD EXCHANGE
-              </span>
-
-              <h2>
-                景品交換
-              </h2>
-
+              <span>REWARD EXCHANGE</span>
+              <h2>景品交換</h2>
             </div>
 
             {loadingRewardStatus ? (
               <div className="rewardExchangeCard">
-
                 <h3>
                   交換情報を確認中...
                 </h3>
-
               </div>
             ) : rewardExchanged ? (
               <div className="rewardExchangeComplete">
-
                 <div className="rewardCompleteCheck">
                   ✓
                 </div>
 
-                <span>
-                  REWARD EXCHANGED
-                </span>
+                <span>REWARD EXCHANGED</span>
 
                 <h3>
                   景品交換完了！
@@ -1598,11 +1179,9 @@ export default function RewardPage() {
                     {rewardExchangedAt}
                   </p>
                 )}
-
               </div>
             ) : !completed ? (
               <div className="rewardExchangeCard">
-
                 <h3>
                   まだ交換できません
                 </h3>
@@ -1610,38 +1189,31 @@ export default function RewardPage() {
                 <p>
                   5つのスタンプを集めると交換できます。
                 </p>
-
               </div>
             ) : !postSurveyCompleted ? (
               <div className="rewardExchangeCard locked">
-
                 <div className="rewardExchangeIcon">
                   🔒
                 </div>
 
-                <span>
-                  SURVEY REQUIRED
-                </span>
+                <span>SURVEY REQUIRED</span>
 
                 <h3>
                   アンケート回答後にQRを表示します
                 </h3>
 
                 <p>
-                  上の「参加後アンケートに回答する」から回答してください。
+                  上の「参加後アンケートに回答する」から
+                  回答してください。
                 </p>
-
               </div>
             ) : issuingRewardQr ? (
               <div className="rewardExchangeCard">
-
                 <div className="rewardExchangeIcon">
                   QR
                 </div>
 
-                <span>
-                  ISSUING
-                </span>
+                <span>ISSUING</span>
 
                 <h3>
                   交換用QRを発行しています...
@@ -1650,11 +1222,9 @@ export default function RewardPage() {
                 <p>
                   そのまま少しお待ちください。
                 </p>
-
               </div>
-            ) : rewardQrIssued ? (
+            ) : rewardQrIssued && rewardToken ? (
               <div className="rewardExchangeCard rewardQrCard">
-
                 <div className="rewardQrStatus">
                   READY TO EXCHANGE
                 </div>
@@ -1666,18 +1236,15 @@ export default function RewardPage() {
                 </h3>
 
                 <div className="rewardQrBox">
-
                   <QRCodeSVG
                     value={`POKIPO_REWARD:${rewardToken}`}
                     size={190}
                     level="H"
                     includeMargin
                   />
-
                 </div>
 
                 <div className="rewardConfirmationCode">
-
                   <span>
                     CONFIRMATION NUMBER
                   </span>
@@ -1694,13 +1261,10 @@ export default function RewardPage() {
                     QRコードとあわせて
                     スタッフに提示してください。
                   </p>
-
                 </div>
-
               </div>
             ) : (
               <div className="rewardExchangeCard">
-
                 <h3>
                   QRコードを準備中です
                 </h3>
@@ -1709,10 +1273,8 @@ export default function RewardPage() {
                   画面を再読み込みしても表示されない場合は、
                   スタッフまでお声がけください。
                 </p>
-
               </div>
             )}
-
           </section>
 
           {/* =================================
@@ -1721,9 +1283,7 @@ export default function RewardPage() {
 
           {rewardExchanged && (
             <section className="certificateSection">
-
               <div className="rewardSectionTitle">
-
                 <span>
                   COMPLETION CERTIFICATE
                 </span>
@@ -1731,32 +1291,23 @@ export default function RewardPage() {
                 <h2>
                   達成証をつくる
                 </h2>
-
               </div>
 
               <div className="certificateSettingCard">
-
                 <div className="certificateSettingTitle">
-
                   <strong>
                     掲載する達成者情報
                   </strong>
-
                 </div>
 
                 <div className="certificateProfileSelect">
-
                   <button
                     type="button"
                     className={
-                      showNickname
-                        ? "active"
-                        : ""
+                      showNickname ? "active" : ""
                     }
                     onClick={() =>
-                      toggleProfile(
-                        "nickname"
-                      )
+                      toggleProfile("nickname")
                     }
                   >
                     ニックネーム
@@ -1765,14 +1316,10 @@ export default function RewardPage() {
                   <button
                     type="button"
                     className={
-                      showGrade
-                        ? "active"
-                        : ""
+                      showGrade ? "active" : ""
                     }
                     onClick={() =>
-                      toggleProfile(
-                        "grade"
-                      )
+                      toggleProfile("grade")
                     }
                   >
                     学年
@@ -1781,82 +1328,50 @@ export default function RewardPage() {
                   <button
                     type="button"
                     className={
-                      showDepartment
-                        ? "active"
-                        : ""
+                      showDepartment ? "active" : ""
                     }
                     onClick={() =>
-                      toggleProfile(
-                        "department"
-                      )
+                      toggleProfile("department")
                     }
                   >
                     学科
                   </button>
-
                 </div>
-
               </div>
 
               <div className="certificateSettingCard">
-
                 <div className="certificateSettingTitle">
-
                   <strong>
                     一番「へぇ！」となった豆知識
                   </strong>
-
                 </div>
 
                 <div className="certificateKnowledgeSelect">
-
-                  {knowledgeItems.map(
-                    (
-                      item
-                    ) => (
-                      <button
-                        key={
-                          item.id
-                        }
-                        type="button"
-                        className={
-                          item.id ===
-                          selectedKnowledgeId
-                            ? "active"
-                            : ""
-                        }
-                        onClick={() =>
-                          selectKnowledge(
-                            item.id
-                          )
-                        }
-                      >
-
-                        <span>
-                          {item.number}
-                        </span>
-
-                        <strong>
-                          {item.title}
-                        </strong>
-
-                      </button>
-                    )
-                  )}
-
+                  {knowledgeItems.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={
+                        item.id === selectedKnowledgeId
+                          ? "active"
+                          : ""
+                      }
+                      onClick={() =>
+                        selectKnowledge(item.id)
+                      }
+                    >
+                      <span>{item.number}</span>
+                      <strong>{item.title}</strong>
+                    </button>
+                  ))}
                 </div>
-
               </div>
 
               <div
-                ref={
-                  certificateRef
-                }
+                ref={certificateRef}
                 className="certificateCard"
               >
-
                 <div className="certificateTop">
-
                   <span>
                     DOKKYO UNIVERSITY
                   </span>
@@ -1868,13 +1383,10 @@ export default function RewardPage() {
                   <strong>
                     COMPLETION CERTIFICATE
                   </strong>
-
                 </div>
 
                 <div className="certificateStats">
-
                   <div className="certificateStatCard">
-
                     <span>
                       ACHIEVED AT
                     </span>
@@ -1882,30 +1394,23 @@ export default function RewardPage() {
                     <strong>
                       {completedAt}
                     </strong>
-
                   </div>
 
                   <div className="certificateStatCard rank">
-
                     <span>
                       RANK
                     </span>
 
                     <strong>
-                      {achievementRank ??
-                        "—"}
+                      {achievementRank ?? "—"}
                       番目
                     </strong>
-
                   </div>
-
                 </div>
 
                 <div className="certificateProfileBlock">
-
                   {showNickname && (
                     <div className="certificateProfileItem">
-
                       <span>
                         NICKNAME
                       </span>
@@ -1913,13 +1418,11 @@ export default function RewardPage() {
                       <strong>
                         {nickname}
                       </strong>
-
                     </div>
                   )}
 
                   {showGrade && (
                     <div className="certificateProfileItem">
-
                       <span>
                         GRADE
                       </span>
@@ -1927,13 +1430,11 @@ export default function RewardPage() {
                       <strong>
                         {grade}
                       </strong>
-
                     </div>
                   )}
 
                   {showDepartment && (
                     <div className="certificateProfileItem">
-
                       <span>
                         DEPARTMENT
                       </span>
@@ -1941,14 +1442,11 @@ export default function RewardPage() {
                       <strong>
                         {department}
                       </strong>
-
                     </div>
                   )}
-
                 </div>
 
                 <div className="certificateKnowledgeBlock">
-
                   <span>
                     FAVORITE KNOWLEDGE
                   </span>
@@ -1956,11 +1454,9 @@ export default function RewardPage() {
                   <strong>
                     {selectedKnowledge.title}
                   </strong>
-
                 </div>
 
                 <div className="certificateFooter">
-
                   <span>
                     高安ゼミ LiPost × POCKY
                   </span>
@@ -1968,21 +1464,16 @@ export default function RewardPage() {
                   <strong>
                     SHARE HAPPINESS!
                   </strong>
-
                 </div>
-
               </div>
 
               <div className="certificateActions">
-
                 <button
                   type="button"
-                  onClick={
-                    downloadCertificate
+                  onClick={() =>
+                    void downloadCertificate()
                   }
-                  disabled={
-                    creatingImage
-                  }
+                  disabled={creatingImage}
                 >
                   {creatingImage
                     ? "作成中..."
@@ -1992,18 +1483,14 @@ export default function RewardPage() {
                 <button
                   type="button"
                   className="primary"
-                  onClick={
-                    shareCertificate
+                  onClick={() =>
+                    void shareCertificate()
                   }
-                  disabled={
-                    creatingImage
-                  }
+                  disabled={creatingImage}
                 >
                   SNSで共有
                 </button>
-
               </div>
-
             </section>
           )}
 
@@ -2013,7 +1500,6 @@ export default function RewardPage() {
 
           {secretStamp && (
             <section className="rewardSecretUnlocked">
-
               <span>
                 SECRET MODE
               </span>
@@ -2021,7 +1507,6 @@ export default function RewardPage() {
               <h2>
                 🎆 雄飛祭モード解放済み
               </h2>
-
             </section>
           )}
 
@@ -2043,18 +1528,13 @@ export default function RewardPage() {
             type="button"
             className="rewardBackHomeButton"
             onClick={() =>
-              router.push(
-                "/home"
-              )
+              router.push("/home")
             }
           >
             トップへ戻る
           </button>
-
         </section>
-
       </main>
-
     </MaintenanceGate>
   );
 }
