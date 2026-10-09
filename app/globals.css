@@ -40038,3 +40038,401 @@ textarea + div button {
     font-size: 12px !important;
   }
 }
+
+
+/* ==========================================
+   POKIPO STAFF SUPPORT
+   DESIGN UNIFICATION
+   スタッフメニューとのデザイン統一
+========================================== */
+
+/* 管理者サポート画面共通 */
+main.shell > .staffMenuPage[style*="max-width"] {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100%;
+  box-sizing: border-box;
+
+  color: #292525;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+/* ページタイトルを最上部 */
+main.shell > .staffMenuPage[style*="max-width"] > header {
+  order: -2;
+  width: 100%;
+  margin: 10px 0 12px !important;
+  padding: 0 0 8px;
+}
+
+/* 英語補助見出し */
+main.shell > .staffMenuPage[style*="max-width"]
+> header .staffMenuEyebrow {
+  display: block;
+  color: #77716e !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em;
+  line-height: 1.5;
+}
+
+/* ページタイトル */
+main.shell > .staffMenuPage[style*="max-width"]
+> header h1 {
+  margin: 8px 0 10px !important;
+  color: #242424 !important;
+  font-size: clamp(24px, 5vw, 30px) !important;
+  font-weight: 850 !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.02em;
+}
+
+/* ヘッダー説明文 */
+main.shell > .staffMenuPage[style*="max-width"]
+> header p {
+  margin: 0 !important;
+  color: #706b68 !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  line-height: 1.85 !important;
+}
+
+/* ==========================================
+   BACK BUTTON
+========================================== */
+
+/* タイトルより下に配置 */
+main.shell > .staffMenuPage[style*="max-width"]
+> button:first-child {
+  order: -1;
+  align-self: flex-start;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+
+  width: auto !important;
+  min-height: 38px;
+  margin: 0 0 22px !important;
+  padding: 9px 13px !important;
+
+  color: #57514d !important;
+  background: #f7f5f3 !important;
+  border: 1px solid #e6e0dc !important;
+  border-radius: 9px !important;
+
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+
+  white-space: nowrap !important;
+  writing-mode: horizontal-tb !important;
+
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+main.shell > .staffMenuPage[style*="max-width"]
+> button:first-child:hover {
+  background: #eee9e6 !important;
+}
+
+/* ==========================================
+   CARDS
+========================================== */
+
+/* 各カードの統一 */
+main.shell > .staffMenuPage[style*="max-width"]
+> section[style*="background"] {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  padding: 22px !important;
+  background: #fff !important;
+
+  border: 1px solid #e8e1de !important;
+  border-radius: 16px !important;
+
+  box-shadow: 0 3px 14px rgba(30, 22, 20, 0.035);
+}
+
+/* カード内のタイトル */
+main.shell > .staffMenuPage[style*="max-width"]
+> section h2 {
+  color: #292525 !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+  letter-spacing: -0.01em;
+}
+
+/* 小見出し */
+main.shell > .staffMenuPage[style*="max-width"]
+> section h3 {
+  color: #302b29 !important;
+  font-size: 15px !important;
+  font-weight: 750 !important;
+  line-height: 1.5;
+}
+
+/* 一般的な説明文 */
+main.shell > .staffMenuPage[style*="max-width"]
+> section p {
+  font-family: inherit;
+  line-height: 1.75;
+}
+
+/* ==========================================
+   LABELS / INFORMATION
+========================================== */
+
+/* 項目ラベル */
+main.shell > .staffMenuPage[style*="max-width"]
+label {
+  color: #48413e !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.5;
+}
+
+/* 学年・学科など */
+main.shell > .staffMenuPage[style*="max-width"]
+> section span {
+  line-height: 1.5;
+}
+
+/* 参加者名や数値 */
+main.shell > .staffMenuPage[style*="max-width"]
+> section strong {
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+/* 入力欄 */
+main.shell > .staffMenuPage[style*="max-width"]
+input[type="text"],
+main.shell > .staffMenuPage[style*="max-width"]
+textarea {
+  max-width: 100%;
+  box-sizing: border-box;
+
+  color: #302b29 !important;
+  background: #fff !important;
+
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.6 !important;
+
+  border: 1px solid #dcd4d0 !important;
+  border-radius: 10px !important;
+}
+
+main.shell > .staffMenuPage[style*="max-width"]
+input:focus,
+main.shell > .staffMenuPage[style*="max-width"]
+textarea:focus {
+  border-color: #a53b45 !important;
+  outline: 2px solid rgba(165, 59, 69, 0.12);
+  outline-offset: 1px;
+}
+
+/* ==========================================
+   STAMP ROWS
+========================================== */
+
+/* スタンプ表示の行 */
+main.shell > .staffMenuPage[style*="max-width"]
+div:has(> button[style*="flex-shrink: 0"]) {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* スポット名と取得状況 */
+main.shell > .staffMenuPage[style*="max-width"]
+div:has(> button[style*="flex-shrink: 0"])
+> div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* スタンプ名 */
+main.shell > .staffMenuPage[style*="max-width"]
+div:has(> button[style*="flex-shrink: 0"])
+> div:first-child strong {
+  display: block;
+  color: #33302e !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+}
+
+/* 取得済み・未取得の詳細 */
+main.shell > .staffMenuPage[style*="max-width"]
+div:has(> button[style*="flex-shrink: 0"])
+> div:first-child span {
+  font-size: 11px !important;
+  line-height: 1.6 !important;
+}
+
+/* 手動付与・削除ボタンの縦書き防止 */
+main.shell > .staffMenuPage[style*="max-width"]
+button[style*="flex-shrink: 0"] {
+  display: inline-flex !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  flex: 0 0 auto !important;
+
+  width: auto !important;
+  min-width: 90px !important;
+  min-height: 38px !important;
+
+  padding: 9px 12px !important;
+
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+  line-height: 1.4 !important;
+
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+
+  border-radius: 9px !important;
+  box-sizing: border-box;
+}
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+main.shell > .staffMenuPage[style*="max-width"]
+button {
+  font-family: inherit !important;
+  letter-spacing: 0 !important;
+
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+  word-break: keep-all;
+
+  transition:
+    opacity 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* スマートフォンでも文字が縦方向に崩れない */
+main.shell > .staffMenuPage[style*="max-width"]
+form button,
+main.shell > .staffMenuPage[style*="max-width"]
+textarea ~ div button {
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.5 !important;
+}
+
+/* ==========================================
+   OPERATION LOGS
+========================================== */
+
+/* 履歴の文章 */
+main.shell > .staffMenuPage[style*="max-width"]
+article p {
+  color: #514a46 !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  overflow-wrap: anywhere;
+}
+
+/* 履歴の見出し */
+main.shell > .staffMenuPage[style*="max-width"]
+article > strong {
+  color: #302b29 !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+}
+
+/* 履歴の日時・担当者 */
+main.shell > .staffMenuPage[style*="max-width"]
+article div[style*="flex-wrap: wrap"] {
+  line-height: 1.65 !important;
+}
+
+main.shell > .staffMenuPage[style*="max-width"]
+article div[style*="flex-wrap: wrap"] span {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #77716e !important;
+}
+
+/* ==========================================
+   MODALS
+========================================== */
+
+/* 確認モーダルの文字 */
+main.shell > .staffMenuPage[style*="max-width"]
+[role="dialog"] h2 {
+  color: #292525 !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+}
+
+main.shell > .staffMenuPage[style*="max-width"]
+[role="dialog"] p {
+  color: #5e5551;
+  line-height: 1.8;
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 640px) {
+  main.shell > .staffMenuPage[style*="max-width"] {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  main.shell > .staffMenuPage[style*="max-width"]
+  > header h1 {
+    font-size: 24px !important;
+  }
+
+  main.shell > .staffMenuPage[style*="max-width"]
+  > section[style*="background"] {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  main.shell > .staffMenuPage[style*="max-width"]
+  button[style*="flex-shrink: 0"] {
+    min-width: 88px !important;
+    padding: 9px 10px !important;
+  }
+
+  main.shell > .staffMenuPage[style*="max-width"]
+  > button:first-child {
+    margin-bottom: 18px !important;
+  }
+}
