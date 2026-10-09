@@ -96,7 +96,7 @@ export default function StaffTestPage() {
   const [successMessage, setSuccessMessage] = useState("");
 
   /* ========================================
-     AUTH
+     STAFF AUTHENTICATION
   ======================================== */
 
   const verifyStaff = useCallback(async () => {
@@ -247,9 +247,7 @@ export default function StaffTestPage() {
 
     try {
       await loadTestData();
-      setSuccessMessage(
-        "最新の検証データを取得しました。"
-      );
+      setSuccessMessage("最新の検証データを取得しました。");
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -493,9 +491,7 @@ export default function StaffTestPage() {
           <>
             {/* PROFILE */}
             <section style={cardStyle}>
-              <span style={labelStyle}>
-                TEST PROFILE
-              </span>
+              <span style={labelStyle}>TEST PROFILE</span>
 
               <h2 style={{ margin: "10px 0" }}>
                 {session.nickname}
@@ -508,9 +504,7 @@ export default function StaffTestPage() {
 
             {/* STAMP PROGRESS */}
             <section style={cardStyle}>
-              <span style={labelStyle}>
-                STAMP PROGRESS
-              </span>
+              <span style={labelStyle}>STAMP PROGRESS</span>
 
               <h2
                 style={{
@@ -530,8 +524,7 @@ export default function StaffTestPage() {
                 }}
               >
                 {SPOTS.map((spot) => {
-                  const collected =
-                    stampIds.has(spot.id);
+                  const collected = stampIds.has(spot.id);
 
                   return (
                     <div
@@ -550,53 +543,37 @@ export default function StaffTestPage() {
                         fontWeight: 800,
                       }}
                     >
-                      {collected
-                        ? "✓"
-                        : spot.id.slice(-1)}
+                      {collected ? "✓" : spot.id.slice(-1)}
                     </div>
                   );
                 })}
               </div>
 
               <p style={{ marginBottom: 0 }}>
-                獲得した豆知識：
-                {knowledgeCount} / 5
+                獲得した豆知識：{knowledgeCount} / 5
               </p>
             </section>
 
             {/* SURVEY / REWARD STATUS */}
             <section style={cardStyle}>
-              <span style={labelStyle}>
-                TEST STATUS
-              </span>
+              <span style={labelStyle}>TEST STATUS</span>
 
-              <div
-                style={{
-                  lineHeight: 2,
-                  marginTop: 10,
-                }}
-              >
+              <div style={{ lineHeight: 2, marginTop: 10 }}>
                 <div>
                   参加前アンケート：
-                  {session.pre_survey
-                    ? "回答済み"
-                    : "未回答"}
+                  {session.pre_survey ? "回答済み" : "未回答"}
                 </div>
 
                 <div>
                   参加後アンケート：
-                  {session.post_survey
-                    ? "回答済み"
-                    : "未回答"}
+                  {session.post_survey ? "回答済み" : "未回答"}
                 </div>
 
                 <div>
                   景品交換：
-                  {session.reward_status ===
-                  "exchanged"
+                  {session.reward_status === "exchanged"
                     ? "交換済み"
-                    : session.reward_status ===
-                      "issued"
+                    : session.reward_status === "issued"
                     ? "QR発行済み"
                     : "未発行"}
                 </div>
@@ -604,7 +581,7 @@ export default function StaffTestPage() {
             </section>
 
             {/* ========================================
-                SURVEY TEST MENU - STEP 12
+                SURVEY TEST MENU
             ======================================== */}
             <section style={cardStyle}>
               <span
@@ -616,17 +593,11 @@ export default function StaffTestPage() {
                 SURVEY TEST
               </span>
 
-              <h2
-                style={{
-                  marginTop: 10,
-                  fontSize: 19,
-                }}
-              >
+              <h2 style={{ marginTop: 10, fontSize: 19 }}>
                 アンケート動作確認
               </h2>
 
               <p style={{ lineHeight: 1.8 }}>
-                本番と同じ設問を使用して、
                 参加前・参加後アンケートの入力と
                 回答保存を確認できます。
                 回答は検証専用データに保存されます。
@@ -652,9 +623,7 @@ export default function StaffTestPage() {
                   }}
                   disabled={resetting || refreshing}
                   onClick={() =>
-                    router.push(
-                      "/staff/test/survey/before"
-                    )
+                    router.push("/staff/test/survey/before")
                   }
                 >
                   参加前アンケートを確認する →
@@ -676,9 +645,7 @@ export default function StaffTestPage() {
                     !session.pre_survey
                   }
                   onClick={() =>
-                    router.push(
-                      "/staff/test/survey/after"
-                    )
+                    router.push("/staff/test/survey/after")
                   }
                 >
                   参加後アンケートを確認する →
@@ -696,14 +663,13 @@ export default function StaffTestPage() {
                   }}
                 >
                   ※ 参加後アンケートは、
-                  参加前アンケートの回答を保存すると
-                  開けるようになります。
+                  参加前アンケートの回答後に利用できます。
                 </p>
               )}
             </section>
 
             {/* ========================================
-                QR TEST MENU
+                QR / STAMP TEST MENU
             ======================================== */}
             <section style={cardStyle}>
               <span
@@ -712,15 +678,10 @@ export default function StaffTestPage() {
                   color: "#a83b3b",
                 }}
               >
-                TEST APPLICATION
+                STAMP TEST
               </span>
 
-              <h2
-                style={{
-                  marginTop: 10,
-                  fontSize: 19,
-                }}
-              >
+              <h2 style={{ marginTop: 10, fontSize: 19 }}>
                 スタンプラリー動作確認
               </h2>
 
@@ -742,13 +703,96 @@ export default function StaffTestPage() {
                 }}
                 disabled={resetting || refreshing}
                 onClick={() =>
-                  router.push(
-                    "/staff/test/stamp"
-                  )
+                  router.push("/staff/test/stamp")
                 }
               >
                 QR読み取りを動作確認する →
               </button>
+            </section>
+
+            {/* ========================================
+                REWARD TEST MENU - STEP 15
+            ======================================== */}
+            <section style={cardStyle}>
+              <span
+                style={{
+                  ...labelStyle,
+                  color: "#a83b3b",
+                }}
+              >
+                REWARD TEST
+              </span>
+
+              <h2 style={{ marginTop: 10, fontSize: 19 }}>
+                特典交換の動作確認
+              </h2>
+
+              <p style={{ lineHeight: 1.8 }}>
+                検証専用の特典QRコードを発行し、
+                スタッフによるQR読み取りと
+                交換確定まで確認できます。
+                本番の交換記録や会場モニターには
+                反映されません。
+              </p>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr",
+                  gap: 12,
+                  marginTop: 18,
+                }}
+              >
+                <button
+                  type="button"
+                  style={{
+                    ...buttonStyle,
+                    width: "100%",
+                    background: "#bd2838",
+                    color: "#ffffff",
+                    border: "none",
+                    padding: "16px 20px",
+                  }}
+                  disabled={resetting || refreshing}
+                  onClick={() =>
+                    router.push("/staff/test/reward")
+                  }
+                >
+                  検証用特典QRを発行・確認する →
+                </button>
+
+                <button
+                  type="button"
+                  style={{
+                    ...buttonStyle,
+                    width: "100%",
+                    background: "#ffffff",
+                    color: "#bd2838",
+                    border: "1px solid #bd2838",
+                    padding: "16px 20px",
+                  }}
+                  disabled={resetting || refreshing}
+                  onClick={() =>
+                    router.push("/staff/test/reward/scan")
+                  }
+                >
+                  検証用特典QRを読み取る →
+                </button>
+              </div>
+
+              <p
+                style={{
+                  marginTop: 12,
+                  marginBottom: 0,
+                  fontSize: 12,
+                  color: "#777777",
+                  lineHeight: 1.8,
+                }}
+              >
+                ※ QR発行には5か所達成と
+                参加後アンケート回答が必要です。
+                読み取り画面では検証専用QRのみ受け付けます。
+              </p>
             </section>
 
             {/* ========================================
@@ -769,12 +813,7 @@ export default function StaffTestPage() {
                 TEST DATA RESET
               </span>
 
-              <h2
-                style={{
-                  marginTop: 10,
-                  fontSize: 19,
-                }}
-              >
+              <h2 style={{ marginTop: 10, fontSize: 19 }}>
                 動作確認を最初からやり直す
               </h2>
 
@@ -807,9 +846,7 @@ export default function StaffTestPage() {
                   background: "#fff8f8",
                 }}
                 disabled={resetting || refreshing}
-                onClick={() =>
-                  void resetTestData()
-                }
+                onClick={() => void resetTestData()}
               >
                 {resetting
                   ? "検証データを初期化中..."
@@ -831,9 +868,7 @@ export default function StaffTestPage() {
             type="button"
             style={buttonStyle}
             disabled={refreshing || resetting}
-            onClick={() =>
-              void refresh()
-            }
+            onClick={() => void refresh()}
           >
             {refreshing
               ? "更新中..."
@@ -843,9 +878,7 @@ export default function StaffTestPage() {
           <button
             type="button"
             style={buttonStyle}
-            onClick={() =>
-              router.push("/staff")
-            }
+            onClick={() => router.push("/staff")}
           >
             管理画面へ戻る
           </button>
@@ -859,8 +892,7 @@ export default function StaffTestPage() {
             color: "#777",
           }}
         >
-          本画面が操作するのは検証専用の
-          3テーブルのみです。
+          この画面では検証専用の3テーブルのみを操作します。
           本番の参加者・スタンプ・アンケート・
           景品交換記録は変更しません。
         </p>
