@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Html5Qrcode } from "html5-qrcode";
 import { supabase } from "../../../lib/supabase-client";
+import { PokipoStaffRewardVerification } from "../../../components/PokipoRewardShared";
 
 /* ========================================
    TYPES
@@ -186,7 +187,6 @@ export default function StaffRewardPage() {
 
   /* ========================================
      LOGIN
-     ログイン成功後はスタッフメニューへ移動
   ======================================== */
 
   async function loginStaff() {
@@ -211,14 +211,12 @@ export default function StaffRewardPage() {
 
       if (error || !data.user) {
         console.error("管理者ログインエラー:", error);
-
         setMessage(
           "管理IDまたはパスワードが正しくありません。"
         );
         return;
       }
 
-      /* 管理者権限の確認 */
       const {
         data: staffProfile,
         error: profileError,
@@ -243,30 +241,19 @@ export default function StaffRewardPage() {
         return;
       }
 
-      /*
-       * ログイン直後に以前の端末設定が残らないようにする。
-       * 景品交換の端末選択は、スタッフメニューから
-       * 景品交換を開いたときだけ表示する。
-       */
+      // ログイン直後に以前の端末設定を解除
       sessionStorage.removeItem(DEVICE_MODE_KEY);
 
       setDeviceMode(null);
       setDeviceModeLoaded(false);
-
       setAuthenticated(true);
       setPassword("");
 
-      /*
-       * ★今回の変更箇所
-       * ログイン成功後はスタッフメニューへ移動
-       */
+      // ログイン成功後はスタッフメニューへ移動
       router.replace("/staff");
     } catch (error) {
       console.error("管理者ログイン通信エラー:", error);
-
-      setMessage(
-        "通信中にエラーが発生しました。"
-      );
+      setMessage("通信中にエラーが発生しました。");
     } finally {
       setLoginLoading(false);
     }
@@ -308,7 +295,6 @@ export default function StaffRewardPage() {
 
   function selectScannerMode() {
     sessionStorage.setItem(DEVICE_MODE_KEY, "scanner");
-
     setDeviceMode("scanner");
     setMessage("");
   }
@@ -319,7 +305,6 @@ export default function StaffRewardPage() {
 
   async function selectMonitorMode() {
     sessionStorage.setItem(DEVICE_MODE_KEY, "monitor");
-
     setDeviceMode("monitor");
 
     try {
@@ -350,7 +335,6 @@ export default function StaffRewardPage() {
     setReward(null);
     setParticipant(null);
     setMonitorProfile(null);
-
     setMessage("");
     setCameraError("");
   }
@@ -466,9 +450,12 @@ export default function StaffRewardPage() {
       const {
         data: routeData,
         error: routeError,
-      } = await supabase.rpc("get_pokipo_route_type", {
-        p_participant_id: participantData.id,
-      });
+      } = await supabase.rpc(
+        "get_pokipo_route_type",
+        {
+          p_participant_id: participantData.id,
+        }
+      );
 
       if (routeError) {
         console.error(
@@ -494,7 +481,7 @@ export default function StaffRewardPage() {
       );
     }
 
-    /* SEND */
+    /* SEND PRESENTED */
     try {
       const { error } = await supabase
         .from("reward_monitor_state")
@@ -579,8 +566,8 @@ export default function StaffRewardPage() {
       }
 
       /*
-       * 交換完了後はQR端末がidleへ戻さない。
-       * モニター側で10秒後に自動的にidleへ戻す。
+       * 交換完了後はQR端末からidleに戻さない。
+       * モニター側の10秒タイマーに任せる。
        */
       monitorPresentationActiveRef.current = false;
     } catch (error) {
@@ -655,7 +642,7 @@ export default function StaffRewardPage() {
             await readRewardQr(qrValue);
           },
           () => {
-            // QR探索中のエラーは無視
+            // QR探索中のエラーは無視する
           }
         );
 
@@ -741,6 +728,7 @@ export default function StaffRewardPage() {
   async function readRewardQr(qrValue: string) {
     const prefix = "POKIPO_REWARD:";
 
+    // 検証用QRを本番のスキャナーで受け付けない
     if (!qrValue.startsWith(prefix)) {
       setMessage(
         "POKIPOの特典交換QRではありません。"
@@ -841,7 +829,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     CONFIRM
+     CONFIRM EXCHANGE
   ======================================== */
 
   function confirmExchange() {
@@ -860,7 +848,10 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     EXCHANGE
+     PERFORM EXCHANGE
+
+     本番のreward_exchangesだけ更新
+     既存の二重交換防止条件を維持
   ======================================== */
 
   async function performExchange() {
@@ -955,9 +946,9 @@ export default function StaffRewardPage() {
 
   async function resetScanner() {
     /*
-     * 未交換なら presented → idle
-     * 交換済みなら completed を維持し、
-     * モニター側の10秒タイマーに任せる。
+     * 未交換の場合は presented → idle
+     * 交換済みの場合は completed を維持
+     * モニター側の10秒タイマーに任せる
      */
     if (reward?.status !== "exchanged") {
       await clearPendingMonitorPresentation();
@@ -996,7 +987,7 @@ export default function StaffRewardPage() {
   }
 
   /* ========================================
-     LOADING
+     AUTH LOADING
   ======================================== */
 
   if (authLoading) {
@@ -1021,9 +1012,7 @@ export default function StaffRewardPage() {
         <section className="staffRewardPage">
           <div className="staffLoginCard">
             <span>POKIPO STAFF</span>
-
             <h1>管理者ログイン</h1>
-
             <p>
               POKIPO運営管理者専用ページです。
             </p>
@@ -1158,17 +1147,9 @@ export default function StaffRewardPage() {
                   </p>
 
                   <div className="staffDeviceModeFeature">
-                    <span>
-                      ✓ QR読み取り
-                    </span>
-
-                    <span>
-                      ✓ 参加者確認
-                    </span>
-
-                    <span>
-                      ✓ 景品交換確定
-                    </span>
+                    <span>✓ QR読み取り</span>
+                    <span>✓ 参加者確認</span>
+                    <span>✓ 景品交換確定</span>
                   </div>
                 </div>
 
@@ -1204,21 +1185,10 @@ export default function StaffRewardPage() {
                   </p>
 
                   <div className="staffDeviceModeFeature">
-                    <span>
-                      ✓ 待機画面
-                    </span>
-
-                    <span>
-                      ✓ ゴール演出
-                    </span>
-
-                    <span>
-                      ✓ YOUR ROUTE
-                    </span>
-
-                    <span>
-                      ✓ THANK YOU画面
-                    </span>
+                    <span>✓ 待機画面</span>
+                    <span>✓ ゴール演出</span>
+                    <span>✓ YOUR ROUTE</span>
+                    <span>✓ THANK YOU画面</span>
                   </div>
                 </div>
 
@@ -1276,6 +1246,8 @@ export default function StaffRewardPage() {
   return (
     <main className="shell">
       <section className="staffRewardPage">
+
+        {/* HEADER */}
         <header className="staffRewardHeader">
           <div>
             <span>
@@ -1290,21 +1262,27 @@ export default function StaffRewardPage() {
           <div className="staffRewardHeaderActions">
             <button
               type="button"
-              onClick={() => void changeDeviceMode()}
+              onClick={() =>
+                void changeDeviceMode()
+              }
             >
               端末設定
             </button>
 
             <button
               type="button"
-              onClick={() => void goStaffMenu()}
+              onClick={() =>
+                void goStaffMenu()
+              }
             >
               メニュー
             </button>
 
             <button
               type="button"
-              onClick={() => void logoutStaff()}
+              onClick={() =>
+                void logoutStaff()
+              }
             >
               ログアウト
             </button>
@@ -1384,7 +1362,9 @@ export default function StaffRewardPage() {
                 <button
                   type="button"
                   className="staffScannerCancel"
-                  onClick={() => void stopQrScanner()}
+                  onClick={() =>
+                    void stopQrScanner()
+                  }
                 >
                   カメラを閉じる
                 </button>
@@ -1411,32 +1391,42 @@ export default function StaffRewardPage() {
           </section>
         )}
 
-        {/* PARTICIPANT */}
+        {/* =================================
+            PARTICIPANT CONFIRMATION
+
+            本番・検証の共通表示部品を使用
+
+            ・本番の交換処理は変更しない
+            ・会場モニター情報は維持する
+            ・検証用テーブルは参照しない
+        ================================= */}
+
         {reward && participant && (
-          <section className="staffParticipantCard">
-            <div
-              className={
-                reward.status === "exchanged"
-                  ? "staffExchangeStatus exchanged"
-                  : "staffExchangeStatus ready"
-              }
-            >
-              {reward.status === "exchanged"
-                ? "交換済み"
-                : "交換可能"}
-            </div>
-
-            <span className="staffParticipantEyebrow">
-              PARTICIPANT
-            </span>
-
-            <h2>
-              {participant.nickname}
-              <small>さん</small>
-            </h2>
-
-            {monitorProfile &&
-              reward.status !== "exchanged" && (
+          <PokipoStaffRewardVerification
+            mode="production"
+            nickname={participant.nickname}
+            confirmationCode={
+              reward.confirmation_code
+            }
+            status={
+              reward.status === "exchanged"
+                ? "exchanged"
+                : "issued"
+            }
+            grade={participant.grade}
+            department={participant.department}
+            exchangedAt={
+              reward.exchanged_at
+                ? formatExchangeDate(
+                    reward.exchanged_at
+                  )
+                : null
+            }
+            confirming={confirming}
+            message={message}
+            monitorInfo={
+              monitorProfile &&
+              reward.status !== "exchanged" ? (
                 <div className="staffMonitorInfo">
                   <span>
                     MONITOR DISPLAY
@@ -1456,102 +1446,15 @@ export default function StaffRewardPage() {
                     {monitorProfile.routeTitle}
                   </strong>
                 </div>
-              )}
-
-            <div className="staffConfirmationCode">
-              <span>
-                CONFIRMATION NUMBER
-              </span>
-
-              <small>
-                確認番号
-              </small>
-
-              <strong>
-                {reward.confirmation_code}
-              </strong>
-            </div>
-
-            <div className="staffParticipantInfo">
-              <div>
-                <span>
-                  学年
-                </span>
-
-                <strong>
-                  {participant.grade ?? "未設定"}
-                </strong>
-              </div>
-
-              <div>
-                <span>
-                  学科
-                </span>
-
-                <strong>
-                  {participant.department ?? "未設定"}
-                </strong>
-              </div>
-            </div>
-
-            {reward.status === "exchanged" ? (
-              <div className="staffAlreadyExchanged">
-                <div>
-                  ✓
-                </div>
-
-                <span>
-                  REWARD EXCHANGED
-                </span>
-
-                <h3>
-                  このQRは交換済みです
-                </h3>
-
-                {reward.exchanged_at && (
-                  <p>
-                    交換日時：
-                    {formatExchangeDate(
-                      reward.exchanged_at
-                    )}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="staffExchangeConfirm">
-                <p>
-                  参加者画面に表示されている
-                  確認番号と一致していることを確認し、
-                  景品を渡す直前に交換を確定してください。
-                </p>
-
-                <button
-                  type="button"
-                  onClick={confirmExchange}
-                  disabled={confirming}
-                >
-                  {confirming
-                    ? "交換を記録中..."
-                    : "景品交換を確定する"}
-                </button>
-              </div>
-            )}
-
-            <button
-              type="button"
-              className="staffNextScanButton"
-              onClick={() => void resetScanner()}
-            >
-              次のQRを読み取る
-            </button>
-
-            {message && (
-              <p className="staffMessage">
-                {message}
-              </p>
-            )}
-          </section>
+              ) : null
+            }
+            onConfirm={confirmExchange}
+            onNextScan={() =>
+              void resetScanner()
+            }
+          />
         )}
+
       </section>
     </main>
   );
