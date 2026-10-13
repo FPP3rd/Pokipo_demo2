@@ -41440,3 +41440,59 @@ main.shell > .staffMenuPage[style*="max-width"]
     grid-row: 3;
   }
 }
+
+/* ==========================================
+   POKIPO DASHBOARD COMPACT CLOCK
+   タイトル右横の小型時計
+========================================== */
+
+.staffDashboardPage .staffDashboardHeader {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  row-gap: 6px !important;
+  width: 100%;
+}
+
+.staffDashboardPage .pokipoDashboardHeaderTitle {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  min-width: 0 !important;
+  width: auto !important;
+}
+
+.staffDashboardPage .pokipoDashboardHeaderTitle h1 {
+  font-size: clamp(19px, 2.8vw, 26px) !important;
+  line-height: 1.35 !important;
+  word-break: keep-all !important;
+  writing-mode: horizontal-tb !important;
+}
+
+.staffDashboardPage .pokipoDashboardClockSlot {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  justify-self: end !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+/* QR交換ボタンはタイトルの下の右側 */
+.staffDashboardPage .staffDashboardHeader > button {
+  grid-column: 2 !important;
+  grid-row: 2 !important;
+  justify-self: end !important;
+  width: auto !important;
+  white-space: nowrap !important;
+}
+
+/* スマホでも小さく */
+@media (max-width: 640px) {
+  .staffDashboardPage .staffDashboardHeader {
+    column-gap: 8px !important;
+  }
+
+  .staffDashboardPage .pokipoDashboardHeaderTitle h1 {
+    font-size: 18px !important;
+  }
+}
