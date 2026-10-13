@@ -1,22 +1,8 @@
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-
-import {
-  useRouter,
-} from "next/navigation";
-
-import {
-  supabase,
-} from "../../../lib/supabase-client";
-
-/* ========================================
-   TYPES
-======================================== */
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabase-client";
 
 type PreSurvey = {
   participant_id: string;
@@ -41,1193 +27,833 @@ type PostSurvey = {
   created_at: string;
 };
 
-type ComparisonRow = {
-  participantId: string;
+type AnalysisTab = "before" | "after" | "comparison";
 
+type Filters = {
   gender: string;
-
-  knewRenewal: boolean;
-
-  hasSharedPocky: boolean;
-
-  pockyFrequency: string;
-
-  preInterest: number;
-  postInterest: number;
-
-  preEatIntent: number;
-  postEatIntent: number;
-
-  preShareIntent: number;
-  postShareIntent: number;
+  frequency: string;
+  renewal: string;
+  share: string;
 };
 
-type SegmentMetric = {
-  count: number;
-
-  interestBefore: number;
-  interestAfter: number;
-  interestChange: number;
-
-  eatBefore: number;
-  eatAfter: number;
-  eatChange: number;
-
-  shareBefore: number;
-  shareAfter: number;
-  shareChange: number;
+type Pair = {
+  before: PreSurvey;
+  after: PostSurvey;
 };
 
-/* ========================================
-   HELPERS
-======================================== */
+type ScoreKey =
+  | "interest_score"
+  | "eat_intent_score"
+  | "share_intent_score";
 
-function average(
-  values: number[]
-) {
-  if (
-    values.length === 0
-  ) {
-    return 0;
-  }
+const initialFilters: Filters = {
+  gender: "all",
+  frequency: "all",
+  renewal: "all",
+  share: "all",
+};
 
-  return (
-    values.reduce(
-      (
-        total,
-        value
-      ) =>
-        total + value,
-      0
-    ) /
-    values.length
-  );
+const frequencyOptions = [
+  "毎日食べる",
+  "週1回",
+  "月1〜2回",
+  "半年に1回",
+  "食べない",
+];
+
+const scoreOptions = [
+  { value: 4, label: "4点" },
+  { value: 3, label: "3点" },
+  { value: 2, label: "2点" },
+  { value: 1, label: "1点" },
+];
+
+const understandingOptions = [
+  { value: 4, label: "よく知ることができた" },
+  { value: 3, label: "ある程度知ることができた" },
+  { value: 2, label: "あまり知ることができなかった" },
+  { value: 1, label: "知ることができなかった" },
+];
+
+const sharedQuestions: {
+  key: ScoreKey;
+  title: string;
+  subtitle: string;
+}[] = [
+  {
+    key: "interest_score",
+    title: "ポッキーへの興味",
+    subtitle: "現在、ポッキーにどの程度興味がありますか？",
+  },
+  {
+    key: "eat_intent_score",
+    title: "ポッキーを食べたい気持ち",
+    subtitle: "今後、ポッキーを食べたいと思いますか？",
+  },
+  {
+    key: "share_intent_score",
+    title: "ポッキーをシェアしたい気持ち",
+    subtitle: "今後、ポッキーを誰かとシェアして食べたいと思いますか？",
+  },
+];
+
+function average(values: number[]): number {
+  if (values.length === 0) return 0;
+
+  return values.reduce((sum, value) => sum + value, 0) /
+    values.length;
 }
 
-function positiveRate(
-  values: number[]
-) {
-  if (
-    values.length === 0
-  ) {
-    return 0;
-  }
-
-  const positive =
-    values.filter(
-      (
-        value
-      ) =>
-        value >= 3
-    ).length;
+function positiveRate(values: number[]): number {
+  if (values.length === 0) return 0;
 
   return (
-    positive /
+    values.filter((value) => value >= 3).length /
     values.length
   ) * 100;
 }
 
-function formatScore(
-  value: number
-) {
-  return value.toFixed(
-    2
-  );
+function scoreText(value: number): string {
+  return value.toFixed(2);
 }
 
-function formatRate(
-  value: number
-) {
-  return `${Math.round(
-    value
-  )}%`;
+function rateText(value: number): string {
+  return `${Math.round(value)}%`;
 }
 
-function formatDifference(
-  value: number
-) {
+function differenceText(value: number): string {
+  const formatted = value.toFixed(2);
+  return value > 0 ? `+${formatted}` : formatted;
+}
+
+function countValues<T>(
+  items: T[],
+  predicate: (item: T) => boolean
+): number {
+  return items.filter(predicate).length;
+}
+
+function matchesFilters(
+  survey: PreSurvey,
+  filters: Filters
+): boolean {
   if (
-    value > 0
+    filters.gender !== "all" &&
+    survey.gender !== filters.gender
   ) {
-    return `+${value.toFixed(
-      2
-    )}`;
+    return false;
   }
-
-  return value.toFixed(
-    2
-  );
-}
-
-function formatPointDifference(
-  value: number
-) {
-  const rounded =
-    Math.round(
-      value
-    );
 
   if (
-    rounded > 0
+    filters.frequency !== "all" &&
+    survey.pocky_frequency !== filters.frequency
   ) {
-    return `+${rounded}pt`;
+    return false;
   }
-
-  return `${rounded}pt`;
-}
-
-function changeSummary(
-  beforeValues: number[],
-  afterValues: number[]
-) {
-  const total =
-    Math.min(
-      beforeValues.length,
-      afterValues.length
-    );
 
   if (
-    total === 0
+    filters.renewal === "known" &&
+    !survey.knew_renewal
   ) {
-    return {
-      improved: 0,
-      same: 0,
-      decreased: 0,
-
-      improvedRate: 0,
-      sameRate: 0,
-      decreasedRate: 0,
-    };
+    return false;
   }
 
-  let improved = 0;
-
-  let same = 0;
-
-  let decreased = 0;
-
-  for (
-    let index = 0;
-    index < total;
-    index += 1
-  ) {
-    const before =
-      beforeValues[index];
-
-    const after =
-      afterValues[index];
-
-    if (
-      after >
-      before
-    ) {
-      improved += 1;
-    } else if (
-      after ===
-      before
-    ) {
-      same += 1;
-    } else {
-      decreased += 1;
-    }
-  }
-
-  return {
-    improved,
-
-    same,
-
-    decreased,
-
-    improvedRate:
-      (
-        improved /
-        total
-      ) * 100,
-
-    sameRate:
-      (
-        same /
-        total
-      ) * 100,
-
-    decreasedRate:
-      (
-        decreased /
-        total
-      ) * 100,
-  };
-}
-
-function calculateSegmentMetric(
-  rows: ComparisonRow[]
-): SegmentMetric {
   if (
-    rows.length === 0
+    filters.renewal === "unknown" &&
+    survey.knew_renewal
   ) {
-    return {
-      count: 0,
-
-      interestBefore: 0,
-      interestAfter: 0,
-      interestChange: 0,
-
-      eatBefore: 0,
-      eatAfter: 0,
-      eatChange: 0,
-
-      shareBefore: 0,
-      shareAfter: 0,
-      shareChange: 0,
-    };
+    return false;
   }
 
-  const interestBefore =
-    average(
-      rows.map(
-        (
-          row
-        ) =>
-          row.preInterest
-      )
-    );
+  if (
+    filters.share === "shared" &&
+    !survey.has_shared_pocky
+  ) {
+    return false;
+  }
 
-  const interestAfter =
-    average(
-      rows.map(
-        (
-          row
-        ) =>
-          row.postInterest
-      )
-    );
+  if (
+    filters.share === "not-shared" &&
+    survey.has_shared_pocky
+  ) {
+    return false;
+  }
 
-  const eatBefore =
-    average(
-      rows.map(
-        (
-          row
-        ) =>
-          row.preEatIntent
-      )
-    );
-
-  const eatAfter =
-    average(
-      rows.map(
-        (
-          row
-        ) =>
-          row.postEatIntent
-      )
-    );
-
-  const shareBefore =
-    average(
-      rows.map(
-        (
-          row
-        ) =>
-          row.preShareIntent
-      )
-    );
-
-  const shareAfter =
-    average(
-      rows.map(
-        (
-          row
-        ) =>
-          row.postShareIntent
-      )
-    );
-
-  return {
-    count:
-      rows.length,
-
-    interestBefore,
-
-    interestAfter,
-
-    interestChange:
-      interestAfter -
-      interestBefore,
-
-    eatBefore,
-
-    eatAfter,
-
-    eatChange:
-      eatAfter -
-      eatBefore,
-
-    shareBefore,
-
-    shareAfter,
-
-    shareChange:
-      shareAfter -
-      shareBefore,
-  };
+  return true;
 }
 
 /* ========================================
-   PAGE
+   GRAPH COMPONENT
+======================================== */
+
+type GraphItem = {
+  label: string;
+  count: number;
+};
+
+function DistributionGraph({
+  title,
+  description,
+  items,
+  total,
+}: {
+  title: string;
+  description?: string;
+  items: GraphItem[];
+  total: number;
+}) {
+  return (
+    <article className="surveyAnalysisGraphCard">
+      <h3>{title}</h3>
+
+      {description && (
+        <p className="surveyAnalysisGraphDescription">
+          {description}
+        </p>
+      )}
+
+      {total === 0 ? (
+        <p className="surveyAnalysisEmpty">
+          集計できる回答がありません。
+        </p>
+      ) : (
+        <div className="surveyAnalysisGraphRows">
+          {items.map((item) => {
+            const rate =
+              total > 0 ? (item.count / total) * 100 : 0;
+
+            return (
+              <div
+                key={item.label}
+                className="surveyAnalysisGraphRow"
+              >
+                <div className="surveyAnalysisGraphRowTop">
+                  <span>{item.label}</span>
+
+                  <strong>
+                    {item.count}人
+                    <small>（{rateText(rate)}）</small>
+                  </strong>
+                </div>
+
+                <div
+                  className="surveyAnalysisGraphTrack"
+                  role="progressbar"
+                  aria-label={`${title}：${item.label}`}
+                  aria-valuenow={rate}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    className="surveyAnalysisGraphFill"
+                    style={{
+                      width: `${Math.min(
+                        Math.max(rate, 0),
+                        100
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </article>
+  );
+}
+
+function ScoreDistribution({
+  title,
+  values,
+  labels = scoreOptions,
+}: {
+  title: string;
+  values: number[];
+  labels?: { value: number; label: string }[];
+}) {
+  return (
+    <DistributionGraph
+      title={title}
+      description={
+        values.length > 0
+          ? `平均 ${scoreText(average(values))} / 4 ・ 肯定率 ${rateText(
+              positiveRate(values)
+            )}（3〜4点）`
+          : "4段階評価"
+      }
+      total={values.length}
+      items={labels.map((option) => ({
+        label: option.label,
+        count: values.filter(
+          (value) => value === option.value
+        ).length,
+      }))}
+    />
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  description,
+}: {
+  label: string;
+  value: string;
+  description?: string;
+}) {
+  return (
+    <article className="surveyAnalysisStatCard">
+      <span>{label}</span>
+      <strong>{value}</strong>
+
+      {description && <p>{description}</p>}
+    </article>
+  );
+}
+
+function SectionHeading({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="staffSurveySectionTitle">
+      <span>{eyebrow}</span>
+      <h2>{title}</h2>
+      {description && <p>{description}</p>}
+    </div>
+  );
+}
+
+/* ========================================
+   STAFF SURVEY PAGE
 ======================================== */
 
 export default function StaffSurveyPage() {
-  const router =
-    useRouter();
+  const router = useRouter();
+
+  const [authenticated, setAuthenticated] =
+    useState(false);
+
+  const [authLoading, setAuthLoading] =
+    useState(true);
+
+  const [loading, setLoading] = useState(true);
+
+  const [preSurveys, setPreSurveys] =
+    useState<PreSurvey[]>([]);
+
+  const [postSurveys, setPostSurveys] =
+    useState<PostSurvey[]>([]);
+
+  const [message, setMessage] = useState("");
+
+  const [activeTab, setActiveTab] =
+    useState<AnalysisTab>("before");
+
+  const [filters, setFilters] =
+    useState<Filters>(initialFilters);
+
+  const [lastUpdated, setLastUpdated] =
+    useState("");
 
   /* ========================================
-     AUTH
-  ======================================== */
-
-  const [
-    authenticated,
-    setAuthenticated,
-  ] = useState(false);
-
-  const [
-    authLoading,
-    setAuthLoading,
-  ] = useState(true);
-
-  /* ========================================
-     DATA
-  ======================================== */
-
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
-
-  const [
-    preSurveys,
-    setPreSurveys,
-  ] = useState<
-    PreSurvey[]
-  >([]);
-
-  const [
-    postSurveys,
-    setPostSurveys,
-  ] = useState<
-    PostSurvey[]
-  >([]);
-
-  const [
-    message,
-    setMessage,
-  ] = useState("");
-
-  /* ========================================
-     FILTERS
-  ======================================== */
-
-  const [
-    genderFilter,
-    setGenderFilter,
-  ] = useState(
-    "all"
-  );
-
-  const [
-    frequencyFilter,
-    setFrequencyFilter,
-  ] = useState(
-    "all"
-  );
-
-  const [
-    renewalFilter,
-    setRenewalFilter,
-  ] = useState(
-    "all"
-  );
-
-  const [
-    shareFilter,
-    setShareFilter,
-  ] = useState(
-    "all"
-  );
-
-  /* ========================================
-     AUTH CHECK
+     STAFF AUTHENTICATION
   ======================================== */
 
   useEffect(() => {
+    let active = true;
+
     async function checkAuth() {
-      const {
-        data,
-        error,
-      } =
-        await supabase.auth.getSession();
-
-      if (
-        error ||
-        !data.session
-      ) {
-        router.replace(
-          "/staff/reward"
-        );
-
-        return;
-      }
-
-      setAuthenticated(
-        true
-      );
-
-      setAuthLoading(
-        false
-      );
-    }
-
-    void checkAuth();
-  }, [
-    router,
-  ]);
-
-  /* ========================================
-     LOAD SURVEY DATA
-  ======================================== */
-
-  useEffect(() => {
-    if (
-      !authenticated
-    ) {
-      return;
-    }
-
-    async function loadSurveyData() {
-      setLoading(
-        true
-      );
-
-      setMessage("");
-
       try {
-        const {
-          data:
-            preData,
+        const { data, error } =
+          await supabase.auth.getSession();
 
-          error:
-            preError,
-        } =
-          await supabase
-            .from(
-              "pokipo_pre_surveys"
-            )
-            .select(
-              "participant_id, gender, pocky_frequency, knew_renewal, has_shared_pocky, share_situation, interest_score, eat_intent_score, share_intent_score, created_at"
-            );
+        if (!active) return;
 
-        if (
-          preError
-        ) {
-          console.error(
-            "参加前アンケート取得エラー:",
-            preError
-          );
-
-          setMessage(
-            "参加前アンケートを取得できませんでした。"
-          );
-
+        if (error || !data.session) {
+          router.replace("/staff/reward");
           return;
         }
 
-        const {
-          data:
-            postData,
-
-          error:
-            postError,
-        } =
-          await supabase
-            .from(
-              "pokipo_post_surveys"
-            )
-            .select(
-              "participant_id, interest_score, eat_intent_score, share_intent_score, renewal_understanding_score, memorable_point, created_at"
-            );
-
-        if (
-          postError
-        ) {
-          console.error(
-            "参加後アンケート取得エラー:",
-            postError
-          );
-
-          setMessage(
-            "参加後アンケートを取得できませんでした。"
-          );
-
-          return;
-        }
-
-        setPreSurveys(
-          (
-            preData ??
-            []
-          ) as PreSurvey[]
-        );
-
-        setPostSurveys(
-          (
-            postData ??
-            []
-          ) as PostSurvey[]
-        );
-      } catch (
-        error
-      ) {
+        setAuthenticated(true);
+      } catch (error) {
         console.error(
-          "アンケート分析通信エラー:",
+          "スタッフ認証確認エラー:",
           error
         );
 
-        setMessage(
-          "アンケート情報の読み込み中にエラーが発生しました。"
-        );
+        if (active) {
+          router.replace("/staff/reward");
+        }
       } finally {
-        setLoading(
-          false
+        if (active) {
+          setAuthLoading(false);
+        }
+      }
+    }
+
+    void checkAuth();
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
+  /* ========================================
+     READ SURVEY DATA
+  ======================================== */
+
+  useEffect(() => {
+    if (!authenticated) return;
+
+    let active = true;
+
+    async function loadSurveyData() {
+      setLoading(true);
+      setMessage("");
+
+      try {
+        const [preResult, postResult] =
+          await Promise.all([
+            supabase
+              .from("pokipo_pre_surveys")
+              .select(
+                "participant_id, gender, pocky_frequency, knew_renewal, has_shared_pocky, share_situation, interest_score, eat_intent_score, share_intent_score, created_at"
+              ),
+
+            supabase
+              .from("pokipo_post_surveys")
+              .select(
+                "participant_id, interest_score, eat_intent_score, share_intent_score, renewal_understanding_score, memorable_point, created_at"
+              ),
+          ]);
+
+        if (preResult.error) {
+          throw new Error(
+            `参加前アンケート: ${preResult.error.message}`
+          );
+        }
+
+        if (postResult.error) {
+          throw new Error(
+            `参加後アンケート: ${postResult.error.message}`
+          );
+        }
+
+        if (!active) return;
+
+        setPreSurveys(
+          (preResult.data ?? []) as PreSurvey[]
         );
+
+        setPostSurveys(
+          (postResult.data ?? []) as PostSurvey[]
+        );
+
+        setLastUpdated(
+          new Date().toLocaleString("ja-JP")
+        );
+      } catch (error) {
+        console.error(
+          "アンケート取得エラー:",
+          error
+        );
+
+        if (active) {
+          setMessage(
+            "アンケートを取得できませんでした。通信環境やスタッフ権限を確認してください。"
+          );
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
     void loadSurveyData();
-  }, [
-    authenticated,
-  ]);
+
+    return () => {
+      active = false;
+    };
+  }, [authenticated]);
 
   /* ========================================
-     COMPARISON ROWS
+     FILTERING
   ======================================== */
 
-  const comparisonRows =
-    useMemo(
-      () => {
-        const rows:
-          ComparisonRow[] = [];
+  const filteredPreSurveys = useMemo(
+    () =>
+      preSurveys.filter((survey) =>
+        matchesFilters(survey, filters)
+      ),
+    [preSurveys, filters]
+  );
 
-        for (
-          const pre of preSurveys
-        ) {
-          const post =
-            postSurveys.find(
-              (
-                item
-              ) =>
-                item.participant_id ===
-                pre.participant_id
-            );
-
-          if (
-            !post
-          ) {
-            continue;
-          }
-
-          rows.push({
-            participantId:
-              pre.participant_id,
-
-            gender:
-              pre.gender,
-
-            knewRenewal:
-              pre.knew_renewal,
-
-            hasSharedPocky:
-              pre.has_shared_pocky,
-
-            pockyFrequency:
-              pre.pocky_frequency,
-
-            preInterest:
-              pre.interest_score,
-
-            postInterest:
-              post.interest_score,
-
-            preEatIntent:
-              pre.eat_intent_score,
-
-            postEatIntent:
-              post.eat_intent_score,
-
-            preShareIntent:
-              pre.share_intent_score,
-
-            postShareIntent:
-              post.share_intent_score,
-          });
-        }
-
-        return rows;
-      },
-      [
-        preSurveys,
-        postSurveys,
-      ]
-    );
-
-  /* ========================================
-     FILTERED ROWS
-  ======================================== */
-
-  const filteredComparisonRows =
-    useMemo(
-      () => {
-        return comparisonRows.filter(
-          (
-            row
-          ) => {
-            if (
-              genderFilter !==
-                "all" &&
-              row.gender !==
-                genderFilter
-            ) {
-              return false;
-            }
-
-            if (
-              frequencyFilter !==
-                "all" &&
-              row.pockyFrequency !==
-                frequencyFilter
-            ) {
-              return false;
-            }
-
-            if (
-              renewalFilter ===
-                "known" &&
-              !row.knewRenewal
-            ) {
-              return false;
-            }
-
-            if (
-              renewalFilter ===
-                "unknown" &&
-              row.knewRenewal
-            ) {
-              return false;
-            }
-
-            if (
-              shareFilter ===
-                "shared" &&
-              !row.hasSharedPocky
-            ) {
-              return false;
-            }
-
-            if (
-              shareFilter ===
-                "not-shared" &&
-              row.hasSharedPocky
-            ) {
-              return false;
-            }
-
-            return true;
-          }
-        );
-      },
-      [
-        comparisonRows,
-        genderFilter,
-        frequencyFilter,
-        renewalFilter,
-        shareFilter,
-      ]
-    );
-
-  /* ========================================
-     FILTERED PRE / POST
-  ======================================== */
-
-  const filteredParticipantIds =
-    new Set(
-      filteredComparisonRows.map(
-        (
-          row
-        ) =>
-          row.participantId
-      )
-    );
-
-  const filteredPreSurveys =
-    preSurveys.filter(
-      (
-        survey
-      ) =>
-        filteredParticipantIds.has(
-          survey.participant_id
+  const filteredPreIds = useMemo(
+    () =>
+      new Set(
+        filteredPreSurveys.map(
+          (survey) => survey.participant_id
         )
-    );
+      ),
+    [filteredPreSurveys]
+  );
 
-  const filteredPostSurveys =
-    postSurveys.filter(
-      (
-        survey
-      ) =>
-        filteredParticipantIds.has(
-          survey.participant_id
-        )
-    );
+  const filterIsActive = Object.values(
+    filters
+  ).some((value) => value !== "all");
 
-  /* ========================================
-     VALUES
-  ======================================== */
-
-  const preInterestValues =
-    filteredComparisonRows.map(
-      (
-        row
-      ) =>
-        row.preInterest
-    );
-
-  const postInterestValues =
-    filteredComparisonRows.map(
-      (
-        row
-      ) =>
-        row.postInterest
-    );
-
-  const preEatValues =
-    filteredComparisonRows.map(
-      (
-        row
-      ) =>
-        row.preEatIntent
-    );
-
-  const postEatValues =
-    filteredComparisonRows.map(
-      (
-        row
-      ) =>
-        row.postEatIntent
-    );
-
-  const preShareValues =
-    filteredComparisonRows.map(
-      (
-        row
-      ) =>
-        row.preShareIntent
-    );
-
-  const postShareValues =
-    filteredComparisonRows.map(
-      (
-        row
-      ) =>
-        row.postShareIntent
-    );
+  // 参加後のみの回答者は、参加前属性が不明なため
+  // 属性フィルター適用時には含めない。
+  const filteredPostSurveys = useMemo(
+    () =>
+      filterIsActive
+        ? postSurveys.filter((survey) =>
+            filteredPreIds.has(
+              survey.participant_id
+            )
+          )
+        : postSurveys,
+    [
+      postSurveys,
+      filteredPreIds,
+      filterIsActive,
+    ]
+  );
 
   /* ========================================
-     AVERAGES
+     MATCHED BEFORE / AFTER
   ======================================== */
 
-  const interestPreAverage =
-    average(
-      preInterestValues
+  const comparisonPairs = useMemo(() => {
+    const postById = new Map(
+      postSurveys.map((survey) => [
+        survey.participant_id,
+        survey,
+      ])
     );
 
-  const interestPostAverage =
-    average(
-      postInterestValues
-    );
+    const pairs: Pair[] = [];
 
-  const eatPreAverage =
-    average(
-      preEatValues
-    );
+    for (const before of filteredPreSurveys) {
+      const after = postById.get(
+        before.participant_id
+      );
 
-  const eatPostAverage =
-    average(
-      postEatValues
-    );
-
-  const sharePreAverage =
-    average(
-      preShareValues
-    );
-
-  const sharePostAverage =
-    average(
-      postShareValues
-    );
-
-  /* ========================================
-     POSITIVE RATES
-  ======================================== */
-
-  const interestPrePositive =
-    positiveRate(
-      preInterestValues
-    );
-
-  const interestPostPositive =
-    positiveRate(
-      postInterestValues
-    );
-
-  const eatPrePositive =
-    positiveRate(
-      preEatValues
-    );
-
-  const eatPostPositive =
-    positiveRate(
-      postEatValues
-    );
-
-  const sharePrePositive =
-    positiveRate(
-      preShareValues
-    );
-
-  const sharePostPositive =
-    positiveRate(
-      postShareValues
-    );
-
-  /* ========================================
-     BEFORE STATUS
-  ======================================== */
-
-  const renewalAwareCount =
-    filteredPreSurveys.filter(
-      (
-        survey
-      ) =>
-        survey.knew_renewal
-    ).length;
-
-  const renewalAwareRate =
-    filteredPreSurveys.length >
-    0
-      ? (
-          renewalAwareCount /
-          filteredPreSurveys.length
-        ) * 100
-      : 0;
-
-  const sharedCount =
-    filteredPreSurveys.filter(
-      (
-        survey
-      ) =>
-        survey.has_shared_pocky
-    ).length;
-
-  const sharedRate =
-    filteredPreSurveys.length >
-    0
-      ? (
-          sharedCount /
-          filteredPreSurveys.length
-        ) * 100
-      : 0;
-
-  /* ========================================
-     AFTER STATUS
-  ======================================== */
-
-  const postInterestPositiveRate =
-    positiveRate(
-      filteredPostSurveys.map(
-        (
-          survey
-        ) =>
-          survey.interest_score
-      )
-    );
-
-  const postEatPositiveRate =
-    positiveRate(
-      filteredPostSurveys.map(
-        (
-          survey
-        ) =>
-          survey.eat_intent_score
-      )
-    );
-
-  const postSharePositiveRate =
-    positiveRate(
-      filteredPostSurveys.map(
-        (
-          survey
-        ) =>
-          survey.share_intent_score
-      )
-    );
-
-  const renewalUnderstandingPositiveRate =
-    positiveRate(
-      filteredPostSurveys.map(
-        (
-          survey
-        ) =>
-          survey.renewal_understanding_score
-      )
-    );
-
-  /* ========================================
-     CHANGE ANALYSIS
-  ======================================== */
-
-  const interestChange =
-    changeSummary(
-      preInterestValues,
-      postInterestValues
-    );
-
-  const eatChange =
-    changeSummary(
-      preEatValues,
-      postEatValues
-    );
-
-  const shareChange =
-    changeSummary(
-      preShareValues,
-      postShareValues
-    );
-
-  /* ========================================
-     SEGMENT ANALYSIS
-  ======================================== */
-
-  const knewRenewalRows =
-    filteredComparisonRows.filter(
-      (
-        row
-      ) =>
-        row.knewRenewal
-    );
-
-  const didNotKnowRenewalRows =
-    filteredComparisonRows.filter(
-      (
-        row
-      ) =>
-        !row.knewRenewal
-    );
-
-  const sharedBeforeRows =
-    filteredComparisonRows.filter(
-      (
-        row
-      ) =>
-        row.hasSharedPocky
-    );
-
-  const neverSharedRows =
-    filteredComparisonRows.filter(
-      (
-        row
-      ) =>
-        !row.hasSharedPocky
-    );
-
-  const knewRenewalSegment =
-    calculateSegmentMetric(
-      knewRenewalRows
-    );
-
-  const didNotKnowRenewalSegment =
-    calculateSegmentMetric(
-      didNotKnowRenewalRows
-    );
-
-  const sharedBeforeSegment =
-    calculateSegmentMetric(
-      sharedBeforeRows
-    );
-
-  const neverSharedSegment =
-    calculateSegmentMetric(
-      neverSharedRows
-    );
-
-  /* ========================================
-     UNDERSTANDING
-  ======================================== */
-
-  const understandingAverage =
-    average(
-      filteredPostSurveys.map(
-        (
-          survey
-        ) =>
-          survey.renewal_understanding_score
-      )
-    );
-
-  function understandingCount(
-    score: number
-  ) {
-    return filteredPostSurveys.filter(
-      (
-        survey
-      ) =>
-        survey.renewal_understanding_score ===
-        score
-    ).length;
-  }
-
-  function understandingRate(
-    score: number
-  ) {
-    if (
-      filteredPostSurveys.length ===
-      0
-    ) {
-      return 0;
+      if (after) {
+        pairs.push({ before, after });
+      }
     }
 
+    return pairs;
+  }, [filteredPreSurveys, postSurveys]);
+
+  /* ========================================
+     COMPARISON HELPERS
+  ======================================== */
+
+  function getPairScores(
+    pairs: Pair[],
+    key: ScoreKey
+  ) {
+    return {
+      before: pairs.map(
+        (pair) => pair.before[key]
+      ),
+      after: pairs.map(
+        (pair) => pair.after[key]
+      ),
+    };
+  }
+
+  function getChangeCounts(
+    pairs: Pair[],
+    key: ScoreKey
+  ) {
+    return {
+      improved: pairs.filter(
+        (pair) =>
+          pair.after[key] > pair.before[key]
+      ).length,
+
+      same: pairs.filter(
+        (pair) =>
+          pair.after[key] === pair.before[key]
+      ).length,
+
+      decreased: pairs.filter(
+        (pair) =>
+          pair.after[key] < pair.before[key]
+      ).length,
+    };
+  }
+
+  function renderComparisonMetric(
+    key: ScoreKey,
+    title: string,
+    pairs: Pair[]
+  ) {
+    const scores = getPairScores(pairs, key);
+
+    const beforeAverage = average(
+      scores.before
+    );
+
+    const afterAverage = average(
+      scores.after
+    );
+
+    const beforePositive = positiveRate(
+      scores.before
+    );
+
+    const afterPositive = positiveRate(
+      scores.after
+    );
+
+    const counts = getChangeCounts(
+      pairs,
+      key
+    );
+
     return (
-      understandingCount(
-        score
-      ) /
-      filteredPostSurveys.length
-    ) * 100;
+      <article
+        key={key}
+        className="staffSurveyMetricCard"
+      >
+        <div className="staffSurveyMetricHeader">
+          <div>
+            <span>BEFORE / AFTER</span>
+            <h3>{title}</h3>
+          </div>
+
+          <strong>
+            {pairs.length > 0
+              ? differenceText(
+                  afterAverage - beforeAverage
+                )
+              : "—"}
+          </strong>
+        </div>
+
+        <div className="staffSurveyBeforeAfter">
+          <div>
+            <span>BEFORE</span>
+            <strong>
+              {pairs.length > 0
+                ? scoreText(beforeAverage)
+                : "—"}
+            </strong>
+            <small>/ 4</small>
+          </div>
+
+          <div className="arrow">→</div>
+
+          <div>
+            <span>AFTER</span>
+            <strong>
+              {pairs.length > 0
+                ? scoreText(afterAverage)
+                : "—"}
+            </strong>
+            <small>/ 4</small>
+          </div>
+        </div>
+
+        <div className="staffSurveyPositiveRate">
+          <span>肯定率</span>
+
+          <strong>
+            {pairs.length > 0
+              ? `${rateText(
+                  beforePositive
+                )} → ${rateText(afterPositive)}`
+              : "—"}
+          </strong>
+
+          <b>
+            {pairs.length > 0
+              ? `${differenceText(
+                  afterPositive - beforePositive
+                )}pt`
+              : "—"}
+          </b>
+        </div>
+
+        <div className="surveyAnalysisChangeSummary">
+          <div>
+            <span>改善</span>
+            <strong>{counts.improved}人</strong>
+            <small>
+              {rateText(
+                pairs.length
+                  ? (counts.improved /
+                      pairs.length) *
+                      100
+                  : 0
+              )}
+            </small>
+          </div>
+
+          <div>
+            <span>変化なし</span>
+            <strong>{counts.same}人</strong>
+            <small>
+              {rateText(
+                pairs.length
+                  ? (counts.same /
+                      pairs.length) *
+                      100
+                  : 0
+              )}
+            </small>
+          </div>
+
+          <div>
+            <span>低下</span>
+            <strong>{counts.decreased}人</strong>
+            <small>
+              {rateText(
+                pairs.length
+                  ? (counts.decreased /
+                      pairs.length) *
+                      100
+                  : 0
+              )}
+            </small>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
+  function renderSegment(
+    title: string,
+    description: string,
+    pairs: Pair[]
+  ) {
+    return (
+      <article className="surveyAnalysisSegmentCard">
+        <h3>{title}</h3>
+        <p>{description}</p>
+        <strong className="surveyAnalysisSegmentCount">
+          {pairs.length}人
+        </strong>
+
+        {sharedQuestions.map((question) => {
+          const scores = getPairScores(
+            pairs,
+            question.key
+          );
+
+          const beforeAverage = average(
+            scores.before
+          );
+
+          const afterAverage = average(
+            scores.after
+          );
+
+          return (
+            <div
+              key={question.key}
+              className="surveyAnalysisSegmentRow"
+            >
+              <span>{question.title}</span>
+
+              <strong>
+                {pairs.length > 0
+                  ? `${scoreText(
+                      beforeAverage
+                    )} → ${scoreText(afterAverage)}`
+                  : "—"}
+              </strong>
+
+              <small>
+                {pairs.length > 0
+                  ? differenceText(
+                      afterAverage - beforeAverage
+                    )
+                  : "—"}
+              </small>
+            </div>
+          );
+        })}
+      </article>
+    );
   }
 
   /* ========================================
-     FREQUENCY
+     TAB AND FILTERS
   ======================================== */
 
-  const frequencyOptions = [
-    "毎日食べる",
-    "週1回",
-    "月1〜2回",
-    "半年に1回",
-    "食べない",
-  ];
-
-  function frequencyCount(
+  function updateFilter(
+    key: keyof Filters,
     value: string
   ) {
-    return filteredPreSurveys.filter(
-      (
-        survey
-      ) =>
-        survey.pocky_frequency ===
-        value
-    ).length;
+    setFilters((previous) => ({
+      ...previous,
+      [key]: value,
+    }));
   }
 
-  /* ========================================
-     RESET FILTER
-  ======================================== */
-
   function resetFilters() {
-    setGenderFilter(
-      "all"
-    );
-
-    setFrequencyFilter(
-      "all"
-    );
-
-    setRenewalFilter(
-      "all"
-    );
-
-    setShareFilter(
-      "all"
-    );
+    setFilters(initialFilters);
   }
 
   /* ========================================
      LOADING
   ======================================== */
 
-  if (
-    authLoading
-  ) {
+  if (authLoading) {
     return (
       <main className="shell">
-
         <section className="staffSurveyPage">
-
           <div className="staffLoadingCard">
             スタッフ情報を確認中...
           </div>
-
         </section>
-
       </main>
     );
   }
 
   /* ========================================
-     VIEW
+     MAIN VIEW
   ======================================== */
 
   return (
     <main className="shell">
-
       <section className="staffSurveyPage">
-
-        {/* =================================
-            HEADER
-        ================================= */}
-
         <header className="staffSurveyHeader">
-
           <div>
-
-            <span>
-              POKIPO STAFF
-            </span>
-
-            <h1>
-              アンケート分析
-            </h1>
-
+            <span>POKIPO STAFF</span>
+            <h1>アンケート分析</h1>
             <p>
-              POKIPO参加前後の回答変化を確認できます。
+              参加前・参加後・前後比較の
+              3つの分析を切り替えて確認できます。
             </p>
-
           </div>
 
           <button
             type="button"
-            onClick={() =>
-              router.push(
-                "/staff"
-              )
-            }
+            onClick={() => router.push("/staff")}
           >
             メニューへ
           </button>
-
         </header>
 
-        {/* =================================
-            MESSAGE
-        ================================= */}
-
         {message && (
-          <p className="staffSurveyMessage">
+          <p
+            className="staffSurveyMessage"
+            role="alert"
+          >
             {message}
           </p>
         )}
@@ -1237,1763 +863,756 @@ export default function StaffSurveyPage() {
         ================================= */}
 
         <section className="staffSurveyCounts">
-
           <article>
-
-            <span>
-              BEFORE
-            </span>
-
+            <span>BEFORE</span>
             <strong>
-              {loading
-                ? "—"
-                : preSurveys.length}
+              {loading ? "—" : preSurveys.length}
             </strong>
-
-            <p>
-              参加前回答
-            </p>
-
+            <p>参加前回答</p>
           </article>
 
           <article>
-
-            <span>
-              AFTER
-            </span>
-
+            <span>AFTER</span>
             <strong>
-              {loading
-                ? "—"
-                : postSurveys.length}
+              {loading ? "—" : postSurveys.length}
             </strong>
-
-            <p>
-              参加後回答
-            </p>
-
+            <p>参加後回答</p>
           </article>
 
           <article className="comparison">
+            <span>COMPARISON</span>
+            <strong>
+              {loading
+                ? "—"
+                : new Set(
+                    preSurveys
+                      .filter((survey) =>
+                        postSurveys.some(
+                          (post) =>
+                            post.participant_id ===
+                            survey.participant_id
+                        )
+                      )
+                      .map(
+                        (survey) =>
+                          survey.participant_id
+                      )
+                  ).size}
+            </strong>
+            <p>前後比較可能</p>
+          </article>
+        </section>
 
-            <span>
-              COMPARISON
-            </span>
+        {/* =================================
+            THREE TABS
+        ================================= */}
+
+        <nav
+          className="surveyAnalysisTabs"
+          aria-label="アンケート分析メニュー"
+        >
+          <button
+            type="button"
+            className={`surveyAnalysisTab ${
+              activeTab === "before" ? "active" : ""
+            }`}
+            onClick={() => setActiveTab("before")}
+            aria-current={
+              activeTab === "before"
+                ? "page"
+                : undefined
+            }
+          >
+            <span>BEFORE</span>
+            <strong>参加前の結果</strong>
+          </button>
+
+          <button
+            type="button"
+            className={`surveyAnalysisTab ${
+              activeTab === "after" ? "active" : ""
+            }`}
+            onClick={() => setActiveTab("after")}
+            aria-current={
+              activeTab === "after"
+                ? "page"
+                : undefined
+            }
+          >
+            <span>AFTER</span>
+            <strong>参加後の結果</strong>
+          </button>
+
+          <button
+            type="button"
+            className={`surveyAnalysisTab ${
+              activeTab === "comparison"
+                ? "active"
+                : ""
+            }`}
+            onClick={() =>
+              setActiveTab("comparison")
+            }
+            aria-current={
+              activeTab === "comparison"
+                ? "page"
+                : undefined
+            }
+          >
+            <span>COMPARE</span>
+            <strong>前後比較</strong>
+          </button>
+        </nav>
+
+        {/* =================================
+            FILTERS
+        ================================= */}
+
+        <section className="staffSurveyFilterSection">
+          <SectionHeading
+            eyebrow="FILTER"
+            title="分析条件"
+            description={
+              activeTab === "comparison"
+                ? "参加前の属性で絞り込み、前後両方に回答した人を比較します。"
+                : "参加前アンケートの属性を利用して、対象者を絞り込みます。"
+            }
+          />
+
+          <div className="staffSurveyFilters">
+            <label>
+              <span>性別</span>
+
+              <select
+                value={filters.gender}
+                onChange={(event) =>
+                  updateFilter(
+                    "gender",
+                    event.target.value
+                  )
+                }
+              >
+                <option value="all">すべて</option>
+                <option value="男性">男性</option>
+                <option value="女性">女性</option>
+                <option value="回答しない">
+                  回答しない
+                </option>
+              </select>
+            </label>
+
+            <label>
+              <span>食べる頻度</span>
+
+              <select
+                value={filters.frequency}
+                onChange={(event) =>
+                  updateFilter(
+                    "frequency",
+                    event.target.value
+                  )
+                }
+              >
+                <option value="all">すべて</option>
+
+                {frequencyOptions.map((option) => (
+                  <option
+                    key={option}
+                    value={option}
+                  >
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              <span>リニューアル認知</span>
+
+              <select
+                value={filters.renewal}
+                onChange={(event) =>
+                  updateFilter(
+                    "renewal",
+                    event.target.value
+                  )
+                }
+              >
+                <option value="all">すべて</option>
+                <option value="known">
+                  知っていた
+                </option>
+                <option value="unknown">
+                  知らなかった
+                </option>
+              </select>
+            </label>
+
+            <label>
+              <span>シェア経験</span>
+
+              <select
+                value={filters.share}
+                onChange={(event) =>
+                  updateFilter(
+                    "share",
+                    event.target.value
+                  )
+                }
+              >
+                <option value="all">すべて</option>
+                <option value="shared">
+                  経験あり
+                </option>
+                <option value="not-shared">
+                  経験なし
+                </option>
+              </select>
+            </label>
+          </div>
+
+          <div className="staffSurveyFilterResult">
+            <span>現在の分析対象</span>
 
             <strong>
               {loading
                 ? "—"
-                : comparisonRows.length}
-            </strong>
-
-            <p>
-              前後比較可能
-            </p>
-
-          </article>
-
-        </section>
-
-        {/* =================================
-            FILTER
-        ================================= */}
-
-        <section className="staffSurveyFilterSection">
-
-          <div className="staffSurveySectionTitle">
-
-            <span>
-              FILTER
-            </span>
-
-            <h2>
-              分析条件
-            </h2>
-
-            <p>
-              条件を選ぶと、
-              下の分析結果が対象者だけに絞り込まれます。
-            </p>
-
-          </div>
-
-          <div className="staffSurveyFilters">
-
-            <label>
-
-              <span>
-                性別
-              </span>
-
-              <select
-                value={
-                  genderFilter
-                }
-                onChange={(
-                  event
-                ) =>
-                  setGenderFilter(
-                    event.target.value
-                  )
-                }
-              >
-
-                <option value="all">
-                  すべて
-                </option>
-
-                <option value="男性">
-                  男性
-                </option>
-
-                <option value="女性">
-                  女性
-                </option>
-
-                <option value="回答しない">
-                  回答しない
-                </option>
-
-              </select>
-
-            </label>
-
-            <label>
-
-              <span>
-                食べる頻度
-              </span>
-
-              <select
-                value={
-                  frequencyFilter
-                }
-                onChange={(
-                  event
-                ) =>
-                  setFrequencyFilter(
-                    event.target.value
-                  )
-                }
-              >
-
-                <option value="all">
-                  すべて
-                </option>
-
-                {frequencyOptions.map(
-                  (
-                    option
-                  ) => (
-                    <option
-                      key={
-                        option
-                      }
-                      value={
-                        option
-                      }
-                    >
-                      {option}
-                    </option>
-                  )
-                )}
-
-              </select>
-
-            </label>
-
-            <label>
-
-              <span>
-                リニューアル認知
-              </span>
-
-              <select
-                value={
-                  renewalFilter
-                }
-                onChange={(
-                  event
-                ) =>
-                  setRenewalFilter(
-                    event.target.value
-                  )
-                }
-              >
-
-                <option value="all">
-                  すべて
-                </option>
-
-                <option value="known">
-                  知っていた
-                </option>
-
-                <option value="unknown">
-                  知らなかった
-                </option>
-
-              </select>
-
-            </label>
-
-            <label>
-
-              <span>
-                シェア経験
-              </span>
-
-              <select
-                value={
-                  shareFilter
-                }
-                onChange={(
-                  event
-                ) =>
-                  setShareFilter(
-                    event.target.value
-                  )
-                }
-              >
-
-                <option value="all">
-                  すべて
-                </option>
-
-                <option value="shared">
-                  経験あり
-                </option>
-
-                <option value="not-shared">
-                  経験なし
-                </option>
-
-              </select>
-
-            </label>
-
-          </div>
-
-          <div className="staffSurveyFilterResult">
-
-            <span>
-              現在の分析対象
-            </span>
-
-            <strong>
-              {filteredComparisonRows.length}
+                : activeTab === "before"
+                ? filteredPreSurveys.length
+                : activeTab === "after"
+                ? filteredPostSurveys.length
+                : comparisonPairs.length}
               人
             </strong>
 
             <button
               type="button"
-              onClick={
-                resetFilters
-              }
+              onClick={resetFilters}
             >
               条件をリセット
             </button>
-
           </div>
-
         </section>
 
-        {/* =================================
-            MAIN COMPARISON
-        ================================= */}
-
-        <section className="staffSurveySection">
-
-          <div className="staffSurveySectionTitle">
-
-            <span>
-              BEFORE / AFTER
-            </span>
-
-            <h2>
-              主要指標の変化
-            </h2>
-
-            <p>
-              現在の分析条件に該当し、
-              前後両方に回答した参加者のみで比較しています。
-            </p>
-
+        {loading ? (
+          <div className="staffLoadingCard">
+            アンケートを集計しています...
           </div>
-
-          <div className="staffSurveyMetricList">
-
-            {/* INTEREST */}
-
-            <article className="staffSurveyMetricCard">
-
-              <div className="staffSurveyMetricHeader">
-
-                <div>
-
-                  <span>
-                    INTEREST
-                  </span>
-
-                  <h3>
-                    ポッキーへの興味
-                  </h3>
-
-                </div>
-
-                <strong>
-                  {formatDifference(
-                    interestPostAverage -
-                    interestPreAverage
-                  )}
-                </strong>
-
-              </div>
-
-              <div className="staffSurveyBeforeAfter">
-
-                <div>
-
-                  <span>
-                    BEFORE
-                  </span>
-
-                  <strong>
-                    {formatScore(
-                      interestPreAverage
-                    )}
-                  </strong>
-
-                  <small>
-                    / 4
-                  </small>
-
-                </div>
-
-                <div className="arrow">
-                  →
-                </div>
-
-                <div>
-
-                  <span>
-                    AFTER
-                  </span>
-
-                  <strong>
-                    {formatScore(
-                      interestPostAverage
-                    )}
-                  </strong>
-
-                  <small>
-                    / 4
-                  </small>
-
-                </div>
-
-              </div>
-
-              <div className="staffSurveyPositiveRate">
-
-                <span>
-                  肯定率
-                </span>
-
-                <strong>
-                  {formatRate(
-                    interestPrePositive
-                  )}
-                  {" → "}
-                  {formatRate(
-                    interestPostPositive
-                  )}
-                </strong>
-
-                <b>
-                  {formatPointDifference(
-                    interestPostPositive -
-                    interestPrePositive
-                  )}
-                </b>
-
-              </div>
-
-            </article>
-
-            {/* EAT */}
-
-            <article className="staffSurveyMetricCard">
-
-              <div className="staffSurveyMetricHeader">
-
-                <div>
-
-                  <span>
-                    EAT INTENT
-                  </span>
-
-                  <h3>
-                    ポッキーを食べたい気持ち
-                  </h3>
-
-                </div>
-
-                <strong>
-                  {formatDifference(
-                    eatPostAverage -
-                    eatPreAverage
-                  )}
-                </strong>
-
-              </div>
-
-              <div className="staffSurveyBeforeAfter">
-
-                <div>
-
-                  <span>
-                    BEFORE
-                  </span>
-
-                  <strong>
-                    {formatScore(
-                      eatPreAverage
-                    )}
-                  </strong>
-
-                  <small>
-                    / 4
-                  </small>
-
-                </div>
-
-                <div className="arrow">
-                  →
-                </div>
-
-                <div>
-
-                  <span>
-                    AFTER
-                  </span>
-
-                  <strong>
-                    {formatScore(
-                      eatPostAverage
-                    )}
-                  </strong>
-
-                  <small>
-                    / 4
-                  </small>
-
-                </div>
-
-              </div>
-
-              <div className="staffSurveyPositiveRate">
-
-                <span>
-                  肯定率
-                </span>
-
-                <strong>
-                  {formatRate(
-                    eatPrePositive
-                  )}
-                  {" → "}
-                  {formatRate(
-                    eatPostPositive
-                  )}
-                </strong>
-
-                <b>
-                  {formatPointDifference(
-                    eatPostPositive -
-                    eatPrePositive
-                  )}
-                </b>
-
-              </div>
-
-            </article>
-
-            {/* SHARE */}
-
-            <article className="staffSurveyMetricCard">
-
-              <div className="staffSurveyMetricHeader">
-
-                <div>
-
-                  <span>
-                    SHARE INTENT
-                  </span>
-
-                  <h3>
-                    ポッキーをシェアしたい気持ち
-                  </h3>
-
-                </div>
-
-                <strong>
-                  {formatDifference(
-                    sharePostAverage -
-                    sharePreAverage
-                  )}
-                </strong>
-
-              </div>
-
-              <div className="staffSurveyBeforeAfter">
-
-                <div>
-
-                  <span>
-                    BEFORE
-                  </span>
-
-                  <strong>
-                    {formatScore(
-                      sharePreAverage
-                    )}
-                  </strong>
-
-                  <small>
-                    / 4
-                  </small>
-
-                </div>
-
-                <div className="arrow">
-                  →
-                </div>
-
-                <div>
-
-                  <span>
-                    AFTER
-                  </span>
-
-                  <strong>
-                    {formatScore(
-                      sharePostAverage
-                    )}
-                  </strong>
-
-                  <small>
-                    / 4
-                  </small>
-
-                </div>
-
-              </div>
-
-              <div className="staffSurveyPositiveRate">
-
-                <span>
-                  肯定率
-                </span>
-
-                <strong>
-                  {formatRate(
-                    sharePrePositive
-                  )}
-                  {" → "}
-                  {formatRate(
-                    sharePostPositive
-                  )}
-                </strong>
-
-                <b>
-                  {formatPointDifference(
-                    sharePostPositive -
-                    sharePrePositive
-                  )}
-                </b>
-
-              </div>
-
-            </article>
-
-          </div>
-
-        </section>
-
-        {/* =================================
-            BEFORE STATUS
-        ================================= */}
-
-        <section className="staffSurveySection">
-
-          <div className="staffSurveySectionTitle">
-
-            <span>
-              BEFORE SURVEY
-            </span>
-
-            <h2>
-              参加前の状況
-            </h2>
-
-            <p>
-              現在の分析条件に該当する参加者の
-              POKIPO体験前の状態です。
-            </p>
-
-          </div>
-
-          <div className="staffSurveySimpleStats">
-
-            <article>
-
-              <span>
-                リニューアル認知率
-              </span>
-
-              <strong>
-                {formatRate(
-                  renewalAwareRate
-                )}
-              </strong>
-
-              <p>
-                {renewalAwareCount}
-                人が「知っていた」
-              </p>
-
-            </article>
-
-            <article>
-
-              <span>
-                シェア経験率
-              </span>
-
-              <strong>
-                {formatRate(
-                  sharedRate
-                )}
-              </strong>
-
-              <p>
-                {sharedCount}
-                人がシェア経験あり
-              </p>
-
-            </article>
-
-          </div>
-
-          <div className="staffSurveyDistribution">
-
-            <h3>
-              ポッキーを食べる頻度
-            </h3>
-
-            {frequencyOptions.map(
-              (
-                option
-              ) => {
-                const count =
-                  frequencyCount(
-                    option
-                  );
-
-                const rate =
-                  filteredPreSurveys.length >
-                  0
-                    ? (
-                        count /
+        ) : (
+          <>
+            {/* =================================
+                BEFORE TAB
+            ================================= */}
+
+            {activeTab === "before" && (
+              <div className="surveyAnalysisTabContent">
+                <section className="staffSurveySection">
+                  <SectionHeading
+                    eyebrow="BEFORE SURVEY"
+                    title="参加前アンケートの結果"
+                    description="参加前アンケートに回答した人を対象に、各設問の集計結果を表示しています。参加後未回答者も含みます。"
+                  />
+
+                  <div className="staffSurveySimpleStats">
+                    <StatCard
+                      label="回答人数"
+                      value={`${filteredPreSurveys.length}人`}
+                      description="現在の条件に該当する回答"
+                    />
+
+                    <StatCard
+                      label="リニューアル認知率"
+                      value={rateText(
                         filteredPreSurveys.length
-                      ) * 100
-                    : 0;
+                          ? (countValues(
+                              filteredPreSurveys,
+                              (survey) =>
+                                survey.knew_renewal
+                            ) /
+                              filteredPreSurveys.length) *
+                              100
+                          : 0
+                      )}
+                      description="リニューアルを知っていた割合"
+                    />
 
-                return (
-                  <div
-                    key={
-                      option
-                    }
-                    className="staffSurveyDistributionRow"
-                  >
-
-                    <span>
-                      {option}
-                    </span>
-
-                    <div>
-
-                      <div
-                        style={{
-                          width:
-                            `${rate}%`,
-                        }}
-                      />
-
-                    </div>
-
-                    <strong>
-                      {count}人
-                    </strong>
-
+                    <StatCard
+                      label="シェア経験率"
+                      value={rateText(
+                        filteredPreSurveys.length
+                          ? (countValues(
+                              filteredPreSurveys,
+                              (survey) =>
+                                survey.has_shared_pocky
+                            ) /
+                              filteredPreSurveys.length) *
+                              100
+                          : 0
+                      )}
+                      description="シェア経験がある割合"
+                    />
                   </div>
-                );
-              }
+
+                  <div className="surveyAnalysisGraphGrid">
+                    <DistributionGraph
+                      title="性別"
+                      total={filteredPreSurveys.length}
+                      items={[
+                        "男性",
+                        "女性",
+                        "回答しない",
+                      ].map((option) => ({
+                        label: option,
+                        count: countValues(
+                          filteredPreSurveys,
+                          (survey) =>
+                            survey.gender === option
+                        ),
+                      }))}
+                    />
+
+                    <DistributionGraph
+                      title="ポッキーを食べる頻度"
+                      total={filteredPreSurveys.length}
+                      items={frequencyOptions.map(
+                        (option) => ({
+                          label: option,
+                          count: countValues(
+                            filteredPreSurveys,
+                            (survey) =>
+                              survey.pocky_frequency ===
+                              option
+                          ),
+                        })
+                      )}
+                    />
+
+                    <DistributionGraph
+                      title="リニューアル認知"
+                      total={filteredPreSurveys.length}
+                      items={[
+                        {
+                          label: "知っていた",
+                          count: countValues(
+                            filteredPreSurveys,
+                            (survey) =>
+                              survey.knew_renewal
+                          ),
+                        },
+                        {
+                          label: "知らなかった",
+                          count: countValues(
+                            filteredPreSurveys,
+                            (survey) =>
+                              !survey.knew_renewal
+                          ),
+                        },
+                      ]}
+                    />
+
+                    <DistributionGraph
+                      title="ポッキーのシェア経験"
+                      total={filteredPreSurveys.length}
+                      items={[
+                        {
+                          label: "経験あり",
+                          count: countValues(
+                            filteredPreSurveys,
+                            (survey) =>
+                              survey.has_shared_pocky
+                          ),
+                        },
+                        {
+                          label: "経験なし",
+                          count: countValues(
+                            filteredPreSurveys,
+                            (survey) =>
+                              !survey.has_shared_pocky
+                          ),
+                        },
+                      ]}
+                    />
+                  </div>
+                </section>
+
+                <section className="staffSurveySection">
+                  <SectionHeading
+                    eyebrow="BEFORE SCORES"
+                    title="参加前の気持ち・意向"
+                    description="4段階評価の人数・割合・平均点を表示します。肯定率は3点または4点の割合です。"
+                  />
+
+                  <div className="surveyAnalysisGraphGrid">
+                    {sharedQuestions.map((question) => (
+                      <ScoreDistribution
+                        key={question.key}
+                        title={question.title}
+                        values={filteredPreSurveys.map(
+                          (survey) =>
+                            survey[question.key]
+                        )}
+                      />
+                    ))}
+                  </div>
+                </section>
+
+                <section className="staffSurveySection">
+                  <SectionHeading
+                    eyebrow="SHARE SITUATIONS"
+                    title="ポッキーをシェアする場面"
+                    description="参加前アンケートの自由記述回答です。"
+                  />
+
+                  <div className="staffSurveyComments">
+                    {filteredPreSurveys.filter(
+                      (survey) =>
+                        Boolean(
+                          survey.share_situation?.trim()
+                        )
+                    ).length === 0 ? (
+                      <div className="staffSurveyEmpty">
+                        現在の条件に該当する回答はありません。
+                      </div>
+                    ) : (
+                      filteredPreSurveys
+                        .filter((survey) =>
+                          Boolean(
+                            survey.share_situation?.trim()
+                          )
+                        )
+                        .map((survey, index) => (
+                          <article
+                            key={survey.participant_id}
+                          >
+                            <span>
+                              ANSWER {index + 1}
+                            </span>
+                            <p>
+                              {survey.share_situation}
+                            </p>
+                          </article>
+                        ))
+                    )}
+                  </div>
+                </section>
+              </div>
             )}
 
-          </div>
+            {/* =================================
+                AFTER TAB
+            ================================= */}
 
-        </section>
+            {activeTab === "after" && (
+              <div className="surveyAnalysisTabContent">
+                <section className="staffSurveySection">
+                  <SectionHeading
+                    eyebrow="AFTER SURVEY"
+                    title="参加後アンケートの結果"
+                    description="参加後アンケートに回答した人を対象に、各設問の結果を表示しています。"
+                  />
 
-        {/* =================================
-            AFTER STATUS
-        ================================= */}
+                  <div className="staffSurveyAfterStats">
+                    <StatCard
+                      label="回答人数"
+                      value={`${filteredPostSurveys.length}人`}
+                    />
 
-        <section className="staffSurveySection">
+                    <StatCard
+                      label="リニューアル理解・肯定率"
+                      value={rateText(
+                        positiveRate(
+                          filteredPostSurveys.map(
+                            (survey) =>
+                              survey.renewal_understanding_score
+                          )
+                        )
+                      )}
+                    />
 
-          <div className="staffSurveySectionTitle">
+                    <StatCard
+                      label="ポッキーへの興味・肯定率"
+                      value={rateText(
+                        positiveRate(
+                          filteredPostSurveys.map(
+                            (survey) =>
+                              survey.interest_score
+                          )
+                        )
+                      )}
+                    />
 
-            <span>
-              AFTER SURVEY
-            </span>
+                    <StatCard
+                      label="食べたい気持ち・肯定率"
+                      value={rateText(
+                        positiveRate(
+                          filteredPostSurveys.map(
+                            (survey) =>
+                              survey.eat_intent_score
+                          )
+                        )
+                      )}
+                    />
 
-            <h2>
-              参加後の状況
-            </h2>
+                    <StatCard
+                      label="シェア意向・肯定率"
+                      value={rateText(
+                        positiveRate(
+                          filteredPostSurveys.map(
+                            (survey) =>
+                              survey.share_intent_score
+                          )
+                        )
+                      )}
+                    />
+                  </div>
+                </section>
 
-            <p>
-              現在の分析条件に該当する参加者の
-              POKIPO体験後の肯定回答率です。
-            </p>
+                <section className="staffSurveySection">
+                  <SectionHeading
+                    eyebrow="AFTER SCORES"
+                    title="参加後の回答分布"
+                    description="参加後の回答を4段階の棒グラフで表示します。"
+                  />
 
-          </div>
+                  <div className="surveyAnalysisGraphGrid">
+                    {sharedQuestions.map((question) => (
+                      <ScoreDistribution
+                        key={question.key}
+                        title={question.title}
+                        values={filteredPostSurveys.map(
+                          (survey) =>
+                            survey[question.key]
+                        )}
+                      />
+                    ))}
 
-          <div className="staffSurveyAfterStats">
+                    <ScoreDistribution
+                      title="リニューアル内容の理解度"
+                      values={filteredPostSurveys.map(
+                        (survey) =>
+                          survey.renewal_understanding_score
+                      )}
+                      labels={understandingOptions}
+                    />
+                  </div>
+                </section>
 
-            <article>
+                <section className="staffSurveySection">
+                  <SectionHeading
+                    eyebrow="COMMENTS"
+                    title="POKIPOで印象に残ったこと"
+                    description="参加後アンケートの自由記述回答です。"
+                  />
 
-              <span>
-                リニューアル理解
-              </span>
-
-              <strong>
-                {formatRate(
-                  renewalUnderstandingPositiveRate
-                )}
-              </strong>
-
-              <p>
-                「よく／ある程度知ることができた」
-              </p>
-
-            </article>
-
-            <article>
-
-              <span>
-                ポッキーへの興味
-              </span>
-
-              <strong>
-                {formatRate(
-                  postInterestPositiveRate
-                )}
-              </strong>
-
-              <p>
-                参加後の肯定回答
-              </p>
-
-            </article>
-
-            <article>
-
-              <span>
-                食べたい気持ち
-              </span>
-
-              <strong>
-                {formatRate(
-                  postEatPositiveRate
-                )}
-              </strong>
-
-              <p>
-                参加後の肯定回答
-              </p>
-
-            </article>
-
-            <article>
-
-              <span>
-                シェア意向
-              </span>
-
-              <strong>
-                {formatRate(
-                  postSharePositiveRate
-                )}
-              </strong>
-
-              <p>
-                参加後の肯定回答
-              </p>
-
-            </article>
-
-          </div>
-
-        </section>
-
-        {/* =================================
-            CHANGE ANALYSIS
-        ================================= */}
-
-        <section className="staffSurveySection">
-
-          <div className="staffSurveySectionTitle">
-
-            <span>
-              CHANGE ANALYSIS
-            </span>
-
-            <h2>
-              一人ひとりの変化
-            </h2>
-
-            <p>
-              現在の分析対象者を、
-              改善・変化なし・低下に分類しています。
-            </p>
-
-          </div>
-
-          <div className="staffSurveyChangeList">
-
-            <article>
-
-              <div className="staffSurveyChangeTitle">
-
-                <span>
-                  INTEREST
-                </span>
-
-                <h3>
-                  ポッキーへの興味
-                </h3>
-
+                  <div className="staffSurveyComments">
+                    {filteredPostSurveys.filter(
+                      (survey) =>
+                        Boolean(
+                          survey.memorable_point?.trim()
+                        )
+                    ).length === 0 ? (
+                      <div className="staffSurveyEmpty">
+                        現在の条件に該当する自由記述はありません。
+                      </div>
+                    ) : (
+                      filteredPostSurveys
+                        .filter((survey) =>
+                          Boolean(
+                            survey.memorable_point?.trim()
+                          )
+                        )
+                        .map((survey, index) => (
+                          <article
+                            key={survey.participant_id}
+                          >
+                            <span>
+                              COMMENT {index + 1}
+                            </span>
+                            <p>
+                              {survey.memorable_point}
+                            </p>
+                          </article>
+                        ))
+                    )}
+                  </div>
+                </section>
               </div>
-
-              <div className="staffSurveyChangeNumbers">
-
-                <div className="improved">
-
-                  <span>
-                    改善
-                  </span>
-
-                  <strong>
-                    {formatRate(
-                      interestChange.improvedRate
-                    )}
-                  </strong>
-
-                  <small>
-                    {interestChange.improved}
-                    人
-                  </small>
-
-                </div>
-
-                <div className="same">
-
-                  <span>
-                    変化なし
-                  </span>
-
-                  <strong>
-                    {formatRate(
-                      interestChange.sameRate
-                    )}
-                  </strong>
-
-                  <small>
-                    {interestChange.same}
-                    人
-                  </small>
-
-                </div>
-
-                <div className="decreased">
-
-                  <span>
-                    低下
-                  </span>
-
-                  <strong>
-                    {formatRate(
-                      interestChange.decreasedRate
-                    )}
-                  </strong>
-
-                  <small>
-                    {interestChange.decreased}
-                    人
-                  </small>
-
-                </div>
-
-              </div>
-
-            </article>
-
-            <article>
-
-              <div className="staffSurveyChangeTitle">
-
-                <span>
-                  EAT INTENT
-                </span>
-
-                <h3>
-                  ポッキーを食べたい気持ち
-                </h3>
-
-              </div>
-
-              <div className="staffSurveyChangeNumbers">
-
-                <div className="improved">
-
-                  <span>
-                    改善
-                  </span>
-
-                  <strong>
-                    {formatRate(
-                      eatChange.improvedRate
-                    )}
-                  </strong>
-
-                  <small>
-                    {eatChange.improved}
-                    人
-                  </small>
-
-                </div>
-
-                <div className="same">
-
-                  <span>
-                    変化なし
-                  </span>
-
-                  <strong>
-                    {formatRate(
-                      eatChange.sameRate
-                    )}
-                  </strong>
-
-                  <small>
-                    {eatChange.same}
-                    人
-                  </small>
-
-                </div>
-
-                <div className="decreased">
-
-                  <span>
-                    低下
-                  </span>
-
-                  <strong>
-                    {formatRate(
-                      eatChange.decreasedRate
-                    )}
-                  </strong>
-
-                  <small>
-                    {eatChange.decreased}
-                    人
-                  </small>
-
-                </div>
-
-              </div>
-
-            </article>
-
-            <article>
-
-              <div className="staffSurveyChangeTitle">
-
-                <span>
-                  SHARE INTENT
-                </span>
-
-                <h3>
-                  ポッキーをシェアしたい気持ち
-                </h3>
-
-              </div>
-
-              <div className="staffSurveyChangeNumbers">
-
-                <div className="improved">
-
-                  <span>
-                    改善
-                  </span>
-
-                  <strong>
-                    {formatRate(
-                      shareChange.improvedRate
-                    )}
-                  </strong>
-
-                  <small>
-                    {shareChange.improved}
-                    人
-                  </small>
-
-                </div>
-
-                <div className="same">
-
-                  <span>
-                    変化なし
-                  </span>
-
-                  <strong>
-                    {formatRate(
-                      shareChange.sameRate
-                    )}
-                  </strong>
-
-                  <small>
-                    {shareChange.same}
-                    人
-                  </small>
-
-                </div>
-
-                <div className="decreased">
-
-                  <span>
-                    低下
-                  </span>
-
-                  <strong>
-                    {formatRate(
-                      shareChange.decreasedRate
-                    )}
-                  </strong>
-
-                  <small>
-                    {shareChange.decreased}
-                    人
-                  </small>
-
-                </div>
-
-              </div>
-
-            </article>
-
-          </div>
-
-        </section>
-
-        {/* =================================
-            SEGMENT ANALYSIS
-        ================================= */}
-
-        <section className="staffSurveySection">
-
-          <div className="staffSurveySectionTitle">
-
-            <span>
-              SEGMENT ANALYSIS
-            </span>
-
-            <h2>
-              参加前状況別の変化
-            </h2>
-
-            <p>
-              現在のフィルター条件の中で、
-              さらに参加前の状態ごとに比較します。
-            </p>
-
-          </div>
-
-          {/* RENEWAL */}
-
-          <div className="staffSurveySegmentBlock">
-
-            <div className="staffSurveySegmentHeading">
-
-              <span>
-                RENEWAL AWARENESS
-              </span>
-
-              <h3>
-                リニューアル認知別
-              </h3>
-
-              <p>
-                リニューアルを知っていた人と
-                知らなかった人を比較します。
-              </p>
-
-            </div>
-
-            <div className="staffSurveySegmentGrid">
-
-              <article className="staffSurveySegmentCard">
-
-                <div className="staffSurveySegmentCardHeader">
-
-                  <div>
-
-                    <span>
-                      KNOW
-                    </span>
-
-                    <h4>
-                      知っていた人
-                    </h4>
-
+            )}
+
+            {/* =================================
+                COMPARISON TAB
+            ================================= */}
+
+            {activeTab === "comparison" && (
+              <div className="surveyAnalysisTabContent">
+                <section className="staffSurveySection">
+                  <SectionHeading
+                    eyebrow="BEFORE / AFTER"
+                    title="参加前後の比較"
+                    description="参加前と参加後の両方に回答した同一参加者だけを対象に比較しています。"
+                  />
+
+                  <div className="staffSurveySimpleStats">
+                    <StatCard
+                      label="比較対象者"
+                      value={`${comparisonPairs.length}人`}
+                      description="両方のアンケートに回答"
+                    />
+
+                    <StatCard
+                      label="参加前回答者"
+                      value={`${filteredPreSurveys.length}人`}
+                    />
+
+                    <StatCard
+                      label="参加後回答者"
+                      value={`${filteredPostSurveys.length}人`}
+                    />
                   </div>
 
-                  <strong>
-                    {knewRenewalSegment.count}人
-                  </strong>
-
-                </div>
-
-                <div className="staffSurveySegmentMetric">
-
-                  <span>
-                    ポッキーへの興味
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      {formatScore(
-                        knewRenewalSegment.interestBefore
-                      )}
-                    </strong>
-
-                    <b>
-                      →
-                    </b>
-
-                    <strong>
-                      {formatScore(
-                        knewRenewalSegment.interestAfter
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <em>
-                    {formatDifference(
-                      knewRenewalSegment.interestChange
-                    )}
-                  </em>
-
-                </div>
-
-                <div className="staffSurveySegmentMetric">
-
-                  <span>
-                    食べたい気持ち
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      {formatScore(
-                        knewRenewalSegment.eatBefore
-                      )}
-                    </strong>
-
-                    <b>
-                      →
-                    </b>
-
-                    <strong>
-                      {formatScore(
-                        knewRenewalSegment.eatAfter
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <em>
-                    {formatDifference(
-                      knewRenewalSegment.eatChange
-                    )}
-                  </em>
-
-                </div>
-
-                <div className="staffSurveySegmentMetric">
-
-                  <span>
-                    シェア意向
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      {formatScore(
-                        knewRenewalSegment.shareBefore
-                      )}
-                    </strong>
-
-                    <b>
-                      →
-                    </b>
-
-                    <strong>
-                      {formatScore(
-                        knewRenewalSegment.shareAfter
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <em>
-                    {formatDifference(
-                      knewRenewalSegment.shareChange
-                    )}
-                  </em>
-
-                </div>
-
-              </article>
-
-              <article className="staffSurveySegmentCard highlight">
-
-                <div className="staffSurveySegmentCardHeader">
-
-                  <div>
-
-                    <span>
-                      DID NOT KNOW
-                    </span>
-
-                    <h4>
-                      知らなかった人
-                    </h4>
-
-                  </div>
-
-                  <strong>
-                    {didNotKnowRenewalSegment.count}人
-                  </strong>
-
-                </div>
-
-                <div className="staffSurveySegmentMetric">
-
-                  <span>
-                    ポッキーへの興味
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      {formatScore(
-                        didNotKnowRenewalSegment.interestBefore
-                      )}
-                    </strong>
-
-                    <b>
-                      →
-                    </b>
-
-                    <strong>
-                      {formatScore(
-                        didNotKnowRenewalSegment.interestAfter
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <em>
-                    {formatDifference(
-                      didNotKnowRenewalSegment.interestChange
-                    )}
-                  </em>
-
-                </div>
-
-                <div className="staffSurveySegmentMetric">
-
-                  <span>
-                    食べたい気持ち
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      {formatScore(
-                        didNotKnowRenewalSegment.eatBefore
-                      )}
-                    </strong>
-
-                    <b>
-                      →
-                    </b>
-
-                    <strong>
-                      {formatScore(
-                        didNotKnowRenewalSegment.eatAfter
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <em>
-                    {formatDifference(
-                      didNotKnowRenewalSegment.eatChange
-                    )}
-                  </em>
-
-                </div>
-
-                <div className="staffSurveySegmentMetric">
-
-                  <span>
-                    シェア意向
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      {formatScore(
-                        didNotKnowRenewalSegment.shareBefore
-                      )}
-                    </strong>
-
-                    <b>
-                      →
-                    </b>
-
-                    <strong>
-                      {formatScore(
-                        didNotKnowRenewalSegment.shareAfter
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <em>
-                    {formatDifference(
-                      didNotKnowRenewalSegment.shareChange
-                    )}
-                  </em>
-
-                </div>
-
-              </article>
-
-            </div>
-
-          </div>
-
-          {/* SHARE EXPERIENCE */}
-
-          <div className="staffSurveySegmentBlock">
-
-            <div className="staffSurveySegmentHeading">
-
-              <span>
-                SHARE EXPERIENCE
-              </span>
-
-              <h3>
-                シェア経験別
-              </h3>
-
-              <p>
-                もともとシェア経験がある人と
-                ない人を比較します。
-              </p>
-
-            </div>
-
-            <div className="staffSurveySegmentGrid">
-
-              <article className="staffSurveySegmentCard">
-
-                <div className="staffSurveySegmentCardHeader">
-
-                  <div>
-
-                    <span>
-                      EXPERIENCED
-                    </span>
-
-                    <h4>
-                      シェア経験あり
-                    </h4>
-
-                  </div>
-
-                  <strong>
-                    {sharedBeforeSegment.count}人
-                  </strong>
-
-                </div>
-
-                <div className="staffSurveySegmentMetric">
-
-                  <span>
-                    シェア意向
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      {formatScore(
-                        sharedBeforeSegment.shareBefore
-                      )}
-                    </strong>
-
-                    <b>
-                      →
-                    </b>
-
-                    <strong>
-                      {formatScore(
-                        sharedBeforeSegment.shareAfter
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <em>
-                    {formatDifference(
-                      sharedBeforeSegment.shareChange
-                    )}
-                  </em>
-
-                </div>
-
-                <div className="staffSurveySegmentMetric">
-
-                  <span>
-                    ポッキーへの興味
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      {formatScore(
-                        sharedBeforeSegment.interestBefore
-                      )}
-                    </strong>
-
-                    <b>
-                      →
-                    </b>
-
-                    <strong>
-                      {formatScore(
-                        sharedBeforeSegment.interestAfter
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <em>
-                    {formatDifference(
-                      sharedBeforeSegment.interestChange
-                    )}
-                  </em>
-
-                </div>
-
-              </article>
-
-              <article className="staffSurveySegmentCard highlight">
-
-                <div className="staffSurveySegmentCardHeader">
-
-                  <div>
-
-                    <span>
-                      NO EXPERIENCE
-                    </span>
-
-                    <h4>
-                      シェア経験なし
-                    </h4>
-
-                  </div>
-
-                  <strong>
-                    {neverSharedSegment.count}人
-                  </strong>
-
-                </div>
-
-                <div className="staffSurveySegmentMetric">
-
-                  <span>
-                    シェア意向
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      {formatScore(
-                        neverSharedSegment.shareBefore
-                      )}
-                    </strong>
-
-                    <b>
-                      →
-                    </b>
-
-                    <strong>
-                      {formatScore(
-                        neverSharedSegment.shareAfter
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <em>
-                    {formatDifference(
-                      neverSharedSegment.shareChange
-                    )}
-                  </em>
-
-                </div>
-
-                <div className="staffSurveySegmentMetric">
-
-                  <span>
-                    ポッキーへの興味
-                  </span>
-
-                  <div>
-
-                    <strong>
-                      {formatScore(
-                        neverSharedSegment.interestBefore
-                      )}
-                    </strong>
-
-                    <b>
-                      →
-                    </b>
-
-                    <strong>
-                      {formatScore(
-                        neverSharedSegment.interestAfter
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <em>
-                    {formatDifference(
-                      neverSharedSegment.interestChange
-                    )}
-                  </em>
-
-                </div>
-
-              </article>
-
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* =================================
-            UNDERSTANDING
-        ================================= */}
-
-        <section className="staffSurveySection">
-
-          <div className="staffSurveySectionTitle">
-
-            <span>
-              RENEWAL UNDERSTANDING
-            </span>
-
-            <h2>
-              リニューアル理解度
-            </h2>
-
-            <p>
-              現在の分析対象：
-              平均
-              {" "}
-              {formatScore(
-                understandingAverage
-              )}
-              /4
-            </p>
-
-          </div>
-
-          <div className="staffSurveyUnderstandingList">
-
-            {[
-              {
-                score: 4,
-                label:
-                  "よく知ることができた",
-              },
-              {
-                score: 3,
-                label:
-                  "ある程度知ることができた",
-              },
-              {
-                score: 2,
-                label:
-                  "あまり知ることができなかった",
-              },
-              {
-                score: 1,
-                label:
-                  "知ることができなかった",
-              },
-            ].map(
-              (
-                item
-              ) => (
-                <article
-                  key={
-                    item.score
-                  }
-                >
-
-                  <div>
-
-                    <span>
-                      {item.score}
-                    </span>
-
-                    <strong>
-                      {item.label}
-                    </strong>
-
-                  </div>
-
-                  <p>
-                    {understandingCount(
-                      item.score
-                    )}
-                    人
-                  </p>
-
-                  <b>
-                    {formatRate(
-                      understandingRate(
-                        item.score
+                  <div className="staffSurveyMetricList">
+                    {sharedQuestions.map((question) =>
+                      renderComparisonMetric(
+                        question.key,
+                        question.title,
+                        comparisonPairs
                       )
                     )}
-                  </b>
+                  </div>
+                </section>
 
-                </article>
-              )
-            )}
+                <section className="staffSurveySection">
+                  <SectionHeading
+                    eyebrow="SCORE DISTRIBUTION"
+                    title="参加前後の回答分布"
+                    description="同じ参加者を対象に、参加前と参加後の回答の偏りを比べます。"
+                  />
 
-          </div>
+                  <div className="surveyAnalysisGraphGrid">
+                    {sharedQuestions.map((question) => {
+                      const scores = getPairScores(
+                        comparisonPairs,
+                        question.key
+                      );
 
-        </section>
+                      return (
+                        <div key={question.key}>
+                          <h3 className="surveyAnalysisPairTitle">
+                            {question.title}
+                          </h3>
 
-        {/* =================================
-            COMMENTS
-        ================================= */}
+                          <div className="surveyAnalysisPairGrid">
+                            <ScoreDistribution
+                              title="参加前"
+                              values={scores.before}
+                            />
 
-        <section className="staffSurveySection">
+                            <ScoreDistribution
+                              title="参加後"
+                              values={scores.after}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
 
-          <div className="staffSurveySectionTitle">
+                <section className="staffSurveySection">
+                  <SectionHeading
+                    eyebrow="CHANGE ANALYSIS"
+                    title="一人ひとりの変化"
+                    description="参加前から参加後にかけて、改善・変化なし・低下した人数を集計しています。"
+                  />
 
-            <span>
-              COMMENTS
-            </span>
+                  <div className="surveyAnalysisGraphGrid">
+                    {sharedQuestions.map((question) => {
+                      const counts = getChangeCounts(
+                        comparisonPairs,
+                        question.key
+                      );
 
-            <h2>
-              印象に残ったこと
-            </h2>
+                      return (
+                        <DistributionGraph
+                          key={question.key}
+                          title={question.title}
+                          total={comparisonPairs.length}
+                          items={[
+                            {
+                              label: "改善",
+                              count: counts.improved,
+                            },
+                            {
+                              label: "変化なし",
+                              count: counts.same,
+                            },
+                            {
+                              label: "低下",
+                              count: counts.decreased,
+                            },
+                          ]}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
 
-            <p>
-              現在の分析条件に該当する参加者の自由記述です。
-            </p>
+                <section className="staffSurveySection">
+                  <SectionHeading
+                    eyebrow="SEGMENT ANALYSIS"
+                    title="参加前の状態別に比較"
+                    description="リニューアル認知・シェア経験の違いによって、変化に差があるかを確認できます。"
+                  />
 
-          </div>
+                  <div className="surveyAnalysisSegmentGrid">
+                    {renderSegment(
+                      "リニューアルを知っていた人",
+                      "参加前にリニューアルを認知していた参加者",
+                      comparisonPairs.filter(
+                        (pair) =>
+                          pair.before.knew_renewal
+                      )
+                    )}
 
-          <div className="staffSurveyComments">
+                    {renderSegment(
+                      "リニューアルを知らなかった人",
+                      "参加前にリニューアルを認知していなかった参加者",
+                      comparisonPairs.filter(
+                        (pair) =>
+                          !pair.before.knew_renewal
+                      )
+                    )}
 
-            {filteredPostSurveys.filter(
-              (
-                survey
-              ) =>
-                Boolean(
-                  survey.memorable_point?.trim()
-                )
-            ).length ===
-            0 ? (
-              <div className="staffSurveyEmpty">
-                現在の条件に該当する自由記述回答はありません。
+                    {renderSegment(
+                      "シェア経験がある人",
+                      "参加前からシェア経験があった参加者",
+                      comparisonPairs.filter(
+                        (pair) =>
+                          pair.before.has_shared_pocky
+                      )
+                    )}
+
+                    {renderSegment(
+                      "シェア経験がない人",
+                      "参加前にシェア経験がなかった参加者",
+                      comparisonPairs.filter(
+                        (pair) =>
+                          !pair.before.has_shared_pocky
+                      )
+                    )}
+                  </div>
+                </section>
               </div>
-            ) : (
-              filteredPostSurveys
-                .filter(
-                  (
-                    survey
-                  ) =>
-                    Boolean(
-                      survey.memorable_point?.trim()
-                    )
-                )
-                .map(
-                  (
-                    survey,
-                    index
-                  ) => (
-                    <article
-                      key={
-                        survey.participant_id
-                      }
-                    >
-
-                      <span>
-                        COMMENT {index + 1}
-                      </span>
-
-                      <p>
-                        {survey.memorable_point}
-                      </p>
-
-                    </article>
-                  )
-                )
             )}
+          </>
+        )}
 
-          </div>
-
-        </section>
-
+        {lastUpdated && (
+          <p className="surveyAnalysisUpdated">
+            最終取得：{lastUpdated}
+          </p>
+        )}
       </section>
-
     </main>
   );
 }

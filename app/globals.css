@@ -40436,3 +40436,399 @@ main.shell > .staffMenuPage[style*="max-width"]
     margin-bottom: 18px !important;
   }
 }
+
+/* ==========================================
+   POKIPO STAFF SURVEY ANALYSIS
+   参加前・参加後・前後比較 3メニュー
+   既存CSSの末尾に追記
+========================================== */
+
+/* 3つの切替メニュー */
+
+.surveyAnalysisTabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 24px 0;
+}
+
+.surveyAnalysisTab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+
+  width: 100%;
+  min-height: 76px;
+  margin: 0;
+  padding: 12px 8px;
+
+  border: 1px solid #ead9d6;
+  border-radius: 17px;
+
+  background: #fff;
+  color: #62433c;
+
+  box-shadow: 0 3px 12px rgba(60, 30, 20, 0.04);
+  cursor: pointer;
+}
+
+.surveyAnalysisTab span {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  opacity: 0.7;
+}
+
+.surveyAnalysisTab strong {
+  color: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.surveyAnalysisTab.active {
+  border-color: #c91d28;
+  background: linear-gradient(135deg, #e12d37, #b9121d);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(190, 25, 35, 0.18);
+}
+
+.surveyAnalysisTab.active strong {
+  color: #fff;
+}
+
+.surveyAnalysisTab.active:hover {
+  background: linear-gradient(135deg, #e12d37, #b9121d);
+}
+
+/* タブの内容 */
+
+.surveyAnalysisTabContent {
+  display: grid;
+  gap: 22px;
+}
+
+/* 単独集計の数値カード */
+
+.surveyAnalysisStatCard {
+  min-width: 0;
+  padding: 20px;
+
+  border: 1px solid #eee0db;
+  border-radius: 17px;
+
+  background: #fff;
+}
+
+.surveyAnalysisStatCard > span {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #80685e;
+}
+
+.surveyAnalysisStatCard > strong {
+  display: block;
+  margin: 9px 0 6px;
+
+  font-size: 30px;
+  font-weight: 900;
+  color: #ca202d;
+}
+
+.surveyAnalysisStatCard > p {
+  margin: 0;
+  font-size: 12px;
+  color: #8a756c;
+}
+
+/* グラフ全体 */
+
+.surveyAnalysisGraphGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.surveyAnalysisGraphCard {
+  min-width: 0;
+  padding: 20px;
+
+  border: 1px solid #eddfda;
+  border-radius: 20px;
+
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(60, 35, 25, 0.04);
+}
+
+.surveyAnalysisGraphCard h3 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 900;
+  color: #483129;
+}
+
+.surveyAnalysisGraphDescription {
+  margin: 0 0 19px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #91766b;
+}
+
+.surveyAnalysisGraphRows {
+  display: grid;
+  gap: 16px;
+}
+
+.surveyAnalysisGraphRow {
+  min-width: 0;
+}
+
+.surveyAnalysisGraphRowTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+}
+
+.surveyAnalysisGraphRowTop span {
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #5c463d;
+  overflow-wrap: anywhere;
+}
+
+.surveyAnalysisGraphRowTop strong {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: #3e2920;
+  white-space: nowrap;
+}
+
+.surveyAnalysisGraphRowTop small {
+  font-size: 11px;
+  color: #9a8276;
+  font-weight: 500;
+}
+
+.surveyAnalysisGraphTrack {
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+
+  border-radius: 100px;
+  background: #f2e7e2;
+}
+
+.surveyAnalysisGraphFill {
+  height: 100%;
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #f1797c 0%,
+    #d32935 100%
+  );
+
+  transition: width 0.35s ease;
+}
+
+/* データがない場合 */
+
+.surveyAnalysisEmpty {
+  padding: 15px;
+  border-radius: 12px;
+  background: #f9f5f2;
+  color: #8a766d;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* 前後比較の回答分布 */
+
+.surveyAnalysisPairTitle {
+  margin: 0 0 13px;
+  font-size: 18px;
+  font-weight: 900;
+  color: #4a3028;
+}
+
+.surveyAnalysisPairGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+/* 改善・変化なし・低下 */
+
+.surveyAnalysisChangeSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.surveyAnalysisChangeSummary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 13px 9px;
+
+  border-radius: 13px;
+  background: #f8f3f0;
+  text-align: center;
+}
+
+.surveyAnalysisChangeSummary span {
+  font-size: 11px;
+  color: #806b61;
+}
+
+.surveyAnalysisChangeSummary strong {
+  font-size: 18px;
+  font-weight: 900;
+  color: #403028;
+}
+
+.surveyAnalysisChangeSummary small {
+  font-size: 11px;
+  color: #89746b;
+}
+
+.surveyAnalysisChangeSummary > div:first-child {
+  background: #ecf8f0;
+}
+
+.surveyAnalysisChangeSummary > div:first-child strong {
+  color: #25834c;
+}
+
+.surveyAnalysisChangeSummary > div:last-child {
+  background: #fff0f0;
+}
+
+.surveyAnalysisChangeSummary > div:last-child strong {
+  color: #c52b34;
+}
+
+/* 参加前属性別分析 */
+
+.surveyAnalysisSegmentGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.surveyAnalysisSegmentCard {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid #ecdfd9;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.surveyAnalysisSegmentCard h3 {
+  margin: 0 0 7px;
+  font-size: 17px;
+  color: #4a3028;
+}
+
+.surveyAnalysisSegmentCard > p {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #806b60;
+}
+
+.surveyAnalysisSegmentCount {
+  display: inline-block;
+  margin-bottom: 16px;
+  padding: 7px 12px;
+  border-radius: 20px;
+
+  background: #fff0ed;
+  color: #c52530;
+  font-size: 13px;
+}
+
+.surveyAnalysisSegmentRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 0;
+  border-top: 1px solid #eee6e1;
+}
+
+.surveyAnalysisSegmentRow span {
+  font-size: 12px;
+  color: #624c42;
+}
+
+.surveyAnalysisSegmentRow strong {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.surveyAnalysisSegmentRow small {
+  font-size: 12px;
+  font-weight: 800;
+  color: #c42b34;
+  white-space: nowrap;
+}
+
+/* 最終更新日時 */
+
+.surveyAnalysisUpdated {
+  margin-top: 15px;
+  font-size: 11px;
+  color: #9b887f;
+  text-align: right;
+}
+
+/* スマートフォン */
+
+@media (max-width: 600px) {
+  .surveyAnalysisTabs {
+    gap: 7px;
+  }
+
+  .surveyAnalysisTab {
+    min-height: 66px;
+    padding: 9px 5px;
+    border-radius: 13px;
+  }
+
+  .surveyAnalysisTab span {
+    font-size: 9px;
+  }
+
+  .surveyAnalysisTab strong {
+    font-size: 11px;
+  }
+
+  .surveyAnalysisPairGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .surveyAnalysisGraphCard {
+    padding: 16px;
+  }
+
+  .surveyAnalysisSegmentRow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .surveyAnalysisSegmentRow small {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  .surveyAnalysisChangeSummary strong {
+    font-size: 15px;
+  }
+}
