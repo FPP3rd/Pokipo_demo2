@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -45,27 +44,47 @@ export default function StaffTestStampPage() {
   const [ready, setReady] = useState(false);
 
   const [scans, setScans] = useState<string[]>([]);
+  const scansRef = useRef<string[]>([]);
+
   const [message, setMessage] = useState("");
 
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const savingRef = useRef(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const processingRef = useRef(false);
   const scannerRunRef = useRef(0);
 
-  const [activeSpot, setActiveSpot] = useState<Spot | null>(
-    null
-  );
-  const [showGetEffect, setShowGetEffect] = useState(false);
-  const [triviaReady, setTriviaReady] = useState(false);
+  const [activeSpot, setActiveSpot] =
+    useState<Spot | null>(null);
+
+  const [showGetEffect, setShowGetEffect] =
+    useState(false);
+
+  const [triviaReady, setTriviaReady] =
+    useState(false);
+
   const [quizInput, setQuizInput] = useState("");
-  const [quizCorrect, setQuizCorrect] = useState(false);
-  const [quizError, setQuizError] = useState(false);
+  const [quizCorrect, setQuizCorrect] =
+    useState(false);
+
+  const [quizError, setQuizError] =
+    useState(false);
+
+  const [stampConfirmed, setStampConfirmed] =
+    useState(false);
 
   const triviaTimerRef =
     useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function updateStamps(ids: string[]): void {
+    const unique = [...new Set(ids)];
+
+    scansRef.current = unique;
+    setScans(unique);
+  }
 
   /* ========================================
      INITIALIZE
@@ -76,16 +95,17 @@ export default function StaffTestStampPage() {
 
     async function initialize() {
       try {
-        // スタッフ権限と検証セッションを必ず確認
+        // スタッフ権限と検証セッションを確認
         await getPokipoTestSession();
 
         const stamps = await getPokipoTestStamps();
 
         if (!active) return;
 
-        setScans([
-          ...new Set(stamps.map((item) => item.spot_id)),
-        ]);
+        updateStamps(
+          stamps.map((item) => item.spot_id)
+        );
+
         setReady(true);
       } catch (error) {
         if (!active) return;
@@ -96,7 +116,9 @@ export default function StaffTestStampPage() {
             : "検証セッションを確認できませんでした。"
         );
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
@@ -133,7 +155,7 @@ export default function StaffTestStampPage() {
     try {
       scanner.clear();
     } catch {
-      // すでに終了している場合
+      // 終了済みの場合は無視
     }
 
     if (scannerRef.current === scanner) {
@@ -157,7 +179,7 @@ export default function StaffTestStampPage() {
       !ready ||
       cameraOpen ||
       scannerRef.current ||
-      saving ||
+      savingRef.current ||
       showGetEffect
     ) {
       return;
@@ -201,7 +223,10 @@ export default function StaffTestStampPage() {
           { facingMode: "environment" },
           {
             fps: 10,
-            qrbox: { width: 240, height: 240 },
+            qrbox: {
+              width: 240,
+              height: 240,
+            },
             aspectRatio: 1,
           },
           async (decodedText) => {
@@ -265,6 +290,7 @@ export default function StaffTestStampPage() {
           setCameraError(
             "カメラを起動できませんでした。カメラ権限を確認してください。"
           );
+
           setCameraOpen(false);
         }
 
@@ -285,68 +311,41 @@ export default function StaffTestStampPage() {
   }, [cameraOpen, ready]);
 
   /* ========================================
-     SAVE TEST STAMP
+     OPEN SPOT
+     QR読み取りだけでは保存しない
   ======================================== */
 
   async function scanSpot(spot: Spot): Promise<void> {
-    setSaving(true);
     setMessage("");
 
     try {
-      // 保存直前に検証専用セッションを再確認
+      // 検証用のスタッフセッションを確認
       await getPokipoTestSession();
 
+      // 最新のスタンプを取得
       const previous = await getPokipoTestStamps();
 
-      if (
-        previous.some(
-          (item) => item.spot_id === spot.id
-        )
-      ) {
-        setScans([
-          ...new Set(
-            previous.map((item) => item.spot_id)
-          ),
-        ]);
+      const existingIds = [
+        ...new Set(
+          previous.map((item) => item.spot_id)
+        ),
+      ];
 
+      updateStamps(existingIds);
+
+      if (existingIds.includes(spot.id)) {
         setMessage(
           `${spot.spotName}のスタンプは取得済みです。`
         );
         return;
       }
 
-      // 本番用RPCは呼ばず検証テーブルに保存
-      await recordPokipoTestStamp(spot.id);
-
-      const stamps = await getPokipoTestStamps();
-
-      const updatedScans = [
-        ...new Set(
-          stamps.map((item) => item.spot_id)
-        ),
-      ];
-
-      setScans(updatedScans);
-
-      if (updatedScans.length >= 5) {
-        try {
-          await recordPokipoTestCompletion();
-        } catch (error) {
-          console.error(
-            "検証用完走記録保存エラー:",
-            error
-          );
-
-          setMessage(
-            "スタンプは保存しましたが、検証用完走記録の更新に失敗しました。"
-          );
-        }
-      }
-
+      // ここではスタンプを保存しない
       setActiveSpot(spot);
       setQuizInput("");
       setQuizCorrect(false);
       setQuizError(false);
+      setStampConfirmed(false);
       setTriviaReady(false);
 
       if (triviaTimerRef.current) {
@@ -359,27 +358,29 @@ export default function StaffTestStampPage() {
 
       setShowGetEffect(true);
     } catch (error) {
-      console.error("検証スタンプ保存エラー:", error);
+      console.error(
+        "検証スポット準備エラー:",
+        error
+      );
 
       setMessage(
         error instanceof Error
           ? error.message
-          : "検証用スタンプを保存できませんでした。"
+          : "検証スポットを準備できませんでした。"
       );
-    } finally {
-      setSaving(false);
     }
   }
 
   /* ========================================
      QUIZ
+     正解時は豆知識のみ保存
   ======================================== */
 
   async function checkQuiz(): Promise<void> {
     if (
       !activeSpot ||
       !quizInput.trim() ||
-      saving ||
+      savingRef.current ||
       quizCorrect
     ) {
       return;
@@ -393,19 +394,24 @@ export default function StaffTestStampPage() {
       return;
     }
 
+    savingRef.current = true;
     setSaving(true);
     setQuizError(false);
 
     try {
-      // 本番の豆知識保存RPCは使わない
+      // 本番用RPCは使用しない
       await recordPokipoTestKnowledge(
         activeSpot.knowledgeId
       );
 
+      // クイズ正解と豆知識解放のみ
       setQuizCorrect(true);
       setMessage("");
     } catch (error) {
-      console.error("検証豆知識保存エラー:", error);
+      console.error(
+        "検証豆知識保存エラー:",
+        error
+      );
 
       setMessage(
         error instanceof Error
@@ -413,12 +419,176 @@ export default function StaffTestStampPage() {
           : "検証用の豆知識を保存できませんでした。"
       );
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }
 
+  /* ========================================
+     LEARNING CONFIRM
+     学習確認後に検証スタンプ保存
+  ======================================== */
+
+  async function confirmLearning(
+    selectedAnswer: string
+  ): Promise<void> {
+    if (
+      !activeSpot ||
+      !quizCorrect ||
+      stampConfirmed ||
+      savingRef.current
+    ) {
+      return;
+    }
+
+    const spot = activeSpot;
+
+    if (!selectedAnswer.trim()) {
+      throw new Error(
+        "意見を選択してください。"
+      );
+    }
+
+    savingRef.current = true;
+    setSaving(true);
+    setMessage("");
+
+    try {
+      // スタッフ認証を再確認
+      await getPokipoTestSession();
+
+      const previous = await getPokipoTestStamps();
+
+      const existingIds = [
+        ...new Set(
+          previous.map((item) => item.spot_id)
+        ),
+      ];
+
+      if (existingIds.includes(spot.id)) {
+        // 他の画面などで取得済みの場合も再保存しない
+        updateStamps(existingIds);
+        setStampConfirmed(true);
+        return;
+      }
+
+      // 回答を検証用ブラウザー領域へ保存
+      // 本番参加者テーブルには記録しない
+      const storageKey =
+        "pokipo_test_learning_answers";
+
+      let savedAnswers: Record<string, string> = {};
+
+      try {
+        const existing = sessionStorage.getItem(
+          storageKey
+        );
+
+        if (existing) {
+          const parsed: unknown =
+            JSON.parse(existing);
+
+          if (
+            parsed &&
+            typeof parsed === "object" &&
+            !Array.isArray(parsed)
+          ) {
+            savedAnswers = parsed as Record<
+              string,
+              string
+            >;
+          }
+        }
+      } catch {
+        savedAnswers = {};
+      }
+
+      savedAnswers[spot.id] =
+        selectedAnswer;
+
+      // この記録は画面確認用。
+      // 他のスタッフの集計には含まれない。
+      try {
+        sessionStorage.setItem(
+          storageKey,
+          JSON.stringify(savedAnswers)
+        );
+      } catch {
+        // ストレージが使用できなくても
+        // 検証用スタンプの保存は続行
+      }
+
+      // 学習画面を確認した後、初めて保存
+      await recordPokipoTestStamp(spot.id);
+
+      const stamps = await getPokipoTestStamps();
+
+      const updatedScans = [
+        ...new Set(
+          stamps.map((item) => item.spot_id)
+        ),
+      ];
+
+      if (!updatedScans.includes(spot.id)) {
+        throw new Error(
+          "検証用スタンプの保存を確認できませんでした。"
+        );
+      }
+
+      updateStamps(updatedScans);
+      setStampConfirmed(true);
+
+      if (updatedScans.length >= 5) {
+        try {
+          await recordPokipoTestCompletion();
+        } catch (error) {
+          console.error(
+            "検証用完走記録保存エラー:",
+            error
+          );
+
+          setMessage(
+            "スタンプは保存されましたが、検証用完走記録の更新に失敗しました。"
+          );
+        }
+      }
+
+      if (updatedScans.length < 5) {
+        setMessage(
+          `${spot.spotName}の検証用スタンプを獲得しました！`
+        );
+      }
+    } catch (error) {
+      console.error(
+        "検証用学習・スタンプ保存エラー:",
+        error
+      );
+
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "検証用スタンプを保存できませんでした。"
+      );
+
+      throw error;
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  }
+
+  /* ========================================
+     CLOSE MODAL
+  ======================================== */
+
   function closeGetEffect(): void {
-    if (!quizCorrect || saving) return;
+    if (
+      !quizCorrect ||
+      !stampConfirmed ||
+      savingRef.current
+    ) {
+      return;
+    }
 
     if (triviaTimerRef.current) {
       clearTimeout(triviaTimerRef.current);
@@ -431,6 +601,7 @@ export default function StaffTestStampPage() {
     setQuizInput("");
     setQuizCorrect(false);
     setQuizError(false);
+    setStampConfirmed(false);
     setMessage("");
   }
 
@@ -469,7 +640,9 @@ export default function StaffTestStampPage() {
 
           <button
             type="button"
-            onClick={() => router.push("/staff/test")}
+            onClick={() =>
+              router.push("/staff/test")
+            }
           >
             動作確認メニューへ戻る
           </button>
@@ -488,16 +661,24 @@ export default function StaffTestStampPage() {
         cameraReaderId="pokipo-test-qr-reader"
         onStartCamera={startCamera}
         onStopCamera={stopScanner}
-        onBack={() => router.push("/staff/test")}
+        onBack={() =>
+          router.push("/staff/test")
+        }
         testMode={true}
         disabled={saving || showGetEffect}
       />
 
-      {/* 共通のスタンプ獲得演出 */}
+      {/* 検証専用のスタンプ・学習画面 */}
       {showGetEffect && activeSpot && (
         <PokipoStampGetModal
+          spotId={activeSpot.id}
           spotName={activeSpot.spotName}
-          stampCount={scans.length}
+          stampCount={
+            stampConfirmed
+              ? scans.length
+              : scans.length + 1
+          }
+          stampConfirmed={stampConfirmed}
           triviaReady={triviaReady}
           quizQuestion={activeSpot.quizQuestion}
           quizHint={activeSpot.quizHint}
@@ -511,7 +692,10 @@ export default function StaffTestStampPage() {
             setQuizInput(value);
             setQuizError(false);
           }}
-          onQuizSubmit={() => void checkQuiz()}
+          onQuizSubmit={() =>
+            void checkQuiz()
+          }
+          onLearningConfirm={confirmLearning}
           onClose={closeGetEffect}
         />
       )}
