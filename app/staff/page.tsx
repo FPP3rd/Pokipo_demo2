@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -132,7 +131,8 @@ const MENU_SECTIONS: MenuSection[] = [
     id: "analytics",
     eyebrow: "REAL-TIME ANALYTICS",
     title: "リアルタイム分析",
-    description: "参加状況やアンケート結果を確認します。",
+    description:
+      "参加状況・アンケート・学習と振り返りの結果を確認します。",
     items: [
       {
         icon: "LIVE",
@@ -150,6 +150,15 @@ const MENU_SECTIONS: MenuSection[] = [
         description:
           "参加前・参加後アンケートの回答結果を分析します。",
         href: "/staff/surveys",
+        variant: "",
+      },
+      {
+        icon: "LEARN",
+        label: "LEARNING ANALYTICS",
+        title: "学習・振り返り分析",
+        description:
+          "5か所の学習意見と完走後の振り返りをグラフで分析します。",
+        href: "/staff/learning",
         variant: "",
       },
     ],
@@ -193,7 +202,7 @@ const MENU_SECTIONS: MenuSection[] = [
         label: "STAFF TESTING",
         title: "POKIPO動作確認",
         description:
-          "QR読み取り・スタンプ・アンケート・特典交換を検証します。現在は接続準備中です。",
+          "QR読み取り・スタンプ・アンケート・特典交換を検証します。",
         href: "/staff/test",
         variant: "",
         disabled: false,
