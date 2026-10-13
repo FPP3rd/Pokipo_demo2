@@ -1,11 +1,7 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-
-import {
-  getPokipoLearningContent,
-} from "../app/data/pokipo-learning";
 
 type PockyStep = {
   step: string;
@@ -28,13 +24,6 @@ type Props = {
   onQuizInputChange: (value: string) => void;
   onQuizSubmit: () => void;
   onClose: () => void;
-
-  // 第2段階で追加
-  spotId?: string;
-  stampConfirmed?: boolean;
-  onLearningConfirm?: (
-    selectedAnswer: string
-  ) => void | Promise<void>;
 };
 
 export function getPockyStep(
@@ -98,9 +87,6 @@ export default function PokipoStampGetModal({
   onQuizInputChange,
   onQuizSubmit,
   onClose,
-  spotId,
-  stampConfirmed = false,
-  onLearningConfirm,
 }: Props): ReactNode {
   const safeCount = Math.max(
     1,
@@ -108,77 +94,7 @@ export default function PokipoStampGetModal({
   );
 
   const currentStep = getPockyStep(safeCount);
-
   const completed = safeCount >= 5;
-
-  const learningContent = spotId
-    ? getPokipoLearningContent(spotId)
-    : null;
-
-  const learningEnabled = Boolean(
-    learningContent &&
-    onLearningConfirm
-  );
-
-  const [selectedAnswer, setSelectedAnswer] =
-    useState("");
-
-  const [articleOpened, setArticleOpened] =
-    useState(false);
-
-  const [readConfirmed, setReadConfirmed] =
-    useState(false);
-
-  const [localSubmitting, setLocalSubmitting] =
-    useState(false);
-
-  const [learningError, setLearningError] =
-    useState("");
-
-  useEffect(() => {
-    setSelectedAnswer("");
-    setArticleOpened(false);
-    setReadConfirmed(false);
-    setLocalSubmitting(false);
-    setLearningError("");
-  }, [spotId]);
-
-  async function confirmLearning() {
-    if (
-      !learningContent ||
-      !onLearningConfirm ||
-      !selectedAnswer ||
-      !articleOpened ||
-      !readConfirmed ||
-      saving ||
-      localSubmitting
-    ) {
-      return;
-    }
-
-    setLocalSubmitting(true);
-    setLearningError("");
-
-    try {
-      await onLearningConfirm(selectedAnswer);
-    } catch (error) {
-      console.error(
-        "学習確認エラー:",
-        error
-      );
-
-      setLearningError(
-        "確認処理に失敗しました。通信環境を確認して、もう一度お試しください。"
-      );
-    } finally {
-      setLocalSubmitting(false);
-    }
-  }
-
-  const busy = saving || localSubmitting;
-
-  const showStampResult =
-    !learningEnabled || stampConfirmed;
 
   return (
     <div className="stampGetOverlay">
@@ -188,62 +104,44 @@ export default function PokipoStampGetModal({
       <div className="stampGetBurst burst4">✦</div>
 
       <section className="stampGetModal">
-        <div className="stampGetCircle">
-          {showStampResult ? "✓" : "★"}
-        </div>
+        <div className="stampGetCircle">✓</div>
 
         <p className="stampGetLabel">
-          {showStampResult
-            ? "STAMP GET!"
-            : "POKIPO LEARNING"}
+          STAMP GET!
         </p>
 
-        <h2>
-          {showStampResult
-            ? "スタンプ獲得！"
-            : "その一本の向こう側へ。"}
-        </h2>
+        <h2>スタンプ獲得！</h2>
 
         <p className="stampGetPlace">
           {spotName}
         </p>
 
-        {showStampResult && (
-          <>
-            <div className="stampGetProgress">
-              <span>{safeCount} / 5</span>
+        <div className="stampGetProgress">
+          <span>{safeCount} / 5</span>
 
-              <div className="stampGetProgressBar">
-                <div
-                  className="stampGetProgressFill"
-                  style={{
-                    width: `${safeCount * 20}%`,
-                  }}
-                />
-              </div>
-            </div>
+          <div className="stampGetProgressBar">
+            <div
+              className="stampGetProgressFill"
+              style={{
+                width: `${safeCount * 20}%`,
+              }}
+            />
+          </div>
+        </div>
 
-            <div className="stampGetStep">
-              <span>POCKY STEP</span>
+        <div className="stampGetStep">
+          <span>POCKY STEP</span>
 
-              <small className="stampGetStepNumber">
-                {currentStep.step}
-              </small>
+          <small className="stampGetStepNumber">
+            {currentStep.step}
+          </small>
 
-              <strong>
-                {currentStep.title}
-              </strong>
+          <strong>{currentStep.title}</strong>
 
-              <p className="stampGetStepDescription">
-                {currentStep.description}
-              </p>
-            </div>
-          </>
-        )}
-
-        {/* ==================================
-            EXISTING QUIZ AND KNOWLEDGE
-        ================================== */}
+          <p className="stampGetStepDescription">
+            {currentStep.description}
+          </p>
+        </div>
 
         <div
           className={
@@ -278,6 +176,7 @@ export default function PokipoStampGetModal({
 
                 <div className="triviaQuizQuestion">
                   <span>QUESTION</span>
+
                   <strong>
                     {quizQuestion}
                   </strong>
@@ -299,7 +198,7 @@ export default function PokipoStampGetModal({
                     onKeyDown={(event) => {
                       if (
                         event.key === "Enter" &&
-                        !busy &&
+                        !saving &&
                         quizInput.trim()
                       ) {
                         onQuizSubmit();
@@ -307,14 +206,14 @@ export default function PokipoStampGetModal({
                     }}
                     placeholder="答えを入力"
                     className="triviaQuizInput"
-                    disabled={busy}
+                    disabled={saving}
                   />
 
                   <button
                     type="button"
                     className="triviaQuizCheckButton"
                     disabled={
-                      !quizInput.trim() || busy
+                      !quizInput.trim() || saving
                     }
                     onClick={onQuizSubmit}
                   >
@@ -366,174 +265,18 @@ export default function PokipoStampGetModal({
           </div>
         </div>
 
-        {/* ==================================
-            ADDITIONAL LEARNING
-        ================================== */}
-
-        {triviaReady &&
-          quizCorrect &&
-          learningEnabled &&
-          learningContent &&
-          !stampConfirmed && (
-            <section className="pokipoLearningSection">
-              <div className="pokipoLearningHeading">
-                <span>THINK BEYOND THE POCKY</span>
-
-                <h3>
-                  {learningContent.title}
-                </h3>
-
-                <p>
-                  {learningContent.theme}
-                </p>
-              </div>
-
-              <div className="pokipoLearningQuestion">
-                <span>YOUR OPINION</span>
-
-                <h4>
-                  {learningContent.question}
-                </h4>
-
-                <p>
-                  正解・不正解はありません。
-                  今の考えに近いものを
-                  一つ選んでください。
-                </p>
-
-                <div className="pokipoLearningOptions">
-                  {learningContent.options.map(
-                    (option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        className={
-                          selectedAnswer === option
-                            ? "pokipoLearningOption active"
-                            : "pokipoLearningOption"
-                        }
-                        disabled={busy}
-                        onClick={() => {
-                          setSelectedAnswer(option);
-                          setLearningError("");
-                        }}
-                      >
-                        {option}
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
-
-              {selectedAnswer && (
-                <div className="pokipoLearningArticle">
-                  <span>LEARN MORE</span>
-
-                  <h4>
-                    もう少し知ってみよう
-                  </h4>
-
-                  {!articleOpened ? (
-                    <button
-                      type="button"
-                      className="pokipoLearningReadButton"
-                      onClick={() =>
-                        setArticleOpened(true)
-                      }
-                      disabled={busy}
-                    >
-                      記事を読む
-                    </button>
-                  ) : (
-                    <>
-                      <p>
-                        {learningContent.article}
-                      </p>
-
-                      <div className="pokipoLearningSources">
-                        <strong>
-                          参考資料
-                        </strong>
-
-                        {learningContent.sources.map(
-                          (source) => (
-                            <a
-                              key={source.url}
-                              href={source.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {source.label} ↗
-                            </a>
-                          )
-                        )}
-                      </div>
-
-                      <label className="pokipoLearningConfirmLabel">
-                        <input
-                          type="checkbox"
-                          checked={readConfirmed}
-                          disabled={busy}
-                          onChange={(event) =>
-                            setReadConfirmed(
-                              event.target.checked
-                            )
-                          }
-                        />
-
-                        <span>
-                          記事を確認しました
-                        </span>
-                      </label>
-
-                      <button
-                        type="button"
-                        className="pokipoLearningFinishButton"
-                        disabled={
-                          !readConfirmed || busy
-                        }
-                        onClick={() =>
-                          void confirmLearning()
-                        }
-                      >
-                        {busy
-                          ? "保存中..."
-                          : "確認してスタンプを取得"}
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {learningError && (
-                <p
-                  className="pokipoLearningError"
-                  role="alert"
-                >
-                  {learningError}
-                </p>
-              )}
-            </section>
-          )}
-
-        {/* ==================================
-            FINISH
-        ================================== */}
-
-        {triviaReady &&
-          quizCorrect &&
-          showStampResult && (
-            <button
-              type="button"
-              className="stampGetCloseButton"
-              onClick={onClose}
-              disabled={busy}
-            >
-              {completed
-                ? "コンプリート！"
-                : "次のスポットへ"}
-            </button>
-          )}
+        {triviaReady && quizCorrect && (
+          <button
+            type="button"
+            className="stampGetCloseButton"
+            onClick={onClose}
+            disabled={saving}
+          >
+            {completed
+              ? "コンプリート！"
+              : "次のスポットへ"}
+          </button>
+        )}
       </section>
     </div>
   );

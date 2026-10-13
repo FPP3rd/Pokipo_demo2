@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -79,8 +80,6 @@ export default function StampPage() {
   const router = useRouter();
 
   const [scans, setScans] = useState<string[]>([]);
-  const scansRef = useRef<string[]>([]);
-
   const [message, setMessage] = useState("");
 
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -90,79 +89,29 @@ export default function StampPage() {
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const processingRef = useRef(false);
   const scannerRunRef = useRef(0);
-  const savingRef = useRef(false);
 
-  const [activeSpot, setActiveSpot] =
-    useState<Spot | null>(null);
-
-  const [showGetEffect, setShowGetEffect] =
-    useState(false);
-
-  const [triviaReady, setTriviaReady] =
-    useState(false);
-
+  const [activeSpot, setActiveSpot] = useState<Spot | null>(
+    null
+  );
+  const [showGetEffect, setShowGetEffect] = useState(false);
+  const [triviaReady, setTriviaReady] = useState(false);
   const [quizInput, setQuizInput] = useState("");
-  const [quizCorrect, setQuizCorrect] =
-    useState(false);
-
-  const [quizError, setQuizError] =
-    useState(false);
-
-  const [quizSaving, setQuizSaving] =
-    useState(false);
-
-  const [stampConfirmed, setStampConfirmed] =
-    useState(false);
-
-  const [learningSaving, setLearningSaving] =
-    useState(false);
+  const [quizCorrect, setQuizCorrect] = useState(false);
+  const [quizError, setQuizError] = useState(false);
+  const [quizSaving, setQuizSaving] = useState(false);
 
   const triviaTimerRef =
     useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [secretStamp, setSecretStamp] =
-    useState(false);
-
+  const [secretStamp, setSecretStamp] = useState(false);
   const [secretGetEffect, setSecretGetEffect] =
     useState(false);
 
   const [showTestWarning, setShowTestWarning] =
     useState(false);
-
-  const [showTestPanel, setShowTestPanel] =
-    useState(false);
-
-  const [staffChecking, setStaffChecking] =
-    useState(false);
-
-  const [testModeError, setTestModeError] =
-    useState("");
-
-  /* ========================================
-     SHARED PROGRESS UPDATE
-  ======================================== */
-
-  function updateProgress(ids: string[]): void {
-    const uniqueIds = [...new Set(ids)];
-
-    scansRef.current = uniqueIds;
-    setScans(uniqueIds);
-
-    localStorage.setItem(
-      "pokipo_scans",
-      JSON.stringify(uniqueIds)
-    );
-
-    localStorage.setItem(
-      "pokipo_progress",
-      String(Math.min(uniqueIds.length, 5))
-    );
-
-    localStorage.setItem(
-      "pokipo_completed",
-      uniqueIds.length >= 5 ? "true" : "false"
-    );
-  }
+  const [showTestPanel, setShowTestPanel] = useState(false);
+  const [staffChecking, setStaffChecking] = useState(false);
+  const [testModeError, setTestModeError] = useState("");
 
   /* ========================================
      INITIAL DATA
@@ -175,25 +124,22 @@ export default function StampPage() {
       const participantId = getParticipantId();
 
       if (!participantId) {
-        const saved = localStorage.getItem(
-          "pokipo_scans"
-        );
+        const saved = localStorage.getItem("pokipo_scans");
 
         if (saved && active) {
           try {
-            const parsed: unknown =
-              JSON.parse(saved);
+            const parsed: unknown = JSON.parse(saved);
 
             if (Array.isArray(parsed)) {
-              const ids = parsed.filter(
-                (id): id is string =>
-                  typeof id === "string"
+              setScans(
+                parsed.filter(
+                  (id): id is string =>
+                    typeof id === "string"
+                )
               );
-
-              updateProgress(ids);
             }
           } catch {
-            updateProgress([]);
+            setScans([]);
           }
         }
 
@@ -208,26 +154,39 @@ export default function StampPage() {
       if (!active) return;
 
       if (error) {
-        console.error(
-          "スタンプ取得エラー:",
-          error
-        );
+        console.error("スタンプ取得エラー:", error);
         return;
       }
 
-      const ids = (
-        (data ?? []) as { spot_id: string }[]
-      ).map((item) => item.spot_id);
+      const ids = [
+        ...new Set(
+          ((data ?? []) as { spot_id: string }[]).map(
+            (item) => item.spot_id
+          )
+        ),
+      ];
 
-      updateProgress(ids);
+      setScans(ids);
+
+      localStorage.setItem(
+        "pokipo_scans",
+        JSON.stringify(ids)
+      );
+      localStorage.setItem(
+        "pokipo_progress",
+        String(Math.min(ids.length, 5))
+      );
+      localStorage.setItem(
+        "pokipo_completed",
+        ids.length >= 5 ? "true" : "false"
+      );
     }
 
     void loadStamps();
 
     setSecretStamp(
-      localStorage.getItem(
-        "pokipo_secret_yuhisai"
-      ) === "true"
+      localStorage.getItem("pokipo_secret_yuhisai") ===
+        "true"
     );
 
     return () => {
@@ -255,10 +214,7 @@ export default function StampPage() {
         await scanner.stop();
       }
     } catch (error) {
-      console.warn(
-        "カメラ停止エラー:",
-        error
-      );
+      console.warn("カメラ停止エラー:", error);
     }
 
     try {
@@ -287,7 +243,7 @@ export default function StampPage() {
     if (
       cameraOpen ||
       scannerRef.current ||
-      savingRef.current ||
+      saving ||
       showGetEffect
     ) {
       return;
@@ -295,7 +251,6 @@ export default function StampPage() {
 
     setCameraError("");
     setMessage("");
-
     processingRef.current = false;
     setCameraOpen(true);
   }
@@ -313,16 +268,12 @@ export default function StampPage() {
       );
 
       if (!element) {
-        setCameraError(
-          "QR読み取りエリアがありません。"
-        );
+        setCameraError("QR読み取りエリアがありません。");
         setCameraOpen(false);
         return;
       }
 
-      const instance = new Html5Qrcode(
-        "pokipo-qr-reader"
-      );
+      const instance = new Html5Qrcode("pokipo-qr-reader");
 
       scanner = instance;
       scannerRef.current = instance;
@@ -332,10 +283,7 @@ export default function StampPage() {
           { facingMode: "environment" },
           {
             fps: 10,
-            qrbox: {
-              width: 240,
-              height: 240,
-            },
+            qrbox: { width: 240, height: 240 },
             aspectRatio: 1,
           },
           async (decodedText) => {
@@ -350,9 +298,7 @@ export default function StampPage() {
             processingRef.current = true;
 
             try {
-              const value = normalizeQr(
-                decodedText
-              );
+              const value = normalizeQr(decodedText);
 
               if (isStaffTestQr(decodedText)) {
                 await stopQrScanner();
@@ -360,18 +306,14 @@ export default function StampPage() {
                 return;
               }
 
-              if (
-                value ===
-                normalizeQr(SECRET_QR_VALUE)
-              ) {
+              if (value === normalizeQr(SECRET_QR_VALUE)) {
                 await stopQrScanner();
                 scanSecretSpot();
                 return;
               }
 
               const spot = pokipoSpots.find(
-                (item) =>
-                  normalizeQr(item.id) === value
+                (item) => normalizeQr(item.id) === value
               );
 
               if (!spot) {
@@ -384,11 +326,7 @@ export default function StampPage() {
               await stopQrScanner();
               await scanSpot(spot);
             } catch (error) {
-              console.error(
-                "QR処理エラー:",
-                error
-              );
-
+              console.error("QR処理エラー:", error);
               setMessage(
                 "QR読み取り中にエラーが発生しました。"
               );
@@ -406,15 +344,10 @@ export default function StampPage() {
         }
       } catch (error) {
         if (!cancelled) {
-          console.error(
-            "カメラ起動エラー:",
-            error
-          );
-
+          console.error("カメラ起動エラー:", error);
           setCameraError(
             "カメラを起動できませんでした。使用許可を確認してください。"
           );
-
           setCameraOpen(false);
         }
 
@@ -444,16 +377,11 @@ export default function StampPage() {
     try {
       const { data, error } = await supabase.rpc(
         "record_pokipo_completion",
-        {
-          p_participant_id: participantId,
-        }
+        { p_participant_id: participantId }
       );
 
       if (error) {
-        console.error(
-          "完走記録エラー:",
-          error
-        );
+        console.error("完走記録エラー:", error);
         return;
       }
 
@@ -463,9 +391,7 @@ export default function StampPage() {
         if (record.completed_at) {
           localStorage.setItem(
             "pokipo_completed_at",
-            formatDateTime(
-              record.completed_at
-            )
+            formatDateTime(record.completed_at)
           );
         }
 
@@ -480,25 +406,25 @@ export default function StampPage() {
         }
       }
     } catch (error) {
-      console.error(
-        "完走保存通信エラー:",
-        error
-      );
+      console.error("完走保存通信エラー:", error);
     }
   }
 
   /* ========================================
-     OPEN SPOT
-     QR読取時点ではスタンプ保存しない
+     SAVE STAMP
   ======================================== */
 
-  async function scanSpot(
-    spot: Spot
-  ): Promise<void> {
+  async function scanSpot(spot: Spot): Promise<void> {
     const spotId = spot.id;
 
-    const participantId =
-      getParticipantId();
+    if (scans.includes(spotId)) {
+      setMessage(
+        `${spot.spotName}のスタンプは取得済みです。`
+      );
+      return;
+    }
+
+    const participantId = getParticipantId();
 
     if (!participantId) {
       setMessage(
@@ -507,41 +433,82 @@ export default function StampPage() {
       return;
     }
 
-    if (scansRef.current.includes(spotId)) {
-      setMessage(
-        `${spot.spotName}のスタンプは取得済みです。`
+    setSaving(true);
+
+    try {
+      const { error } = await supabase.rpc(
+        "record_pokipo_stamp",
+        {
+          p_participant_id: participantId,
+          p_spot_id: spotId,
+        }
       );
-      return;
-    }
 
-    // QRを読んだだけではデータを保存しない
-    setActiveSpot(spot);
-    setQuizInput("");
-    setQuizCorrect(false);
-    setQuizError(false);
-    setQuizSaving(false);
-    setStampConfirmed(false);
-    setLearningSaving(false);
-    setTriviaReady(false);
+      if (error) {
+        throw new Error(error.message);
+      }
 
-    if (triviaTimerRef.current) {
-      clearTimeout(triviaTimerRef.current);
-    }
+      const { data, error: loadError } = await supabase.rpc(
+        "get_pokipo_stamps",
+        { p_participant_id: participantId }
+      );
 
-    triviaTimerRef.current = setTimeout(
-      () => {
+      const updatedScans = loadError
+        ? [...new Set([...scans, spotId])]
+        : [
+            ...new Set(
+              ((data ?? []) as { spot_id: string }[]).map(
+                (item) => item.spot_id
+              )
+            ),
+          ];
+
+      setScans(updatedScans);
+
+      localStorage.setItem(
+        "pokipo_scans",
+        JSON.stringify(updatedScans)
+      );
+      localStorage.setItem(
+        "pokipo_progress",
+        String(Math.min(updatedScans.length, 5))
+      );
+
+      if (updatedScans.length >= 5) {
+        localStorage.setItem("pokipo_completed", "true");
+        await saveCompletion(participantId);
+      }
+
+      setActiveSpot(spot);
+      setQuizInput("");
+      setQuizCorrect(false);
+      setQuizError(false);
+      setTriviaReady(false);
+
+      if (triviaTimerRef.current) {
+        clearTimeout(triviaTimerRef.current);
+      }
+
+      triviaTimerRef.current = setTimeout(() => {
         setTriviaReady(true);
-      },
-      650
-    );
+      }, 650);
 
-    setShowGetEffect(true);
-    setMessage("");
+      setShowGetEffect(true);
+      setMessage(
+        `${spot.spotName}のスタンプを獲得しました！`
+      );
+    } catch (error) {
+      console.error("スタンプ保存エラー:", error);
+      setMessage(
+        "スタンプを保存できませんでした。通信環境を確認してもう一度お試しください。"
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   /* ========================================
      QUIZ
-     正解と既存の豆知識を保存
   ======================================== */
 
   async function checkQuiz(): Promise<void> {
@@ -549,8 +516,7 @@ export default function StampPage() {
       !activeSpot ||
       !quizInput.trim() ||
       quizSaving ||
-      quizCorrect ||
-      savingRef.current
+      quizCorrect
     ) {
       return;
     }
@@ -563,13 +529,10 @@ export default function StampPage() {
       return;
     }
 
-    const participantId =
-      getParticipantId();
+    const participantId = getParticipantId();
 
     if (!participantId) {
-      setMessage(
-        "参加者情報を確認できませんでした。"
-      );
+      setMessage("参加者情報を確認できませんでした。");
       return;
     }
 
@@ -581,25 +544,20 @@ export default function StampPage() {
         "record_pokipo_knowledge",
         {
           p_participant_id: participantId,
-          p_knowledge_id:
-            activeSpot.knowledgeId,
+          p_knowledge_id: activeSpot.knowledgeId,
         }
       );
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      if (error) throw new Error(error.message);
 
-      const saved = localStorage.getItem(
-        "pokipo_knowledge"
-      );
+      const saved =
+        localStorage.getItem("pokipo_knowledge");
 
       let knowledge: string[] = [];
 
       if (saved) {
         try {
-          const parsed: unknown =
-            JSON.parse(saved);
+          const parsed: unknown = JSON.parse(saved);
 
           if (Array.isArray(parsed)) {
             knowledge = parsed.filter(
@@ -612,14 +570,8 @@ export default function StampPage() {
         }
       }
 
-      if (
-        !knowledge.includes(
-          activeSpot.knowledgeId
-        )
-      ) {
-        knowledge.push(
-          activeSpot.knowledgeId
-        );
+      if (!knowledge.includes(activeSpot.knowledgeId)) {
+        knowledge.push(activeSpot.knowledgeId);
       }
 
       localStorage.setItem(
@@ -630,11 +582,7 @@ export default function StampPage() {
       setQuizCorrect(true);
       setMessage("");
     } catch (error) {
-      console.error(
-        "豆知識保存エラー:",
-        error
-      );
-
+      console.error("豆知識保存エラー:", error);
       setMessage(
         "豆知識を保存できませんでした。もう一度お試しください。"
       );
@@ -643,140 +591,11 @@ export default function StampPage() {
     }
   }
 
-  /* ========================================
-     LEARNING CONFIRM
-     意見回答＋スタンプを一体保存
-  ======================================== */
-
-  async function confirmLearning(
-    selectedAnswer: string
-  ): Promise<void> {
-    if (
-      !activeSpot ||
-      !quizCorrect ||
-      stampConfirmed ||
-      savingRef.current
-    ) {
-      return;
-    }
-
-    const participantId =
-      getParticipantId();
-
-    if (!participantId) {
-      throw new Error(
-        "参加者情報がありません。"
-      );
-    }
-
-    const spotId = activeSpot.id;
-    const spotName = activeSpot.spotName;
-
-    savingRef.current = true;
-    setSaving(true);
-    setLearningSaving(true);
-    setMessage("");
-
-    try {
-      const { error } = await supabase.rpc(
-        "complete_pokipo_spot_learning",
-        {
-          p_participant_id: participantId,
-          p_spot_id: spotId,
-          p_selected_answer: selectedAnswer,
-        }
-      );
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      const { data, error: loadError } =
-        await supabase.rpc(
-          "get_pokipo_stamps",
-          {
-            p_participant_id: participantId,
-          }
-        );
-
-      if (loadError) {
-        throw new Error(
-          "保存後の進捗を読み込めませんでした。画面を再読み込みして確認してください。"
-        );
-      }
-
-      const updatedScans = [
-        ...new Set(
-          (
-            (data ?? []) as {
-              spot_id: string;
-            }[]
-          ).map(
-            (item) => item.spot_id
-          )
-        ),
-      ];
-
-      if (
-        !updatedScans.includes(spotId)
-      ) {
-        throw new Error(
-          "スタンプの保存が確認できませんでした。"
-        );
-      }
-
-      updateProgress(updatedScans);
-      setStampConfirmed(true);
-
-      if (updatedScans.length >= 5) {
-        await saveCompletion(
-          participantId
-        );
-      }
-
-      setMessage(
-        `${spotName}のスタンプを獲得しました！`
-      );
-    } catch (error) {
-      console.error(
-        "学習・スタンプ保存エラー:",
-        error
-      );
-
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "保存に失敗しました。もう一度お試しください。"
-      );
-
-      throw error;
-    } finally {
-      savingRef.current = false;
-      setSaving(false);
-      setLearningSaving(false);
-    }
-  }
-
-  /* ========================================
-     CLOSE STAMP MODAL
-  ======================================== */
-
   function closeGetEffect(): void {
-    if (
-      !quizCorrect ||
-      !stampConfirmed ||
-      quizSaving ||
-      learningSaving ||
-      savingRef.current
-    ) {
-      return;
-    }
+    if (!quizCorrect || quizSaving) return;
 
     if (triviaTimerRef.current) {
-      clearTimeout(
-        triviaTimerRef.current
-      );
-
+      clearTimeout(triviaTimerRef.current);
       triviaTimerRef.current = null;
     }
 
@@ -786,7 +605,6 @@ export default function StampPage() {
     setQuizInput("");
     setQuizCorrect(false);
     setQuizError(false);
-    setStampConfirmed(false);
     setMessage("");
   }
 
@@ -795,7 +613,7 @@ export default function StampPage() {
   ======================================== */
 
   function scanSecretSpot(): void {
-    if (scansRef.current.length < 5) {
+    if (scans.length < 5) {
       setMessage(
         "シークレットスタンプは通常5か所を達成すると取得できます。"
       );
@@ -813,7 +631,6 @@ export default function StampPage() {
       "pokipo_secret_yuhisai",
       "true"
     );
-
     localStorage.setItem(
       "pokipo_secret_yuhisai_at",
       new Date().toISOString()
@@ -821,7 +638,6 @@ export default function StampPage() {
 
     setSecretStamp(true);
     setSecretGetEffect(true);
-
     setMessage(
       "雄飛祭 LiPostブースのシークレットスタンプを獲得しました！"
     );
@@ -834,7 +650,7 @@ export default function StampPage() {
 
   /* ========================================
      STAFF TEST QR
-     本番のスタンプへの書き込みは行わない
+     本番のスタンプ一括書き込みは行わない
   ======================================== */
 
   async function openSafeStaffTest(): Promise<void> {
@@ -844,28 +660,21 @@ export default function StampPage() {
     setTestModeError("");
 
     try {
-      const { data, error } =
-        await supabase.auth.getUser();
+      const { data, error } = await supabase.auth.getUser();
 
       if (error || !data.user) {
-        throw new Error(
-          "スタッフログインが必要です。"
-        );
+        throw new Error("スタッフログインが必要です。");
       }
 
-      const {
-        data: staff,
-        error: staffError,
-      } = await supabase
-        .from("staff_profiles")
-        .select("user_id")
-        .eq("user_id", data.user.id)
-        .maybeSingle();
+      const { data: staff, error: staffError } =
+        await supabase
+          .from("staff_profiles")
+          .select("user_id")
+          .eq("user_id", data.user.id)
+          .maybeSingle();
 
       if (staffError || !staff) {
-        throw new Error(
-          "スタッフ権限がありません。"
-        );
+        throw new Error("スタッフ権限がありません。");
       }
 
       router.push("/staff/test");
@@ -879,6 +688,8 @@ export default function StampPage() {
       setStaffChecking(false);
     }
   }
+
+  const completed = new Set(scans).size >= 5;
 
   /* ========================================
      DISPLAY
@@ -895,16 +706,11 @@ export default function StampPage() {
           cameraReaderId="pokipo-qr-reader"
           onStartCamera={startQrScanner}
           onStopCamera={stopQrScanner}
-          onBack={() =>
-            router.push("/home")
-          }
-          disabled={
-            saving || showGetEffect
-          }
+          onBack={() => router.push("/home")}
+          disabled={saving || showGetEffect}
         />
 
         {/* STAFF TEST QR WARNING */}
-
         {showTestWarning && (
           <div className="staffTestOverlay">
             <section className="staffTestWarningCard">
@@ -913,9 +719,7 @@ export default function StampPage() {
               </div>
 
               <span>STAFF TEST</span>
-              <h2>
-                スタッフテスト用QRです
-              </h2>
+              <h2>スタッフテスト用QRです</h2>
 
               <p>
                 本番参加者の記録には書き込まず、
@@ -949,20 +753,13 @@ export default function StampPage() {
         )}
 
         {/* STAFF TEST PANEL */}
-
         {showTestPanel && (
           <div className="staffTestOverlay">
             <section className="staffTestPanel">
               <div className="staffTestPanelHeader">
                 <div>
-                  <span>
-                    STAFF TEST MODE
-                  </span>
-
-                  <h2>
-                    POKIPOテスト確認
-                  </h2>
-
+                  <span>STAFF TEST MODE</span>
+                  <h2>POKIPOテスト確認</h2>
                   <p>
                     スポットのクイズと豆知識を
                     一覧で確認できます。
@@ -981,75 +778,50 @@ export default function StampPage() {
               </div>
 
               <div className="staffTestQuizList">
-                {pokipoSpots.map(
-                  (spot) => (
-                    <article
-                      key={spot.id}
-                      className="staffTestQuizCard"
-                    >
-                      <div className="staffTestQuizTop">
-                        <span>
-                          SPOT {spot.number}
-                        </span>
+                {pokipoSpots.map((spot) => (
+                  <article
+                    key={spot.id}
+                    className="staffTestQuizCard"
+                  >
+                    <div className="staffTestQuizTop">
+                      <span>
+                        SPOT {spot.number}
+                      </span>
+                      <strong>{spot.spotName}</strong>
+                    </div>
 
-                        <strong>
-                          {spot.spotName}
-                        </strong>
-                      </div>
+                    <div className="staffTestQuizSection">
+                      <span>QUESTION</span>
+                      <p>{spot.quizQuestion}</p>
+                    </div>
 
-                      <div className="staffTestQuizSection">
-                        <span>QUESTION</span>
-                        <p>
-                          {spot.quizQuestion}
-                        </p>
-                      </div>
+                    <div className="staffTestQuizSection answer">
+                      <span>ANSWER</span>
+                      <strong>{spot.quizAnswer}</strong>
+                    </div>
 
-                      <div className="staffTestQuizSection answer">
-                        <span>ANSWER</span>
-                        <strong>
-                          {spot.quizAnswer}
-                        </strong>
-                      </div>
+                    <div className="staffTestQuizSection">
+                      <span>HINT</span>
+                      <p>{spot.quizHint}</p>
+                    </div>
 
-                      <div className="staffTestQuizSection">
-                        <span>HINT</span>
-                        <p>
-                          {spot.quizHint}
-                        </p>
-                      </div>
-
-                      <div className="staffTestQuizSection knowledge">
-                        <span>
-                          解説・豆知識
-                        </span>
-
-                        <h3>
-                          {spot.knowledgeTitle}
-                        </h3>
-
-                        <p>
-                          {spot.knowledgeText}
-                        </p>
-                      </div>
-                    </article>
-                  )
-                )}
+                    <div className="staffTestQuizSection knowledge">
+                      <span>解説・豆知識</span>
+                      <h3>{spot.knowledgeTitle}</h3>
+                      <p>{spot.knowledgeText}</p>
+                    </div>
+                  </article>
+                ))}
               </div>
 
               {testModeError && (
-                <p
-                  className="staffTestError"
-                  role="alert"
-                >
+                <p className="staffTestError" role="alert">
                   {testModeError}
                 </p>
               )}
 
               <div className="staffTestFinalNotice">
-                <strong>
-                  検証専用メニュー
-                </strong>
-
+                <strong>検証専用メニュー</strong>
                 <p>
                   スタンプ・アンケート・特典交換を
                   本番データと分離して確認できます。
@@ -1085,87 +857,45 @@ export default function StampPage() {
           </div>
         )}
 
-        {/* STAMP AND LEARNING MODAL */}
-
+        {/* SHARED STAMP GET EFFECT */}
         {showGetEffect && activeSpot && (
           <PokipoStampGetModal
-            spotId={activeSpot.id}
             spotName={activeSpot.spotName}
-            stampCount={
-              stampConfirmed
-                ? scans.length
-                : scans.length + 1
-            }
-            stampConfirmed={
-              stampConfirmed
-            }
+            stampCount={scans.length}
             triviaReady={triviaReady}
-            quizQuestion={
-              activeSpot.quizQuestion
-            }
-            quizHint={
-              activeSpot.quizHint
-            }
+            quizQuestion={activeSpot.quizQuestion}
+            quizHint={activeSpot.quizHint}
             quizInput={quizInput}
             quizCorrect={quizCorrect}
             quizError={quizError}
-            saving={
-              quizSaving ||
-              learningSaving ||
-              saving
-            }
-            knowledgeTitle={
-              activeSpot.knowledgeTitle
-            }
-            knowledgeText={
-              activeSpot.knowledgeText
-            }
-            onQuizInputChange={(
-              value
-            ) => {
+            saving={quizSaving}
+            knowledgeTitle={activeSpot.knowledgeTitle}
+            knowledgeText={activeSpot.knowledgeText}
+            onQuizInputChange={(value) => {
               setQuizInput(value);
               setQuizError(false);
             }}
-            onQuizSubmit={() =>
-              void checkQuiz()
-            }
-            onLearningConfirm={
-              confirmLearning
-            }
+            onQuizSubmit={() => void checkQuiz()}
             onClose={closeGetEffect}
           />
         )}
 
         {/* SECRET STAMP EFFECT */}
-
         {secretGetEffect && (
           <div className="stampGetOverlay">
             <section className="stampGetModal">
-              <div className="stampGetCircle">
-                6
-              </div>
-
+              <div className="stampGetCircle">6</div>
               <p className="stampGetLabel">
                 SECRET STAMP GET!
               </p>
-
-              <h2>
-                雄飛祭スタンプ獲得！
-              </h2>
-
+              <h2>雄飛祭スタンプ獲得！</h2>
               <p className="stampGetPlace">
                 雄飛祭 LiPostブース
               </p>
 
               <div className="stampGetStep">
-                <span>
-                  SECRET MODE
-                </span>
-
-                <strong>
-                  POKIPOが変化しました！
-                </strong>
-
+                <span>SECRET MODE</span>
+                <strong>POKIPOが変化しました！</strong>
                 <p className="stampGetStepDescription">
                   トップ画面で雄飛祭限定の
                   POKIPOを確認してみよう。
