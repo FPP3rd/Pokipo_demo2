@@ -1697,7 +1697,12 @@ export default function StartPage() {
                   <br />
                   音量をご確認ください。
                   <br />
-                  始める前に：ChromeまたはSafariのいずれかのブラウザで開始してください！
+                  <br />
+                  始める前に確認！！
+                  <br />
+                  ChromeまたはSafariのいずれかのブラウザで開始してください！
+                  <br />
+                  （LINEやInstagramなどの内部ブラウザでは正常に動きません）
                 </p>
 
                 <button
