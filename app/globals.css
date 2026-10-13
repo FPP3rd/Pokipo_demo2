@@ -41021,3 +41021,222 @@ main.shell > .staffMenuPage[style*="max-width"]
     font-size: 19px;
   }
 }
+
+/* ========================================
+   STAFF DESKTOP HEADER LAYOUT FIX
+   スタッフメニュー／イベント・広告管理
+======================================== */
+
+@media (min-width: 641px) {
+  .staffMenuHeader,
+  .staffPromotionHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: 18px;
+  }
+
+  .staffMenuHeader > div,
+  .staffPromotionHeader > div {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .staffMenuHeader h1,
+  .staffPromotionHeader h1 {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    white-space: normal;
+  }
+
+  .staffMenuHeader > .staffLogoutButton,
+  .staffPromotionHeader > button {
+    width: auto;
+    min-width: max-content;
+    max-width: 100%;
+    margin-top: 0;
+    justify-self: end;
+    white-space: nowrap;
+  }
+}
+
+/* =============================================
+   POKIPO STAFF DASHBOARD MOTION
+   管理ダッシュボード専用
+============================================= */
+
+@keyframes pokipoDashRise {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pokipoDashLivePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(64, 160, 96, 0.13);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(64, 160, 96, 0);
+    opacity: 0.78;
+  }
+}
+
+@keyframes pokipoDashBarReveal {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.staffDashboardPage .staffDashboardHeader {
+  animation: pokipoDashRise 0.55s ease-out both;
+}
+
+.staffDashboardPage .staffDashboardLive {
+  animation: pokipoDashRise 0.55s 0.12s ease-out both;
+}
+
+.staffDashboardPage .staffDashboardLiveDot {
+  animation: pokipoDashLivePulse 2.1s ease-in-out infinite;
+}
+
+.staffDashboardPage .staffDashboardStatCard {
+  position: relative;
+  overflow: hidden;
+  animation: pokipoDashRise 0.65s
+    cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.staffDashboardPage .staffDashboardStatCard:nth-child(1) {
+  animation-delay: 0.16s;
+}
+.staffDashboardPage .staffDashboardStatCard:nth-child(2) {
+  animation-delay: 0.28s;
+}
+.staffDashboardPage .staffDashboardStatCard:nth-child(3) {
+  animation-delay: 0.40s;
+}
+.staffDashboardPage .staffDashboardStatCard:nth-child(4) {
+  animation-delay: 0.52s;
+}
+
+.staffDashboardPage .staffDashboardStatCard::after {
+  content: "";
+  position: absolute;
+  top: -60%;
+  left: -60%;
+  width: 55%;
+  height: 220%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  transform: rotate(18deg);
+  opacity: 0;
+  pointer-events: none;
+  transition: left 0.55s ease, opacity 0.35s ease;
+}
+
+.staffDashboardPage .staffDashboardStatCard:hover,
+.staffDashboardPage .staffSpotCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px rgba(85, 40, 32, 0.13);
+}
+
+.staffDashboardPage .staffDashboardStatCard:hover::after {
+  opacity: 0.7;
+  left: 130%;
+}
+
+.staffDashboardPage .staffSpotSection {
+  animation: pokipoDashRise 0.65s 0.35s ease-out both;
+}
+
+.staffDashboardPage .staffSpotCard {
+  animation: pokipoDashRise 0.6s
+    cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.staffDashboardPage .staffSpotCard:nth-child(1) {
+  animation-delay: 0.48s;
+}
+.staffDashboardPage .staffSpotCard:nth-child(2) {
+  animation-delay: 0.58s;
+}
+.staffDashboardPage .staffSpotCard:nth-child(3) {
+  animation-delay: 0.68s;
+}
+.staffDashboardPage .staffSpotCard:nth-child(4) {
+  animation-delay: 0.78s;
+}
+.staffDashboardPage .staffSpotCard:nth-child(5) {
+  animation-delay: 0.88s;
+}
+
+.staffDashboardPage .staffDashboardRates {
+  animation: pokipoDashRise 0.6s 0.55s ease-out both;
+}
+
+.staffDashboardPage .staffDashboardRateBar > div {
+  transform-origin: left center;
+  animation: pokipoDashBarReveal 1.15s 0.55s
+    cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: width 0.65s ease;
+}
+
+.staffDashboardPage .staffDashboardActions,
+.staffDashboardPage .staffDashboardHistory {
+  animation: pokipoDashRise 0.65s 0.65s ease-out both;
+}
+
+.staffDashboardPage .staffDashboardHistoryList article {
+  animation: pokipoDashRise 0.5s ease-out both;
+}
+
+.staffDashboardPage .staffDashboardHistoryList article:nth-child(1) {
+  animation-delay: 0.72s;
+}
+.staffDashboardPage .staffDashboardHistoryList article:nth-child(2) {
+  animation-delay: 0.82s;
+}
+.staffDashboardPage .staffDashboardHistoryList article:nth-child(3) {
+  animation-delay: 0.92s;
+}
+.staffDashboardPage .staffDashboardHistoryList article:nth-child(4) {
+  animation-delay: 1.02s;
+}
+.staffDashboardPage .staffDashboardHistoryList article:nth-child(5) {
+  animation-delay: 1.12s;
+}
+
+/* アニメーション軽減設定に対応 */
+@media (prefers-reduced-motion: reduce) {
+  .staffDashboardPage .staffDashboardHeader,
+  .staffDashboardPage .staffDashboardLive,
+  .staffDashboardPage .staffDashboardLiveDot,
+  .staffDashboardPage .staffDashboardStatCard,
+  .staffDashboardPage .staffSpotSection,
+  .staffDashboardPage .staffSpotCard,
+  .staffDashboardPage .staffDashboardRates,
+  .staffDashboardPage .staffDashboardRateBar > div,
+  .staffDashboardPage .staffDashboardActions,
+  .staffDashboardPage .staffDashboardHistory,
+  .staffDashboardPage .staffDashboardHistoryList article {
+    animation: none !important;
+    transition: none !important;
+  }
+}
