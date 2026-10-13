@@ -1696,6 +1696,8 @@ export default function StartPage() {
                   音声が流れます。
                   <br />
                   音量をご確認ください。
+                  <br />
+                  始める前に：ChromeまたはSafariのいずれかのブラウザで開始してください！
                 </p>
 
                 <button
