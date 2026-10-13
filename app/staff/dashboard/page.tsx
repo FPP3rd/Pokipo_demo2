@@ -1,17 +1,9 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  useRouter,
-} from "next/navigation";
-
-import {
-  supabase,
-} from "../../../lib/supabase-client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabase-client";
+import PokipoStampDistribution from "../../../components/PokipoStampDistribution";
 
 /* ========================================
    TYPES
@@ -19,30 +11,20 @@ import {
 
 type RewardHistoryItem = {
   id: string;
-
   participant_id: string;
-
   student_number: string;
-
-  exchanged_at:
-    | string
-    | null;
-
+  exchanged_at: string | null;
   nickname: string;
 };
 
 type SpotSummary = {
   spot_id: string;
-
   scan_count: number;
-
-  last_scanned_at:
-    | string
-    | null;
+  last_scanned_at: string | null;
 };
 
 /* ========================================
-   SPOTS
+   SPOT INFORMATION
 ======================================== */
 
 const SPOT_INFORMATION: Record<
@@ -56,22 +38,18 @@ const SPOT_INFORMATION: Record<
     number: 1,
     name: "学生センター",
   },
-
   spot2: {
     number: 2,
     name: "東棟2階",
   },
-
   spot3: {
     number: 3,
     name: "ラーニングスクエア",
   },
-
   spot4: {
     number: 4,
     name: "ゆうちょ銀行ATM",
   },
-
   spot5: {
     number: 5,
     name: "セブンイレブン付近掲示板",
@@ -79,119 +57,76 @@ const SPOT_INFORMATION: Record<
 };
 
 /* ========================================
-   STAFF DASHBOARD
+   PAGE
 ======================================== */
 
 export default function StaffDashboardPage() {
-  const router =
-    useRouter();
+  const router = useRouter();
 
   /* ========================================
      AUTH
   ======================================== */
 
-  const [
-    authenticated,
-    setAuthenticated,
-  ] = useState(false);
+  const [authenticated, setAuthenticated] =
+    useState(false);
 
-  const [
-    authLoading,
-    setAuthLoading,
-  ] = useState(true);
+  const [authLoading, setAuthLoading] =
+    useState(true);
 
   /* ========================================
-     STATS
+     STATISTICS
   ======================================== */
 
-  const [
-    participantCount,
-    setParticipantCount,
-  ] = useState(0);
+  const [participantCount, setParticipantCount] =
+    useState(0);
 
-  const [
-    completionCount,
-    setCompletionCount,
-  ] = useState(0);
+  const [completionCount, setCompletionCount] =
+    useState(0);
 
-  const [
-    exchangedCount,
-    setExchangedCount,
-  ] = useState(0);
+  const [exchangedCount, setExchangedCount] =
+    useState(0);
 
-  const [
-    todayExchangedCount,
-    setTodayExchangedCount,
-  ] = useState(0);
+  const [todayExchangedCount, setTodayExchangedCount] =
+    useState(0);
 
   /* ========================================
-     SPOTS
+     SPOT STATUS
   ======================================== */
 
-  const [
-    spotSummaries,
-    setSpotSummaries,
-  ] =
-    useState<SpotSummary[]>(
-      []
-    );
+  const [spotSummaries, setSpotSummaries] =
+    useState<SpotSummary[]>([]);
 
-  /*
-   * 「○分前」の表示を、
-   * 新しい読み取りがなくても
-   * 自動更新するための現在時刻。
-   */
-  const [
-    currentTime,
-    setCurrentTime,
-  ] = useState(
-    Date.now()
-  );
+  const [currentTime, setCurrentTime] =
+    useState(Date.now());
 
   /* ========================================
-     HISTORY
+     REWARD HISTORY
   ======================================== */
 
-  const [
-    latestHistory,
-    setLatestHistory,
-  ] = useState<
-    RewardHistoryItem[]
-  >([]);
+  const [latestHistory, setLatestHistory] =
+    useState<RewardHistoryItem[]>([]);
 
   /* ========================================
      UI
   ======================================== */
 
-  const [
-    loading,
-    setLoading,
-  ] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
-  const [
-    message,
-    setMessage,
-  ] = useState("");
+  const [message, setMessage] =
+    useState("");
 
   /* ========================================
-     CURRENT TIME UPDATE
+     CLOCK UPDATE
   ======================================== */
 
   useEffect(() => {
-    const timer =
-      window.setInterval(
-        () => {
-          setCurrentTime(
-            Date.now()
-          );
-        },
-        30000
-      );
+    const timer = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 30000);
 
     return () => {
-      window.clearInterval(
-        timer
-      );
+      window.clearInterval(timer);
     };
   }, []);
 
@@ -200,61 +135,52 @@ export default function StaffDashboardPage() {
   ======================================== */
 
   useEffect(() => {
+    let active = true;
+
     async function checkAuth() {
-      const {
-        data,
-      } =
+      const { data, error } =
         await supabase.auth.getSession();
 
-      if (
-        !data.session
-      ) {
-        setAuthenticated(
-          false
-        );
+      if (!active) return;
 
-        setAuthLoading(
-          false
-        );
-
-        router.replace(
-          "/staff/reward"
-        );
-
+      if (error || !data.session) {
+        setAuthenticated(false);
+        setAuthLoading(false);
+        router.replace("/staff/reward");
         return;
       }
 
-      setAuthenticated(
-        true
-      );
-
-      setAuthLoading(
-        false
-      );
+      setAuthenticated(true);
+      setAuthLoading(false);
     }
 
     void checkAuth();
-  }, [
-    router,
-  ]);
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
 
   /* ========================================
-     LOAD DASHBOARD
+     DASHBOARD DATA
   ======================================== */
 
   useEffect(() => {
-    if (
-      !authenticated
-    ) {
-      return;
-    }
+    if (!authenticated) return;
+
+    let active = true;
+    let requestId = 0;
 
     async function loadDashboard() {
-      setLoading(
-        true
-      );
+      const thisRequest = ++requestId;
 
-      setMessage("");
+      const isCurrent = () =>
+        active && thisRequest === requestId;
+
+      if (isCurrent()) {
+        setLoading(true);
+        setMessage("");
+      }
 
       try {
         /* =================================
@@ -262,125 +188,88 @@ export default function StaffDashboardPage() {
         ================================= */
 
         const {
-          data:
-            participantCountData,
+          data: participantCountData,
+          error: participantCountError,
+        } = await supabase.rpc(
+          "get_participant_count"
+        );
 
-          error:
-            participantCountError,
-        } =
-          await supabase.rpc(
-            "get_participant_count"
-          );
+        if (!isCurrent()) return;
 
-        if (
-          participantCountError
-        ) {
+        if (participantCountError) {
           console.error(
             "参加者数取得エラー:",
             participantCountError
           );
         } else {
           setParticipantCount(
-            Number(
-              participantCountData ??
-                0
-            )
+            Number(participantCountData ?? 0)
           );
         }
 
         /* =================================
-           COMPLETION COUNT
+           COMPLETED PARTICIPANTS
         ================================= */
 
         const {
-          data:
-            completionCountData,
+          data: completionCountData,
+          error: completionCountError,
+        } = await supabase.rpc(
+          "get_completed_participant_count"
+        );
 
-          error:
-            completionCountError,
-        } =
-          await supabase.rpc(
-            "get_completed_participant_count"
-          );
+        if (!isCurrent()) return;
 
-        if (
-          completionCountError
-        ) {
+        if (completionCountError) {
           console.error(
             "完走者数取得エラー:",
             completionCountError
           );
         } else {
           setCompletionCount(
-            Number(
-              completionCountData ??
-                0
-            )
+            Number(completionCountData ?? 0)
           );
         }
 
         /* =================================
-           SPOT SUMMARY
+           SPOT SCAN SUMMARY
         ================================= */
 
         const {
-          data:
-            spotSummaryData,
+          data: spotSummaryData,
+          error: spotSummaryError,
+        } = await supabase.rpc(
+          "get_spot_scan_summary"
+        );
 
-          error:
-            spotSummaryError,
-        } =
-          await supabase.rpc(
-            "get_spot_scan_summary"
-          );
+        if (!isCurrent()) return;
 
-        if (
-          spotSummaryError
-        ) {
+        if (spotSummaryError) {
           console.error(
             "スポット読み取り状況取得エラー:",
             spotSummaryError
           );
 
-          setSpotSummaries(
-            []
-          );
+          setSpotSummaries([]);
         } else {
-          const normalized =
-            (
-              spotSummaryData ??
-              []
-            ).map(
-              (
-                item: {
-                  spot_id: string;
-
-                  scan_count:
-                    | number
-                    | string;
-
-                  last_scanned_at:
-                    | string
-                    | null;
-                }
-              ) => ({
-                spot_id:
-                  item.spot_id,
-
-                scan_count:
-                  Number(
-                    item.scan_count ??
-                      0
-                  ),
-
-                last_scanned_at:
-                  item.last_scanned_at,
-              })
-            );
-
-          setSpotSummaries(
-            normalized
+          const normalized = (
+            spotSummaryData ?? []
+          ).map(
+            (item: {
+              spot_id: string;
+              scan_count: number | string;
+              last_scanned_at: string | null;
+            }) => ({
+              spot_id: item.spot_id,
+              scan_count: Number(
+                item.scan_count ?? 0
+              ),
+              last_scanned_at:
+                item.last_scanned_at,
+            })
           );
+
+          setSpotSummaries(normalized);
         }
 
         /* =================================
@@ -388,61 +277,38 @@ export default function StaffDashboardPage() {
         ================================= */
 
         const {
-          count:
-            exchangedCountData,
+          count: exchangedCountData,
+          error: exchangedCountError,
+        } = await supabase
+          .from("reward_exchanges")
+          .select("*", {
+            count: "exact",
+            head: true,
+          })
+          .eq("status", "exchanged");
 
-          error:
-            exchangedCountError,
-        } =
-          await supabase
-            .from(
-              "reward_exchanges"
-            )
-            .select(
-              "*",
-              {
-                count:
-                  "exact",
+        if (!isCurrent()) return;
 
-                head:
-                  true,
-              }
-            )
-            .eq(
-              "status",
-              "exchanged"
-            );
-
-        if (
-          exchangedCountError
-        ) {
+        if (exchangedCountError) {
           console.error(
             "交換済み人数取得エラー:",
             exchangedCountError
           );
         } else {
           setExchangedCount(
-            exchangedCountData ??
-              0
+            exchangedCountData ?? 0
           );
         }
 
         /* =================================
-           TODAY EXCHANGED
-
-           日本時間の「今日」を基準
+           TODAY'S EXCHANGES (JST)
         ================================= */
 
-        const japanNow =
-          new Date(
-            new Date().toLocaleString(
-              "en-US",
-              {
-                timeZone:
-                  "Asia/Tokyo",
-              }
-            )
-          );
+        const japanNow = new Date(
+          new Date().toLocaleString("en-US", {
+            timeZone: "Asia/Tokyo",
+          })
+        );
 
         const japanYear =
           japanNow.getFullYear();
@@ -453,170 +319,108 @@ export default function StaffDashboardPage() {
         const japanDate =
           japanNow.getDate();
 
-        /*
-         * JST 00:00 をUTCへ変換。
-         * JSTはUTC+9なので
-         * Date.UTC(..., -9時間) とする。
-         */
-        const startOfToday =
-          new Date(
-            Date.UTC(
-              japanYear,
-              japanMonth,
-              japanDate,
-              -9,
-              0,
-              0
-            )
-          );
+        const startOfToday = new Date(
+          Date.UTC(
+            japanYear,
+            japanMonth,
+            japanDate,
+            -9,
+            0,
+            0
+          )
+        );
 
-        const startOfTomorrow =
-          new Date(
-            Date.UTC(
-              japanYear,
-              japanMonth,
-              japanDate + 1,
-              -9,
-              0,
-              0
-            )
-          );
+        const startOfTomorrow = new Date(
+          Date.UTC(
+            japanYear,
+            japanMonth,
+            japanDate + 1,
+            -9,
+            0,
+            0
+          )
+        );
 
         const {
-          count:
-            todayCountData,
+          count: todayCountData,
+          error: todayCountError,
+        } = await supabase
+          .from("reward_exchanges")
+          .select("*", {
+            count: "exact",
+            head: true,
+          })
+          .eq("status", "exchanged")
+          .gte(
+            "exchanged_at",
+            startOfToday.toISOString()
+          )
+          .lt(
+            "exchanged_at",
+            startOfTomorrow.toISOString()
+          );
 
-          error:
-            todayCountError,
-        } =
-          await supabase
-            .from(
-              "reward_exchanges"
-            )
-            .select(
-              "*",
-              {
-                count:
-                  "exact",
+        if (!isCurrent()) return;
 
-                head:
-                  true,
-              }
-            )
-            .eq(
-              "status",
-              "exchanged"
-            )
-            .gte(
-              "exchanged_at",
-              startOfToday.toISOString()
-            )
-            .lt(
-              "exchanged_at",
-              startOfTomorrow.toISOString()
-            );
-
-        if (
-          todayCountError
-        ) {
+        if (todayCountError) {
           console.error(
             "本日交換人数取得エラー:",
             todayCountError
           );
         } else {
           setTodayExchangedCount(
-            todayCountData ??
-              0
+            todayCountData ?? 0
           );
         }
 
         /* =================================
-           LATEST EXCHANGES
+           LATEST REWARD EXCHANGES
         ================================= */
 
         const {
-          data:
-            rewardData,
+          data: rewardData,
+          error: rewardError,
+        } = await supabase
+          .from("reward_exchanges")
+          .select(
+            "id, participant_id, student_number, exchanged_at"
+          )
+          .eq("status", "exchanged")
+          .order("exchanged_at", {
+            ascending: false,
+          })
+          .limit(5);
 
-          error:
-            rewardError,
-        } =
-          await supabase
-            .from(
-              "reward_exchanges"
-            )
-            .select(
-              "id, participant_id, student_number, exchanged_at"
-            )
-            .eq(
-              "status",
-              "exchanged"
-            )
-            .order(
-              "exchanged_at",
-              {
-                ascending:
-                  false,
-              }
-            )
-            .limit(
-              5
-            );
+        if (!isCurrent()) return;
 
-        if (
-          rewardError
-        ) {
+        if (rewardError) {
           console.error(
             "最新交換履歴取得エラー:",
             rewardError
           );
 
-          setLatestHistory(
-            []
-          );
+          setLatestHistory([]);
         } else {
-          const rewards =
-            rewardData ??
-            [];
+          const rewards = rewardData ?? [];
 
-          if (
-            rewards.length ===
-            0
-          ) {
-            setLatestHistory(
-              []
-            );
+          if (rewards.length === 0) {
+            setLatestHistory([]);
           } else {
-            const participantIds =
-              rewards.map(
-                (
-                  item
-                ) =>
-                  item.participant_id
-              );
+            const participantIds = rewards.map(
+              (item) => item.participant_id
+            );
 
             const {
-              data:
-                participantData,
+              data: participantData,
+              error: participantError,
+            } = await supabase
+              .from("participants")
+              .select("id, nickname")
+              .in("id", participantIds);
 
-              error:
-                participantError,
-            } =
-              await supabase
-                .from(
-                  "participants"
-                )
-                .select(
-                  "id, nickname"
-                )
-                .in(
-                  "id",
-                  participantIds
-                );
+            if (!isCurrent()) return;
 
-            if (
-              participantError
-            ) {
+            if (participantError) {
               console.error(
                 "最新履歴参加者取得エラー:",
                 participantError
@@ -624,51 +428,38 @@ export default function StaffDashboardPage() {
             }
 
             const participants =
-              participantData ??
-              [];
+              participantData ?? [];
 
-            const combined =
-              rewards.map(
-                (
-                  reward
-                ) => {
-                  const participant =
-                    participants.find(
-                      (
-                        item
-                      ) =>
-                        item.id ===
-                        reward.participant_id
-                    );
+            const combined = rewards.map(
+              (reward) => {
+                const participant =
+                  participants.find(
+                    (item) =>
+                      item.id ===
+                      reward.participant_id
+                  );
 
-                  return {
-                    id:
-                      reward.id,
-
-                    participant_id:
-                      reward.participant_id,
-
-                    student_number:
-                      reward.student_number,
-
-                    exchanged_at:
-                      reward.exchanged_at,
-
-                    nickname:
-                      participant?.nickname ??
-                      "不明",
-                  };
-                }
-              );
-
-            setLatestHistory(
-              combined
+                return {
+                  id: reward.id,
+                  participant_id:
+                    reward.participant_id,
+                  student_number:
+                    reward.student_number,
+                  exchanged_at:
+                    reward.exchanged_at,
+                  nickname:
+                    participant?.nickname ??
+                    "不明",
+                };
+              }
             );
+
+            setLatestHistory(combined);
           }
         }
-      } catch (
-        error
-      ) {
+      } catch (error) {
+        if (!isCurrent()) return;
+
         console.error(
           "ダッシュボード取得エラー:",
           error
@@ -678,9 +469,9 @@ export default function StaffDashboardPage() {
           "ダッシュボード情報を取得できませんでした。"
         );
       } finally {
-        setLoading(
-          false
-        );
+        if (isCurrent()) {
+          setLoading(false);
+        }
       }
     }
 
@@ -690,116 +481,91 @@ export default function StaffDashboardPage() {
        REALTIME - PARTICIPANTS
     ======================================== */
 
-    const participantsChannel =
-      supabase
-        .channel(
-          "staff-dashboard-participants"
-        )
-        .on(
-          "postgres_changes",
-          {
-            event:
-              "*",
-
-            schema:
-              "public",
-
-            table:
-              "participants",
-          },
-          () => {
-            void loadDashboard();
-          }
-        )
-        .subscribe();
+    const participantsChannel = supabase
+      .channel("staff-dashboard-participants")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "participants",
+        },
+        () => {
+          void loadDashboard();
+        }
+      )
+      .subscribe();
 
     /* ========================================
        REALTIME - STAMPS
-
-       完走者数だけでなく、
-       SPOT1〜5の人数・最終読み取りも
-       ここでリアルタイム更新
     ======================================== */
 
-    const stampsChannel =
-      supabase
-        .channel(
-          "staff-dashboard-stamps"
-        )
-        .on(
-          "postgres_changes",
-          {
-            event:
-              "*",
-
-            schema:
-              "public",
-
-            table:
-              "participant_stamps",
-          },
-          () => {
-            setCurrentTime(
-              Date.now()
-            );
-
-            void loadDashboard();
-          }
-        )
-        .subscribe();
+    const stampsChannel = supabase
+      .channel("staff-dashboard-stamps")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "participant_stamps",
+        },
+        () => {
+          setCurrentTime(Date.now());
+          void loadDashboard();
+        }
+      )
+      .subscribe();
 
     /* ========================================
        REALTIME - REWARDS
     ======================================== */
 
-    const rewardsChannel =
-      supabase
-        .channel(
-          "staff-dashboard-rewards"
-        )
-        .on(
-          "postgres_changes",
-          {
-            event:
-              "*",
-
-            schema:
-              "public",
-
-            table:
-              "reward_exchanges",
-          },
-          () => {
-            void loadDashboard();
-          }
-        )
-        .subscribe();
+    const rewardsChannel = supabase
+      .channel("staff-dashboard-rewards")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "reward_exchanges",
+        },
+        () => {
+          void loadDashboard();
+        }
+      )
+      .subscribe();
 
     /* ========================================
-       FOCUS REFRESH
+       PERIODIC REFRESH
+    ======================================== */
+
+    const refreshTimer = window.setInterval(
+      () => {
+        if (
+          document.visibilityState ===
+          "visible"
+        ) {
+          void loadDashboard();
+        }
+      },
+      30000
+    );
+
+    /* ========================================
+       FOCUS / VISIBILITY
     ======================================== */
 
     function handleFocus() {
-      setCurrentTime(
-        Date.now()
-      );
-
+      setCurrentTime(Date.now());
       void loadDashboard();
     }
-
-    /* ========================================
-       VISIBILITY REFRESH
-    ======================================== */
 
     function handleVisibility() {
       if (
         document.visibilityState ===
         "visible"
       ) {
-        setCurrentTime(
-          Date.now()
-        );
-
+        setCurrentTime(Date.now());
         void loadDashboard();
       }
     }
@@ -815,6 +581,11 @@ export default function StaffDashboardPage() {
     );
 
     return () => {
+      active = false;
+      requestId++;
+
+      window.clearInterval(refreshTimer);
+
       window.removeEventListener(
         "focus",
         handleFocus
@@ -825,97 +596,55 @@ export default function StaffDashboardPage() {
         handleVisibility
       );
 
-      supabase.removeChannel(
+      void supabase.removeChannel(
         participantsChannel
       );
 
-      supabase.removeChannel(
+      void supabase.removeChannel(
         stampsChannel
       );
 
-      supabase.removeChannel(
+      void supabase.removeChannel(
         rewardsChannel
       );
     };
-  }, [
-    authenticated,
-  ]);
+  }, [authenticated]);
 
   /* ========================================
-     FORMAT DATE - JST
+     DATE FORMAT - JST
   ======================================== */
 
   function formatDate(
-    value:
-      | string
-      | null
+    value: string | null
   ) {
-    if (
-      !value
-    ) {
-      return "----";
-    }
+    if (!value) return "----";
 
-    return new Date(
-      value
-    ).toLocaleString(
+    return new Date(value).toLocaleString(
       "ja-JP",
       {
-        timeZone:
-          "Asia/Tokyo",
-
-        month:
-          "2-digit",
-
-        day:
-          "2-digit",
-
-        hour:
-          "2-digit",
-
-        minute:
-          "2-digit",
+        timeZone: "Asia/Tokyo",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
       }
     );
   }
 
-  /* ========================================
-     FORMAT SPOT DATE - JST
-  ======================================== */
-
   function formatSpotDate(
-    value:
-      | string
-      | null
+    value: string | null
   ) {
-    if (
-      !value
-    ) {
-      return "読み取りなし";
-    }
+    if (!value) return "読み取りなし";
 
-    return new Date(
-      value
-    ).toLocaleString(
+    return new Date(value).toLocaleString(
       "ja-JP",
       {
-        timeZone:
-          "Asia/Tokyo",
-
-        year:
-          "numeric",
-
-        month:
-          "2-digit",
-
-        day:
-          "2-digit",
-
-        hour:
-          "2-digit",
-
-        minute:
-          "2-digit",
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
       }
     );
   }
@@ -925,70 +654,45 @@ export default function StaffDashboardPage() {
   ======================================== */
 
   function formatRelativeTime(
-    value:
-      | string
-      | null
+    value: string | null
   ) {
-    if (
-      !value
-    ) {
+    if (!value) {
       return "まだ読み取りなし";
     }
 
     const scannedAt =
-      new Date(
-        value
-      ).getTime();
+      new Date(value).getTime();
 
-    const difference =
-      Math.max(
-        0,
-        currentTime -
-          scannedAt
-      );
+    const difference = Math.max(
+      0,
+      currentTime - scannedAt
+    );
 
-    const seconds =
-      Math.floor(
-        difference /
-          1000
-      );
+    const seconds = Math.floor(
+      difference / 1000
+    );
 
-    const minutes =
-      Math.floor(
-        difference /
-          60000
-      );
+    const minutes = Math.floor(
+      difference / 60000
+    );
 
-    const hours =
-      Math.floor(
-        difference /
-          3600000
-      );
+    const hours = Math.floor(
+      difference / 3600000
+    );
 
-    const days =
-      Math.floor(
-        difference /
-          86400000
-      );
+    const days = Math.floor(
+      difference / 86400000
+    );
 
-    if (
-      seconds <
-      60
-    ) {
+    if (seconds < 60) {
       return "たった今";
     }
 
-    if (
-      minutes <
-      60
-    ) {
+    if (minutes < 60) {
       return `${minutes}分前`;
     }
 
-    if (
-      hours <
-      24
-    ) {
+    if (hours < 24) {
       return `${hours}時間前`;
     }
 
@@ -1001,23 +705,15 @@ export default function StaffDashboardPage() {
 
   function getSpotSummary(
     spotId: string
-  ) {
+  ): SpotSummary {
     return (
       spotSummaries.find(
-        (
-          item
-        ) =>
-          item.spot_id ===
-          spotId
+        (item) =>
+          item.spot_id === spotId
       ) ?? {
-        spot_id:
-          spotId,
-
-        scan_count:
-          0,
-
-        last_scanned_at:
-          null,
+        spot_id: spotId,
+        scan_count: 0,
+        last_scanned_at: null,
       }
     );
   }
@@ -1027,13 +723,10 @@ export default function StaffDashboardPage() {
   ======================================== */
 
   const completionRate =
-    participantCount >
-    0
+    participantCount > 0
       ? Math.round(
-          (
-            completionCount /
-            participantCount
-          ) *
+          (completionCount /
+            participantCount) *
             100
         )
       : 0;
@@ -1043,37 +736,32 @@ export default function StaffDashboardPage() {
   ======================================== */
 
   const exchangeRate =
-    completionCount >
-    0
+    completionCount > 0
       ? Math.round(
-          (
-            exchangedCount /
-            completionCount
-          ) *
+          (exchangedCount /
+            completionCount) *
             100
         )
       : 0;
 
   /* ========================================
-     LOADING AUTH
+     AUTH LOADING
   ======================================== */
 
-  if (
-    authLoading
-  ) {
+  if (authLoading) {
     return (
       <main className="shell">
-
         <section className="staffDashboardPage">
-
           <div className="staffLoadingCard">
             スタッフ情報を確認中...
           </div>
-
         </section>
-
       </main>
     );
+  }
+
+  if (!authenticated) {
+    return null;
   }
 
   /* ========================================
@@ -1082,7 +770,6 @@ export default function StaffDashboardPage() {
 
   return (
     <main className="shell">
-
       <section className="staffDashboardPage">
 
         {/* =================================
@@ -1090,12 +777,8 @@ export default function StaffDashboardPage() {
         ================================= */}
 
         <header className="staffDashboardHeader">
-
           <div>
-
-            <span>
-              POKIPO STAFF
-            </span>
+            <span>POKIPO STAFF</span>
 
             <h1>
               管理ダッシュボード
@@ -1104,156 +787,129 @@ export default function StaffDashboardPage() {
             <p>
               POKIPOの現在の参加状況
             </p>
-
           </div>
 
           <button
             type="button"
             onClick={() =>
-              router.push(
-                "/staff/reward"
-              )
+              router.push("/staff/reward")
             }
           >
             QR交換
           </button>
-
         </header>
 
         {/* =================================
-            LIVE
+            LIVE INDICATOR
         ================================= */}
 
         <div className="staffDashboardLive">
-
           <span className="staffDashboardLiveDot" />
-
           LIVE DATA
-
         </div>
 
         {/* =================================
-            STATS
+            MAIN STATISTICS
         ================================= */}
 
         <section className="staffDashboardStats">
 
           <article className="staffDashboardStatCard">
-
             <span>
               PARTICIPANTS
             </span>
 
             <div>
-
               <strong>
                 {loading
                   ? "—"
                   : participantCount}
               </strong>
 
-              <small>
-                人
-              </small>
-
+              <small>人</small>
             </div>
 
             <p>
               現在の参加者
             </p>
-
           </article>
 
           <article className="staffDashboardStatCard">
-
             <span>
               COMPLETED
             </span>
 
             <div>
-
               <strong>
                 {loading
                   ? "—"
                   : completionCount}
               </strong>
 
-              <small>
-                人
-              </small>
-
+              <small>人</small>
             </div>
 
             <p>
               スタンプ完走者
             </p>
-
           </article>
 
           <article className="staffDashboardStatCard">
-
             <span>
               EXCHANGED
             </span>
 
             <div>
-
               <strong>
                 {loading
                   ? "—"
                   : exchangedCount}
               </strong>
 
-              <small>
-                人
-              </small>
-
+              <small>人</small>
             </div>
 
             <p>
               特典交換済み
             </p>
-
           </article>
 
           <article className="staffDashboardStatCard today">
-
             <span>
               TODAY
             </span>
 
             <div>
-
               <strong>
                 {loading
                   ? "—"
                   : todayExchangedCount}
               </strong>
 
-              <small>
-                人
-              </small>
-
+              <small>人</small>
             </div>
 
             <p>
               本日の特典交換
             </p>
-
           </article>
 
         </section>
+
+        {/* =================================
+            NEW STAMP DISTRIBUTION
+            0〜5個の参加者内訳
+        ================================= */}
+
+        <PokipoStampDistribution />
 
         {/* =================================
             SPOT LIVE STATUS
         ================================= */}
 
         <section className="staffSpotSection">
-
           <div className="staffDashboardSectionTitle">
-
             <div>
-
               <span>
                 SPOT LIVE STATUS
               </span>
@@ -1266,28 +922,20 @@ export default function StaffDashboardPage() {
                 各スポットのQR読み取り人数と、
                 最終読み取り状況をリアルタイムで表示します。
               </p>
-
             </div>
 
             <div className="staffSpotJstBadge">
               JST
             </div>
-
           </div>
 
           <div className="staffSpotGrid">
-
             {Object.entries(
               SPOT_INFORMATION
             ).map(
-              ([
-                spotId,
-                spot,
-              ]) => {
+              ([spotId, spot]) => {
                 const summary =
-                  getSpotSummary(
-                    spotId
-                  );
+                  getSpotSummary(spotId);
 
                 const hasScan =
                   Boolean(
@@ -1296,31 +944,21 @@ export default function StaffDashboardPage() {
 
                 return (
                   <article
-                    key={
-                      spotId
-                    }
+                    key={spotId}
                     className={
                       hasScan
                         ? "staffSpotCard active"
                         : "staffSpotCard"
                     }
                   >
-
                     <div className="staffSpotCardHeader">
-
                       <div className="staffSpotNumber">
-
                         {String(
                           spot.number
-                        ).padStart(
-                          2,
-                          "0"
-                        )}
-
+                        ).padStart(2, "0")}
                       </div>
 
                       <div className="staffSpotCardTitle">
-
                         <span>
                           SPOT {spot.number}
                         </span>
@@ -1328,92 +966,68 @@ export default function StaffDashboardPage() {
                         <strong>
                           {spot.name}
                         </strong>
-
                       </div>
 
                       <div className="staffSpotStatus">
-
                         <span />
-
                         {hasScan
                           ? "ACTIVE"
                           : "NO DATA"}
-
                       </div>
-
                     </div>
 
                     <div className="staffSpotScanCount">
-
                       <span>
                         読み取り人数
                       </span>
 
                       <div>
-
                         <strong>
-
                           {loading
                             ? "—"
                             : summary.scan_count}
-
                         </strong>
 
-                        <small>
-                          人
-                        </small>
-
+                        <small>人</small>
                       </div>
-
                     </div>
 
                     <div className="staffSpotLastScan">
-
                       <span>
                         最終読み取り
                       </span>
 
                       <strong>
-
                         {loading
                           ? "確認中..."
                           : formatRelativeTime(
                               summary.last_scanned_at
                             )}
-
                       </strong>
 
                       <time>
-
                         {loading
                           ? "----"
                           : formatSpotDate(
                               summary.last_scanned_at
                             )}
-
                       </time>
-
                     </div>
-
                   </article>
                 );
               }
             )}
-
           </div>
-
         </section>
 
         {/* =================================
-            RATES
+            PROGRESS RATES
         ================================= */}
 
         <section className="staffDashboardRates">
 
           <div className="staffDashboardRateCard">
-
             <div>
-
               <span>
                 COMPLETION RATE
               </span>
@@ -1421,33 +1035,28 @@ export default function StaffDashboardPage() {
               <strong>
                 {completionRate}%
               </strong>
-
             </div>
 
             <div className="staffDashboardRateBar">
-
               <div
                 style={{
-                  width:
-                    `${Math.min(
+                  width: `${
+                    Math.min(
                       completionRate,
                       100
-                    )}%`,
+                    )
+                  }%`,
                 }}
               />
-
             </div>
 
             <p>
               参加者のうち完走した割合
             </p>
-
           </div>
 
           <div className="staffDashboardRateCard">
-
             <div>
-
               <span>
                 EXCHANGE RATE
               </span>
@@ -1455,33 +1064,30 @@ export default function StaffDashboardPage() {
               <strong>
                 {exchangeRate}%
               </strong>
-
             </div>
 
             <div className="staffDashboardRateBar">
-
               <div
                 style={{
-                  width:
-                    `${Math.min(
+                  width: `${
+                    Math.min(
                       exchangeRate,
                       100
-                    )}%`,
+                    )
+                  }%`,
                 }}
               />
-
             </div>
 
             <p>
               完走者のうち特典交換した割合
             </p>
-
           </div>
 
         </section>
 
         {/* =================================
-            ACTIONS
+            ACTION BUTTONS
         ================================= */}
 
         <section className="staffDashboardActions">
@@ -1489,18 +1095,12 @@ export default function StaffDashboardPage() {
           <button
             type="button"
             onClick={() =>
-              router.push(
-                "/staff/reward"
-              )
+              router.push("/staff/reward")
             }
           >
-
-            <span>
-              QR
-            </span>
+            <span>QR</span>
 
             <div>
-
               <strong>
                 景品交換
               </strong>
@@ -1508,13 +1108,9 @@ export default function StaffDashboardPage() {
               <small>
                 参加者QRを読み取る
               </small>
-
             </div>
 
-            <b>
-              →
-            </b>
-
+            <b>→</b>
           </button>
 
           <button
@@ -1525,13 +1121,9 @@ export default function StaffDashboardPage() {
               )
             }
           >
-
-            <span>
-              LOG
-            </span>
+            <span>LOG</span>
 
             <div>
-
               <strong>
                 交換履歴
               </strong>
@@ -1539,27 +1131,20 @@ export default function StaffDashboardPage() {
               <small>
                 交換済み参加者を確認
               </small>
-
             </div>
 
-            <b>
-              →
-            </b>
-
+            <b>→</b>
           </button>
 
         </section>
 
         {/* =================================
-            LATEST HISTORY
+            LATEST EXCHANGE HISTORY
         ================================= */}
 
         <section className="staffDashboardHistory">
-
           <div className="staffDashboardSectionTitle">
-
             <div>
-
               <span>
                 LATEST EXCHANGES
               </span>
@@ -1567,7 +1152,6 @@ export default function StaffDashboardPage() {
               <h2>
                 最新の特典交換
               </h2>
-
             </div>
 
             <button
@@ -1580,17 +1164,14 @@ export default function StaffDashboardPage() {
             >
               すべて見る
             </button>
-
           </div>
 
           {loading ? (
             <div className="staffDashboardEmpty">
               読み込み中...
             </div>
-          ) : latestHistory.length ===
-            0 ? (
+          ) : latestHistory.length === 0 ? (
             <div className="staffDashboardEmpty">
-
               <strong>
                 まだ交換履歴はありません
               </strong>
@@ -1599,62 +1180,39 @@ export default function StaffDashboardPage() {
                 景品交換が完了すると
                 ここに表示されます。
               </p>
-
             </div>
           ) : (
             <div className="staffDashboardHistoryList">
+              {latestHistory.map((item) => (
+                <article key={item.id}>
+                  <div className="staffDashboardHistoryAvatar">
+                    {item.nickname.slice(0, 1)}
+                  </div>
 
-              {latestHistory.map(
-                (
-                  item
-                ) => (
-                  <article
-                    key={
-                      item.id
-                    }
-                  >
+                  <div className="staffDashboardHistoryUser">
+                    <strong>
+                      {item.nickname}さん
+                    </strong>
 
-                    <div className="staffDashboardHistoryAvatar">
+                    <span>
+                      学籍番号：
+                      {item.student_number}
+                    </span>
+                  </div>
 
-                      {item.nickname
-                        .slice(
-                          0,
-                          1
-                        )}
-
-                    </div>
-
-                    <div className="staffDashboardHistoryUser">
-
-                      <strong>
-                        {item.nickname}
-                        さん
-                      </strong>
-
-                      <span>
-                        学籍番号：
-                        {item.student_number}
-                      </span>
-
-                    </div>
-
-                    <time>
-                      {formatDate(
-                        item.exchanged_at
-                      )}
-                    </time>
-
-                  </article>
-                )
-              )}
-
+                  <time>
+                    {formatDate(
+                      item.exchanged_at
+                    )}
+                  </time>
+                </article>
+              ))}
             </div>
           )}
-
         </section>
 
         {/* =================================
-            MESSAGE
+            ERROR MESSAGE
         ================================= */}
 
         {message && (
@@ -1664,7 +1222,6 @@ export default function StaffDashboardPage() {
         )}
 
       </section>
-
     </main>
   );
 }
