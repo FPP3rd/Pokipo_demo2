@@ -1702,7 +1702,7 @@ export default function StartPage() {
                   <br />
                   ChromeまたはSafariのいずれかのブラウザで開始してください！
                   <br />
-                  （LINEやInstagramなどの内部ブラウザでは正常に動きません）
+                  （LINEやInstagramなどの内部ブラウザの場合は、︙を押して「○○で開く」や「デフォルトのブラウザで開く」を押す）
                 </p>
 
                 <button
