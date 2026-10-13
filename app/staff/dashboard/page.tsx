@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase-client";
+
 import PokipoStampDistribution from "../../../components/PokipoStampDistribution";
+import PokipoAnimatedNumber from "../../../components/PokipoAnimatedNumber";
+import PokipoLiveClock from "../../../components/PokipoLiveClock";
 
 /* ========================================
    TYPES
@@ -24,7 +27,7 @@ type SpotSummary = {
 };
 
 /* ========================================
-   SPOT INFORMATION
+   SPOTS
 ======================================== */
 
 const SPOT_INFORMATION: Record<
@@ -57,7 +60,96 @@ const SPOT_INFORMATION: Record<
 };
 
 /* ========================================
-   PAGE
+   FORMAT HELPERS
+======================================== */
+
+function formatDate(value: string | null) {
+  if (!value) return "----";
+
+  return new Date(value).toLocaleString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatSpotDate(value: string | null) {
+  if (!value) return "読み取りなし";
+
+  return new Date(value).toLocaleString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatRelativeTime(
+  value: string | null,
+  currentTime: number
+) {
+  if (!value) return "まだ読み取りなし";
+
+  const scannedAt = new Date(value).getTime();
+
+  const difference = Math.max(
+    0,
+    currentTime - scannedAt
+  );
+
+  const seconds = Math.floor(difference / 1000);
+  const minutes = Math.floor(difference / 60000);
+  const hours = Math.floor(difference / 3600000);
+  const days = Math.floor(difference / 86400000);
+
+  if (seconds < 60) return "たった今";
+  if (minutes < 60) return `${minutes}分前`;
+  if (hours < 24) return `${hours}時間前`;
+
+  return `${days}日前`;
+}
+
+/* ========================================
+   JST DATE RANGE
+======================================== */
+
+function getTodayJstRange() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(new Date());
+
+  const get = (type: string) =>
+    Number(
+      parts.find((part) => part.type === type)?.value ?? 0
+    );
+
+  const year = get("year");
+  const month = get("month");
+  const day = get("day");
+
+  const start = new Date(
+    Date.UTC(year, month - 1, day, -9)
+  );
+
+  const end = new Date(
+    Date.UTC(year, month - 1, day + 1, -9)
+  );
+
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
+  };
+}
+
+/* ========================================
+   STAFF DASHBOARD
 ======================================== */
 
 export default function StaffDashboardPage() {
@@ -86,8 +178,10 @@ export default function StaffDashboardPage() {
   const [exchangedCount, setExchangedCount] =
     useState(0);
 
-  const [todayExchangedCount, setTodayExchangedCount] =
-    useState(0);
+  const [
+    todayExchangedCount,
+    setTodayExchangedCount,
+  ] = useState(0);
 
   /* ========================================
      SPOT STATUS
@@ -110,14 +204,11 @@ export default function StaffDashboardPage() {
      UI
   ======================================== */
 
-  const [loading, setLoading] =
-    useState(true);
-
-  const [message, setMessage] =
-    useState("");
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
   /* ========================================
-     CLOCK UPDATE
+     RELATIVE TIME REFRESH
   ======================================== */
 
   useEffect(() => {
@@ -146,6 +237,7 @@ export default function StaffDashboardPage() {
       if (error || !data.session) {
         setAuthenticated(false);
         setAuthLoading(false);
+
         router.replace("/staff/reward");
         return;
       }
@@ -162,7 +254,7 @@ export default function StaffDashboardPage() {
   }, [router]);
 
   /* ========================================
-     DASHBOARD DATA
+     LOAD DASHBOARD
   ======================================== */
 
   useEffect(() => {
@@ -208,7 +300,7 @@ export default function StaffDashboardPage() {
         }
 
         /* =================================
-           COMPLETED PARTICIPANTS
+           COMPLETION COUNT
         ================================= */
 
         const {
@@ -232,7 +324,7 @@ export default function StaffDashboardPage() {
         }
 
         /* =================================
-           SPOT SCAN SUMMARY
+           SPOT SUMMARY
         ================================= */
 
         const {
@@ -252,7 +344,7 @@ export default function StaffDashboardPage() {
 
           setSpotSummaries([]);
         } else {
-          const normalized = (
+          const normalized: SpotSummary[] = (
             spotSummaryData ?? []
           ).map(
             (item: {
@@ -301,45 +393,10 @@ export default function StaffDashboardPage() {
         }
 
         /* =================================
-           TODAY'S EXCHANGES (JST)
+           TODAY EXCHANGED (JST)
         ================================= */
 
-        const japanNow = new Date(
-          new Date().toLocaleString("en-US", {
-            timeZone: "Asia/Tokyo",
-          })
-        );
-
-        const japanYear =
-          japanNow.getFullYear();
-
-        const japanMonth =
-          japanNow.getMonth();
-
-        const japanDate =
-          japanNow.getDate();
-
-        const startOfToday = new Date(
-          Date.UTC(
-            japanYear,
-            japanMonth,
-            japanDate,
-            -9,
-            0,
-            0
-          )
-        );
-
-        const startOfTomorrow = new Date(
-          Date.UTC(
-            japanYear,
-            japanMonth,
-            japanDate + 1,
-            -9,
-            0,
-            0
-          )
-        );
+        const todayRange = getTodayJstRange();
 
         const {
           count: todayCountData,
@@ -353,11 +410,11 @@ export default function StaffDashboardPage() {
           .eq("status", "exchanged")
           .gte(
             "exchanged_at",
-            startOfToday.toISOString()
+            todayRange.start
           )
           .lt(
             "exchanged_at",
-            startOfTomorrow.toISOString()
+            todayRange.end
           );
 
         if (!isCurrent()) return;
@@ -374,7 +431,7 @@ export default function StaffDashboardPage() {
         }
 
         /* =================================
-           LATEST REWARD EXCHANGES
+           LATEST EXCHANGES
         ================================= */
 
         const {
@@ -430,8 +487,8 @@ export default function StaffDashboardPage() {
             const participants =
               participantData ?? [];
 
-            const combined = rewards.map(
-              (reward) => {
+            const combined: RewardHistoryItem[] =
+              rewards.map((reward) => {
                 const participant =
                   participants.find(
                     (item) =>
@@ -451,8 +508,7 @@ export default function StaffDashboardPage() {
                     participant?.nickname ??
                     "不明",
                 };
-              }
-            );
+              });
 
             setLatestHistory(combined);
           }
@@ -552,7 +608,7 @@ export default function StaffDashboardPage() {
     );
 
     /* ========================================
-       FOCUS / VISIBILITY
+       FOCUS REFRESH
     ======================================== */
 
     function handleFocus() {
@@ -611,96 +667,7 @@ export default function StaffDashboardPage() {
   }, [authenticated]);
 
   /* ========================================
-     DATE FORMAT - JST
-  ======================================== */
-
-  function formatDate(
-    value: string | null
-  ) {
-    if (!value) return "----";
-
-    return new Date(value).toLocaleString(
-      "ja-JP",
-      {
-        timeZone: "Asia/Tokyo",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      }
-    );
-  }
-
-  function formatSpotDate(
-    value: string | null
-  ) {
-    if (!value) return "読み取りなし";
-
-    return new Date(value).toLocaleString(
-      "ja-JP",
-      {
-        timeZone: "Asia/Tokyo",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      }
-    );
-  }
-
-  /* ========================================
-     RELATIVE TIME
-  ======================================== */
-
-  function formatRelativeTime(
-    value: string | null
-  ) {
-    if (!value) {
-      return "まだ読み取りなし";
-    }
-
-    const scannedAt =
-      new Date(value).getTime();
-
-    const difference = Math.max(
-      0,
-      currentTime - scannedAt
-    );
-
-    const seconds = Math.floor(
-      difference / 1000
-    );
-
-    const minutes = Math.floor(
-      difference / 60000
-    );
-
-    const hours = Math.floor(
-      difference / 3600000
-    );
-
-    const days = Math.floor(
-      difference / 86400000
-    );
-
-    if (seconds < 60) {
-      return "たった今";
-    }
-
-    if (minutes < 60) {
-      return `${minutes}分前`;
-    }
-
-    if (hours < 24) {
-      return `${hours}時間前`;
-    }
-
-    return `${days}日前`;
-  }
-
-  /* ========================================
-     GET SPOT SUMMARY
+     SPOT HELPERS
   ======================================== */
 
   function getSpotSummary(
@@ -708,8 +675,7 @@ export default function StaffDashboardPage() {
   ): SpotSummary {
     return (
       spotSummaries.find(
-        (item) =>
-          item.spot_id === spotId
+        (item) => item.spot_id === spotId
       ) ?? {
         spot_id: spotId,
         scan_count: 0,
@@ -719,28 +685,20 @@ export default function StaffDashboardPage() {
   }
 
   /* ========================================
-     COMPLETION RATE
+     RATES
   ======================================== */
 
   const completionRate =
     participantCount > 0
       ? Math.round(
-          (completionCount /
-            participantCount) *
-            100
+          (completionCount / participantCount) * 100
         )
       : 0;
-
-  /* ========================================
-     EXCHANGE RATE
-  ======================================== */
 
   const exchangeRate =
     completionCount > 0
       ? Math.round(
-          (exchangedCount /
-            completionCount) *
-            100
+          (exchangedCount / completionCount) * 100
         )
       : 0;
 
@@ -765,7 +723,7 @@ export default function StaffDashboardPage() {
   }
 
   /* ========================================
-     VIEW
+     DASHBOARD VIEW
   ======================================== */
 
   return (
@@ -773,11 +731,12 @@ export default function StaffDashboardPage() {
       <section className="staffDashboardPage">
 
         {/* =================================
-            HEADER
+            HEADER + LIVE CLOCK
         ================================= */}
 
         <header className="staffDashboardHeader">
-          <div>
+
+          <div className="pokipoDashboardHeaderTitle">
             <span>POKIPO STAFF</span>
 
             <h1>
@@ -789,6 +748,10 @@ export default function StaffDashboardPage() {
             </p>
           </div>
 
+          <div className="pokipoDashboardClockSlot">
+            <PokipoLiveClock />
+          </div>
+
           <button
             type="button"
             onClick={() =>
@@ -797,10 +760,11 @@ export default function StaffDashboardPage() {
           >
             QR交換
           </button>
+
         </header>
 
         {/* =================================
-            LIVE INDICATOR
+            LIVE DATA
         ================================= */}
 
         <div className="staffDashboardLive">
@@ -814,6 +778,7 @@ export default function StaffDashboardPage() {
 
         <section className="staffDashboardStats">
 
+          {/* 参加人数 */}
           <article className="staffDashboardStatCard">
             <span>
               PARTICIPANTS
@@ -821,9 +786,13 @@ export default function StaffDashboardPage() {
 
             <div>
               <strong>
-                {loading
-                  ? "—"
-                  : participantCount}
+                <PokipoAnimatedNumber
+                  value={
+                    loading
+                      ? null
+                      : participantCount
+                  }
+                />
               </strong>
 
               <small>人</small>
@@ -834,6 +803,7 @@ export default function StaffDashboardPage() {
             </p>
           </article>
 
+          {/* 完走者数 */}
           <article className="staffDashboardStatCard">
             <span>
               COMPLETED
@@ -841,9 +811,13 @@ export default function StaffDashboardPage() {
 
             <div>
               <strong>
-                {loading
-                  ? "—"
-                  : completionCount}
+                <PokipoAnimatedNumber
+                  value={
+                    loading
+                      ? null
+                      : completionCount
+                  }
+                />
               </strong>
 
               <small>人</small>
@@ -854,6 +828,7 @@ export default function StaffDashboardPage() {
             </p>
           </article>
 
+          {/* 特典交換済み人数 */}
           <article className="staffDashboardStatCard">
             <span>
               EXCHANGED
@@ -861,9 +836,13 @@ export default function StaffDashboardPage() {
 
             <div>
               <strong>
-                {loading
-                  ? "—"
-                  : exchangedCount}
+                <PokipoAnimatedNumber
+                  value={
+                    loading
+                      ? null
+                      : exchangedCount
+                  }
+                />
               </strong>
 
               <small>人</small>
@@ -874,6 +853,7 @@ export default function StaffDashboardPage() {
             </p>
           </article>
 
+          {/* 本日の交換人数 */}
           <article className="staffDashboardStatCard today">
             <span>
               TODAY
@@ -881,9 +861,13 @@ export default function StaffDashboardPage() {
 
             <div>
               <strong>
-                {loading
-                  ? "—"
-                  : todayExchangedCount}
+                <PokipoAnimatedNumber
+                  value={
+                    loading
+                      ? null
+                      : todayExchangedCount
+                  }
+                />
               </strong>
 
               <small>人</small>
@@ -897,8 +881,8 @@ export default function StaffDashboardPage() {
         </section>
 
         {/* =================================
-            NEW STAMP DISTRIBUTION
-            0〜5個の参加者内訳
+            STAMP DISTRIBUTION
+            0〜5個
         ================================= */}
 
         <PokipoStampDistribution />
@@ -908,6 +892,7 @@ export default function StaffDashboardPage() {
         ================================= */}
 
         <section className="staffSpotSection">
+
           <div className="staffDashboardSectionTitle">
             <div>
               <span>
@@ -930,103 +915,119 @@ export default function StaffDashboardPage() {
           </div>
 
           <div className="staffSpotGrid">
+
             {Object.entries(
               SPOT_INFORMATION
-            ).map(
-              ([spotId, spot]) => {
-                const summary =
-                  getSpotSummary(spotId);
+            ).map(([spotId, spot]) => {
+              const summary =
+                getSpotSummary(spotId);
 
-                const hasScan =
-                  Boolean(
-                    summary.last_scanned_at
-                  );
+              const hasScan =
+                Boolean(
+                  summary.last_scanned_at
+                );
 
-                return (
-                  <article
-                    key={spotId}
-                    className={
-                      hasScan
-                        ? "staffSpotCard active"
-                        : "staffSpotCard"
-                    }
-                  >
-                    <div className="staffSpotCardHeader">
-                      <div className="staffSpotNumber">
-                        {String(
-                          spot.number
-                        ).padStart(2, "0")}
-                      </div>
+              return (
+                <article
+                  key={spotId}
+                  className={
+                    hasScan
+                      ? "staffSpotCard active"
+                      : "staffSpotCard"
+                  }
+                >
 
-                      <div className="staffSpotCardTitle">
-                        <span>
-                          SPOT {spot.number}
-                        </span>
+                  <div className="staffSpotCardHeader">
 
-                        <strong>
-                          {spot.name}
-                        </strong>
-                      </div>
-
-                      <div className="staffSpotStatus">
-                        <span />
-                        {hasScan
-                          ? "ACTIVE"
-                          : "NO DATA"}
-                      </div>
+                    <div className="staffSpotNumber">
+                      {String(
+                        spot.number
+                      ).padStart(2, "0")}
                     </div>
 
-                    <div className="staffSpotScanCount">
+                    <div className="staffSpotCardTitle">
                       <span>
-                        読み取り人数
-                      </span>
-
-                      <div>
-                        <strong>
-                          {loading
-                            ? "—"
-                            : summary.scan_count}
-                        </strong>
-
-                        <small>人</small>
-                      </div>
-                    </div>
-
-                    <div className="staffSpotLastScan">
-                      <span>
-                        最終読み取り
+                        SPOT {spot.number}
                       </span>
 
                       <strong>
-                        {loading
-                          ? "確認中..."
-                          : formatRelativeTime(
-                              summary.last_scanned_at
-                            )}
+                        {spot.name}
+                      </strong>
+                    </div>
+
+                    <div className="staffSpotStatus">
+                      <span />
+
+                      {hasScan
+                        ? "ACTIVE"
+                        : "NO DATA"}
+                    </div>
+
+                  </div>
+
+                  <div className="staffSpotScanCount">
+
+                    <span>
+                      読み取り人数
+                    </span>
+
+                    <div>
+                      <strong>
+                        <PokipoAnimatedNumber
+                          value={
+                            loading
+                              ? null
+                              : summary.scan_count
+                          }
+                          duration={850}
+                        />
                       </strong>
 
-                      <time>
-                        {loading
-                          ? "----"
-                          : formatSpotDate(
-                              summary.last_scanned_at
-                            )}
-                      </time>
+                      <small>人</small>
                     </div>
-                  </article>
-                );
-              }
-            )}
+
+                  </div>
+
+                  <div className="staffSpotLastScan">
+
+                    <span>
+                      最終読み取り
+                    </span>
+
+                    <strong>
+                      {loading
+                        ? "確認中..."
+                        : formatRelativeTime(
+                            summary.last_scanned_at,
+                            currentTime
+                          )}
+                    </strong>
+
+                    <time>
+                      {loading
+                        ? "----"
+                        : formatSpotDate(
+                            summary.last_scanned_at
+                          )}
+                    </time>
+
+                  </div>
+
+                </article>
+              );
+            })}
+
           </div>
         </section>
 
         {/* =================================
-            PROGRESS RATES
+            COMPLETION / EXCHANGE RATES
         ================================= */}
 
         <section className="staffDashboardRates">
 
           <div className="staffDashboardRateCard">
+
             <div>
               <span>
                 COMPLETION RATE
@@ -1040,12 +1041,10 @@ export default function StaffDashboardPage() {
             <div className="staffDashboardRateBar">
               <div
                 style={{
-                  width: `${
-                    Math.min(
-                      completionRate,
-                      100
-                    )
-                  }%`,
+                  width: `${Math.min(
+                    completionRate,
+                    100
+                  )}%`,
                 }}
               />
             </div>
@@ -1053,9 +1052,11 @@ export default function StaffDashboardPage() {
             <p>
               参加者のうち完走した割合
             </p>
+
           </div>
 
           <div className="staffDashboardRateCard">
+
             <div>
               <span>
                 EXCHANGE RATE
@@ -1069,12 +1070,10 @@ export default function StaffDashboardPage() {
             <div className="staffDashboardRateBar">
               <div
                 style={{
-                  width: `${
-                    Math.min(
-                      exchangeRate,
-                      100
-                    )
-                  }%`,
+                  width: `${Math.min(
+                    exchangeRate,
+                    100
+                  )}%`,
                 }}
               />
             </div>
@@ -1082,12 +1081,13 @@ export default function StaffDashboardPage() {
             <p>
               完走者のうち特典交換した割合
             </p>
+
           </div>
 
         </section>
 
         {/* =================================
-            ACTION BUTTONS
+            ACTIONS
         ================================= */}
 
         <section className="staffDashboardActions">
@@ -1139,11 +1139,13 @@ export default function StaffDashboardPage() {
         </section>
 
         {/* =================================
-            LATEST EXCHANGE HISTORY
+            LATEST EXCHANGES
         ================================= */}
 
         <section className="staffDashboardHistory">
+
           <div className="staffDashboardSectionTitle">
+
             <div>
               <span>
                 LATEST EXCHANGES
@@ -1164,14 +1166,19 @@ export default function StaffDashboardPage() {
             >
               すべて見る
             </button>
+
           </div>
 
           {loading ? (
+
             <div className="staffDashboardEmpty">
               読み込み中...
             </div>
+
           ) : latestHistory.length === 0 ? (
+
             <div className="staffDashboardEmpty">
+
               <strong>
                 まだ交換履歴はありません
               </strong>
@@ -1180,16 +1187,23 @@ export default function StaffDashboardPage() {
                 景品交換が完了すると
                 ここに表示されます。
               </p>
+
             </div>
+
           ) : (
+
             <div className="staffDashboardHistoryList">
+
               {latestHistory.map((item) => (
+
                 <article key={item.id}>
+
                   <div className="staffDashboardHistoryAvatar">
                     {item.nickname.slice(0, 1)}
                   </div>
 
                   <div className="staffDashboardHistoryUser">
+
                     <strong>
                       {item.nickname}さん
                     </strong>
@@ -1198,6 +1212,7 @@ export default function StaffDashboardPage() {
                       学籍番号：
                       {item.student_number}
                     </span>
+
                   </div>
 
                   <time>
@@ -1205,14 +1220,19 @@ export default function StaffDashboardPage() {
                       item.exchanged_at
                     )}
                   </time>
+
                 </article>
+
               ))}
+
             </div>
+
           )}
+
         </section>
 
         {/* =================================
-            ERROR MESSAGE
+            MESSAGE
         ================================= */}
 
         {message && (
