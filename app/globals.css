@@ -41696,3 +41696,335 @@ main.shell > .staffMenuPage[style*="max-width"]
     line-height: 1.7;
   }
 }
+
+
+/* ============================================
+   POKIPO PARTICIPANTS DESIGN
+   参加者一覧専用デザイン
+   globals.css 最下部に追記
+============================================ */
+
+main.shell:has(input[aria-label="参加者検索"]) {
+  --pp-red: #cc242c;
+  --pp-red-deep: #a91a23;
+  --pp-ink: #3d2a20;
+  --pp-muted: #755e52;
+  --pp-border: rgba(164, 77, 53, 0.17);
+
+  background: radial-gradient(
+    circle at top,
+    #fff0e5 0%,
+    #fff8f1 52%,
+    #f7ede5 100%
+  );
+
+  color: var(--pp-ink) !important;
+  padding: 34px 16px 64px !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"]) > section {
+  width: 100%;
+  min-width: 0;
+}
+
+/* ヘッダー */
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:first-child {
+  padding: 22px 24px !important;
+  margin-bottom: 22px !important;
+  background: linear-gradient(
+    125deg, #fff, #fff3eb
+  ) !important;
+  border: 1px solid var(--pp-border);
+  border-radius: 22px;
+  box-shadow:
+    0 12px 28px rgba(103, 47, 32, 0.08);
+}
+
+main.shell:has(input[aria-label="参加者検索"]) h1 {
+  color: var(--pp-red) !important;
+  font-size: clamp(22px, 3vw, 30px) !important;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+main.shell:has(input[aria-label="参加者検索"]) p {
+  color: var(--pp-muted);
+  line-height: 1.8;
+}
+
+/* ボタン */
+
+main.shell:has(input[aria-label="参加者検索"]) button {
+  width: auto !important;
+  min-width: 0;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 9px 17px !important;
+  border: 1px solid rgba(198, 36, 44, 0.22)
+    !important;
+  border-radius: 12px !important;
+
+  background: linear-gradient(
+    135deg, #df343b, #bf1f29
+  ) !important;
+
+  color: #fff !important;
+  font-size: 13px;
+  font-weight: 800 !important;
+  line-height: 1.4;
+
+  box-shadow:
+    0 7px 16px rgba(188, 28, 37, 0.17)
+    !important;
+
+  transition: transform 0.15s ease;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  button:hover {
+  transform: translateY(-1px);
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  :is(button, input, select):focus-visible {
+  outline: 3px solid #e99b78;
+  outline-offset: 2px;
+}
+
+/* 集計カード */
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:nth-child(2) > div {
+  background: linear-gradient(
+    155deg, #fff, #fff8f4
+  ) !important;
+
+  border: 1px solid var(--pp-border)
+    !important;
+  border-top: 4px solid var(--pp-red)
+    !important;
+  border-radius: 20px !important;
+  padding: 20px 22px !important;
+
+  box-shadow:
+    0 10px 26px rgba(105, 53, 35, 0.075);
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:nth-child(2)
+  > div:nth-child(2) {
+  border-top-color: #d4774c !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:nth-child(2)
+  > div:nth-child(3) {
+  border-top-color: #c17b27 !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:nth-child(2)
+  > div > div {
+  color: var(--pp-muted) !important;
+  font-size: 13px !important;
+  font-weight: 800;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:nth-child(2)
+  > div > strong {
+  color: var(--pp-red-deep) !important;
+  font-size: clamp(27px, 3.7vw, 36px)
+    !important;
+}
+
+/* フィルター・一覧・履歴カード */
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:nth-child(3),
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:nth-child(4),
+main.shell:has(input[aria-label="参加者検索"])
+  > section > section {
+  background: #fff !important;
+  border: 1px solid var(--pp-border)
+    !important;
+  border-radius: 20px !important;
+  box-shadow:
+    0 10px 28px rgba(105, 53, 35, 0.07);
+}
+
+/* 入力フォーム */
+
+main.shell:has(input[aria-label="参加者検索"])
+  input:not([type="checkbox"]),
+main.shell:has(input[aria-label="参加者検索"])
+  select {
+  width: auto !important;
+  min-width: 180px;
+  max-width: 100%;
+  min-height: 44px !important;
+  padding: 9px 12px !important;
+
+  background: #fffcf9 !important;
+  color: var(--pp-ink) !important;
+  border: 1px solid #e5cfc5 !important;
+  border-radius: 12px !important;
+  font-size: 14px;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  label {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  margin: 0 !important;
+  color: var(--pp-ink) !important;
+  font-weight: 750;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  padding: 0;
+  margin: 0;
+  accent-color: var(--pp-red);
+}
+
+/* 参加者一覧テーブル */
+
+main.shell:has(input[aria-label="参加者検索"])
+  table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: separate !important;
+  color: var(--pp-ink);
+  font-size: 13px !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  table thead tr {
+  background: #fff1e9 !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  table th {
+  background: #fff1e9 !important;
+  color: #7e382c !important;
+  font-size: 12px;
+  font-weight: 900;
+  border-bottom: 2px solid #ebc9ba
+    !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  table th,
+main.shell:has(input[aria-label="参加者検索"])
+  table td {
+  padding: 13px 12px !important;
+  line-height: 1.55;
+  vertical-align: middle;
+  text-align: left;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  table tbody tr:nth-child(even) {
+  background: #fffaf6 !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  table tbody tr:hover {
+  background: #fff0e8 !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  table td:first-child {
+  font-weight: 800;
+  color: #533326;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  table td button {
+  min-height: 36px !important;
+  padding: 7px 14px !important;
+  font-size: 12px;
+}
+
+/* 履歴詳細 */
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > section h2 {
+  color: var(--pp-red-deep) !important;
+  margin-top: 0;
+  font-weight: 900;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > section strong {
+  color: #57352b;
+}
+
+/* スマートフォン */
+
+@media (max-width: 640px) {
+  main.shell:has(input[aria-label="参加者検索"]) {
+    padding: 16px 10px 50px !important;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"])
+    > section > div:first-child {
+    padding: 18px 16px !important;
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"])
+    > section > div:first-child button {
+    align-self: flex-start;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"])
+    > section > div:nth-child(2) {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"])
+    > section > div:nth-child(2) > div {
+    padding: 14px !important;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"])
+    > section > div:nth-child(3) {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"])
+    input:not([type="checkbox"]),
+  main.shell:has(input[aria-label="参加者検索"])
+    select {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"])
+    table th,
+  main.shell:has(input[aria-label="参加者検索"])
+    table td {
+    padding: 11px 10px !important;
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main.shell:has(input[aria-label="参加者検索"])
+    button {
+    transition: none;
+    transform: none !important;
+  }
+}
