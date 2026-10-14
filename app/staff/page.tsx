@@ -156,6 +156,7 @@ const MENU_SECTIONS: MenuSection[] = [
     title: "参加者サポート",
     description: "お問い合わせへの対応と参加者データの修正を行います。",
     items: [
+    
       {
         icon: "HELP",
         label: "STAMP SUPPORT",
