@@ -47,11 +47,11 @@ const SPOT_INFORMATION: Record<
   },
   spot3: {
     number: 3,
-    name: "ラーニングスクエア",
+    name: "ゆうちょ銀行ATM付近掲示板",
   },
   spot4: {
     number: 4,
-    name: "ゆうちょ銀行ATM",
+    name: "ラーニングスクエア",
   },
   spot5: {
     number: 5,
