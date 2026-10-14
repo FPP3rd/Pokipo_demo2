@@ -1,34 +1,21 @@
-
 "use client";
 
 import type { ReactNode } from "react";
 import { pokipoSpots } from "../app/data/pokipo-data";
-
-/* ========================================
-   TYPES
-======================================== */
 
 type Props = {
   scans: string[];
   cameraOpen: boolean;
   cameraError: string;
   message: string;
-
   onStartCamera: () => void;
   onStopCamera: () => void | Promise<void>;
   onBack: () => void;
-
   cameraReaderId: string;
-
   testMode?: boolean;
   disabled?: boolean;
-
   children?: ReactNode;
 };
-
-/* ========================================
-   CAMPUS MAP
-======================================== */
 
 const mapPins = [
   {
@@ -68,10 +55,6 @@ const mapPins = [
   },
 ];
 
-/* ========================================
-   SHARED SCREEN
-======================================== */
-
 export default function PokipoStampScreen({
   scans,
   cameraOpen,
@@ -86,12 +69,7 @@ export default function PokipoStampScreen({
   children,
 }: Props) {
   const collectedIds = new Set(scans);
-
-  const count = Math.min(
-    collectedIds.size,
-    5
-  );
-
+  const count = Math.min(collectedIds.size, 5);
   const completed = count >= 5;
 
   function showMapSpot(spotId: string) {
@@ -108,7 +86,8 @@ export default function PokipoStampScreen({
 
   return (
     <section className="card stampPage">
-      {/* HEADER */}
+
+      {/* ヘッダー */}
       <header className="stampHeader">
         <button
           type="button"
@@ -131,7 +110,7 @@ export default function PokipoStampScreen({
         </div>
       </header>
 
-      {/* TEST MODE NOTICE */}
+      {/* テストモード表示 */}
       {testMode && (
         <section
           style={{
@@ -151,7 +130,7 @@ export default function PokipoStampScreen({
         </section>
       )}
 
-      {/* PROGRESS */}
+      {/* 進捗表示 */}
       <section className="stampProgressCard">
         <div className="stampProgressTop">
           <div>
@@ -177,7 +156,7 @@ export default function PokipoStampScreen({
         </div>
       </section>
 
-      {/* QR SCANNER */}
+      {/* QR読み取り */}
       <section className="qrScannerSection">
         {!cameraOpen ? (
           <button
@@ -269,7 +248,7 @@ export default function PokipoStampScreen({
         )}
       </section>
 
-      {/* CAMPUS MAP */}
+      {/* キャンパスマップ */}
       <section className="stampMapSection">
         <div className="stampMapHeader">
           <div>
@@ -332,7 +311,7 @@ export default function PokipoStampScreen({
         </div>
       </section>
 
-      {/* SPOT LIST */}
+      {/* 写真付きスポット一覧 */}
       <section className="spotList">
         {pokipoSpots.map((spot) => {
           const collected =
@@ -343,6 +322,7 @@ export default function PokipoStampScreen({
               key={spot.id}
               className={[
                 "spotCard",
+                "pokipoPhotoSpotCard",
                 collected
                   ? "collected"
                   : "available",
@@ -375,12 +355,26 @@ export default function PokipoStampScreen({
                     : "この場所のQRコードを見つけて読み込もう！"}
                 </p>
               </div>
+
+              {/* 新しく追加するスポット写真 */}
+              <div className="pokipoSpotPhotoBox">
+                <img
+                  src={`/spot-photos/Spot${spot.number}.jpg`}
+                  alt={`${spot.spotName}のポスター掲示場所`}
+                  className="pokipoSpotPhoto"
+                  loading="lazy"
+                />
+
+                <span className="pokipoSpotPhotoLabel">
+                  SPOT {spot.number}
+                </span>
+              </div>
             </article>
           );
         })}
       </section>
 
-      {/* COMPLETE */}
+      {/* 全スポット完走 */}
       {completed && (
         <button
           type="button"
@@ -406,6 +400,83 @@ export default function PokipoStampScreen({
       )}
 
       {children}
+
+      {/* 追加写真のスタイル */}
+      <style jsx>{`
+        .pokipoPhotoSpotCard {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+          overflow: hidden;
+        }
+
+        .pokipoPhotoSpotCard .spotTimeline {
+          flex-shrink: 0;
+        }
+
+        .pokipoPhotoSpotCard .spotContent {
+          flex: 1 1 auto;
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
+
+        .pokipoSpotPhotoBox {
+          position: relative;
+          flex: 0 0 92px;
+          width: 92px;
+          height: 80px;
+          border-radius: 12px;
+          overflow: hidden;
+          background: #f5eeea;
+          border: 1px solid rgba(150, 80, 65, 0.12);
+          box-shadow: 0 3px 10px rgba(65, 34, 28, 0.08);
+        }
+
+        .pokipoSpotPhoto {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .pokipoSpotPhotoLabel {
+          position: absolute;
+          right: 4px;
+          bottom: 4px;
+          padding: 3px 5px;
+          border-radius: 5px;
+          background: rgba(35, 30, 30, 0.7);
+          color: #fff;
+          font-size: 8px;
+          font-weight: 800;
+          letter-spacing: 0.04em;
+          pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+          .pokipoPhotoSpotCard {
+            gap: 7px;
+          }
+
+          .pokipoSpotPhotoBox {
+            flex-basis: 76px;
+            width: 76px;
+            height: 72px;
+            border-radius: 9px;
+          }
+
+          .pokipoPhotoSpotCard .spotContent h2 {
+            font-size: 13px;
+            line-height: 1.4;
+          }
+
+          .pokipoPhotoSpotCard .spotContent p {
+            font-size: 10px;
+            line-height: 1.5;
+          }
+        }
+      `}</style>
     </section>
   );
 }
