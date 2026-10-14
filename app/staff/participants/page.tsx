@@ -2,7 +2,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../../lib/supabase-client";
 import type { CSSProperties } from "react";
 
 type Stamp = {
@@ -19,7 +20,7 @@ type Participant = {
   stamps: Stamp[];
 };
 
-const spotNames: Record<string, string> = {
+const SPOTS: Record<string, string> = {
   spot1: "学生センター／雄飛ホール",
   spot2: "東棟2階",
   spot3: "ゆうちょ銀行ATM付近",
@@ -27,385 +28,623 @@ const spotNames: Record<string, string> = {
   spot5: "セブンイレブン前掲示板",
 };
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
-    ""
-);
+const DATE_OPTIONS: Intl.DateTimeFormatOptions = {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: false,
+};
 
-function dateText(value?: string) {
-  return value
-    ? new Date(value).toLocaleString("ja-JP", {
-        timeZone: "Asia/Tokyo",
-      })
-    : "未取得";
+function formatDate(value?: string | null) {
+  if (!value) return "未取得";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "日時不明";
+  return date.toLocaleString("ja-JP", DATE_OPTIONS);
 }
 
-function elapsedSeconds(stamps: Stamp[]) {
-  const normal = stamps.filter((stamp) =>
-    /^spot[1-5]$/.test(stamp.spot_id)
-  );
+function getStampInfo(stamps: Stamp[]) {
+  const earliest = new Map<string, number>();
 
-  const unique = new Map<string, number>();
+  for (const stamp of stamps) {
+    if (!/^spot[1-5]$/.test(stamp.spot_id)) continue;
 
-  for (const stamp of normal) {
-    const t = Date.parse(stamp.acquired_at);
+    const time = Date.parse(stamp.acquired_at);
+    if (!Number.isFinite(time)) continue;
 
-    if (Number.isFinite(t)) {
-      unique.set(
-        stamp.spot_id,
-        Math.min(t, unique.get(stamp.spot_id) ?? t)
-      );
+    const previous = earliest.get(stamp.spot_id);
+    if (previous === undefined || time < previous) {
+      earliest.set(stamp.spot_id, time);
     }
   }
 
-  if (unique.size < 5) return null;
+  const times = [...earliest.values()];
 
-  const times = [...unique.values()];
-
-  return Math.round(
-    (Math.max(...times) - Math.min(...times)) / 1000
-  );
-}
-
-export default function ParticipantsPage() {
-  const [rows, setRows] = useState<Participant[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [keyword, setKeyword] = useState("");
-  const [onlyFlagged, setOnlyFlagged] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [threshold, setThreshold] = useState(60);
-
-  async function load() {
-    setLoading(true);
-    setError("");
-
-    const { data: userData, error: authError } =
-      await supabase.auth.getUser();
-
-    if (authError || !userData.user) {
-      setRows([]);
-      setError(
-        "管理者としてログインしてください。先に /staff からログインしてください。"
-      );
-      setLoading(false);
-      return;
-    }
-
-    const { data, error: rpcError } = await supabase.rpc(
-      "pokipo_furuya_participant_list"
-    );
-
-    if (rpcError) {
-      setRows([]);
-      setError(
-        "閲覧権限がないか、取得に失敗しました。lipost-furuya でログインしているか確認してください。"
-      );
-    } else {
-      setRows(
-        Array.isArray(data) ? (data as Participant[]) : []
-      );
-    }
-
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    void load();
-  }, []);
-
-  const visible = useMemo(
-    () =>
-      rows.filter((p) => {
-        const matches = [
-          p.nickname,
-          p.grade,
-          p.department,
-          p.id,
-        ].some((v) =>
-          (v ?? "")
-            .toLowerCase()
-            .includes(keyword.toLowerCase())
-        );
-
-        const seconds = elapsedSeconds(p.stamps);
-
-        return (
-          matches &&
-          (!onlyFlagged ||
-            (seconds !== null && seconds <= threshold))
-        );
-      }),
-    [rows, keyword, onlyFlagged, threshold]
-  );
-
-  const flaggedCount = rows.filter((p) => {
-    const seconds = elapsedSeconds(p.stamps);
-    return seconds !== null && seconds <= threshold;
-  }).length;
-
-  const selectedParticipant = visible.find(
-    (p) => p.id === selected
-  );
-
-  return (
-    <main
-      style={{
-        maxWidth: 1050,
-        margin: "0 auto",
-        padding: "28px 16px",
-        color: "#262626",
-        fontFamily: "system-ui, sans-serif",
-      }}
-    >
-      <h1 style={{ fontSize: 24, marginBottom: 4 }}>
-        POKIPO 参加者一覧
-      </h1>
-
-      <p style={{ color: "#666", fontSize: 13 }}>
-        管理責任者専用・閲覧のみ
-      </p>
-
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          flexWrap: "wrap",
-          alignItems: "center",
-          margin: "20px 0",
-        }}
-      >
-        <button
-          onClick={() => void load()}
-          disabled={loading}
-          style={buttonStyle}
-        >
-          再読み込み
-        </button>
-
-        <input
-          aria-label="参加者検索"
-          placeholder="ニックネーム・学年・学科で検索"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          style={inputStyle}
-        />
-
-        <label style={{ fontSize: 14 }}>
-          <input
-            type="checkbox"
-            checked={onlyFlagged}
-            onChange={(e) =>
-              setOnlyFlagged(e.target.checked)
-            }
-          />
-          要確認のみ
-        </label>
-
-        <label style={{ fontSize: 14 }}>
-          基準{" "}
-          <select
-            value={threshold}
-            onChange={(e) =>
-              setThreshold(Number(e.target.value))
-            }
-            style={inputStyle}
-          >
-            <option value={30}>30秒以内</option>
-            <option value={60}>60秒以内</option>
-            <option value={120}>2分以内</option>
-            <option value={300}>5分以内</option>
-          </select>
-        </label>
-      </div>
-
-      {error && (
-        <p role="alert" style={{ color: "#b91c1c" }}>
-          {error}
-        </p>
-      )}
-
-      {loading ? (
-        <p>読み込み中...</p>
-      ) : (
-        !error && (
-          <>
-            <p style={{ fontSize: 14 }}>
-              登録者 {rows.length}人 / 表示{" "}
-              {visible.length}人 / 要確認{" "}
-              {flaggedCount}人
-            </p>
-
-            <p style={{ fontSize: 12, color: "#666" }}>
-              「要確認」は5か所の取得時刻の差で判定しています。
-              不正取得を証明するものではありません。
-            </p>
-
-            <div style={{ overflowX: "auto" }}>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  fontSize: 14,
-                }}
-              >
-                <thead>
-                  <tr style={{ background: "#f4f4f4" }}>
-                    <th style={cell}>ニックネーム</th>
-                    <th style={cell}>学年・学科</th>
-                    <th style={cell}>登録日時</th>
-                    <th style={cell}>取得数</th>
-                    <th style={cell}>所要時間</th>
-                    <th style={cell}>確認</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {visible.map((p) => {
-                    const seconds = elapsedSeconds(p.stamps);
-
-                    const count = new Set(
-                      p.stamps
-                        .filter((s) =>
-                          /^spot[1-5]$/.test(s.spot_id)
-                        )
-                        .map((s) => s.spot_id)
-                    ).size;
-
-                    const flagged =
-                      seconds !== null &&
-                      seconds <= threshold;
-
-                    return (
-                      <tr
-                        key={p.id}
-                        style={{
-                          background: flagged
-                            ? "#fff7ed"
-                            : "white",
-                        }}
-                      >
-                        <td style={cell}>
-                          {p.nickname || "（未設定）"}
-                        </td>
-
-                        <td style={cell}>
-                          {p.grade || "—"} /{" "}
-                          {p.department || "—"}
-                        </td>
-
-                        <td style={cell}>
-                          {dateText(p.created_at)}
-                        </td>
-
-                        <td style={cell}>
-                          {count}/5
-                        </td>
-
-                        <td style={cell}>
-                          {seconds === null
-                            ? "—"
-                            : `${seconds}秒`}{" "}
-                          {flagged && (
-                            <strong
-                              style={{ color: "#a16207" }}
-                            >
-                              要確認
-                            </strong>
-                          )}
-                        </td>
-
-                        <td style={cell}>
-                          <button
-                            style={buttonStyle}
-                            onClick={() =>
-                              setSelected(
-                                selected === p.id
-                                  ? null
-                                  : p.id
-                              )
-                            }
-                          >
-                            {selected === p.id
-                              ? "閉じる"
-                              : "履歴"}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {selectedParticipant && (
-              <section
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: 10,
-                  padding: 16,
-                  marginTop: 16,
-                }}
-              >
-                <h2 style={{ fontSize: 18 }}>
-                  スタンプ取得履歴
-                </h2>
-
-                <p
-                  style={{
-                    fontSize: 12,
-                    overflowWrap: "anywhere",
-                  }}
-                >
-                  参加者ID: {selectedParticipant.id}
-                </p>
-
-                {selectedParticipant.stamps.length === 0 ? (
-                  <p>履歴なし</p>
-                ) : (
-                  <ol>
-                    {selectedParticipant.stamps.map(
-                      (stamp, i) => (
-                        <li
-                          key={`${stamp.spot_id}-${i}`}
-                        >
-                          {spotNames[stamp.spot_id] ||
-                            stamp.spot_id}
-                          ：{dateText(stamp.acquired_at)}
-                        </li>
-                      )
-                    )}
-                  </ol>
-                )}
-              </section>
-            )}
-          </>
+  const seconds =
+    earliest.size === 5
+      ? Math.round(
+          (Math.max(...times) - Math.min(...times)) / 1000
         )
-      )}
-    </main>
-  );
+      : null;
+
+  return {
+    count: earliest.size,
+    seconds,
+  };
 }
 
-const cell: CSSProperties = {
-  padding: "10px 8px",
-  borderBottom: "1px solid #e5e5e5",
+const cellStyle: CSSProperties = {
+  padding: "11px 10px",
+  borderBottom: "1px solid #e7e7e7",
   textAlign: "left",
   whiteSpace: "nowrap",
 };
 
 const buttonStyle: CSSProperties = {
-  border: "1px solid #bbb",
-  borderRadius: 6,
-  padding: "7px 12px",
-  background: "white",
+  background: "#ffffff",
+  color: "#333333",
+  padding: "9px 13px",
+  border: "1px solid #cccccc",
+  borderRadius: 8,
   cursor: "pointer",
+  fontWeight: 600,
 };
 
 const inputStyle: CSSProperties = {
-  border: "1px solid #bbb",
-  borderRadius: 6,
-  padding: "7px",
+  border: "1px solid #cccccc",
+  borderRadius: 8,
+  padding: "10px",
   maxWidth: "100%",
 };
+
+export default function ParticipantsPage() {
+  const router = useRouter();
+
+  const [participants, setParticipants] =
+    useState<Participant[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [keyword, setKeyword] = useState("");
+  const [onlyFlagged, setOnlyFlagged] = useState(false);
+  const [threshold, setThreshold] = useState(60);
+  const [selectedId, setSelectedId] =
+    useState<string | null>(null);
+
+  async function loadParticipants() {
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      const { data: authData, error: authError } =
+        await supabase.auth.getUser();
+
+      if (authError || !authData.user) {
+        setParticipants([]);
+        setErrorMessage(
+          "管理者ログインが必要です。先にスタッフ画面からログインしてください。"
+        );
+        return;
+      }
+
+      const { data: profile, error: profileError } =
+        await supabase
+          .from("staff_profiles")
+          .select("admin_id")
+          .eq("user_id", authData.user.id)
+          .maybeSingle();
+
+      if (
+        profileError ||
+        profile?.admin_id !== "lipost-furuya"
+      ) {
+        setParticipants([]);
+        setErrorMessage(
+          "このページは lipost-furuya 専用です。閲覧権限がありません。"
+        );
+        return;
+      }
+
+      const { data, error } = await supabase.rpc(
+        "pokipo_furuya_participant_list"
+      );
+
+      if (error) {
+        console.error("参加者一覧取得エラー:", error);
+        setParticipants([]);
+        setErrorMessage(
+          "参加者一覧を取得できませんでした。SupabaseのSQL関数と権限を確認してください。"
+        );
+        return;
+      }
+
+      if (!Array.isArray(data)) {
+        setParticipants([]);
+        setErrorMessage(
+          "取得データの形式が正しくありません。"
+        );
+        return;
+      }
+
+      const normalized: Participant[] = data.map(
+        (row: Participant) => ({
+          id: row.id,
+          nickname: row.nickname,
+          grade: row.grade,
+          department: row.department,
+          created_at: row.created_at,
+          stamps: Array.isArray(row.stamps)
+            ? row.stamps
+            : [],
+        })
+      );
+
+      setParticipants(normalized);
+    } catch (error) {
+      console.error("参加者一覧通信エラー:", error);
+      setParticipants([]);
+      setErrorMessage(
+        "通信エラーが発生しました。再読み込みしてください。"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadParticipants();
+  }, []);
+
+  const visible = useMemo(() => {
+    return participants.filter((participant) => {
+      const search = keyword.trim().toLowerCase();
+
+      const matches = [
+        participant.nickname,
+        participant.grade,
+        participant.department,
+        participant.id,
+      ].some((value) =>
+        String(value ?? "").toLowerCase().includes(search)
+      );
+
+      const info = getStampInfo(participant.stamps);
+
+      const flagged =
+        info.seconds !== null &&
+        info.seconds <= threshold;
+
+      return matches && (!onlyFlagged || flagged);
+    });
+  }, [participants, keyword, onlyFlagged, threshold]);
+
+  const flaggedCount = participants.filter((participant) => {
+    const info = getStampInfo(participant.stamps);
+
+    return (
+      info.seconds !== null &&
+      info.seconds <= threshold
+    );
+  }).length;
+
+  const selectedParticipant = participants.find(
+    (participant) => participant.id === selectedId
+  );
+
+  return (
+    <main
+      className="shell"
+      style={{
+        minHeight: "100vh",
+        padding: "24px 12px",
+      }}
+    >
+      <section
+        style={{
+          width: "100%",
+          maxWidth: 1100,
+          margin: "0 auto",
+          color: "#242424",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            marginBottom: 20,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                color: "#b91c1c",
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              POKIPO STAFF / PRIVATE
+            </div>
+
+            <h1
+              style={{
+                fontSize: 25,
+                margin: "8px 0",
+              }}
+            >
+              参加者一覧・読み取り履歴
+            </h1>
+
+            <p style={{ color: "#666", fontSize: 13 }}>
+              lipost-furuya 限定・閲覧専用
+            </p>
+          </div>
+
+          <button
+            type="button"
+            style={buttonStyle}
+            onClick={() => router.push("/staff")}
+          >
+            スタッフメニューへ戻る
+          </button>
+        </div>
+
+        {errorMessage && (
+          <div
+            role="alert"
+            style={{
+              background: "#fff1f2",
+              border: "1px solid #fecdd3",
+              borderRadius: 10,
+              padding: 16,
+              color: "#991b1b",
+              marginBottom: 20,
+            }}
+          >
+            {errorMessage}
+          </div>
+        )}
+
+        {loading ? (
+          <p>参加者情報を読み込み中...</p>
+        ) : !errorMessage ? (
+          <>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit,minmax(150px,1fr))",
+                gap: 12,
+                marginBottom: 20,
+              }}
+            >
+              {[
+                {
+                  label: "参加登録者",
+                  value: participants.length,
+                },
+                {
+                  label: "5か所達成者",
+                  value: participants.filter(
+                    (p) => getStampInfo(p.stamps).count === 5
+                  ).length,
+                },
+                {
+                  label: "短時間取得・要確認",
+                  value: flaggedCount,
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  style={{
+                    background: "#fff",
+                    padding: 18,
+                    borderRadius: 12,
+                    border: "1px solid #e5e5e5",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#777",
+                    }}
+                  >
+                    {item.label}
+                  </div>
+
+                  <strong style={{ fontSize: 26 }}>
+                    {item.value}
+                  </strong>
+                  <span style={{ fontSize: 12 }}> 人</span>
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                padding: 16,
+                background: "#fff",
+                border: "1px solid #e5e5e5",
+                borderRadius: 12,
+                marginBottom: 20,
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              <input
+                aria-label="参加者検索"
+                style={inputStyle}
+                placeholder="ニックネーム・学年・学科を検索"
+                value={keyword}
+                onChange={(event) =>
+                  setKeyword(event.target.value)
+                }
+              />
+
+              <label style={{ fontSize: 14 }}>
+                <input
+                  type="checkbox"
+                  checked={onlyFlagged}
+                  onChange={(event) =>
+                    setOnlyFlagged(event.target.checked)
+                  }
+                />
+                要確認のみ
+              </label>
+
+              <label style={{ fontSize: 14 }}>
+                判定基準：
+                <select
+                  style={inputStyle}
+                  value={threshold}
+                  onChange={(event) =>
+                    setThreshold(Number(event.target.value))
+                  }
+                >
+                  <option value={30}>30秒以内</option>
+                  <option value={60}>60秒以内</option>
+                  <option value={120}>2分以内</option>
+                  <option value={300}>5分以内</option>
+                  <option value={600}>10分以内</option>
+                </select>
+              </label>
+
+              <button
+                style={buttonStyle}
+                type="button"
+                onClick={() => void loadParticipants()}
+              >
+                更新
+              </button>
+            </div>
+
+            <div
+              style={{
+                padding: 16,
+                background: "#fff",
+                border: "1px solid #e5e5e5",
+                borderRadius: 12,
+              }}
+            >
+              <p style={{ fontSize: 14, marginBottom: 12 }}>
+                表示：{visible.length}人
+              </p>
+
+              <div style={{ overflowX: "auto" }}>
+                <table
+                  style={{
+                    width: "100%",
+                    borderCollapse: "collapse",
+                    fontSize: 13,
+                  }}
+                >
+                  <thead>
+                    <tr style={{ background: "#f5f5f5" }}>
+                      <th style={cellStyle}>ニックネーム</th>
+                      <th style={cellStyle}>学年</th>
+                      <th style={cellStyle}>学科</th>
+                      <th style={cellStyle}>登録日時</th>
+                      <th style={cellStyle}>取得</th>
+                      <th style={cellStyle}>所要時間</th>
+                      <th style={cellStyle}>詳細</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {visible.map((participant) => {
+                      const info = getStampInfo(
+                        participant.stamps
+                      );
+
+                      const flagged =
+                        info.seconds !== null &&
+                        info.seconds <= threshold;
+
+                      return (
+                        <tr
+                          key={participant.id}
+                          style={{
+                            background: flagged
+                              ? "#fff7ed"
+                              : "#ffffff",
+                          }}
+                        >
+                          <td style={cellStyle}>
+                            {participant.nickname || "未設定"}
+                          </td>
+
+                          <td style={cellStyle}>
+                            {participant.grade || "—"}
+                          </td>
+
+                          <td style={cellStyle}>
+                            {participant.department || "—"}
+                          </td>
+
+                          <td style={cellStyle}>
+                            {formatDate(participant.created_at)}
+                          </td>
+
+                          <td style={cellStyle}>
+                            {info.count}/5
+                          </td>
+
+                          <td style={cellStyle}>
+                            {info.seconds === null
+                              ? "—"
+                              : `${info.seconds}秒`}
+
+                            {flagged && (
+                              <div
+                                style={{
+                                  color: "#b45309",
+                                  fontWeight: 700,
+                                  fontSize: 11,
+                                }}
+                              >
+                                要確認
+                              </div>
+                            )}
+                          </td>
+
+                          <td style={cellStyle}>
+                            <button
+                              type="button"
+                              style={buttonStyle}
+                              onClick={() =>
+                                setSelectedId(
+                                  selectedId === participant.id
+                                    ? null
+                                    : participant.id
+                                )
+                              }
+                            >
+                              履歴
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                {visible.length === 0 && (
+                  <p style={{ padding: 16 }}>
+                    該当する参加者はいません。
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {selectedParticipant && (
+              <section
+                style={{
+                  marginTop: 20,
+                  padding: 20,
+                  borderRadius: 12,
+                  border: "1px solid #ddd",
+                  background: "#fff",
+                }}
+              >
+                <h2 style={{ fontSize: 19 }}>
+                  スタンプ取得履歴
+                </h2>
+
+                <p>
+                  参加者：
+                  <strong>
+                    {selectedParticipant.nickname || "未設定"}
+                  </strong>
+                </p>
+
+                <p
+                  style={{
+                    fontSize: 11,
+                    overflowWrap: "anywhere",
+                    color: "#666",
+                  }}
+                >
+                  参加者ID：{selectedParticipant.id}
+                </p>
+
+                <div style={{ marginTop: 18 }}>
+                  {Object.entries(SPOTS).map(
+                    ([spotId, spotName]) => {
+                      const record =
+                        selectedParticipant.stamps
+                          .filter(
+                            (stamp) =>
+                              stamp.spot_id === spotId
+                          )
+                          .sort(
+                            (a, b) =>
+                              Date.parse(a.acquired_at) -
+                              Date.parse(b.acquired_at)
+                          )[0];
+
+                      return (
+                        <div
+                          key={spotId}
+                          style={{
+                            borderBottom: "1px solid #eee",
+                            padding: "12px 0",
+                          }}
+                        >
+                          <strong>{spotName}</strong>
+
+                          <div
+                            style={{
+                              color: record ? "#333" : "#999",
+                              marginTop: 5,
+                              fontSize: 13,
+                            }}
+                          >
+                            {record
+                              ? formatDate(record.acquired_at)
+                              : "未取得"}
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  style={{
+                    ...buttonStyle,
+                    marginTop: 18,
+                  }}
+                  onClick={() => setSelectedId(null)}
+                >
+                  詳細を閉じる
+                </button>
+              </section>
+            )}
+
+            <p
+              style={{
+                color: "#666",
+                fontSize: 12,
+                lineHeight: 1.8,
+                marginTop: 20,
+              }}
+            >
+              ※「要確認」は5か所の取得時刻の差が
+              設定基準以下だった参加者を示します。
+              QRコードの写真共有や不正利用を
+              断定するものではありません。
+            </p>
+          </>
+        ) : null}
+      </section>
+    </main>
+  );
+}
