@@ -142,7 +142,7 @@ const MENU_SECTIONS: MenuSection[] = [
       {
         icon: "USER",
         label: "PARTICIPANTS",
-        title: "参加者一覧・読み取り履歴",
+        title: "参加者一覧・読み取り履歴（管理責任者専用）",
         description: "参加者別の5か所の取得時刻や短時間取得を確認します。",
         href: "/staff/participants",
         variant: "",
@@ -163,6 +163,7 @@ const MENU_SECTIONS: MenuSection[] = [
         description: "問い合わせ番号で参加者を検索し、スタンプを手動付与・削除します。",
         href: "/staff/support",
         variant: "",
+        ownerOnly: true
       },
       {
         icon: "BACK",
@@ -171,6 +172,7 @@ const MENU_SECTIONS: MenuSection[] = [
         description: "誤った景品交換記録を取り消し、未交換の状態に戻します。",
         href: "/staff/support/reward",
         variant: "",
+        ownerOnly: true
       },
     ],
   },
