@@ -42560,3 +42560,638 @@ main.shell:has(input[aria-label="参加者検索"])
     transform: none;
   }
 }
+
+
+/* =========================================
+   POKIPO STAFF OPERATIONS PAGE
+   運営チェック・CSV・自動分析
+========================================= */
+
+.pokipoOpsPage {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 10px 0 50px;
+  color: #3d2a20;
+}
+
+.pokipoOpsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  background: linear-gradient(
+    125deg,
+    #ffffff,
+    #fff1e7
+  );
+
+  border: 1px solid #ead1c4;
+  border-radius: 24px;
+  padding: 24px;
+  margin-bottom: 22px;
+
+  box-shadow:
+    0 12px 28px rgba(116, 63, 36, 0.07);
+}
+
+.pokipoOpsHeader span {
+  color: #b9232b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.pokipoOpsHeader h1 {
+  margin: 6px 0;
+  color: #c5222b;
+  font-size: clamp(23px, 4vw, 30px);
+}
+
+.pokipoOpsHeader p {
+  margin: 0;
+  color: #765b4d;
+}
+
+.pokipoOpsPage button {
+  width: auto;
+  min-height: 43px;
+  margin: 0;
+  padding: 9px 16px;
+  border-radius: 12px;
+
+  background: linear-gradient(
+    135deg,
+    #e03942,
+    #b91d29
+  );
+
+  color: white;
+  font-weight: 800;
+}
+
+.pokipoOpsPage button:disabled {
+  background: #dddddd;
+  color: #777777;
+}
+
+.pokipoOpsCard {
+  padding: 24px;
+  margin-bottom: 20px;
+
+  background: white;
+  border: 1px solid #edd7cd;
+  border-radius: 22px;
+
+  box-shadow:
+    0 8px 28px rgba(102, 53, 28, 0.06);
+}
+
+.pokipoOpsCard h2 {
+  margin: 0 0 12px;
+  color: #53382d;
+  font-size: 20px;
+}
+
+.pokipoOpsCard p {
+  color: #6a5147;
+}
+
+.pokipoOpsTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pokipoOpsChecks {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.pokipoOpsChecks article {
+  padding: 16px;
+  border-radius: 15px;
+
+  background: #f5fbf6;
+  border: 1px solid #cde5d3;
+}
+
+.pokipoOpsChecks article.ng {
+  background: #fff4ee;
+  border-color: #efc5b7;
+}
+
+.pokipoOpsChecks article strong {
+  display: block;
+  color: #216d42;
+  font-size: 14px;
+}
+
+.pokipoOpsChecks article.ng strong {
+  color: #b3412e;
+}
+
+.pokipoOpsChecks article span {
+  display: block;
+  margin-top: 8px;
+  color: #66544b;
+  font-size: 12px;
+}
+
+.pokipoOpsSmall {
+  font-size: 12px;
+  color: #80695f !important;
+  line-height: 1.8;
+}
+
+.pokipoOpsError {
+  padding: 12px;
+  border-radius: 12px;
+  background: #fff0ed;
+  color: #b12727 !important;
+}
+
+.pokipoOpsButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.pokipoOpsReport {
+  border-left: 4px solid #d12a34;
+  padding: 5px 18px;
+
+  background: #fff8f4;
+  border-radius: 0 14px 14px 0;
+}
+
+.pokipoOpsReport p {
+  margin: 12px 0;
+  color: #4c382f;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+@media (max-width: 640px) {
+  .pokipoOpsHeader,
+  .pokipoOpsCard {
+    padding: 18px;
+  }
+
+  .pokipoOpsButtons {
+    flex-direction: column;
+  }
+
+  .pokipoOpsButtons button {
+    width: 100%;
+  }
+}
+
+
+
+/* ============================================
+   POKIPO STAFF DESIGN UNIFICATION
+   スタッフメニューの色合いに統一
+   既存CSSの最下部に追記
+============================================ */
+
+/* --------------------------------------------
+   1. スタッフ画面共通の色定義
+-------------------------------------------- */
+
+.staffDashboardPage,
+.staffSurveyPage,
+.staffRewardPage,
+.staffAnnouncementPage,
+.staffPromotionPage,
+.pokipoAnalyticsPage,
+.pokipoOpsPage,
+main.shell:has(input[aria-label="参加者検索"]) {
+  --staff-primary: #8a1822;
+  --staff-primary-dark: #70131b;
+  --staff-text: #332d29;
+  --staff-muted: #786c64;
+  --staff-border: #e8dfd8;
+  --staff-soft: #fffaf6;
+  --staff-white: #ffffff;
+  --staff-shadow: 0 8px 22px
+    rgba(55, 35, 25, 0.055);
+}
+
+/* --------------------------------------------
+   2. 見出し・説明文
+-------------------------------------------- */
+
+:is(
+  .staffDashboardPage,
+  .staffSurveyPage,
+  .staffRewardPage,
+  .staffAnnouncementPage,
+  .staffPromotionPage,
+  .pokipoAnalyticsPage,
+  .pokipoOpsPage
+) h1 {
+  color: var(--staff-text) !important;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+}
+
+:is(
+  .staffDashboardPage,
+  .staffSurveyPage,
+  .staffRewardPage,
+  .staffAnnouncementPage,
+  .staffPromotionPage,
+  .pokipoAnalyticsPage,
+  .pokipoOpsPage
+) h2 {
+  color: var(--staff-text) !important;
+}
+
+:is(
+  .staffDashboardPage,
+  .staffSurveyPage,
+  .staffRewardPage,
+  .staffAnnouncementPage,
+  .staffPromotionPage,
+  .pokipoAnalyticsPage,
+  .pokipoOpsPage
+) p {
+  color: var(--staff-muted);
+}
+
+:is(
+  .staffDashboardPage,
+  .staffSurveyPage,
+  .staffRewardPage,
+  .staffAnnouncementPage,
+  .staffPromotionPage,
+  .pokipoAnalyticsPage,
+  .pokipoOpsPage
+) :is(
+  .pokipoAnalyticsEyebrow,
+  .pokipoAnalyticsSectionHeader span,
+  .staffDashboardHeader > div > span,
+  .staffSurveyHeader > div > span,
+  .staffAnnouncementHeader > div > span,
+  .staffPromotionHeader span,
+  .pokipoOpsHeader > div > span
+) {
+  color: var(--staff-primary) !important;
+}
+
+/* --------------------------------------------
+   3. グラフ分析ページ
+-------------------------------------------- */
+
+.pokipoAnalyticsHeader {
+  background: linear-gradient(
+    135deg,
+    #fffaf6,
+    #ffffff 70%
+  ) !important;
+  border-color: var(--staff-border) !important;
+  border-radius: 19px !important;
+  box-shadow: var(--staff-shadow) !important;
+}
+
+.pokipoAnalyticsCard,
+.pokipoAnalyticsStat,
+.pokipoAnalyticsDonutCard {
+  background: var(--staff-white) !important;
+  border-color: var(--staff-border) !important;
+  border-radius: 19px !important;
+  box-shadow: var(--staff-shadow) !important;
+}
+
+.pokipoAnalyticsStat {
+  border-top-color: var(--staff-primary) !important;
+}
+
+.pokipoAnalyticsStat strong,
+.pokipoAnalyticsChartSummary strong,
+.pokipoAnalyticsRates strong,
+.pokipoAnalyticsDonut strong {
+  color: var(--staff-primary) !important;
+}
+
+.pokipoAnalyticsRates > div {
+  background: var(--staff-soft) !important;
+  border-color: var(--staff-border) !important;
+}
+
+.pokipoAnalyticsRates span,
+.pokipoAnalyticsSpotMeta span,
+.pokipoAnalyticsSpotMeta b {
+  color: var(--staff-primary) !important;
+}
+
+.pokipoAnalyticsTabs button {
+  background: #ffffff !important;
+  color: #695e58 !important;
+  border: 1px solid var(--staff-border) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.pokipoAnalyticsTabs button.active {
+  background: var(--staff-primary) !important;
+  color: #ffffff !important;
+  border-color: var(--staff-primary) !important;
+}
+
+.pokipoAnalyticsBack {
+  background: #ffffff !important;
+  color: var(--staff-primary) !important;
+  border-color: var(--staff-border) !important;
+  box-shadow: none !important;
+}
+
+.pokipoAnalyticsBarTrack span {
+  background: linear-gradient(
+    180deg,
+    #af4550,
+    #8a1822
+  ) !important;
+}
+
+.pokipoAnalyticsSpotTrack span {
+  background: linear-gradient(
+    90deg,
+    #bc6970,
+    #8a1822
+  ) !important;
+}
+
+.pokipoAnalyticsSpotTrack {
+  background: #f6efea !important;
+}
+
+.pokipoAnalyticsDonut {
+  /* 円グラフの色はTSXのインライン指定なので上書き */
+  background: conic-gradient(
+    var(--staff-primary) 0% var(--pp-percent, 0%),
+    #eee6df var(--pp-percent, 0%) 100%
+  );
+}
+
+/* TSXで指定された円グラフの割合は維持するため、
+   円グラフ本体のインライン背景は変更しない。
+   凡例のみスタッフメニューカラーに統一する。 */
+
+.pokipoAnalyticsLegendRed {
+  background: var(--staff-primary) !important;
+}
+
+.pokipoAnalyticsLegendPale {
+  background: #eee6df !important;
+}
+
+.pokipoAnalyticsReport,
+.pokipoAnalyticsMessage {
+  border-color: var(--staff-border) !important;
+}
+
+/* --------------------------------------------
+   4. 運営チェック・CSV・自動分析
+-------------------------------------------- */
+
+.pokipoOpsHeader {
+  background: linear-gradient(
+    135deg,
+    #fffaf6,
+    #ffffff 70%
+  ) !important;
+  border-color: var(--staff-border) !important;
+  border-radius: 19px !important;
+  box-shadow: var(--staff-shadow) !important;
+}
+
+.pokipoOpsCard {
+  background: #ffffff !important;
+  border-color: var(--staff-border) !important;
+  border-radius: 19px !important;
+  box-shadow: var(--staff-shadow) !important;
+}
+
+.pokipoOpsPage button:not(:disabled) {
+  background: var(--staff-primary) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--staff-primary) !important;
+  border-radius: 13px !important;
+  box-shadow: none !important;
+}
+
+.pokipoOpsPage button:not(:disabled):hover {
+  background: var(--staff-primary-dark) !important;
+}
+
+.pokipoOpsReport {
+  background: var(--staff-soft) !important;
+  border-left-color: var(--staff-primary) !important;
+}
+
+.pokipoOpsReport p {
+  color: var(--staff-text) !important;
+}
+
+/* 監視ステータスの緑と橙は
+   正常・異常の意味があるので維持する */
+
+.pokipoOpsChecks article {
+  border-radius: 15px !important;
+  box-shadow: none !important;
+}
+
+/* --------------------------------------------
+   5. 管理ダッシュボード
+-------------------------------------------- */
+
+.staffDashboardPage .staffDashboardStatCard {
+  background: #ffffff !important;
+  border-color: var(--staff-border) !important;
+  border-radius: 19px !important;
+  box-shadow: var(--staff-shadow) !important;
+}
+
+.staffDashboardPage .staffDashboardStatCard strong {
+  color: var(--staff-primary) !important;
+}
+
+.staffDashboardPage .staffSpotCard {
+  background: #ffffff !important;
+  border-color: var(--staff-border) !important;
+  border-radius: 19px !important;
+}
+
+.staffDashboardPage .staffSpotNumber {
+  background: var(--staff-primary) !important;
+  color: #ffffff !important;
+}
+
+.staffDashboardPage .staffSpotCardTitle strong,
+.staffDashboardPage .staffDashboardSectionTitle h2 {
+  color: var(--staff-text) !important;
+}
+
+.staffDashboardPage
+  .staffDashboardActions > button {
+  border-color: var(--staff-border) !important;
+  border-radius: 19px !important;
+}
+
+.staffDashboardPage
+  .staffDashboardActions > button
+  strong {
+  color: var(--staff-text) !important;
+}
+
+/* LIVEの緑色は稼働状況の意味があるので保持 */
+
+/* --------------------------------------------
+   6. アンケート・お知らせ・広告管理
+-------------------------------------------- */
+
+.staffSurveyPage .staffSurveyCounts article,
+.staffAnnouncementPage .staffAnnouncementForm,
+.staffPromotionPage .staffPromotionTabs button {
+  border-color: var(--staff-border) !important;
+  border-radius: 18px !important;
+}
+
+.staffSurveyPage .staffSurveyCounts span {
+  color: var(--staff-primary);
+}
+
+.staffSurveyPage
+  .staffSurveyCounts article.comparison {
+  background: var(--staff-primary) !important;
+  border-color: var(--staff-primary) !important;
+}
+
+.staffSurveyPage
+  .staffSurveyCounts article.comparison
+  :is(span, strong, p) {
+  color: #ffffff !important;
+}
+
+.staffPromotionPage
+  .staffPromotionTabs button.active {
+  border-color: var(--staff-primary) !important;
+  background: #fffaf6 !important;
+}
+
+/* --------------------------------------------
+   7. 参加者一覧
+   インラインスタイルより優先
+-------------------------------------------- */
+
+main.shell:has(input[aria-label="参加者検索"]) h1 {
+  color: #332d29 !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  button:not(:disabled) {
+  background: #8a1822 !important;
+  color: #ffffff !important;
+  border-color: #8a1822 !important;
+  box-shadow: none !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  button:not(:disabled):hover {
+  background: #70131b !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  input[type="checkbox"] {
+  accent-color: #8a1822 !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:first-child {
+  background: linear-gradient(
+    135deg,
+    #fffaf6,
+    #ffffff
+  ) !important;
+  border-color: #e8dfd8 !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:nth-child(2) > div {
+  border-color: #e8dfd8 !important;
+  border-top-color: #8a1822 !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  > section > div:nth-child(2) > div > strong {
+  color: #8a1822 !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  table thead tr,
+main.shell:has(input[aria-label="参加者検索"])
+  table th {
+  background: #f6efea !important;
+  color: #5a4038 !important;
+  border-bottom-color: #e8dfd8 !important;
+}
+
+main.shell:has(input[aria-label="参加者検索"])
+  table tbody tr:nth-child(even) {
+  background: #fffaf6 !important;
+}
+
+/* --------------------------------------------
+   8. 共通フォーカス表示
+-------------------------------------------- */
+
+:is(
+  .staffDashboardPage,
+  .staffSurveyPage,
+  .staffRewardPage,
+  .staffAnnouncementPage,
+  .staffPromotionPage,
+  .pokipoAnalyticsPage,
+  .pokipoOpsPage
+) :is(button, input, select, textarea):focus-visible {
+  outline: 3px solid rgba(138, 24, 34, 0.45);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------
+   9. スマートフォン
+-------------------------------------------- */
+
+@media (max-width: 640px) {
+  .pokipoAnalyticsHeader,
+  .pokipoOpsHeader {
+    padding: 18px !important;
+  }
+
+  .pokipoAnalyticsCard,
+  .pokipoOpsCard {
+    padding: 18px !important;
+  }
+
+  .pokipoAnalyticsStats {
+    gap: 9px !important;
+  }
+
+  .pokipoAnalyticsStat {
+    padding: 15px !important;
+  }
+
+  .pokipoAnalyticsSectionHeader h2 {
+    font-size: 18px !important;
+  }
+}
