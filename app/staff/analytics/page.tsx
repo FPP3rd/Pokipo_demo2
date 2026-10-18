@@ -1,20 +1,11 @@
 
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase-client";
 
-type Metric =
-  | "registered"
-  | "stamps"
-  | "completed"
-  | "exchanged";
-
+type Metric = "registered" | "stamps" | "completed" | "exchanged";
 type TrendMetric = "registered" | "completed";
 
 type Daily = {
@@ -51,73 +42,55 @@ const SPOT_NAMES: Record<string, string> = {
   spot5: "セブンイレブン付近",
 };
 
-const METRICS: {
-  key: Metric;
-  label: string;
-}[] = [
+const METRICS: { key: Metric; label: string }[] = [
   { key: "registered", label: "新規登録者" },
   { key: "stamps", label: "スタンプ取得" },
   { key: "completed", label: "新規完走者" },
   { key: "exchanged", label: "特典交換" },
 ];
 
-function numberValue(value: unknown): number {
+function num(value: unknown) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
 }
 
-function percentage(part: number, total: number) {
-  return total > 0
-    ? Math.round((part / total) * 100)
-    : 0;
+function percent(a: number, b: number) {
+  return b > 0 ? Math.round((a / b) * 100) : 0;
 }
 
-function dateLabel(value: string) {
-  const parts = value.split("-");
-  return `${Number(parts[1])}/${Number(parts[2])}`;
+function dateLabel(date: string) {
+  const [year, month, day] = date.split("-");
+  return `${Number(month)}/${Number(day)}`;
 }
 
-function fullDateLabel(value: string) {
-  const parts = value.split("-");
-  return `${parts[0]}年${Number(parts[1])}月${Number(parts[2])}日`;
+function fullDate(date: string) {
+  const [year, month, day] = date.split("-");
+  return `${year}年${Number(month)}月${Number(day)}日`;
 }
 
-function normalizeData(raw: unknown): AnalyticsData {
-  const obj =
-    raw && typeof raw === "object"
-      ? (raw as Record<string, unknown>)
-      : {};
-
-  const t =
-    obj.totals && typeof obj.totals === "object"
-      ? (obj.totals as Record<string, unknown>)
-      : {};
-
-  const daily = Array.isArray(obj.daily)
-    ? obj.daily
-    : [];
-
-  const spots = Array.isArray(obj.spots)
-    ? obj.spots
-    : [];
+function normalize(raw: unknown): AnalyticsData {
+  const obj = (raw ?? {}) as Record<string, unknown>;
+  const totals = (obj.totals ?? {}) as Record<string, unknown>;
+  const rawDaily = Array.isArray(obj.daily) ? obj.daily : [];
+  const rawSpots = Array.isArray(obj.spots) ? obj.spots : [];
 
   return {
     totals: {
-      registered: numberValue(t.registered),
-      completed: numberValue(t.completed),
-      exchanged: numberValue(t.exchanged),
-      stamps: numberValue(t.stamps),
+      registered: num(totals.registered),
+      completed: num(totals.completed),
+      exchanged: num(totals.exchanged),
+      stamps: num(totals.stamps),
     },
-    daily: daily.map((item) => ({
+    daily: rawDaily.map((item) => ({
       date: String(item.date ?? ""),
-      registered: numberValue(item.registered),
-      stamps: numberValue(item.stamps),
-      completed: numberValue(item.completed),
-      exchanged: numberValue(item.exchanged),
+      registered: num(item.registered),
+      stamps: num(item.stamps),
+      completed: num(item.completed),
+      exchanged: num(item.exchanged),
     })),
-    spots: spots.map((item) => ({
+    spots: rawSpots.map((item) => ({
       spot_id: String(item.spot_id ?? ""),
-      count: numberValue(item.count),
+      count: num(item.count),
     })),
   };
 }
@@ -128,24 +101,18 @@ function cumulativeValues(
   total: number,
   metric: TrendMetric
 ) {
-  const allDailyTotal = allDays.reduce(
+  const recentTotal = allDays.reduce(
     (sum, day) => sum + day[metric],
     0
   );
 
-  let running = Math.max(
-    0,
-    total - allDailyTotal
-  );
-
+  let running = Math.max(0, total - recentTotal);
   const firstDate = days[0]?.date;
 
-  const earlierDays = allDays.filter(
-    (day) => firstDate && day.date < firstDate
-  );
-
-  for (const day of earlierDays) {
-    running += day[metric];
+  for (const day of allDays) {
+    if (firstDate && day.date < firstDate) {
+      running += day[metric];
+    }
   }
 
   return days.map((day) => {
@@ -154,28 +121,32 @@ function cumulativeValues(
   });
 }
 
+/* =========================================
+   選択日の詳細
+========================================= */
+
 function DayDetail({
   day,
-  cumulative,
   highlighted,
+  cumulative,
 }: {
   day: Daily | null;
+  highlighted?: Metric;
   cumulative?: number;
-  highlighted?: string;
 }) {
   if (!day) {
     return (
       <div className="pokipoGraphDetail empty">
-        <span>日付を選択</span>
+        <span>日付を選択してください</span>
         <p>
-          グラフの棒または点をタップすると、
-          その日の実績が表示されます。
+          グラフの棒や点をタップすると、
+          その日の詳細人数を確認できます。
         </p>
       </div>
     );
   }
 
-  const items = [
+  const details = [
     {
       key: "registered",
       label: "新規登録者",
@@ -210,15 +181,15 @@ function DayDetail({
     >
       <div className="pokipoGraphDetailHeader">
         <span>SELECTED DATE</span>
-        <strong>{fullDateLabel(day.date)}</strong>
+        <strong>{fullDate(day.date)}</strong>
       </div>
 
       <div className="pokipoGraphDetailGrid">
-        {items.map((item) => (
+        {details.map((item) => (
           <div
             key={item.key}
             className={
-              highlighted === item.key
+              item.key === highlighted
                 ? "pokipoGraphDetailItem selected"
                 : "pokipoGraphDetailItem"
             }
@@ -235,18 +206,16 @@ function DayDetail({
       {cumulative !== undefined && (
         <p className="pokipoGraphCumulative">
           この日までの累計：
-          <strong>
-            {cumulative.toLocaleString()}人
-          </strong>
+          <strong>{cumulative.toLocaleString()}人</strong>
         </p>
       )}
     </div>
   );
 }
 
-/* =====================================
-   動く折れ線グラフ
-===================================== */
+/* =========================================
+   累計折れ線グラフ
+========================================= */
 
 function TrendChart({
   data,
@@ -262,107 +231,87 @@ function TrendChart({
   const [selectedDate, setSelectedDate] =
     useState<string | null>(null);
 
-  const values = cumulativeValues(
-    data,
-    allDays,
-    total,
-    metric
-  );
-
+  const values = cumulativeValues(data, allDays, total, metric);
   const maxValue = Math.max(1, ...values);
 
   const W = 760;
   const H = 255;
   const LEFT = 48;
-  const RIGHT = 18;
+  const RIGHT = 24;
   const TOP = 20;
   const BOTTOM = 40;
 
-  const plotW = W - LEFT - RIGHT;
-  const plotH = H - TOP - BOTTOM;
+  const plotWidth = W - LEFT - RIGHT;
+  const plotHeight = H - TOP - BOTTOM;
 
   const points = values.map((value, index) => {
     const x =
       LEFT +
-      (values.length < 2
-        ? plotW / 2
-        : (index / (values.length - 1)) * plotW);
+      (values.length <= 1
+        ? plotWidth / 2
+        : (index / (values.length - 1)) * plotWidth);
 
     const y =
-      TOP +
-      plotH * (1 - value / maxValue);
+      TOP + plotHeight * (1 - value / maxValue);
 
     return {
       x,
       y,
-      value,
       date: data[index].date,
+      value,
     };
   });
 
-  const line = points
-    .map((p) => `${p.x},${p.y}`)
-    .join(" ");
-
-  const activeIndex = data.findIndex(
+  const selectedIndex = data.findIndex(
     (day) => day.date === selectedDate
   );
 
-  const activeDay =
-    activeIndex >= 0 ? data[activeIndex] : null;
+  const selectedDay =
+    selectedIndex >= 0 ? data[selectedIndex] : null;
 
-  const activeCumulative =
-    activeIndex >= 0
-      ? values[activeIndex]
-      : undefined;
-
-  const lineKey = `${metric}-${data.length}-${data[0]?.date ?? ""}`;
+  const selectedCumulative =
+    selectedIndex >= 0 ? values[selectedIndex] : undefined;
 
   return (
     <div className="pokipoInteractiveChart">
       <div className="pokipoAnalyticsTrend">
         <svg
-          key={lineKey}
           viewBox={`0 0 ${W} ${H}`}
           role="group"
-          aria-label="累計人数推移。各点を選択できます"
+          aria-label="累計人数の推移"
         >
-          {[0, 0.25, 0.5, 0.75, 1].map(
-            (fraction) => {
-              const y =
-                TOP +
-                plotH * (1 - fraction);
+          {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
+            const y = TOP + plotHeight * (1 - fraction);
 
-              return (
-                <g key={fraction}>
-                  <line
-                    x1={LEFT}
-                    x2={W - RIGHT}
-                    y1={y}
-                    y2={y}
-                    stroke="#e8dfd8"
-                    strokeDasharray="4 5"
-                  />
-                  <text
-                    x={LEFT - 8}
-                    y={y + 4}
-                    textAnchor="end"
-                    fontSize="12"
-                    fill="#786c64"
-                  >
-                    {Math.round(
-                      maxValue * fraction
-                    )}
-                  </text>
-                </g>
-              );
-            }
-          )}
+            return (
+              <g key={fraction}>
+                <line
+                  x1={LEFT}
+                  x2={W - RIGHT}
+                  y1={y}
+                  y2={y}
+                  stroke="#e8dfd8"
+                  strokeDasharray="4 5"
+                />
+                <text
+                  x={LEFT - 8}
+                  y={y + 4}
+                  textAnchor="end"
+                  fontSize="12"
+                  fill="#786c64"
+                >
+                  {Math.round(maxValue * fraction)}
+                </text>
+              </g>
+            );
+          })}
 
           {points.length > 0 && (
             <>
               <polyline
-                points={line}
+                points={points
+                  .map((p) => `${p.x},${p.y}`)
+                  .join(" ")}
                 fill="none"
                 stroke="#8a1822"
                 strokeWidth="3.5"
@@ -372,26 +321,21 @@ function TrendChart({
               />
 
               {points.map((point, index) => {
-                const selected =
-                  point.date === selectedDate;
+                const selected = point.date === selectedDate;
 
                 return (
                   <g
                     key={point.date}
                     role="button"
                     tabIndex={0}
-                    aria-label={`${fullDateLabel(
-                      point.date
-                    )} 累計${point.value}人`}
+                    aria-label={`${fullDate(point.date)} 累計${point.value}人`}
                     aria-pressed={selected}
                     className={
                       selected
                         ? "pokipoGraphPoint selected"
                         : "pokipoGraphPoint"
                     }
-                    onClick={() =>
-                      setSelectedDate(point.date)
-                    }
+                    onClick={() => setSelectedDate(point.date)}
                     onKeyDown={(event) => {
                       if (
                         event.key === "Enter" ||
@@ -402,41 +346,35 @@ function TrendChart({
                       }
                     }}
                     style={{
-                      animationDelay: `${
-                        150 + index * 8
-                      }ms`,
+                      animationDelay: `${150 + index * 8}ms`,
                     }}
                   >
                     <circle
                       cx={point.x}
                       cy={point.y}
-                      r="13"
+                      r="14"
                       fill="transparent"
                     />
                     {selected && (
                       <circle
                         cx={point.x}
                         cy={point.y}
-                        r="9"
+                        r="10"
                         fill="#8a1822"
-                        fillOpacity="0.13"
+                        fillOpacity="0.12"
                       />
                     )}
                     <circle
                       cx={point.x}
                       cy={point.y}
-                      r={selected ? 5.8 : 3.3}
-                      fill={
-                        selected
-                          ? "#ffffff"
-                          : "#8a1822"
-                      }
+                      r={selected ? 5.5 : 3.5}
+                      fill={selected ? "#ffffff" : "#8a1822"}
                       stroke="#8a1822"
                       strokeWidth={selected ? 2.5 : 0}
                     />
                     <title>
-                      {fullDateLabel(point.date)}
-                      ：累計{point.value}人
+                      {fullDate(point.date)}：累計
+                      {point.value}人
                     </title>
                   </g>
                 );
@@ -449,21 +387,19 @@ function TrendChart({
               <text
                 x={LEFT}
                 y={H - 7}
-                fill="#786c64"
                 fontSize="12"
+                fill="#786c64"
               >
                 {dateLabel(data[0].date)}
               </text>
               <text
                 x={W - RIGHT}
                 y={H - 7}
-                fill="#786c64"
                 fontSize="12"
+                fill="#786c64"
                 textAnchor="end"
               >
-                {dateLabel(
-                  data[data.length - 1].date
-                )}
+                {dateLabel(data[data.length - 1].date)}
               </text>
             </>
           )}
@@ -471,17 +407,17 @@ function TrendChart({
       </div>
 
       <DayDetail
-        day={activeDay}
-        cumulative={activeCumulative}
+        day={selectedDay}
+        cumulative={selectedCumulative}
         highlighted={metric}
       />
     </div>
   );
 }
 
-/* =====================================
-   動く棒グラフ
-===================================== */
+/* =========================================
+   日別棒グラフ
+========================================= */
 
 function BarChart({
   data,
@@ -504,32 +440,26 @@ function BarChart({
   );
 
   const selectedDay =
-    data.find(
-      (day) => day.date === selectedDate
-    ) ?? null;
+    data.find((day) => day.date === selectedDate) ?? null;
+
+  const unit =
+    metric === "stamps" || metric === "exchanged"
+      ? "件"
+      : "人";
 
   return (
     <div className="pokipoInteractiveChart">
       <div className="pokipoAnalyticsChartSummary">
         <span>選択期間の合計</span>
         <strong>
-          {total.toLocaleString()}
-          {metric === "stamps" || metric === "exchanged"
-            ? " 件"
-            : " 人"}
+          {total.toLocaleString()} {unit}
         </strong>
       </div>
 
-      <div
-        className="pokipoAnalyticsBars pokipoGraphAnimatedBars"
-        key={`${metric}-${data.length}-${data[0]?.date ?? ""}`}
-      >
+      <div className="pokipoAnalyticsBars pokipoGraphAnimatedBars">
         {data.map((day, index) => {
-          const selected =
-            selectedDate === day.date;
-
-          const height =
-            (day[metric] / maxValue) * 100;
+          const selected = selectedDate === day.date;
+          const height = (day[metric] / maxValue) * 100;
 
           return (
             <button
@@ -540,12 +470,10 @@ function BarChart({
                   ? "pokipoAnalyticsBarColumn pokipoGraphBarButton selected"
                   : "pokipoAnalyticsBarColumn pokipoGraphBarButton"
               }
-              onClick={() =>
-                setSelectedDate(day.date)
-              }
+              onClick={() => setSelectedDate(day.date)}
               aria-pressed={selected}
-              aria-label={`${fullDateLabel(day.date)}：${day[metric]}件`}
-              title={`${day.date}：${day[metric]}件`}
+              aria-label={`${fullDate(day.date)}：${day[metric]}${unit}`}
+              title={`${day.date}：${day[metric]}${unit}`}
             >
               <span className="pokipoAnalyticsBarTrack">
                 <span
@@ -558,30 +486,24 @@ function BarChart({
                   }}
                 />
               </span>
-
-              <small>
-                {dateLabel(day.date)}
-              </small>
+              <small>{dateLabel(day.date)}</small>
             </button>
           );
         })}
       </div>
 
       <p className="pokipoAnalyticsNote">
-        棒グラフをタップすると、その日の詳細が表示されます。
+        棒グラフをタップすると、その日の詳細を表示します。
       </p>
 
-      <DayDetail
-        day={selectedDay}
-        highlighted={metric}
-      />
+      <DayDetail day={selectedDay} highlighted={metric} />
     </div>
   );
 }
 
-/* =====================================
+/* =========================================
    円グラフ
-===================================== */
+========================================= */
 
 function DonutChart({
   title,
@@ -597,11 +519,12 @@ function DonutChart({
   remainingLabel: string;
 }) {
   const achieved = Math.min(
-    Math.max(good, 0),
-    Math.max(total, 0)
+    Math.max(0, good),
+    Math.max(0, total)
   );
+
   const remaining = Math.max(0, total - achieved);
-  const percent = percentage(achieved, total);
+  const rate = percent(achieved, total);
 
   return (
     <div className="pokipoAnalyticsDonutCard">
@@ -612,15 +535,15 @@ function DonutChart({
           className="pokipoAnalyticsDonut pokipoGraphAnimatedDonut"
           style={{
             background: `conic-gradient(
-              #8a1822 0% ${percent}%,
-              #eee6df ${percent}% 100%
+              #8a1822 0% ${rate}%,
+              #eee6df ${rate}% 100%
             )`,
           }}
           role="img"
-          aria-label={`${goodLabel} ${percent}%`}
+          aria-label={`${goodLabel} ${rate}%`}
         >
           <div>
-            <strong>{percent}%</strong>
+            <strong>{rate}%</strong>
           </div>
         </div>
 
@@ -628,16 +551,12 @@ function DonutChart({
           <p>
             <i className="pokipoAnalyticsLegendRed" />
             {goodLabel}
-            <strong>
-              {achieved.toLocaleString()}人
-            </strong>
+            <strong>{achieved.toLocaleString()}人</strong>
           </p>
           <p>
             <i className="pokipoAnalyticsLegendPale" />
             {remainingLabel}
-            <strong>
-              {remaining.toLocaleString()}人
-            </strong>
+            <strong>{remaining.toLocaleString()}人</strong>
           </p>
         </div>
       </div>
@@ -645,23 +564,17 @@ function DonutChart({
   );
 }
 
-/* =====================================
-   スポット別
-===================================== */
+/* =========================================
+   スポット別読み取り人数
+========================================= */
 
-function SpotChart({
-  spots,
-}: {
-  spots: Spot[];
-}) {
+function SpotChart({ spots }: { spots: Spot[] }) {
   const rows = Object.entries(SPOT_NAMES).map(
     ([id, name]) => ({
       id,
       name,
       count:
-        spots.find(
-          (spot) => spot.spot_id === id
-        )?.count ?? 0,
+        spots.find((spot) => spot.spot_id === id)?.count ?? 0,
     })
   );
 
@@ -673,7 +586,7 @@ function SpotChart({
   const [selectedSpot, setSelectedSpot] =
     useState<string | null>(null);
 
-  const selectedRow = rows.find(
+  const selected = rows.find(
     (row) => row.id === selectedSpot
   );
 
@@ -689,16 +602,12 @@ function SpotChart({
                 ? "pokipoAnalyticsSpotRow pokipoGraphSpotButton selected"
                 : "pokipoAnalyticsSpotRow pokipoGraphSpotButton"
             }
-            onClick={() =>
-              setSelectedSpot(spot.id)
-            }
+            onClick={() => setSelectedSpot(spot.id)}
           >
             <span className="pokipoAnalyticsSpotMeta">
               <span>SPOT {index + 1}</span>
               <strong>{spot.name}</strong>
-              <b>
-                {spot.count.toLocaleString()}人
-              </b>
+              <b>{spot.count.toLocaleString()}人</b>
             </span>
 
             <span className="pokipoAnalyticsSpotTrack">
@@ -716,18 +625,13 @@ function SpotChart({
         ))}
       </div>
 
-      {selectedRow && (
-        <div
-          className="pokipoGraphSpotDetail"
-          role="status"
-        >
+      {selected && (
+        <div className="pokipoGraphSpotDetail" role="status">
           <span>選択したスポット</span>
-          <strong>{selectedRow.name}</strong>
+          <strong>{selected.name}</strong>
           <p>
             累計読み取り人数：
-            <b>
-              {selectedRow.count.toLocaleString()}人
-            </b>
+            <b>{selected.count.toLocaleString()}人</b>
           </p>
         </div>
       )}
@@ -735,31 +639,22 @@ function SpotChart({
   );
 }
 
-/* =====================================
+/* =========================================
    メインページ
-===================================== */
+========================================= */
 
 export default function StaffAnalyticsPage() {
   const router = useRouter();
 
-  const [authorized, setAuthorized] =
-    useState(false);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [message, setMessage] =
-    useState("");
-
+  const [authorized, setAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
   const [data, setData] =
     useState<AnalyticsData | null>(null);
 
-  const [period, setPeriod] =
-    useState(14);
-
+  const [period, setPeriod] = useState(14);
   const [barMetric, setBarMetric] =
     useState<Metric>("registered");
-
   const [trendMetric, setTrendMetric] =
     useState<TrendMetric>("registered");
 
@@ -773,28 +668,22 @@ export default function StaffAnalyticsPage() {
       if (!active) return;
 
       if (error || !auth.user) {
-        setMessage(
-          "スタッフログインが必要です。"
-        );
+        setMessage("スタッフログインが必要です。");
         setLoading(false);
         return;
       }
 
-      const {
-        data: profile,
-        error: profileError,
-      } = await supabase
-        .from("staff_profiles")
-        .select("user_id")
-        .eq("user_id", auth.user.id)
-        .maybeSingle();
+      const { data: profile, error: profileError } =
+        await supabase
+          .from("staff_profiles")
+          .select("user_id")
+          .eq("user_id", auth.user.id)
+          .maybeSingle();
 
       if (!active) return;
 
       if (profileError || !profile) {
-        setMessage(
-          "スタッフ権限がありません。"
-        );
+        setMessage("スタッフ権限がありません。");
         setLoading(false);
         return;
       }
@@ -815,26 +704,18 @@ export default function StaffAnalyticsPage() {
     let active = true;
 
     async function load() {
-      const {
-        data: result,
-        error,
-      } = await supabase.rpc(
-        "pokipo_staff_analytics"
-      );
+      const { data: result, error } =
+        await supabase.rpc("pokipo_staff_analytics");
 
       if (!active) return;
 
       if (error) {
-        console.error(
-          "分析データ取得エラー:",
-          error
-        );
-
+        console.error("分析データ取得エラー:", error);
         setMessage(
-          "分析データの取得に失敗しました。SQL関数を確認してください。"
+          "分析データを取得できませんでした。"
         );
       } else {
-        setData(normalizeData(result));
+        setData(normalize(result));
         setMessage("");
       }
 
@@ -843,16 +724,11 @@ export default function StaffAnalyticsPage() {
 
     void load();
 
-    const timer = window.setInterval(
-      () => {
-        if (
-          document.visibilityState === "visible"
-        ) {
-          void load();
-        }
-      },
-      60000
-    );
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void load();
+      }
+    }, 60000);
 
     return () => {
       active = false;
@@ -860,25 +736,50 @@ export default function StaffAnalyticsPage() {
     };
   }, [authorized]);
 
-  const displayedDays = useMemo(() => {
-    return data?.daily.slice(-period) ?? [];
-  }, [data, period]);
+  const displayedDays = useMemo(
+    () => data?.daily.slice(-period) ?? [],
+    [data, period]
+  );
 
   const totals = data?.totals;
 
-  const completionRate = percentage(
+  const completionRate = percent(
     totals?.completed ?? 0,
     totals?.registered ?? 0
   );
 
-  const exchangeRate = percentage(
+  const exchangeRate = percent(
     totals?.exchanged ?? 0,
     totals?.completed ?? 0
   );
 
+  const summaryCards = [
+    {
+      label: "登録者",
+      value: totals?.registered ?? 0,
+      unit: "人",
+    },
+    {
+      label: "完走者",
+      value: totals?.completed ?? 0,
+      unit: "人",
+    },
+    {
+      label: "交換済み",
+      value: totals?.exchanged ?? 0,
+      unit: "人",
+    },
+    {
+      label: "スタンプ取得件数",
+      value: totals?.stamps ?? 0,
+      unit: "件",
+    },
+  ];
+
   return (
     <main className="shell">
       <section className="pokipoAnalyticsPage">
+
         <header className="pokipoAnalyticsHeader">
           <div>
             <span className="pokipoAnalyticsEyebrow">
@@ -919,50 +820,26 @@ export default function StaffAnalyticsPage() {
 
         {!loading && data && (
           <>
+            {/* 4枚の集計カード：二重divなし */}
             <div className="pokipoAnalyticsStats">
+              {summaryCards.map((item) => (
+                <article
+                  className="pokipoAnalyticsStat"
+                  key={item.label}
+                >
+                  <span>{item.label}</span>
 
-<div className="pokipoAnalyticsStats">
-  {[
-    {
-      label: "登録者",
-      value: totals?.registered ?? 0,
-      unit: "人",
-    },
-    {
-      label: "完走者",
-      value: totals?.completed ?? 0,
-      unit: "人",
-    },
-    {
-      label: "交換済み",
-      value: totals?.exchanged ?? 0,
-      unit: "人",
-    },
-    {
-      label: "スタンプ取得件数",
-      value: totals?.stamps ?? 0,
-      unit: "件",
-    },
-  ].map((item) => (
-    <article
-      className="pokipoAnalyticsStat"
-      key={item.label}
-    >
-      <span>{item.label}</span>
-
-      <div className="pokipoAnalyticsStatValue">
-        <strong>
-          {item.value.toLocaleString()}
-        </strong>
-
-        <small>{item.unit}</small>
-      </div>
-    </article>
-  ))}
-</div>
-
+                  <div className="pokipoAnalyticsStatValue">
+                    <strong>
+                      {item.value.toLocaleString()}
+                    </strong>
+                    <small>{item.unit}</small>
+                  </div>
+                </article>
+              ))}
             </div>
 
+            {/* 累計人数の推移 */}
             <section className="pokipoAnalyticsCard">
               <div className="pokipoAnalyticsSectionHeader">
                 <div>
@@ -971,7 +848,7 @@ export default function StaffAnalyticsPage() {
                 </div>
               </div>
 
-              <div className="pokipoAnalyticsControls">
+              <div className="pokipoAnalyticsControls pokipoAnalyticsCenteredControls">
                 <div className="pokipoAnalyticsTabs">
                   <button
                     type="button"
@@ -1003,24 +880,18 @@ export default function StaffAnalyticsPage() {
                 </div>
 
                 <div className="pokipoAnalyticsTabs">
-                  {[7, 14, 30, 90].map(
-                    (days) => (
-                      <button
-                        type="button"
-                        key={days}
-                        className={
-                          period === days
-                            ? "active"
-                            : ""
-                        }
-                        onClick={() =>
-                          setPeriod(days)
-                        }
-                      >
-                        {days}日
-                      </button>
-                    )
-                  )}
+                  {[7, 14, 30, 90].map((days) => (
+                    <button
+                      type="button"
+                      key={days}
+                      className={
+                        period === days ? "active" : ""
+                      }
+                      onClick={() => setPeriod(days)}
+                    >
+                      {days}日
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -1037,6 +908,7 @@ export default function StaffAnalyticsPage() {
               />
             </section>
 
+            {/* 日別実績 */}
             <section className="pokipoAnalyticsCard">
               <div className="pokipoAnalyticsSectionHeader">
                 <div>
@@ -1045,21 +917,19 @@ export default function StaffAnalyticsPage() {
                 </div>
               </div>
 
-              <div className="pokipoAnalyticsTabs">
-                {METRICS.map((metric) => (
+              <div className="pokipoAnalyticsTabs pokipoAnalyticsCenteredTabs">
+                {METRICS.map((item) => (
                   <button
                     type="button"
-                    key={metric.key}
+                    key={item.key}
                     className={
-                      barMetric === metric.key
-                        ? "active"
-                        : ""
+                      barMetric === item.key ? "active" : ""
                     }
                     onClick={() =>
-                      setBarMetric(metric.key)
+                      setBarMetric(item.key)
                     }
                   >
-                    {metric.label}
+                    {item.label}
                   </button>
                 ))}
               </div>
@@ -1071,6 +941,7 @@ export default function StaffAnalyticsPage() {
               />
             </section>
 
+            {/* スポット別実績 */}
             <section className="pokipoAnalyticsCard">
               <div className="pokipoAnalyticsSectionHeader">
                 <div>
@@ -1087,6 +958,7 @@ export default function StaffAnalyticsPage() {
               </p>
             </section>
 
+            {/* 完走率・交換率 */}
             <section className="pokipoAnalyticsCard">
               <div className="pokipoAnalyticsSectionHeader">
                 <div>
@@ -1098,46 +970,30 @@ export default function StaffAnalyticsPage() {
               <div className="pokipoAnalyticsRates">
                 <div>
                   <span>COMPLETION RATE</span>
-                  <strong>
-                    {completionRate}%
-                  </strong>
-                  <p>
-                    参加者のうち完走した割合
-                  </p>
+                  <strong>{completionRate}%</strong>
+                  <p>参加者のうち完走した割合</p>
                 </div>
 
                 <div>
                   <span>EXCHANGE RATE</span>
-                  <strong>
-                    {exchangeRate}%
-                  </strong>
-                  <p>
-                    完走者のうち特典交換した割合
-                  </p>
+                  <strong>{exchangeRate}%</strong>
+                  <p>完走者のうち特典交換した割合</p>
                 </div>
               </div>
 
               <div className="pokipoAnalyticsDonuts">
                 <DonutChart
                   title="参加者の完走状況"
-                  good={
-                    totals?.completed ?? 0
-                  }
-                  total={
-                    totals?.registered ?? 0
-                  }
+                  good={totals?.completed ?? 0}
+                  total={totals?.registered ?? 0}
                   goodLabel="完走"
                   remainingLabel="未完走"
                 />
 
                 <DonutChart
                   title="完走者の交換状況"
-                  good={
-                    totals?.exchanged ?? 0
-                  }
-                  total={
-                    totals?.completed ?? 0
-                  }
+                  good={totals?.exchanged ?? 0}
+                  total={totals?.completed ?? 0}
                   goodLabel="交換済み"
                   remainingLabel="未交換"
                 />
@@ -1146,10 +1002,8 @@ export default function StaffAnalyticsPage() {
 
             <p className="pokipoAnalyticsFootnote">
               日付は日本時間です。
-              日別実績は直近90日分を使用しています。
+              日別実績は直近90日分の記録を使用しています。
               データは画面表示中、約60秒ごとに更新されます。
-              各日の人数は登録・完走・交換の記録から
-              集計した数値です。
             </p>
           </>
         )}

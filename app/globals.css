@@ -44266,3 +44266,511 @@ main.shell:has(input[aria-label="参加者検索"])
     font-size: 11px;
   }
 }
+
+
+/* ============================================
+   POKIPO ANALYTICS LAYOUT FIX
+   集計カード・グラフ切り替えの配置修正
+============================================ */
+
+/* 集計カードを4枚均等に並べる */
+
+.pokipoAnalyticsPage .pokipoAnalyticsStats {
+  display: grid !important;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+}
+
+.pokipoAnalyticsPage .pokipoAnalyticsStat {
+  min-width: 0 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  text-align: center !important;
+}
+
+.pokipoAnalyticsPage .pokipoAnalyticsStat > span {
+  display: block;
+  text-align: center !important;
+  line-height: 1.5;
+  min-height: 2.4em;
+}
+
+.pokipoAnalyticsPage .pokipoAnalyticsStatValue {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 5px !important;
+  width: 100% !important;
+  margin-top: 8px !important;
+  text-align: center !important;
+}
+
+.pokipoAnalyticsPage
+  .pokipoAnalyticsStatValue strong {
+  margin: 0 !important;
+  color: #8a1822 !important;
+  font-size: clamp(23px, 3vw, 34px) !important;
+}
+
+.pokipoAnalyticsPage
+  .pokipoAnalyticsStatValue small {
+  color: #786c64 !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+/* 累計登録者・累計完走者の切り替えを中央へ */
+
+.pokipoAnalyticsPage .pokipoAnalyticsCenteredControls {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 12px 22px !important;
+  margin-bottom: 14px;
+}
+
+.pokipoAnalyticsPage .pokipoAnalyticsCenteredTabs {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  gap: 7px !important;
+}
+
+.pokipoAnalyticsPage
+  .pokipoAnalyticsCenteredControls
+  .pokipoAnalyticsTabs {
+  justify-content: center !important;
+  margin-bottom: 0 !important;
+}
+
+/* グラフ本体を横幅いっぱいに */
+
+.pokipoAnalyticsPage .pokipoInteractiveChart {
+  width: 100%;
+  min-width: 0;
+}
+
+.pokipoAnalyticsPage .pokipoAnalyticsTrend {
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.pokipoAnalyticsPage .pokipoAnalyticsCard {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* タブレット */
+
+@media (max-width: 900px) {
+  .pokipoAnalyticsPage .pokipoAnalyticsStats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* スマートフォン */
+
+@media (max-width: 640px) {
+  .pokipoAnalyticsPage .pokipoAnalyticsStats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px !important;
+  }
+
+  .pokipoAnalyticsPage .pokipoAnalyticsStat {
+    padding: 15px 9px !important;
+  }
+
+  .pokipoAnalyticsPage
+    .pokipoAnalyticsStatValue strong {
+    font-size: 27px !important;
+  }
+
+  .pokipoAnalyticsPage .pokipoAnalyticsCenteredControls {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .pokipoAnalyticsPage
+    .pokipoAnalyticsCenteredControls
+    .pokipoAnalyticsTabs {
+    width: 100%;
+    justify-content: center !important;
+  }
+}
+
+
+/* ============================================
+   POKIPO STAFF DASHBOARD
+   スタッフメニューに戻るボタン
+============================================ */
+
+.staffDashboardBackArea {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin: 12px 0 16px;
+}
+
+.staffDashboardPage .staffDashboardBackButton {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+
+  width: 100%;
+  min-height: 40px;
+  padding: 10px 16px;
+
+  background: #ffffff !important;
+  color: #8a1822 !important;
+
+  border: 1px solid #e8dfd8 !important;
+  border-radius: 13px !important;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  cursor: pointer;
+  box-shadow: none !important;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.staffDashboardPage .staffDashboardBackButton:hover {
+  background: #fffaf6 !important;
+  border-color: #8a1822 !important;
+}
+
+.staffDashboardPage .staffDashboardBackButton:focus-visible {
+  outline: 3px solid rgba(138, 24, 34, 0.3);
+  outline-offset: 2px;
+}
+
+
+/* ============================================
+   POKIPO PARTICIPANT FLOW HEALTH MONITOR
+   参加者機能・運営監視
+============================================ */
+
+.pokipoHealthPanel {
+  --health-red: #8a1822;
+  --health-text: #332d29;
+  --health-muted: #786c64;
+  --health-border: #e8dfd8;
+
+  margin: 0 0 22px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid var(--health-border);
+  border-radius: 19px;
+  box-shadow: 0 8px 22px rgba(55, 35, 25, 0.055);
+}
+
+.pokipoHealthHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.pokipoHealthEyebrow {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: var(--health-red);
+}
+
+.pokipoHealthHeader h2 {
+  margin: 6px 0 8px;
+  font-size: 22px;
+  color: var(--health-text);
+}
+
+.pokipoHealthHeader p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--health-muted);
+  line-height: 1.8;
+}
+
+.pokipoOpsPage .pokipoHealthRefresh {
+  width: auto !important;
+  min-height: 40px;
+  background: var(--health-red) !important;
+  color: #ffffff !important;
+  border-radius: 12px;
+  font-weight: 900;
+}
+
+.pokipoHealthSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 20px 0 28px;
+}
+
+.pokipoHealthSummary > div {
+  min-width: 0;
+  padding: 15px;
+  background: #fffaf6;
+  border: 1px solid var(--health-border);
+  border-radius: 14px;
+}
+
+.pokipoHealthSummary span {
+  display: block;
+  font-size: 11px;
+  color: var(--health-muted);
+}
+
+.pokipoHealthSummary strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 18px;
+  color: var(--health-red);
+}
+
+.pokipoHealthSummary strong.error {
+  color: #b13d30;
+}
+
+.pokipoHealthSectionHeading {
+  margin: 26px 0 13px;
+}
+
+.pokipoHealthSectionHeading h3 {
+  margin: 0;
+  font-size: 17px;
+  color: var(--health-text);
+}
+
+.pokipoHealthSectionHeading p {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: var(--health-muted);
+}
+
+.pokipoHealthGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pokipoHealthCard {
+  min-width: 0;
+  padding: 17px;
+  background: #ffffff;
+  border: 1px solid var(--health-border);
+  border-radius: 16px;
+}
+
+.pokipoHealthCard.active {
+  border-top: 3px solid #43835e;
+}
+
+.pokipoHealthCard.idle {
+  border-top: 3px solid #c7b9ac;
+}
+
+.pokipoHealthCard.maintenance {
+  border-top: 3px solid #bd8739;
+}
+
+.pokipoHealthCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pokipoHealthCardTop > strong {
+  font-size: 14px;
+  color: var(--health-text);
+}
+
+.pokipoHealthCard > p {
+  margin: 7px 0 15px;
+  font-size: 11px;
+  color: var(--health-muted);
+}
+
+.pokipoHealthStatus {
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.pokipoHealthStatus.active {
+  background: #edf8f0;
+  color: #286b40;
+}
+
+.pokipoHealthStatus.idle {
+  background: #f3efeb;
+  color: #786c64;
+}
+
+.pokipoHealthStatus.maintenance {
+  background: #fff2df;
+  color: #946020;
+}
+
+.pokipoHealthNumbers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.pokipoHealthNumbers > div {
+  min-width: 0;
+  padding: 10px 7px;
+  background: #fffaf6;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.pokipoHealthNumbers span {
+  display: block;
+  color: var(--health-muted);
+  font-size: 10px;
+}
+
+.pokipoHealthNumbers strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 20px;
+  color: var(--health-red);
+  overflow-wrap: anywhere;
+}
+
+.pokipoHealthNumbers small {
+  margin-left: 2px;
+  font-size: 10px;
+  color: var(--health-muted);
+}
+
+.pokipoHealthLast {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--health-muted);
+}
+
+.pokipoHealthSpotList {
+  display: grid;
+  gap: 9px;
+}
+
+.pokipoHealthSpot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px;
+  background: #fffaf6;
+  border: 1px solid var(--health-border);
+  border-radius: 13px;
+}
+
+.pokipoHealthSpotName strong {
+  display: block;
+  color: var(--health-text);
+  font-size: 13px;
+}
+
+.pokipoHealthSpotName > span {
+  display: block;
+  margin-top: 5px;
+  color: var(--health-muted);
+  font-size: 10px;
+}
+
+.pokipoHealthSpotStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 15px;
+  font-size: 11px;
+}
+
+.pokipoHealthSpotStats span {
+  color: var(--health-muted);
+}
+
+.pokipoHealthSpotStats b {
+  color: var(--health-red);
+}
+
+.pokipoHealthNote {
+  font-size: 11px;
+  color: var(--health-muted);
+}
+
+.pokipoHealthExplanation {
+  margin-top: 22px;
+  padding: 15px;
+  background: #f7f3ef;
+  border-radius: 13px;
+}
+
+.pokipoHealthExplanation strong {
+  color: var(--health-text);
+  font-size: 13px;
+}
+
+.pokipoHealthExplanation p {
+  font-size: 11px;
+  line-height: 1.9;
+  color: var(--health-muted);
+}
+
+.pokipoHealthError {
+  margin: 12px 0;
+  padding: 14px;
+  border-radius: 13px;
+  background: #fff1ee;
+  border: 1px solid #ecc4bd;
+  color: #9e322b;
+}
+
+.pokipoHealthError strong {
+  font-size: 13px;
+}
+
+.pokipoHealthError p,
+.pokipoHealthError small {
+  color: #9e322b;
+  font-size: 11px;
+}
+
+@media (max-width: 700px) {
+  .pokipoHealthPanel {
+    padding: 17px;
+  }
+
+  .pokipoHealthGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .pokipoHealthSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .pokipoHealthNumbers strong {
+    font-size: 19px;
+  }
+}

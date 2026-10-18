@@ -1,9 +1,19 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase-client";
+import HealthPanel from "./HealthPanel";
+
+/* ========================================
+   TYPES
+======================================== */
 
 type Daily = {
   date: string;
@@ -35,6 +45,10 @@ type Check = {
   detail: string;
 };
 
+/* ========================================
+   CONFIG
+======================================== */
+
 const spotNames: Record<string, string> = {
   spot1: "学生センター",
   spot2: "東棟2階",
@@ -43,9 +57,13 @@ const spotNames: Record<string, string> = {
   spot5: "セブンイレブン付近",
 };
 
-function n(value: unknown) {
-  const v = Number(value);
-  return Number.isFinite(v) ? v : 0;
+/* ========================================
+   HELPERS
+======================================== */
+
+function n(value: unknown): number {
+  const result = Number(value);
+  return Number.isFinite(result) ? result : 0;
 }
 
 function percent(a: number, b: number) {
@@ -65,8 +83,23 @@ function sum(
 }
 
 function normalize(value: unknown): Snapshot {
-  const x = (value ?? {}) as Record<string, any>;
-  const totals = x.totals ?? {};
+  const raw =
+    value && typeof value === "object"
+      ? (value as Record<string, unknown>)
+      : {};
+
+  const totals =
+    raw.totals && typeof raw.totals === "object"
+      ? (raw.totals as Record<string, unknown>)
+      : {};
+
+  const rawDaily = Array.isArray(raw.daily)
+    ? raw.daily
+    : [];
+
+  const rawSpots = Array.isArray(raw.spots)
+    ? raw.spots
+    : [];
 
   return {
     totals: {
@@ -75,40 +108,46 @@ function normalize(value: unknown): Snapshot {
       exchanged: n(totals.exchanged),
       stamps: n(totals.stamps),
     },
-    daily: Array.isArray(x.daily)
-      ? x.daily.map((d: Record<string, unknown>) => ({
-          date: String(d.date ?? ""),
-          registered: n(d.registered),
-          stamps: n(d.stamps),
-          completed: n(d.completed),
-          exchanged: n(d.exchanged),
-        }))
-      : [],
-    spots: Array.isArray(x.spots)
-      ? x.spots.map((s: Record<string, unknown>) => ({
-          spot_id: String(s.spot_id ?? ""),
-          count: n(s.count),
-        }))
-      : [],
+
+    daily: rawDaily.map((item) => ({
+      date: String(item.date ?? ""),
+      registered: n(item.registered),
+      stamps: n(item.stamps),
+      completed: n(item.completed),
+      exchanged: n(item.exchanged),
+    })),
+
+    spots: rawSpots.map((item) => ({
+      spot_id: String(item.spot_id ?? ""),
+      count: n(item.count),
+    })),
   };
 }
+
+/* ========================================
+   CSV DOWNLOAD
+======================================== */
 
 function downloadCsv(
   name: string,
   rows: (string | number)[][]
 ) {
-  const cell = (v: string | number) => {
-    let text = String(v ?? "");
+  const cell = (value: string | number) => {
+    let text = String(value ?? "");
 
-    // Excel等で数式として解釈されることを防ぐ
+    // Excelの数式として解釈されることを防止
     if (
-      typeof v === "string" &&
+      typeof value === "string" &&
       /^[\s\r\n]*[=+@\-\t]/.test(text)
     ) {
       text = "'" + text;
     }
 
-    return '"' + text.replace(/"/g, '""') + '"';
+    return (
+      '"' +
+      text.replace(/"/g, '""') +
+      '"'
+    );
   };
 
   const csv =
@@ -122,8 +161,8 @@ function downloadCsv(
   });
 
   const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
 
+  const a = document.createElement("a");
   a.href = url;
   a.download = name;
 
@@ -131,59 +170,94 @@ function downloadCsv(
   a.click();
   a.remove();
 
-  window.setTimeout(
-    () => URL.revokeObjectURL(url),
-    1500
-  );
+  window.setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1500);
 }
+
+/* ========================================
+   MAIN PAGE
+======================================== */
 
 export default function StaffOperationsPage() {
   const router = useRouter();
+
+  /* ----------------------------------------
+     AUTH STATE
+  ---------------------------------------- */
 
   const [auth, setAuth] = useState<
     "loading" | "denied" | "ok"
   >("loading");
 
+  /* ----------------------------------------
+     SYSTEM STATE
+  ---------------------------------------- */
+
   const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState("");
+
   const [snapshot, setSnapshot] =
     useState<Snapshot | null>(null);
-  const [checks, setChecks] = useState<Check[]>([]);
-  const [checkedAt, setCheckedAt] = useState("");
 
-  // 管理者認証
+  const [checks, setChecks] =
+    useState<Check[]>([]);
+
+  const [checkedAt, setCheckedAt] =
+    useState("");
+
+  const [dataCheckedAt, setDataCheckedAt] =
+    useState("");
+
+  /* ========================================
+     STAFF AUTHENTICATION
+  ======================================== */
+
   useEffect(() => {
     let active = true;
 
     async function checkStaff() {
-      const {
-        data: user,
-        error: userError,
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: userData,
+          error: userError,
+        } = await supabase.auth.getUser();
 
-      if (!active) return;
+        if (!active) return;
 
-      if (userError || !user.user) {
-        setAuth("denied");
-        return;
+        if (userError || !userData.user) {
+          setAuth("denied");
+          return;
+        }
+
+        const {
+          data: staff,
+          error: staffError,
+        } = await supabase
+          .from("staff_profiles")
+          .select("user_id")
+          .eq("user_id", userData.user.id)
+          .maybeSingle();
+
+        if (!active) return;
+
+        if (staffError || !staff) {
+          setAuth("denied");
+          return;
+        }
+
+        setAuth("ok");
+      } catch (caught) {
+        console.error(
+          "スタッフ認証エラー:",
+          caught
+        );
+
+        if (active) {
+          setAuth("denied");
+        }
       }
-
-      const {
-        data: staff,
-        error: staffError,
-      } = await supabase
-        .from("staff_profiles")
-        .select("user_id")
-        .eq("user_id", user.user.id)
-        .maybeSingle();
-
-      if (!active) return;
-
-      setAuth(
-        !staffError && staff
-          ? "ok"
-          : "denied"
-      );
     }
 
     void checkStaff();
@@ -193,7 +267,10 @@ export default function StaffOperationsPage() {
     };
   }, []);
 
-  // システム状態と集計データを更新
+  /* ========================================
+     SYSTEM CONNECTION CHECK
+  ======================================== */
+
   const refresh = useCallback(async () => {
     if (auth !== "ok") return;
 
@@ -202,36 +279,54 @@ export default function StaffOperationsPage() {
     const results: Check[] = [];
 
     try {
+      /* ------------------------------------
+         スタッフ認証
+      ------------------------------------ */
+
       const {
-        data: user,
+        data: userData,
         error: userError,
       } = await supabase.auth.getUser();
 
       const signedIn =
-        !userError && !!user.user;
+        !userError && !!userData.user;
 
       results.push({
         label: "管理者ログイン",
         ok: signedIn,
         detail: signedIn
-          ? "認証済み"
-          : "認証を確認できません",
+          ? "スタッフ認証への応答を確認"
+          : "認証状態を確認できません",
       });
 
+      /* ------------------------------------
+         参加者集計API
+      ------------------------------------ */
+
       const {
-        data: probe,
-        error: probeError,
+        data: participantData,
+        error: participantError,
       } = await supabase.rpc(
         "get_participant_count"
       );
 
+      const participantApiOk =
+        !participantError &&
+        participantData !== null;
+
       results.push({
         label: "参加者集計API",
-        ok: !probeError,
-        detail: probeError
-          ? "集計APIに接続できません"
-          : `応答あり・登録者数 ${n(probe)}人`,
+        ok: participantApiOk,
+        detail: participantApiOk
+          ? `応答あり・登録者数 ${n(
+              participantData
+            ).toLocaleString()}人`
+          : "参加者集計APIの取得に失敗",
       });
+
+      /* ------------------------------------
+         分析データ取得
+      ------------------------------------ */
 
       const {
         data: analytics,
@@ -240,35 +335,47 @@ export default function StaffOperationsPage() {
         "pokipo_staff_analytics"
       );
 
+      const analyticsOk =
+        !analyticsError && !!analytics;
+
       results.push({
         label: "分析データ取得",
-        ok:
-          !analyticsError &&
-          !!analytics,
-        detail: analyticsError
-          ? "分析APIに接続できません"
-          : "データ取得成功",
+        ok: analyticsOk,
+        detail: analyticsOk
+          ? "集計データの取得に成功"
+          : "分析APIの取得に失敗",
       });
 
-      if (analyticsError || !analytics) {
-        setError(
-          "集計データを取得できませんでした。SQL関数とスタッフ権限を確認してください。"
-        );
-      } else {
+      if (analyticsOk) {
         setSnapshot(normalize(analytics));
+
+        setDataCheckedAt(
+          new Date().toLocaleString("ja-JP", {
+            timeZone: "Asia/Tokyo",
+          })
+        );
+
         setError("");
+      } else {
+        setError(
+          "集計データを取得できませんでした。通信状態・SQL関数・スタッフ権限を確認してください。"
+        );
       }
-    } catch (error) {
-      console.error("システム確認エラー:", error);
+    } catch (caught) {
+      console.error(
+        "システム確認エラー:",
+        caught
+      );
 
       results.push({
         label: "通信状態",
         ok: false,
-        detail: "通信中にエラーが発生しました",
+        detail:
+          "通信中に予期しないエラーが発生しました",
       });
 
       setError(
-        "通信エラーが発生しました。"
+        "システム確認中に通信エラーが発生しました。"
       );
     } finally {
       setChecks(results);
@@ -283,7 +390,10 @@ export default function StaffOperationsPage() {
     }
   }, [auth]);
 
-  // 60秒ごとの自動更新
+  /* ========================================
+     AUTO REFRESH: 60 SECONDS
+  ======================================== */
+
   useEffect(() => {
     if (auth !== "ok") return;
 
@@ -297,12 +407,33 @@ export default function StaffOperationsPage() {
       }
     }, 60000);
 
+    function onVisible() {
+      if (
+        document.visibilityState === "visible"
+      ) {
+        void refresh();
+      }
+    }
+
+    document.addEventListener(
+      "visibilitychange",
+      onVisible
+    );
+
     return () => {
       window.clearInterval(timer);
+
+      document.removeEventListener(
+        "visibilitychange",
+        onVisible
+      );
     };
   }, [auth, refresh]);
 
-  // 自動分析文章
+  /* ========================================
+     AUTOMATIC STATISTICS REPORT
+  ======================================== */
+
   const report = useMemo(() => {
     if (!snapshot) return [];
 
@@ -310,24 +441,28 @@ export default function StaffOperationsPage() {
     const days = snapshot.daily;
 
     const last7 = days.slice(-7);
-    const prev7 = days.slice(-14, -7);
+    const previous7 = days.slice(-14, -7);
 
-    const thisWeek =
-      sum(last7, "registered");
-
-    const previous =
-      sum(prev7, "registered");
-
-    const spots = Object.entries(spotNames).map(
-      ([id, name]) => ({
-        id,
-        name,
-        count:
-          snapshot.spots.find(
-            (s) => s.spot_id === id
-          )?.count ?? 0,
-      })
+    const thisWeek = sum(
+      last7,
+      "registered"
     );
+
+    const previous = sum(
+      previous7,
+      "registered"
+    );
+
+    const spots = Object.entries(
+      spotNames
+    ).map(([id, name]) => ({
+      id,
+      name,
+      count:
+        snapshot.spots.find(
+          (spot) => spot.spot_id === id
+        )?.count ?? 0,
+    }));
 
     const highest = [...spots].sort(
       (a, b) => b.count - a.count
@@ -337,35 +472,42 @@ export default function StaffOperationsPage() {
       previous > 0
         ? `${
             (
-              ((thisWeek - previous) / previous) *
+              ((thisWeek - previous) /
+                previous) *
               100
             ).toFixed(1)
           }%`
         : "比較不可（前の7日間が0人）";
 
     return [
-      `登録者は累計${totals.registered}人。直近7日間の新規登録は${thisWeek}人、前の7日間は${previous}人で、増減率は${growth}です。`,
+      `登録者は累計${totals.registered.toLocaleString()}人。直近7日間の新規登録は${thisWeek.toLocaleString()}人、前の7日間は${previous.toLocaleString()}人で、増減率は${growth}です。`,
 
-      `完走者は${totals.completed}人、完走率は${percent(
+      `完走者は${totals.completed.toLocaleString()}人、完走率は${percent(
         totals.completed,
         totals.registered
       )}%です。`,
 
-      `交換済みは${totals.exchanged}人で、完走者に対する交換率は${percent(
+      `交換済みは${totals.exchanged.toLocaleString()}人で、完走者に対する交換率は${percent(
         totals.exchanged,
         totals.completed
       )}%です。`,
 
       `最多読み取りスポットは${
         highest?.name ?? "未取得"
-      }（${highest?.count ?? 0}人）です。`,
+      }（${(
+        highest?.count ?? 0
+      ).toLocaleString()}人）です。`,
 
-      "※数値から読み取れる事実を自動表示しています。増減の原因や不正利用を推測するものではありません。",
+      "※数値から読み取れる事実を表示しています。増減の原因や不正利用を推測するものではありません。",
     ];
   }, [snapshot]);
 
+  /* ========================================
+     CSV: DAILY DATA
+  ======================================== */
+
   function exportDaily() {
-    if (!snapshot) return;
+    if (!snapshot || error) return;
 
     downloadCsv("POKIPO_日別推移.csv", [
       [
@@ -375,18 +517,22 @@ export default function StaffOperationsPage() {
         "新規完走",
         "特典交換件数",
       ],
-      ...snapshot.daily.map((d) => [
-        d.date,
-        d.registered,
-        d.stamps,
-        d.completed,
-        d.exchanged,
+      ...snapshot.daily.map((day) => [
+        day.date,
+        day.registered,
+        day.stamps,
+        day.completed,
+        day.exchanged,
       ]),
     ]);
   }
 
+  /* ========================================
+     CSV: SPOTS
+  ======================================== */
+
   function exportSpots() {
-    if (!snapshot) return;
+    if (!snapshot || error) return;
 
     downloadCsv("POKIPO_スポット別.csv", [
       [
@@ -397,15 +543,19 @@ export default function StaffOperationsPage() {
         ([id, name]) => [
           name,
           snapshot.spots.find(
-            (s) => s.spot_id === id
+            (spot) => spot.spot_id === id
           )?.count ?? 0,
         ]
       ),
     ]);
   }
 
+  /* ========================================
+     CSV: SUMMARY
+  ======================================== */
+
   function exportSummary() {
-    if (!snapshot) return;
+    if (!snapshot || error) return;
 
     const t = snapshot.totals;
 
@@ -426,11 +576,18 @@ export default function StaffOperationsPage() {
     ]);
   }
 
+  /* ========================================
+     PAGE
+  ======================================== */
+
   return (
     <main className="shell">
       <section className="pokipoOpsPage">
 
-        {/* ヘッダー */}
+        {/* =================================
+            HEADER
+        ================================= */}
+
         <header className="pokipoOpsHeader">
           <div>
             <span>
@@ -442,17 +599,24 @@ export default function StaffOperationsPage() {
             </h1>
 
             <p>
-              エラー監視・CSV出力・自動分析レポート
+              システム接続確認・参加者機能監視・
+              CSV出力・自動分析レポート
             </p>
           </div>
 
           <button
             type="button"
-            onClick={() => router.push("/staff")}
+            onClick={() =>
+              router.push("/staff")
+            }
           >
-            スタッフメニューへ戻る
+            ← スタッフメニューへ戻る
           </button>
         </header>
+
+        {/* =================================
+            AUTH LOADING
+        ================================= */}
 
         {auth === "loading" && (
           <div className="pokipoOpsCard">
@@ -460,28 +624,42 @@ export default function StaffOperationsPage() {
           </div>
         )}
 
+        {/* =================================
+            ACCESS DENIED
+        ================================= */}
+
         {auth === "denied" && (
           <div
             className="pokipoOpsCard"
             role="alert"
           >
             スタッフ権限を確認できませんでした。
-            ログイン後に開いてください。
+            スタッフとしてログインし直してください。
           </div>
         )}
 
+        {/* =================================
+            STAFF CONTENT
+        ================================= */}
+
         {auth === "ok" && (
           <>
-            {/* システム稼働状況 */}
+
+            {/* =============================
+                BASIC SYSTEM HEALTH
+            ============================= */}
+
             <section className="pokipoOpsCard">
               <div className="pokipoOpsTitle">
                 <h2>
-                  システム稼働状況
+                  システム接続状況
                 </h2>
 
                 <button
                   type="button"
-                  onClick={() => void refresh()}
+                  onClick={() =>
+                    void refresh()
+                  }
                   disabled={loading}
                 >
                   {loading
@@ -494,37 +672,39 @@ export default function StaffOperationsPage() {
                 最終確認：
                 {checkedAt || "確認中"}
                 {" ／ "}
-                表示中は60秒ごとに自動更新されます。
+                表示中は60秒ごとに自動更新
               </p>
 
               <div className="pokipoOpsChecks">
-                {checks.map((c) => (
+                {checks.map((check) => (
                   <article
-                    key={c.label}
+                    key={check.label}
                     className={
-                      c.ok ? "ok" : "ng"
+                      check.ok
+                        ? "ok"
+                        : "ng"
                     }
                   >
                     <strong>
-                      {c.ok
-                        ? "● 正常"
+                      {check.ok
+                        ? "● 応答あり"
                         : "● 要確認"}
                       {"｜"}
-                      {c.label}
+                      {check.label}
                     </strong>
 
                     <span>
-                      {c.detail}
+                      {check.detail}
                     </span>
                   </article>
                 ))}
               </div>
 
               <p className="pokipoOpsSmall">
-                この監視は管理画面からの疎通確認です。
-                QR読み取りや景品交換の全操作を
-                常時監視したり、過去のエラーを
-                記録したりする機能ではありません。
+                この確認はログインと
+                集計APIへの接続状態を調べます。
+                参加者端末での操作成功を
+                保証するものではありません。
               </p>
 
               {error && (
@@ -537,19 +717,44 @@ export default function StaffOperationsPage() {
               )}
             </section>
 
-            {/* CSV */}
+            {/* =============================
+                PARTICIPANT FLOW HEALTH
+                NEW MONITOR
+            ============================= */}
+
+            <HealthPanel />
+
+            {/* =============================
+                CSV EXPORT
+            ============================= */}
+
             <section className="pokipoOpsCard">
               <h2>CSVデータ出力</h2>
 
               <p>
-                Excelで開けるUTF-8形式で
-                集計値のみ出力します。
+                Excelで開ける形式で、
+                日別推移・スポット別実績・
+                全体集計を出力します。
+              </p>
+
+              <p className="pokipoOpsSmall">
+                ニックネーム・学籍番号などの
+                個人情報は含みません。
+              </p>
+
+              <p className="pokipoOpsSmall">
+                集計データ最終取得：
+                {dataCheckedAt || "未取得"}
               </p>
 
               <div className="pokipoOpsButtons">
                 <button
                   type="button"
-                  disabled={!snapshot}
+                  disabled={
+                    !snapshot ||
+                    loading ||
+                    Boolean(error)
+                  }
                   onClick={exportDaily}
                 >
                   日別推移CSV
@@ -557,7 +762,11 @@ export default function StaffOperationsPage() {
 
                 <button
                   type="button"
-                  disabled={!snapshot}
+                  disabled={
+                    !snapshot ||
+                    loading ||
+                    Boolean(error)
+                  }
                   onClick={exportSpots}
                 >
                   スポット別CSV
@@ -565,7 +774,11 @@ export default function StaffOperationsPage() {
 
                 <button
                   type="button"
-                  disabled={!snapshot}
+                  disabled={
+                    !snapshot ||
+                    loading ||
+                    Boolean(error)
+                  }
                   onClick={exportSummary}
                 >
                   全体集計CSV
@@ -573,24 +786,34 @@ export default function StaffOperationsPage() {
               </div>
             </section>
 
-            {/* 自動分析レポート */}
+            {/* =============================
+                AUTOMATIC REPORT
+            ============================= */}
+
             <section className="pokipoOpsCard">
               <h2>
                 自動分析レポート
               </h2>
 
               <p>
-                現在の集計データから計算した文章です。
+                現在の集計値から自動計算した
+                統計レポートです。
+                ChatGPT APIや外部AIは使用しません。
               </p>
 
               {!snapshot ? (
                 <p>
                   分析データ取得後に表示されます。
                 </p>
+              ) : error ? (
+                <p className="pokipoOpsError">
+                  最新データを取得できていません。
+                  再度更新してください。
+                </p>
               ) : (
                 <div className="pokipoOpsReport">
-                  {report.map((line, i) => (
-                    <p key={i}>
+                  {report.map((line, index) => (
+                    <p key={index}>
                       {line}
                     </p>
                   ))}
