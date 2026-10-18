@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase-client";
+import PokipoStaffTicker from "../../components/PokipoStaffTicker";
 
 /* ========================================
    TYPES
@@ -172,10 +173,6 @@ const MENU_SECTIONS: MenuSection[] = [
       },
     ],
   },
-
-  /* ========================================
-     NEW: SYSTEM CONTROL
-  ======================================== */
 
   {
     id: "system-control",
@@ -460,6 +457,13 @@ export default function StaffPage() {
             ログアウト
           </button>
         </header>
+
+        {/* =================================
+            POKIPO LIVE NEWS
+            自動更新型の運営速報
+        ================================= */}
+
+        <PokipoStaffTicker />
 
         {/* =================================
             LOGIN USER

@@ -44774,3 +44774,211 @@ main.shell:has(input[aria-label="参加者検索"])
     font-size: 19px;
   }
 }
+
+
+/* ============================================
+   POKIPO LIVE NEWS TICKER
+============================================ */
+
+.pokipoStaffTicker {
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 22px;
+  overflow: hidden;
+  background: #2d2525;
+  color: #fffaf6;
+  border: 1px solid #493536;
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(55, 35, 25, 0.12);
+}
+
+.pokipoTickerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 9px;
+  padding: 11px 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.pokipoTickerBrand,
+.pokipoTickerInfo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.pokipoTickerBrand strong {
+  color: #fffaf6;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.pokipoTickerLive {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 7px;
+  background: #8a1822;
+  border-radius: 5px;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.pokipoTickerInfo {
+  flex-wrap: wrap;
+}
+
+.pokipoTickerConnection {
+  font-size: 10px;
+  font-weight: 800;
+  color: #d9cdc5;
+}
+
+.pokipoTickerConnection.online {
+  color: #86d39e;
+}
+
+.pokipoTickerConnection.partial,
+.pokipoTickerConnection.error {
+  color: #ffd18a;
+}
+
+.pokipoTickerTime {
+  font-size: 10px;
+  color: #c3b5ad;
+}
+
+.staffMenuPage .pokipoTickerPause {
+  width: auto !important;
+  min-width: 0 !important;
+  padding: 5px 9px !important;
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 7px !important;
+  color: #fffaf6 !important;
+  box-shadow: none !important;
+  font-size: 10px !important;
+  cursor: pointer;
+}
+
+.pokipoTickerViewport {
+  width: 100%;
+  overflow: hidden;
+  padding: 14px 0;
+}
+
+.pokipoTickerTrack {
+  display: flex;
+  width: max-content;
+  animation-name: pokipoNewsScroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+
+.pokipoTickerTrack.paused,
+.pokipoStaffTicker:hover .pokipoTickerTrack,
+.pokipoStaffTicker:focus-within .pokipoTickerTrack {
+  animation-play-state: paused;
+}
+
+.pokipoTickerGroup {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: max-content;
+}
+
+.staffMenuPage .pokipoTickerItem {
+  display: inline-flex !important;
+  align-items: center;
+  flex: 0 0 auto;
+  width: auto !important;
+  padding: 0 22px 0 0 !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: #fffaf6 !important;
+  font-family: inherit;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  white-space: nowrap;
+  line-height: 1.7;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.staffMenuPage .pokipoTickerItem:hover {
+  opacity: 0.75;
+}
+
+.pokipoTickerSeparator {
+  margin-right: 10px;
+  color: #ce969b;
+  font-size: 10px;
+}
+
+.staffMenuPage .pokipoTickerItem.highlight {
+  color: #f5d5a1 !important;
+}
+
+.staffMenuPage .pokipoTickerItem.highlight
+  .pokipoTickerSeparator {
+  color: #f5d5a1;
+}
+
+.staffMenuPage .pokipoTickerItem.warning {
+  color: #ffb6ad !important;
+}
+
+.staffMenuPage .pokipoTickerItem.warning
+  .pokipoTickerSeparator {
+  color: #ff978a;
+}
+
+@keyframes pokipoNewsScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 640px) {
+  .pokipoTickerHeader {
+    padding: 10px 12px;
+  }
+
+  .pokipoTickerBrand strong {
+    font-size: 11px;
+  }
+
+  .pokipoTickerTime {
+    display: none;
+  }
+
+  .staffMenuPage .pokipoTickerItem {
+    font-size: 11px !important;
+  }
+
+  .pokipoTickerViewport {
+    padding: 12px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pokipoTickerTrack {
+    animation: none !important;
+  }
+
+  .pokipoTickerViewport {
+    overflow-x: auto;
+  }
+}
