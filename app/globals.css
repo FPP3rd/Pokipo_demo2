@@ -43688,3 +43688,92 @@ main.shell:has(input[aria-label="参加者検索"])
     grid-template-columns: 1fr;
   }
 }
+
+
+/* ============================================
+   POKIPO STAFF DASHBOARD
+   統計カード表示修正
+   参加者・完走者・交換済み・本日交換
+============================================ */
+
+/* 4枚のカードのデザインを統一 */
+
+.staffDashboardPage .staffDashboardStatCard,
+.staffDashboardPage .staffDashboardStatCard.today {
+  background: #ffffff !important;
+  border: 1px solid #e8dfd8 !important;
+  border-radius: 19px !important;
+  box-shadow:
+    0 8px 22px rgba(55, 35, 25, 0.055)
+    !important;
+
+  color: #332d29 !important;
+  min-width: 0;
+}
+
+/* 英語の項目名 */
+
+.staffDashboardPage
+  .staffDashboardStatCard > span {
+  color: #8a1822 !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em;
+}
+
+/* 人数と単位の配置 */
+
+.staffDashboardPage
+  .staffDashboardStatCard > div {
+  display: flex !important;
+  align-items: baseline !important;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+  min-width: 0;
+}
+
+/* 数字 */
+
+.staffDashboardPage
+  .staffDashboardStatCard strong {
+  color: #8a1822 !important;
+  font-size: clamp(25px, 5vw, 34px) !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important;
+  overflow-wrap: anywhere;
+}
+
+/* 単位の「人」 */
+
+.staffDashboardPage
+  .staffDashboardStatCard small {
+  color: #786c64 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+}
+
+/* 日本語の説明文 */
+
+.staffDashboardPage
+  .staffDashboardStatCard p {
+  color: #786c64 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 1.6 !important;
+  margin: 7px 0 0 !important;
+}
+
+/* スマートフォン */
+
+@media (max-width: 560px) {
+  .staffDashboardPage
+    .staffDashboardStatCard {
+    padding: 16px 12px !important;
+  }
+
+  .staffDashboardPage
+    .staffDashboardStatCard strong {
+    font-size: 28px !important;
+  }
+}
