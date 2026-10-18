@@ -524,6 +524,7 @@ export default function StaffSupportRewardPage() {
           <p className="supportDescription">
             お問い合わせ専用QRを読み取るか、
             問い合わせ番号を手入力してください。
+            お問い合わせ専用QRはトップページ右上のユーザー名を5回タップすると表示されます。
           </p>
 
           <form

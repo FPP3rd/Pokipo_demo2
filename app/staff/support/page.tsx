@@ -492,6 +492,7 @@ export default function StaffSupportPage() {
             お問い合わせ専用QRを読み取るか、
             Googleフォームに添付された問い合わせ番号を
             入力してください。
+            お問い合わせ専用QRはトップページ右上のユーザー名を5回タップすると表示されます。
           </p>
 
           <form
