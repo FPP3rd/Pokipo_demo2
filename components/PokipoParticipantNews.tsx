@@ -1,12 +1,7 @@
 
 "use client";
 
-import {
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { supabase } from "../lib/supabase-client";
+import { useEffect, useMemo, useState } from "react";
 
 export type ParticipantNewsAnnouncement = {
   id: string;
@@ -25,17 +20,21 @@ type NewsMessage = {
   kind: "normal" | "personal" | "important";
 };
 
-function normalizeProgress(value: number) {
+function normalizeProgress(value: number): number {
   return Math.min(
     5,
-    Math.max(0, Number.isFinite(value) ? value : 0)
+    Math.max(0, Number.isFinite(value) ? Math.floor(value) : 0)
   );
 }
+
+/* ========================================
+   PARTICIPANT NEWS
+   LiPostのお知らせとは独立
+======================================== */
 
 export function makeParticipantNews({
   progress,
   rewardExchanged = false,
-  announcements = [],
 }: NewsProps): NewsMessage[] {
   const count = normalizeProgress(progress);
 
@@ -51,74 +50,79 @@ export function makeParticipantNews({
 
   if (rewardExchanged) {
     add(
-      "exchanged",
+      "reward-exchanged",
       "特典交換ありがとうございます！POKIPOへのご参加ありがとうございました。",
       "personal"
     );
-  } else if (count === 0) {
-    add(
-      "progress-0",
-      "POKIPOへようこそ！キャンパス内の5か所を巡ってスタンプを集めよう！",
-      "personal"
-    );
-  } else if (count === 1) {
-    add(
-      "progress-1",
-      "最初のスタンプを獲得！あと4か所でコンプリートです。",
-      "personal"
-    );
-  } else if (count === 2) {
-    add(
-      "progress-2",
-      "スタンプ2個達成！あと3か所です。次のスポットを探してみよう！",
-      "personal"
-    );
-  } else if (count === 3) {
-    add(
-      "progress-3",
-      "スタンプ3個達成！コンプリートまで残り2か所です。",
-      "personal"
-    );
-  } else if (count === 4) {
-    add(
-      "progress-4",
-      "コンプリートまであと1か所！最後のスタンプを探そう！",
-      "personal"
-    );
   } else {
-    add(
-      "progress-5",
-      "5か所コンプリート！特典画面から交換に向けた手続きを確認しよう！",
-      "personal"
-    );
+    switch (count) {
+      case 0:
+        add(
+          "progress-0",
+          "POKIPOへようこそ！学内の5か所を巡ってスタンプを集めよう！",
+          "personal"
+        );
+        break;
+
+      case 1:
+        add(
+          "progress-1",
+          "最初のスタンプを獲得！コンプリートまであと4か所です。",
+          "personal"
+        );
+        break;
+
+      case 2:
+        add(
+          "progress-2",
+          "スタンプ2個達成！残り3か所も探してみよう！",
+          "personal"
+        );
+        break;
+
+      case 3:
+        add(
+          "progress-3",
+          "スタンプ3個達成！コンプリートまであと2か所です。",
+          "personal"
+        );
+        break;
+
+      case 4:
+        add(
+          "progress-4",
+          "コンプリートまであと1か所！最後のスタンプを探そう！",
+          "personal"
+        );
+        break;
+
+      default:
+        add(
+          "progress-5",
+          "5か所コンプリート！特典画面から交換に向けた手続きを確認しよう！",
+          "personal"
+        );
+        break;
+    }
   }
 
   add(
-    "rally",
+    "event",
     "POKIPOスタンプラリー開催中！キャンパスを巡りながらポッキーの魅力を発見しよう！"
   );
 
-  for (const announcement of announcements.slice(0, 5)) {
-    const title = announcement.title?.trim();
-    if (!title) continue;
-
+  if (!rewardExchanged) {
     add(
-      `announcement-${announcement.id}`,
-      `LiPostからのお知らせ：${title}`,
+      "exchange",
+      "特典交換会は10月27日 12:35〜16:00、雄飛ホールで開催！",
       "important"
     );
   }
 
-  add(
-    "exchange-event",
-    "特典交換会は10月27日 12:35〜16:00、雄飛ホールで開催！",
-    "important"
-  );
-
   if (count === 5 && !rewardExchanged) {
     add(
-      "reward-preparation",
-      "特典交換には参加後アンケートなどの手続きが必要です。特典画面をご確認ください。",
+      "preparation",
+      "特典交換前に参加後アンケートへの回答が必要です。特典画面をご確認ください。",
       "important"
     );
   }
@@ -126,16 +130,20 @@ export function makeParticipantNews({
   return messages;
 }
 
+/* ========================================
+   SCROLLING NEWS BAR
+======================================== */
+
 export default function PokipoParticipantNews(
   props: NewsProps
 ) {
   const news = useMemo(
-    () => makeParticipantNews(props),
-    [
-      props.progress,
-      props.rewardExchanged,
-      props.announcements,
-    ]
+    () =>
+      makeParticipantNews({
+        progress: props.progress,
+        rewardExchanged: props.rewardExchanged,
+      }),
+    [props.progress, props.rewardExchanged]
   );
 
   const duration = Math.max(
@@ -146,24 +154,24 @@ export default function PokipoParticipantNews(
     ) * 0.28
   );
 
-  const renderGroup = (copy: boolean) => (
-    <div
-      className="pokipoParticipantNewsGroup"
-      aria-hidden={copy ? true : undefined}
-    >
-      {news.map((item) => (
-        <span
-          key={item.id}
-          className={
-            `pokipoParticipantNewsItem ${item.kind}`
-          }
-        >
-          <span aria-hidden="true">◆</span>
-          {item.text}
-        </span>
-      ))}
-    </div>
-  );
+  function renderGroup(copy: boolean) {
+    return (
+      <div
+        className="pokipoParticipantNewsGroup"
+        aria-hidden={copy ? true : undefined}
+      >
+        {news.map((item) => (
+          <span
+            key={item.id}
+            className={`pokipoParticipantNewsItem ${item.kind}`}
+          >
+            <span aria-hidden="true">◆</span>
+            {item.text}
+          </span>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <section
@@ -191,8 +199,8 @@ export default function PokipoParticipantNews(
 }
 
 /* ========================================
-   STAFF PREVIEW
-   本番データを変更しない表示専用
+   STAFF HOME NEWS PREVIEW
+   表示専用・本番データ変更なし
 ======================================== */
 
 export function ParticipantHomeNewsPreview({
@@ -206,59 +214,23 @@ export function ParticipantHomeNewsPreview({
     normalizeProgress(initialProgress)
   );
 
-  const [rewardExchanged, setRewardExchanged] =
-    useState(initialRewardExchanged);
-
-  const [announcements, setAnnouncements] =
-    useState<ParticipantNewsAnnouncement[]>([]);
-
-  const [loading, setLoading] = useState(true);
-  const [newsError, setNewsError] = useState(false);
+  const [rewardExchanged, setRewardExchanged] = useState(
+    initialRewardExchanged
+  );
 
   useEffect(() => {
     setProgress(normalizeProgress(initialProgress));
     setRewardExchanged(initialRewardExchanged);
   }, [initialProgress, initialRewardExchanged]);
 
-  useEffect(() => {
-    let active = true;
-
-    async function loadAnnouncements() {
-      const { data, error } = await supabase
-        .from("lipost_announcements")
-        .select("id, title")
-        .eq("is_published", true)
-        .order("published_at", { ascending: false })
-        .limit(3);
-
-      if (!active) return;
-
-      setLoading(false);
-      setNewsError(Boolean(error));
-
-      if (!error) {
-        setAnnouncements(data ?? []);
-      }
-    }
-
-    void loadAnnouncements();
-
-    const interval = window.setInterval(
-      () => void loadAnnouncements(),
-      60000
-    );
-
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
-  }, []);
-
-  const news = makeParticipantNews({
-    progress,
-    rewardExchanged,
-    announcements,
-  });
+  const news = useMemo(
+    () =>
+      makeParticipantNews({
+        progress,
+        rewardExchanged,
+      }),
+    [progress, rewardExchanged]
+  );
 
   return (
     <section className="pokipoNewsPreviewPanel">
@@ -267,8 +239,8 @@ export function ParticipantHomeNewsPreview({
           <span>PARTICIPANT HOME PREVIEW</span>
           <h2>参加者トップ画面・ニュース確認</h2>
           <p>
-            検証用の表示イメージです。
-            本番の参加者データは変更しません。
+            スタンプ数と交換状態を切り替えて、
+            参加者に流れるニュースを確認できます。
           </p>
         </div>
       </div>
@@ -326,21 +298,23 @@ export function ParticipantHomeNewsPreview({
         <PokipoParticipantNews
           progress={progress}
           rewardExchanged={rewardExchanged}
-          announcements={announcements}
         />
 
         <div className="pokipoNewsPreviewHero">
           <span>POKIPO STAMP RALLY</span>
+
           <strong>
             {progress === 5
               ? "CONGRATULATIONS!"
               : "キャンパスを巡ろう！"}
           </strong>
+
           <p>
             {progress === 5
               ? "5か所すべてのスタンプを獲得！"
               : `コンプリートまであと${5 - progress}か所`}
           </p>
+
           <div className="pokipoNewsPreviewStampRow">
             {[1, 2, 3, 4, 5].map((number) => (
               <div
@@ -363,32 +337,17 @@ export function ParticipantHomeNewsPreview({
         </div>
 
         <p className="pokipoNewsPreviewDisclaimer">
-          ※ 本番ホームの主要要素を簡略化したプレビューです。
-          画面構成や装飾を完全再現するものではありません。
+          ※ 参加者ホームの簡易イメージです。
+          本番データには影響しません。
         </p>
       </div>
 
       <div className="pokipoNewsPreviewDetails">
-        <strong>
-          現在の条件で流れるニュース
-        </strong>
-
-        {loading && (
-          <p>公開中のお知らせを取得中...</p>
-        )}
-
-        {newsError && (
-          <p role="alert">
-            公開お知らせを取得できませんでした。
-            共通・進捗別メッセージを表示しています。
-          </p>
-        )}
+        <strong>現在の条件で流れるニュース</strong>
 
         <ol>
           {news.map((item) => (
-            <li key={item.id}>
-              {item.text}
-            </li>
+            <li key={item.id}>{item.text}</li>
           ))}
         </ol>
       </div>
