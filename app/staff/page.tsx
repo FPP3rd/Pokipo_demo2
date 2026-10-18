@@ -15,18 +15,6 @@ type StaffProfile = {
   display_name: string;
 };
 
-type MaintenanceKey =
-  | "maintenance_home"
-  | "maintenance_stamp"
-  | "maintenance_knowledge"
-  | "maintenance_progress"
-  | "maintenance_reward"
-  | "maintenance_survey_before"
-  | "maintenance_survey_after";
-
-type MaintenanceTargets =
-  Record<MaintenanceKey, boolean>;
-
 type MenuItem = {
   icon: string;
   label: string;
@@ -47,66 +35,7 @@ type MenuSection = {
 };
 
 /* ========================================
-   MAINTENANCE SETTINGS
-======================================== */
-
-const DEFAULT_MESSAGE =
-  "現在システムメンテナンスを行っています。しばらくしてから再度アクセスしてください。";
-
-const DEFAULT_TARGETS: MaintenanceTargets = {
-  maintenance_home: false,
-  maintenance_stamp: false,
-  maintenance_knowledge: false,
-  maintenance_progress: false,
-  maintenance_reward: false,
-  maintenance_survey_before: false,
-  maintenance_survey_after: false,
-};
-
-const MAINTENANCE_ITEMS: {
-  key: MaintenanceKey;
-  label: string;
-  path: string;
-}[] = [
-  {
-    key: "maintenance_home",
-    label: "トップ画面",
-    path: "/home",
-  },
-  {
-    key: "maintenance_stamp",
-    label: "QR読み取り・スタンプ",
-    path: "/stamp",
-  },
-  {
-    key: "maintenance_knowledge",
-    label: "豆知識",
-    path: "/knowledge",
-  },
-  {
-    key: "maintenance_progress",
-    label: "進捗",
-    path: "/progress",
-  },
-  {
-    key: "maintenance_reward",
-    label: "特典・景品交換",
-    path: "/reward",
-  },
-  {
-    key: "maintenance_survey_before",
-    label: "参加前アンケート",
-    path: "/survey/before",
-  },
-  {
-    key: "maintenance_survey_after",
-    label: "参加後アンケート",
-    path: "/survey/after",
-  },
-];
-
-/* ========================================
-   STAFF MENU
+   STAFF MENU CONFIG
 ======================================== */
 
 const MENU_SECTIONS: MenuSection[] = [
@@ -191,23 +120,15 @@ const MENU_SECTIONS: MenuSection[] = [
         href: "/staff/surveys",
         variant: "",
       },
-
-      /* =================================
-         NEW: OPERATIONS
-      ================================= */
       {
         icon: "OPS",
         label: "OPERATIONS",
         title: "運営チェック・データ出力",
         description:
-          "システム稼働確認・CSV出力・自動分析レポートを利用します。",
+          "システム稼働確認・参加者機能監視・CSV出力・自動分析レポートを利用します。",
         href: "/staff/operations",
         variant: "",
       },
-
-      /* =================================
-         OWNER ONLY
-      ================================= */
       {
         icon: "USER",
         label: "PARTICIPANTS",
@@ -252,6 +173,29 @@ const MENU_SECTIONS: MenuSection[] = [
     ],
   },
 
+  /* ========================================
+     NEW: SYSTEM CONTROL
+  ======================================== */
+
+  {
+    id: "system-control",
+    eyebrow: "SYSTEM CONTROL",
+    title: "システム管理",
+    description:
+      "POKIPOの稼働・停止に関する設定を管理します。",
+    items: [
+      {
+        icon: "SET",
+        label: "MAINTENANCE",
+        title: "メンテナンス設定",
+        description:
+          "全体・個別機能の停止設定と、参加者向け案内文を管理します。",
+        href: "/staff/maintenance",
+        variant: "",
+      },
+    ],
+  },
+
   {
     id: "testing",
     eyebrow: "SYSTEM TESTING",
@@ -274,11 +218,15 @@ const MENU_SECTIONS: MenuSection[] = [
 ];
 
 /* ========================================
-   COMPONENT
+   STAFF TOP PAGE
 ======================================== */
 
 export default function StaffPage() {
   const router = useRouter();
+
+  /* ========================================
+     AUTH STATE
+  ======================================== */
 
   const [authLoading, setAuthLoading] =
     useState(true);
@@ -298,23 +246,6 @@ export default function StaffPage() {
   const [message, setMessage] =
     useState("");
 
-  const [maintenanceMode, setMaintenanceMode] =
-    useState(false);
-
-  const [maintenanceMessage, setMaintenanceMessage] =
-    useState(DEFAULT_MESSAGE);
-
-  const [maintenanceLoading, setMaintenanceLoading] =
-    useState(true);
-
-  const [maintenanceSaving, setMaintenanceSaving] =
-    useState(false);
-
-  const [maintenanceTargets, setMaintenanceTargets] =
-    useState<MaintenanceTargets>({
-      ...DEFAULT_TARGETS,
-    });
-
   /* ========================================
      AUTHENTICATION
   ======================================== */
@@ -325,7 +256,6 @@ export default function StaffPage() {
     async function loadStaff() {
       setAuthLoading(true);
       setProfileLoading(true);
-      setMaintenanceLoading(true);
       setMessage("");
 
       try {
@@ -378,84 +308,16 @@ export default function StaffPage() {
           profileData as StaffProfile;
 
         setAuthenticated(true);
+
         setCurrentStaffName(
           profile.display_name
         );
+
         setCurrentAdminId(
           profile.admin_id
         );
+
         setProfileLoading(false);
-
-        /* =================================
-           MAINTENANCE DATA
-        ================================= */
-
-        const {
-          data: settings,
-          error: maintenanceError,
-        } = await supabase
-          .from("pokipo_app_settings")
-          .select(`
-            maintenance_mode,
-            maintenance_message,
-            maintenance_home,
-            maintenance_stamp,
-            maintenance_knowledge,
-            maintenance_progress,
-            maintenance_reward,
-            maintenance_survey_before,
-            maintenance_survey_after
-          `)
-          .eq("id", 1)
-          .single();
-
-        if (!mounted) return;
-
-        if (maintenanceError) {
-          console.error(
-            "メンテナンス設定取得エラー:",
-            maintenanceError
-          );
-
-          setMessage(
-            "メンテナンス設定を取得できませんでした。"
-          );
-        } else if (settings) {
-          setMaintenanceMode(
-            Boolean(
-              settings.maintenance_mode
-            )
-          );
-
-          setMaintenanceMessage(
-            settings.maintenance_message?.trim() ||
-              DEFAULT_MESSAGE
-          );
-
-          setMaintenanceTargets({
-            maintenance_home: Boolean(
-              settings.maintenance_home
-            ),
-            maintenance_stamp: Boolean(
-              settings.maintenance_stamp
-            ),
-            maintenance_knowledge: Boolean(
-              settings.maintenance_knowledge
-            ),
-            maintenance_progress: Boolean(
-              settings.maintenance_progress
-            ),
-            maintenance_reward: Boolean(
-              settings.maintenance_reward
-            ),
-            maintenance_survey_before: Boolean(
-              settings.maintenance_survey_before
-            ),
-            maintenance_survey_after: Boolean(
-              settings.maintenance_survey_after
-            ),
-          });
-        }
       } catch (error) {
         console.error(
           "管理者情報取得エラー:",
@@ -471,7 +333,6 @@ export default function StaffPage() {
         if (mounted) {
           setAuthLoading(false);
           setProfileLoading(false);
-          setMaintenanceLoading(false);
         }
       }
     }
@@ -494,94 +355,6 @@ export default function StaffPage() {
       authListener.subscription.unsubscribe();
     };
   }, [router]);
-
-  /* ========================================
-     MAINTENANCE CONTROLS
-  ======================================== */
-
-  function updateMaintenanceTarget(
-    key: MaintenanceKey,
-    checked: boolean
-  ) {
-    setMaintenanceTargets((current) => ({
-      ...current,
-      [key]: checked,
-    }));
-  }
-
-  function selectAllMaintenanceTargets() {
-    setMaintenanceTargets(
-      Object.fromEntries(
-        MAINTENANCE_ITEMS.map(
-          (item) => [item.key, true]
-        )
-      ) as MaintenanceTargets
-    );
-  }
-
-  function clearAllMaintenanceTargets() {
-    setMaintenanceTargets({
-      ...DEFAULT_TARGETS,
-    });
-  }
-
-  async function saveMaintenanceSettings() {
-    if (
-      maintenanceSaving ||
-      maintenanceLoading
-    ) {
-      return;
-    }
-
-    setMaintenanceSaving(true);
-    setMessage("");
-
-    try {
-      const finalMessage =
-        maintenanceMessage.trim() ||
-        DEFAULT_MESSAGE;
-
-      const { error } = await supabase
-        .from("pokipo_app_settings")
-        .update({
-          maintenance_mode: maintenanceMode,
-          maintenance_message: finalMessage,
-          ...maintenanceTargets,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", 1);
-
-      if (error) {
-        console.error(
-          "メンテナンス設定保存エラー:",
-          error
-        );
-
-        setMessage(
-          "メンテナンス設定を保存できませんでした。"
-        );
-
-        return;
-      }
-
-      setMaintenanceMessage(finalMessage);
-
-      setMessage(
-        "メンテナンス設定を保存しました。"
-      );
-    } catch (error) {
-      console.error(
-        "メンテナンス設定通信エラー:",
-        error
-      );
-
-      setMessage(
-        "メンテナンス設定の保存中にエラーが発生しました。"
-      );
-    } finally {
-      setMaintenanceSaving(false);
-    }
-  }
 
   /* ========================================
      LOGOUT
@@ -672,7 +445,8 @@ export default function StaffPage() {
 
             <p>
               景品交換・お知らせ管理・リアルタイム分析・
-              参加者サポート・動作確認をここから操作できます。
+              参加者サポート・システム管理・動作確認を
+              ここから操作できます。
             </p>
           </div>
 
@@ -740,7 +514,9 @@ export default function StaffPage() {
             <section
               key={section.id}
               className="staffMenuCategory"
-              aria-labelledby={`staff-category-${section.id}`}
+              aria-labelledby={
+                `staff-category-${section.id}`
+              }
             >
               <div className="staffMenuCategoryHeader">
                 <span
@@ -753,7 +529,9 @@ export default function StaffPage() {
                   </span>
 
                   <h2
-                    id={`staff-category-${section.id}`}
+                    id={
+                      `staff-category-${section.id}`
+                    }
                   >
                     {section.title}
                   </h2>
@@ -827,200 +605,6 @@ export default function StaffPage() {
             </section>
           ))}
         </div>
-
-        {/* =================================
-            MAINTENANCE SETTINGS
-        ================================= */}
-
-        <section className="staffMaintenanceCard">
-          <div className="staffMaintenanceHeader">
-            <div>
-              <span className="staffMaintenanceEyebrow">
-                SYSTEM CONTROL
-              </span>
-
-              <h2>
-                メンテナンス設定
-              </h2>
-
-              <p>
-                POKIPO全体、または特定の機能だけを
-                一時的に停止できます。
-              </p>
-            </div>
-
-            <div
-              className={
-                maintenanceMode
-                  ? "staffMaintenanceStatus active"
-                  : "staffMaintenanceStatus"
-              }
-            >
-              {maintenanceMode
-                ? "ALL ON"
-                : "NORMAL"}
-            </div>
-          </div>
-
-          {maintenanceLoading ? (
-            <div className="staffMaintenanceLoading">
-              設定を読み込み中...
-            </div>
-          ) : (
-            <>
-
-              {/* メンテナンスON/OFF */}
-
-              <button
-                type="button"
-                className={
-                  maintenanceMode
-                    ? "staffMaintenanceToggle active"
-                    : "staffMaintenanceToggle"
-                }
-                aria-pressed={maintenanceMode}
-                onClick={() =>
-                  setMaintenanceMode(
-                    (current) => !current
-                  )
-                }
-              >
-                <span className="staffMaintenanceToggleTrack">
-                  <span className="staffMaintenanceToggleKnob" />
-                </span>
-
-                <div>
-                  <strong>
-                    {maintenanceMode
-                      ? "全体メンテナンス ON"
-                      : "全体メンテナンス OFF"}
-                  </strong>
-
-                  <small>
-                    {maintenanceMode
-                      ? "参加者向けページをすべて停止します"
-                      : "個別に停止するページを選択できます"}
-                  </small>
-                </div>
-              </button>
-
-              {/* 個別停止対象 */}
-
-              <div className="staffMaintenanceTargets">
-                <div className="staffMaintenanceTargetsTitle">
-                  <div>
-                    <strong>
-                      個別に停止するページ
-                    </strong>
-
-                    <span>
-                      全体メンテナンスOFF時に使用します
-                    </span>
-                  </div>
-
-                  <div className="staffMaintenanceTargetActions">
-                    <button
-                      type="button"
-                      onClick={
-                        selectAllMaintenanceTargets
-                      }
-                    >
-                      すべて選択
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={
-                        clearAllMaintenanceTargets
-                      }
-                    >
-                      すべて解除
-                    </button>
-                  </div>
-                </div>
-
-                <div className="staffMaintenanceTargetList">
-                  {MAINTENANCE_ITEMS.map(
-                    (item) => (
-                      <label
-                        key={item.key}
-                        className="staffMaintenanceTarget"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={
-                            maintenanceTargets[
-                              item.key
-                            ]
-                          }
-                          onChange={(event) =>
-                            updateMaintenanceTarget(
-                              item.key,
-                              event.target.checked
-                            )
-                          }
-                        />
-
-                        <div>
-                          <strong>
-                            {item.label}
-                          </strong>
-
-                          <span>
-                            {item.path}
-                          </span>
-                        </div>
-                      </label>
-                    )
-                  )}
-                </div>
-              </div>
-
-              {/* メンテナンスメッセージ */}
-
-              <div className="staffMaintenanceMessageField">
-                <label htmlFor="maintenanceMessage">
-                  参加者に表示する案内文
-                </label>
-
-                <textarea
-                  id="maintenanceMessage"
-                  value={maintenanceMessage}
-                  onChange={(event) =>
-                    setMaintenanceMessage(
-                      event.target.value
-                    )
-                  }
-                  rows={5}
-                  maxLength={500}
-                  placeholder="メンテナンス中の案内文"
-                />
-
-                <div className="staffMaintenanceMessageBottom">
-                  <span>
-                    {maintenanceMessage.length}
-                    /500
-                  </span>
-                </div>
-              </div>
-
-              {/* 保存ボタン */}
-
-              <button
-                type="button"
-                className="staffMaintenanceSaveButton"
-                disabled={maintenanceSaving}
-                onClick={() =>
-                  void saveMaintenanceSettings()
-                }
-              >
-                {maintenanceSaving
-                  ? "保存中..."
-                  : "メンテナンス設定を保存"}
-              </button>
-            </>
-          )}
-        </section>
 
         {/* =================================
             SECURITY NOTICE
