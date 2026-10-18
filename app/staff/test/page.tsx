@@ -8,6 +8,8 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase-client";
+import { ParticipantHomeNewsPreview } from "../../../components/PokipoParticipantNews";
+
 
 /* ========================================
    TYPES
@@ -511,6 +513,13 @@ export default function StaffTestPage() {
 
         {session && (
           <>
+            
+            {/* 参加者ホーム画面プレビュー */}
+            <ParticipantHomeNewsPreview
+              initialProgress={progress}
+              initialRewardExchanged={rewardExchanged}
+            />
+
             {/* MAIN PROGRESS */}
             <section className="testPanel testProgressPanel">
               <div className="testSectionTop">

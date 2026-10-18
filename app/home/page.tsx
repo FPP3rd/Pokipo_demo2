@@ -7,6 +7,8 @@ import QRCode from "qrcode";
 import { supabase } from "../../lib/supabase-client";
 import MaintenanceGate from "../../components/MaintenanceGate";
 import PromotionGate from "../../components/PromotionGate";
+import PokipoParticipantNews from "../../components/PokipoParticipantNews";
+
 
 /* ========================================
    TYPES
@@ -652,6 +654,19 @@ export default function HomePage() {
                 {nickname ? `${nickname}さん` : "ゲストさん"}
               </button>
             </header>
+          
+          
+            {/* ========================================
+                POKIPO PARTICIPANT NEWS
+                スタンプ進捗に応じて自動切り替え
+            ======================================== */}
+
+            <PokipoParticipantNews
+              progress={progress}
+              rewardExchanged={rewardExchanged}
+              announcements={announcements}
+            />
+
 
             {/* PROMOTION BANNER */}
             {bannerPromotion && (

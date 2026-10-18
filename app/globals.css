@@ -45048,3 +45048,427 @@ main.shell:has(input[aria-label="参加者検索"])
     font-size: 10px !important;
   }
 }
+
+
+/* ============================================
+   POKIPO PARTICIPANT NEWS
+   参加者向け横流れニュースバー
+============================================ */
+
+.pokipoParticipantNews {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  height: 34px;
+  min-height: 34px;
+  margin: 9px 0 15px;
+  background: #302626;
+  color: #fffaf6;
+  border-radius: 8px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.pokipoParticipantNewsLabel {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 10px;
+  background: #83202b;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.pokipoParticipantNewsLabel span {
+  padding: 2px 5px;
+  background: #fffaf6;
+  border-radius: 3px;
+  color: #83202b;
+  font-size: 8px;
+  font-weight: 900;
+}
+
+.pokipoParticipantNewsLabel strong {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.pokipoParticipantNewsViewport {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+.pokipoParticipantNewsTrack {
+  display: flex;
+  width: max-content;
+  animation: pokipoParticipantNewsScroll
+    45s linear infinite;
+  will-change: transform;
+}
+
+.pokipoParticipantNewsGroup {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: max-content;
+}
+
+.pokipoParticipantNewsItem {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0 20px 0 0;
+  color: #fffaf6;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.pokipoParticipantNewsItem > span {
+  margin-right: 9px;
+  color: #cc9c9f;
+  font-size: 9px;
+}
+
+.pokipoParticipantNewsItem.personal {
+  color: #ffe0a6;
+}
+
+.pokipoParticipantNewsItem.personal > span {
+  color: #ffe0a6;
+}
+
+.pokipoParticipantNewsItem.important {
+  color: #ffffff;
+}
+
+.pokipoParticipantNewsItem.important > span {
+  color: #ffbdc1;
+}
+
+@keyframes pokipoParticipantNewsScroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* マウスを重ねると一時停止 */
+.pokipoParticipantNews:hover
+.pokipoParticipantNewsTrack {
+  animation-play-state: paused;
+}
+
+/* ============================================
+   STAFF PARTICIPANT HOME PREVIEW
+============================================ */
+
+.pokipoNewsPreviewPanel {
+  width: 100%;
+  min-width: 0;
+  margin: 0 0 22px;
+  padding: 20px;
+  box-sizing: border-box;
+  border: 1px solid #e6dcd6;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #352d2b;
+  box-shadow: 0 8px 22px rgba(55, 35, 25, 0.055);
+}
+
+.pokipoNewsPreviewHeading {
+  margin-bottom: 17px;
+}
+
+.pokipoNewsPreviewHeading span {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #8a1822;
+}
+
+.pokipoNewsPreviewHeading h2 {
+  margin: 6px 0;
+  font-size: 21px;
+  font-weight: 900;
+  color: #352d2b;
+}
+
+.pokipoNewsPreviewHeading p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.8;
+  color: #82736c;
+}
+
+.pokipoNewsPreviewControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.pokipoNewsPreviewControls label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #51443d;
+}
+
+.pokipoNewsPreviewControls select {
+  min-width: 145px;
+  padding: 10px 12px;
+  background: #fffaf6;
+  border: 1px solid #ded4cc;
+  border-radius: 9px;
+  color: #352d2b;
+  font: inherit;
+}
+
+.pokipoNewsPreviewPhone {
+  width: 100%;
+  max-width: 410px;
+  margin: 0 auto 20px;
+  padding: 18px 14px 20px;
+  box-sizing: border-box;
+  background:
+    linear-gradient(
+      180deg,
+      #fffaf6 0%,
+      #ffffff 45%,
+      #fff8f4 100%
+    );
+  border: 5px solid #3a3030;
+  border-radius: 25px;
+  overflow: hidden;
+  box-shadow: 0 15px 28px rgba(0, 0, 0, 0.12);
+}
+
+.pokipoNewsPreviewHomeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.pokipoNewsPreviewHomeHeader small {
+  display: block;
+  color: #8a1822;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.pokipoNewsPreviewHomeHeader strong {
+  display: block;
+  color: #8a1822;
+  font-size: 31px;
+  font-weight: 950;
+  letter-spacing: 0.03em;
+}
+
+.pokipoNewsPreviewHomeHeader > span {
+  color: #63544e;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.pokipoNewsPreviewPhone .pokipoParticipantNews {
+  margin: 12px 0;
+  height: 30px;
+  min-height: 30px;
+}
+
+.pokipoNewsPreviewPhone
+.pokipoParticipantNewsLabel {
+  padding: 0 7px;
+}
+
+.pokipoNewsPreviewPhone
+.pokipoParticipantNewsLabel strong {
+  font-size: 9px;
+}
+
+.pokipoNewsPreviewHero {
+  padding: 25px 13px 20px;
+  text-align: center;
+  background: linear-gradient(
+    140deg,
+    #fff0ed,
+    #fffaf6
+  );
+  border: 1px solid #f1d6d1;
+  border-radius: 17px;
+}
+
+.pokipoNewsPreviewHero > span {
+  display: block;
+  color: #8a1822;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.pokipoNewsPreviewHero > strong {
+  display: block;
+  margin-top: 10px;
+  color: #8a1822;
+  font-size: 21px;
+  font-weight: 900;
+}
+
+.pokipoNewsPreviewHero > p {
+  margin: 8px 0 19px;
+  color: #655850;
+  font-size: 12px;
+}
+
+.pokipoNewsPreviewStampRow {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pokipoNewsPreviewStampRow div {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 2px solid #ddcfc8;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #a69a94;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.pokipoNewsPreviewStampRow div.acquired {
+  background: #8a1822;
+  border-color: #8a1822;
+  color: #ffffff;
+}
+
+.pokipoNewsPreviewMenu {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.pokipoNewsPreviewMenu div {
+  display: grid;
+  place-items: center;
+  min-height: 58px;
+  padding: 8px;
+  text-align: center;
+  border: 1px solid #eaded6;
+  background: #ffffff;
+  border-radius: 12px;
+  color: #8a1822;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.pokipoNewsPreviewDisclaimer {
+  margin: 14px 0 0;
+  color: #897b73;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.pokipoNewsPreviewDetails {
+  padding: 16px;
+  background: #fffaf6;
+  border: 1px solid #eaded6;
+  border-radius: 12px;
+}
+
+.pokipoNewsPreviewDetails strong {
+  color: #8a1822;
+  font-size: 14px;
+}
+
+.pokipoNewsPreviewDetails ol {
+  padding-left: 22px;
+  margin: 12px 0 0;
+}
+
+.pokipoNewsPreviewDetails li {
+  margin-bottom: 9px;
+  color: #51443d;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.pokipoNewsPreviewDetails p {
+  font-size: 12px;
+  color: #95612c;
+}
+
+/* ============================================
+   MOBILE
+============================================ */
+
+@media (max-width: 640px) {
+  .pokipoParticipantNews {
+    height: 32px;
+    min-height: 32px;
+  }
+
+  .pokipoParticipantNewsLabel {
+    padding: 0 7px;
+  }
+
+  .pokipoParticipantNewsLabel strong {
+    font-size: 9px;
+  }
+
+  .pokipoParticipantNewsItem {
+    font-size: 10px;
+  }
+
+  .pokipoNewsPreviewPanel {
+    padding: 14px 11px;
+  }
+
+  .pokipoNewsPreviewHeading h2 {
+    font-size: 18px;
+  }
+
+  .pokipoNewsPreviewPhone {
+    border-width: 4px;
+    padding: 13px 10px 16px;
+  }
+
+  .pokipoNewsPreviewStampRow {
+    gap: 5px;
+  }
+
+  .pokipoNewsPreviewStampRow div {
+    width: 31px;
+    height: 31px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pokipoParticipantNewsTrack {
+    animation: none !important;
+  }
+
+  .pokipoParticipantNewsViewport {
+    overflow-x: auto;
+  }
+}
