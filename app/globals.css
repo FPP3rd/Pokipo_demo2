@@ -42028,3 +42028,535 @@ main.shell:has(input[aria-label="参加者検索"])
     transform: none !important;
   }
 }
+
+
+/* =========================================
+   POKIPO STAFF GRAPH ANALYTICS
+   グラフ分析ページ専用CSS
+   2026年10月版
+========================================= */
+
+.pokipoAnalyticsPage {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 12px 0 50px;
+  color: #3d2a20;
+}
+
+/* -----------------------------------------
+   ヘッダー
+----------------------------------------- */
+
+.pokipoAnalyticsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding: 25px;
+  background: linear-gradient(
+    125deg,
+    #ffffff 0%,
+    #fff3ed 100%
+  );
+  border: 1px solid #ead4ca;
+  border-radius: 24px;
+  box-shadow: 0 12px 30px rgba(97, 44, 30, 0.07);
+}
+
+.pokipoAnalyticsEyebrow,
+.pokipoAnalyticsSectionHeader span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  color: #c12b33;
+}
+
+.pokipoAnalyticsHeader h1 {
+  margin: 0 0 8px;
+  color: #c91f29;
+  font-size: clamp(24px, 3vw, 32px);
+}
+
+.pokipoAnalyticsHeader p {
+  margin: 0;
+  color: #705950;
+  font-size: 14px;
+}
+
+.pokipoAnalyticsBack {
+  width: auto !important;
+  min-height: 42px !important;
+  margin: 0 !important;
+  padding: 10px 17px !important;
+  background: #fff !important;
+  color: #b5222d !important;
+  border: 1px solid #e6c5bf !important;
+  border-radius: 12px !important;
+  white-space: nowrap;
+}
+
+.pokipoAnalyticsBack:hover {
+  background: #fff0e9 !important;
+}
+
+/* -----------------------------------------
+   読み込み・エラー表示
+----------------------------------------- */
+
+.pokipoAnalyticsMessage {
+  padding: 18px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #e6cfc5;
+  border-radius: 14px;
+  color: #6e4c42;
+  font-weight: 700;
+}
+
+/* -----------------------------------------
+   上部の集計カード
+----------------------------------------- */
+
+.pokipoAnalyticsStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.pokipoAnalyticsStat {
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #eed8cc;
+  border-top: 4px solid #d32932;
+  border-radius: 19px;
+  box-shadow: 0 9px 22px rgba(98, 47, 31, 0.06);
+}
+
+.pokipoAnalyticsStat span {
+  display: block;
+  color: #795e52;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.pokipoAnalyticsStat strong {
+  display: block;
+  margin-top: 10px;
+  color: #b9202a;
+  font-size: clamp(25px, 3vw, 34px);
+  font-weight: 900;
+}
+
+/* -----------------------------------------
+   各グラフのカード
+----------------------------------------- */
+
+.pokipoAnalyticsCard {
+  margin-bottom: 22px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid #ecd6ca;
+  border-radius: 22px;
+  box-shadow: 0 10px 26px rgba(98, 47, 31, 0.07);
+}
+
+.pokipoAnalyticsSectionHeader {
+  margin-bottom: 18px;
+}
+
+.pokipoAnalyticsSectionHeader h2 {
+  margin: 0;
+  font-size: 21px;
+  color: #493126;
+}
+
+/* -----------------------------------------
+   グラフの切り替えボタン
+----------------------------------------- */
+
+.pokipoAnalyticsControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pokipoAnalyticsTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 0 18px;
+}
+
+.pokipoAnalyticsTabs button {
+  width: auto !important;
+  min-height: 38px !important;
+  margin: 0 !important;
+  padding: 8px 13px !important;
+  background: #fff7f2 !important;
+  color: #875248 !important;
+  border: 1px solid #ebd7cb !important;
+  border-radius: 10px !important;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: none !important;
+}
+
+.pokipoAnalyticsTabs button.active {
+  background: linear-gradient(
+    135deg,
+    #e23d43,
+    #bf1e29
+  ) !important;
+  color: #ffffff !important;
+  border-color: #bf1e29 !important;
+}
+
+.pokipoAnalyticsTabs button:hover {
+  transform: translateY(-1px);
+}
+
+/* -----------------------------------------
+   累計推移の折れ線グラフ
+----------------------------------------- */
+
+.pokipoAnalyticsTrend {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  background: #fffcfa;
+}
+
+.pokipoAnalyticsTrend svg {
+  display: block;
+  width: 100%;
+  min-width: 490px;
+  height: auto;
+}
+
+/* -----------------------------------------
+   日別実績の棒グラフ
+----------------------------------------- */
+
+.pokipoAnalyticsChartSummary {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.pokipoAnalyticsChartSummary span {
+  color: #80675c;
+  font-size: 13px;
+}
+
+.pokipoAnalyticsChartSummary strong {
+  color: #c9232e;
+  font-size: 22px;
+}
+
+.pokipoAnalyticsBars {
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+  height: 230px;
+  padding-top: 15px;
+  border-bottom: 1px solid #edd8cf;
+  overflow-x: auto;
+}
+
+.pokipoAnalyticsBarColumn {
+  flex: 1 0 9px;
+  min-width: 9px;
+  max-width: 52px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pokipoAnalyticsBarTrack {
+  display: flex;
+  flex: 1;
+  width: 78%;
+  min-height: 0;
+  align-items: flex-end;
+  background: transparent;
+}
+
+.pokipoAnalyticsBarTrack span {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(
+    180deg,
+    #eb6664,
+    #c81e2c
+  );
+}
+
+.pokipoAnalyticsBarColumn small {
+  display: block;
+  height: 29px;
+  margin-top: 6px;
+  font-size: 9px;
+  color: #8c7266;
+  white-space: nowrap;
+  transform: rotate(-30deg);
+}
+
+.pokipoAnalyticsNote,
+.pokipoAnalyticsFootnote {
+  margin: 14px 0 0;
+  color: #806a60;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+/* -----------------------------------------
+   スポット別読み取り人数
+----------------------------------------- */
+
+.pokipoAnalyticsSpotList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pokipoAnalyticsSpotMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+.pokipoAnalyticsSpotMeta span {
+  color: #c33439;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.pokipoAnalyticsSpotMeta strong {
+  flex: 1;
+  color: #4f372d;
+  font-size: 14px;
+}
+
+.pokipoAnalyticsSpotMeta b {
+  color: #b9212b;
+  font-size: 15px;
+}
+
+.pokipoAnalyticsSpotTrack {
+  height: 15px;
+  overflow: hidden;
+  background: #f7e9df;
+  border-radius: 999px;
+}
+
+.pokipoAnalyticsSpotTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    #f28b75,
+    #d02632
+  );
+  transition: width 0.5s ease;
+}
+
+/* -----------------------------------------
+   完走率・交換率
+----------------------------------------- */
+
+.pokipoAnalyticsRates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  margin-bottom: 24px;
+}
+
+.pokipoAnalyticsRates > div {
+  padding: 20px;
+  background: #fff6f0;
+  border: 1px solid #f0dbcf;
+  border-radius: 17px;
+}
+
+.pokipoAnalyticsRates span {
+  display: block;
+  color: #b52a32;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+}
+
+.pokipoAnalyticsRates strong {
+  display: block;
+  margin-top: 8px;
+  color: #b71f29;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.pokipoAnalyticsRates p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #70584c;
+}
+
+/* -----------------------------------------
+   完走状況・交換状況の円グラフ
+----------------------------------------- */
+
+.pokipoAnalyticsDonuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.pokipoAnalyticsDonutCard {
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #ecd8cc;
+  border-radius: 17px;
+}
+
+.pokipoAnalyticsDonutCard h3 {
+  margin: 0 0 18px;
+  color: #4a3229;
+  font-size: 15px;
+}
+
+.pokipoAnalyticsDonutRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.pokipoAnalyticsDonut {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 145px;
+  height: 145px;
+  border-radius: 50%;
+}
+
+.pokipoAnalyticsDonut > div {
+  display: grid;
+  place-items: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.pokipoAnalyticsDonut strong {
+  color: #b6222d;
+  font-size: 27px;
+  font-weight: 900;
+}
+
+.pokipoAnalyticsLegend {
+  flex: 1;
+  min-width: 120px;
+}
+
+.pokipoAnalyticsLegend p {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #70584c;
+}
+
+.pokipoAnalyticsLegend p strong {
+  margin-left: auto;
+  color: #443126;
+}
+
+.pokipoAnalyticsLegend i {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.pokipoAnalyticsLegendRed {
+  background: #d32932;
+}
+
+.pokipoAnalyticsLegendPale {
+  background: #f1ded4;
+}
+
+/* -----------------------------------------
+   スマートフォン対応
+----------------------------------------- */
+
+@media (max-width: 760px) {
+  .pokipoAnalyticsHeader {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+  }
+
+  .pokipoAnalyticsBack {
+    align-self: flex-start;
+  }
+
+  .pokipoAnalyticsStats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .pokipoAnalyticsCard {
+    padding: 17px;
+  }
+
+  .pokipoAnalyticsRates,
+  .pokipoAnalyticsDonuts {
+    grid-template-columns: 1fr;
+  }
+
+  .pokipoAnalyticsSpotMeta {
+    flex-wrap: wrap;
+    gap: 5px 9px;
+  }
+
+  .pokipoAnalyticsDonut {
+    width: 125px;
+    height: 125px;
+  }
+
+  .pokipoAnalyticsDonut > div {
+    width: 86px;
+    height: 86px;
+  }
+}
+
+/* -----------------------------------------
+   動きの軽減設定
+----------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .pokipoAnalyticsSpotTrack span {
+    transition: none;
+  }
+
+  .pokipoAnalyticsTabs button:hover {
+    transform: none;
+  }
+}
