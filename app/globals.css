@@ -45472,3 +45472,52 @@ main.shell:has(input[aria-label="参加者検索"])
     overflow-x: auto;
   }
 }
+
+
+/* ============================================
+   POKIPO STAFF LIVE NEWS
+   1行スリム表示・最終調整
+============================================ */
+
+.pokipoStaffTicker .pokipoTickerTrack {
+  display: flex;
+  align-items: center;
+  width: max-content;
+}
+
+.pokipoStaffTicker .pokipoTickerGroup {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: max-content;
+}
+
+.pokipoStaffTicker .pokipoTickerItem {
+  flex: 0 0 auto;
+  min-height: 0;
+  white-space: nowrap;
+}
+
+.pokipoStaffTicker .pokipoTickerViewport {
+  min-width: 0;
+}
+
+.pokipoStaffTicker .pokipoTickerTrack.paused {
+  animation-play-state: paused !important;
+}
+
+@media (max-width: 640px) {
+  .pokipoStaffTicker .pokipoTickerBrand strong {
+    font-size: 9px !important;
+  }
+
+  .pokipoStaffTicker .pokipoTickerItem {
+    font-size: 10px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pokipoStaffTicker .pokipoTickerTrack {
+    animation: none !important;
+  }
+}

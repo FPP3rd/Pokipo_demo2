@@ -10,19 +10,9 @@ import {
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase-client";
 
-type Feature = {
-  key: string;
-  total: number;
-  last10: number;
-  last60: number;
-};
-
-type Spot = {
-  spot_id: string;
-  count?: number;
-  total?: number;
-  last10?: number;
-};
+/* ========================================
+   TYPES
+======================================== */
 
 type NewsItem = {
   id: string;
@@ -38,6 +28,30 @@ type Totals = {
   stamps: number;
 };
 
+type Feature = {
+  key: string;
+  total: number;
+  last10: number;
+  last60: number;
+};
+
+type Spot = {
+  spot_id: string;
+  count: number;
+};
+
+type Status =
+  | "loading"
+  | "online"
+  | "partial"
+  | "error";
+
+/* ========================================
+   CONFIG
+======================================== */
+
+const REWARD_LIMIT = 360;
+
 const SPOT_NAMES: Record<string, string> = {
   spot1: "学生センター",
   spot2: "東棟2階",
@@ -46,47 +60,86 @@ const SPOT_NAMES: Record<string, string> = {
   spot5: "セブンイレブン付近",
 };
 
-const REWARD_LIMIT = 360;
+const MAINTENANCE_NAMES: Record<string, string> = {
+  home: "ホーム",
+  stamp: "スタンプ",
+  knowledge: "豆知識",
+  progress: "進捗",
+  reward: "特典",
+  pre_survey: "参加前アンケート",
+  post_survey: "参加後アンケート",
+};
 
-function n(value: unknown): number {
-  const num = Number(value);
-  return Number.isFinite(num) ? num : 0;
-}
+/* ========================================
+   HELPERS
+======================================== */
 
-function objectValue(
-  value: unknown
-): Record<string, unknown> {
-  return value && typeof value === "object"
+function obj(value: unknown): Record<string, unknown> {
+  return value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 }
 
-function formatNumber(value: number) {
+function num(value: unknown): number {
+  const result = Number(value);
+  return Number.isFinite(result) ? result : 0;
+}
+
+function fmt(value: number): string {
   return value.toLocaleString("ja-JP");
 }
+
+function pct(a: number, b: number): string {
+  return b > 0
+    ? ((a / b) * 100).toFixed(1)
+    : "0.0";
+}
+
+function japanDate(): string {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function japanTime(): string {
+  return new Date().toLocaleTimeString("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/* ========================================
+   MAIN
+======================================== */
 
 export default function PokipoStaffTicker() {
   const router = useRouter();
 
   const [news, setNews] = useState<NewsItem[]>([
     {
-      id: "starting",
-      text: "POKIPOの運営情報を取得しています...",
+      id: "loading",
+      text: "POKIPO運営情報を取得しています...",
       href: "/staff/operations",
       priority: "normal",
     },
   ]);
 
+  const [status, setStatus] = useState<Status>("loading");
   const [updatedAt, setUpdatedAt] = useState("");
-  const [status, setStatus] = useState<
-    "loading" | "online" | "partial" | "error"
-  >("loading");
 
-  const [paused, setPaused] = useState(false);
-
-  const previousTotals = useRef<Totals | null>(null);
-  const mountedRef = useRef(true);
+  const mountedRef = useRef(false);
   const busyRef = useRef(false);
+  const previousTotals = useRef<Totals | null>(null);
+
+  /* ========================================
+     DATA REFRESH
+  ======================================== */
 
   const refresh = useCallback(async () => {
     if (busyRef.current) return;
@@ -111,7 +164,9 @@ export default function PokipoStaffTicker() {
         healthResult.data != null;
 
       if (!analyticsOk && !healthOk) {
+        previousTotals.current = null;
         setStatus("error");
+
         setNews([
           {
             id: "error",
@@ -121,52 +176,48 @@ export default function PokipoStaffTicker() {
             priority: "warning",
           },
         ]);
+
         return;
       }
 
-      const analytics = objectValue(
-        analyticsResult.data
-      );
-
-      const health = objectValue(
-        healthResult.data
-      );
-
-      const rawTotals = objectValue(
-        analytics.totals
-      );
+      const analytics = obj(analyticsResult.data);
+      const health = obj(healthResult.data);
+      const rawTotals = obj(analytics.totals);
 
       const features: Feature[] = Array.isArray(
         health.features
       )
         ? health.features.map((value: unknown) => {
-            const x = objectValue(value);
+            const row = obj(value);
 
             return {
-              key: String(x.key ?? ""),
-              total: n(x.total),
-              last10: n(x.last10),
-              last60: n(x.last60),
+              key: String(row.key ?? ""),
+              total: num(row.total),
+              last10: num(row.last10),
+              last60: num(row.last60),
             };
           })
         : [];
 
       const feature = (key: string) =>
-        features.find((f) => f.key === key);
+        features.find((row) => row.key === key);
 
       const totals: Totals = {
         registered: analyticsOk
-          ? n(rawTotals.registered)
-          : n(feature("registration")?.total),
+          ? num(rawTotals.registered)
+          : num(feature("registration")?.total),
+
         completed: analyticsOk
-          ? n(rawTotals.completed)
-          : n(feature("completions")?.total),
+          ? num(rawTotals.completed)
+          : num(feature("completions")?.total),
+
         exchanged: analyticsOk
-          ? n(rawTotals.exchanged)
-          : n(feature("reward_exchanged")?.total),
+          ? num(rawTotals.exchanged)
+          : num(feature("reward_exchanged")?.total),
+
         stamps: analyticsOk
-          ? n(rawTotals.stamps)
-          : n(feature("stamps")?.total),
+          ? num(rawTotals.stamps)
+          : num(feature("stamps")?.total),
       };
 
       const items: NewsItem[] = [];
@@ -177,36 +228,33 @@ export default function PokipoStaffTicker() {
         href: string,
         priority: NewsItem["priority"] = "normal"
       ) {
-        items.push({ id, text, href, priority });
+        items.push({
+          id,
+          text,
+          href,
+          priority,
+        });
       }
 
-      // =====================================
-      // 重要なお知らせ
-      // =====================================
+      /* ====================================
+         API WARNINGS
+      ==================================== */
 
       if (!analyticsOk || !healthOk) {
         add(
-          "partial",
-          "一部の集計APIが応答していません。運営チェックを確認してください",
+          "api-warning",
+          "一部の集計APIを取得できません。運営チェックをご確認ください",
           "/staff/operations",
           "warning"
         );
       }
 
-      if (healthOk) {
-        const maintenance = objectValue(
-          health.maintenance
-        );
+      /* ====================================
+         MAINTENANCE
+      ==================================== */
 
-        const individualKeys = [
-          "home",
-          "stamp",
-          "knowledge",
-          "progress",
-          "reward",
-          "pre_survey",
-          "post_survey",
-        ];
+      if (healthOk) {
+        const maintenance = obj(health.maintenance);
 
         if (maintenance.all === true) {
           add(
@@ -216,14 +264,16 @@ export default function PokipoStaffTicker() {
             "warning"
           );
         } else {
-          const stopped = individualKeys.filter(
-            (key) => maintenance[key] === true
-          );
+          const stopped = Object.entries(
+            MAINTENANCE_NAMES
+          )
+            .filter(([key]) => maintenance[key] === true)
+            .map(([, name]) => name);
 
           if (stopped.length > 0) {
             add(
               "maintenance-partial",
-              `${stopped.length}機能が個別メンテナンス設定中です`,
+              `個別メンテナンス設定中：${stopped.join("・")}`,
               "/staff/maintenance",
               "warning"
             );
@@ -231,58 +281,69 @@ export default function PokipoStaffTicker() {
         }
       }
 
-      // =====================================
-      // 参加者・完走者・スタンプ
-      // =====================================
+      /* ====================================
+         PARTICIPANTS
+      ==================================== */
 
       add(
         "registered",
-        `現在の参加登録者数：${formatNumber(
-          totals.registered
-        )}人`,
+        `参加登録者：${fmt(totals.registered)}人`,
         "/staff/dashboard"
       );
 
       add(
         "completed",
-        `スタンプラリー完走者：${formatNumber(
-          totals.completed
-        )}人`,
+        `スタンプ完走者：${fmt(totals.completed)}人`,
         "/staff/dashboard"
       );
 
       add(
         "stamps",
-        `スタンプ取得総件数：${formatNumber(
-          totals.stamps
-        )}件`,
-        "/staff/analytics"
+        `スタンプ取得総件数：${fmt(totals.stamps)}件`,
+        "/staff/dashboard"
       );
 
       if (totals.registered > 0) {
-        const rate = Math.round(
-          (totals.completed / totals.registered) *
-            1000
-        ) / 10;
-
         add(
           "completion-rate",
-          `現在の完走率：${rate}%`,
-          "/staff/analytics"
+          `完走率：${pct(
+            totals.completed,
+            totals.registered
+          )}%`,
+          "/staff/dashboard"
         );
       }
 
-      // =====================================
-      // 特典交換
-      // =====================================
+      /* ====================================
+         REWARD EXCHANGE
+      ==================================== */
 
       add(
-        "exchange",
-        `特典交換済み：${formatNumber(
-          totals.exchanged
-        )}人`,
-        "/staff/dashboard"
+        "exchanged",
+        `特典交換済み：${fmt(totals.exchanged)}人`,
+        "/staff/reward/history"
       );
+
+      if (totals.completed >= totals.exchanged) {
+        add(
+          "not-exchanged",
+          `完走者のうち未交換：${fmt(
+            totals.completed - totals.exchanged
+          )}人`,
+          "/staff/dashboard"
+        );
+      }
+
+      if (totals.completed > 0) {
+        add(
+          "exchange-rate",
+          `完走者に対する交換率：${pct(
+            totals.exchanged,
+            totals.completed
+          )}%`,
+          "/staff/dashboard"
+        );
+      }
 
       const remaining = Math.max(
         0,
@@ -290,110 +351,90 @@ export default function PokipoStaffTicker() {
       );
 
       add(
-        "remaining",
-        `先着360名に対する交換枠の参考残数：${formatNumber(
+        "reward-remaining",
+        `先着360名に対する交換記録上の参考残数：${fmt(
           remaining
         )}人分`,
         "/staff/reward",
         remaining <= 30 ? "warning" : "normal"
       );
 
-      if (totals.completed > 0) {
-        const rate = Math.round(
-          (totals.exchanged / totals.completed) *
-            1000
-        ) / 10;
-
-        add(
-          "exchange-rate",
-          `完走者の特典交換率：${rate}%`,
-          "/staff/analytics"
-        );
-      }
-
-      // =====================================
-      // 直近の活動
-      // =====================================
+      /* ====================================
+         RECENT ACTIVITY
+      ==================================== */
 
       if (healthOk) {
-        const recentConfig = [
-          {
-            key: "registration",
-            label: "新規参加登録",
-            unit: "人",
-          },
-          {
-            key: "stamps",
-            label: "スタンプ取得",
-            unit: "件",
-          },
-          {
-            key: "completions",
-            label: "新規完走",
-            unit: "人",
-          },
-          {
-            key: "pre_survey",
-            label: "参加前アンケート回答",
-            unit: "件",
-          },
-          {
-            key: "post_survey",
-            label: "参加後アンケート回答",
-            unit: "件",
-          },
-          {
-            key: "reward_issued",
-            label: "特典交換QR発行記録",
-            unit: "件",
-          },
-          {
-            key: "reward_exchanged",
-            label: "特典交換",
-            unit: "件",
-          },
-        ];
+        const configurations = [
+          ["registration", "参加登録", "人"],
+          ["stamps", "スタンプ取得", "件"],
+          ["completions", "完走", "人"],
+          ["pre_survey", "参加前アンケート", "件"],
+          ["post_survey", "参加後アンケート", "件"],
+          ["reward_issued", "特典QR発行記録", "件"],
+          ["reward_exchanged", "特典交換", "件"],
+        ] as const;
 
-        for (const config of recentConfig) {
-          const row = feature(config.key);
+        for (const [key, label, unit] of configurations) {
+          const row = feature(key);
+
           if (!row) continue;
 
           add(
-            `recent-${config.key}`,
-            `直近60分の${config.label}：${formatNumber(
+            `recent10-${key}`,
+            `直近10分の${label}：${fmt(
+              row.last10
+            )}${unit}`,
+            "/staff/operations",
+            row.last10 > 0 ? "highlight" : "normal"
+          );
+
+          add(
+            `recent60-${key}`,
+            `直近60分の${label}：${fmt(
               row.last60
-            )}${config.unit}`,
+            )}${unit}`,
             "/staff/operations"
           );
         }
 
-        const preSurvey = feature("pre_survey");
-        const postSurvey = feature("post_survey");
+        const pre = feature("pre_survey");
+        const post = feature("post_survey");
+        const issued = feature("reward_issued");
 
-        if (preSurvey) {
+        if (pre) {
           add(
             "pre-total",
-            `参加前アンケート回答：累計${formatNumber(
-              preSurvey.total
+            `参加前アンケート累計：${fmt(
+              pre.total
             )}件`,
             "/staff/surveys"
           );
         }
 
-        if (postSurvey) {
+        if (post) {
           add(
             "post-total",
-            `参加後アンケート回答：累計${formatNumber(
-              postSurvey.total
+            `参加後アンケート累計：${fmt(
+              post.total
             )}件`,
             "/staff/surveys"
+          );
+        }
+
+        if (issued) {
+          add(
+            "issued-total",
+            `特典QR発行記録累計：${fmt(
+              issued.total
+            )}件`,
+            "/staff/reward/history"
           );
         }
       }
 
-      // =====================================
-      // スポットの状況
-      // =====================================
+      /* ====================================
+         SPOT DATA
+      ==================================== */
 
       const rawSpots = analyticsOk
         ? analytics.spots
@@ -401,77 +442,105 @@ export default function PokipoStaffTicker() {
 
       const spots: Spot[] = Array.isArray(rawSpots)
         ? rawSpots.map((value: unknown) => {
-            const x = objectValue(value);
+            const row = obj(value);
 
             return {
-              spot_id: String(x.spot_id ?? ""),
-              count: n(x.count ?? x.total),
-              last10: n(x.last10),
+              spot_id: String(row.spot_id ?? ""),
+              count: num(row.count ?? row.total),
             };
           })
         : [];
 
-      for (const [id, name] of Object.entries(
-        SPOT_NAMES
-      )) {
-        const spot = spots.find(
-          (row) => row.spot_id === id
-        );
+      if (analyticsOk || healthOk) {
+        for (const [id, name] of Object.entries(
+          SPOT_NAMES
+        )) {
+          const spot = spots.find(
+            (row) => row.spot_id === id
+          );
 
-        add(
-          `spot-${id}`,
-          `${name}：スタンプ取得${formatNumber(
-            spot?.count ?? 0
-          )}件`,
-          "/staff/analytics"
-        );
+          add(
+            `spot-${id}`,
+            `${name}：取得${fmt(
+              spot?.count ?? 0
+            )}件`,
+            "/staff/dashboard"
+          );
+        }
       }
 
-      // =====================================
-      // 前回からの増加速報
-      // =====================================
+      /* ====================================
+         TODAY
+      ==================================== */
+
+      if (
+        analyticsOk &&
+        Array.isArray(analytics.daily)
+      ) {
+        const today = japanDate();
+
+        const todayRow = analytics.daily
+          .map((value: unknown) => obj(value))
+          .find((row) => row.date === today);
+
+        if (todayRow) {
+          add(
+            "today-registered",
+            `本日の新規登録：${fmt(
+              num(todayRow.registered)
+            )}人`,
+            "/staff/dashboard"
+          );
+
+          add(
+            "today-stamps",
+            `本日のスタンプ取得：${fmt(
+              num(todayRow.stamps)
+            )}件`,
+            "/staff/dashboard"
+          );
+
+          add(
+            "today-completed",
+            `本日の新規完走：${fmt(
+              num(todayRow.completed)
+            )}人`,
+            "/staff/dashboard"
+          );
+
+          add(
+            "today-exchanged",
+            `本日の特典交換：${fmt(
+              num(todayRow.exchanged)
+            )}件`,
+            "/staff/reward/history"
+          );
+        }
+      }
+
+      /* ====================================
+         INCREASE NOTIFICATIONS
+      ==================================== */
 
       const previous = previousTotals.current;
 
-      if (previous) {
-        const increases: {
-          key: keyof Totals;
-          label: string;
-          unit: string;
-        }[] = [
-          {
-            key: "registered",
-            label: "参加登録者",
-            unit: "人",
-          },
-          {
-            key: "completed",
-            label: "完走者",
-            unit: "人",
-          },
-          {
-            key: "exchanged",
-            label: "特典交換者",
-            unit: "人",
-          },
-          {
-            key: "stamps",
-            label: "スタンプ取得",
-            unit: "件",
-          },
-        ];
+      if (previous && analyticsOk && healthOk) {
+        const comparisons = [
+          ["registered", "参加登録", "人"],
+          ["completed", "完走", "人"],
+          ["stamps", "スタンプ取得", "件"],
+          ["exchanged", "特典交換", "人"],
+        ] as const;
 
-        for (const item of increases) {
-          const difference =
-            totals[item.key] -
-            previous[item.key];
+        for (const [key, label, unit] of comparisons) {
+          const difference = totals[key] - previous[key];
 
           if (difference > 0) {
             add(
-              `increase-${item.key}`,
-              `速報：前回更新から${item.label}が${formatNumber(
+              `increase-${key}`,
+              `速報：前回の更新から${label}が${fmt(
                 difference
-              )}${item.unit}増加しました`,
+              )}${unit}増加！`,
               "/staff/dashboard",
               "highlight"
             );
@@ -479,72 +548,61 @@ export default function PokipoStaffTicker() {
         }
       }
 
-      if (analyticsOk && healthOk) {
-        previousTotals.current = totals;
+      previousTotals.current =
+        analyticsOk && healthOk ? totals : null;
+
+      /* ====================================
+         EVENT INFORMATION
+      ==================================== */
+
+      const today = japanDate();
+      const eventDate = "2026-10-27";
+
+      if (today < eventDate) {
+        const days = Math.round(
+          (
+            Date.parse(`${eventDate}T00:00:00Z`) -
+            Date.parse(`${today}T00:00:00Z`)
+          ) / 86400000
+        );
+
+        add(
+          "event-countdown",
+          `特典交換会まであと${days}日`,
+          "/staff/reward",
+          "highlight"
+        );
+      } else if (today === eventDate) {
+        add(
+          "event-today",
+          "本日は特典交換会当日です！",
+          "/staff/reward",
+          "highlight"
+        );
       }
-
-      // =====================================
-      // 登録・完走の節目
-      // =====================================
-
-      if (
-        previous &&
-        analyticsOk &&
-        healthOk
-      ) {
-        for (const milestone of [
-          50, 100, 200, 300, 500, 1000,
-        ]) {
-          if (
-            previous.registered < milestone &&
-            totals.registered >= milestone
-          ) {
-            add(
-              `milestone-registered-${milestone}`,
-              `登録者数が${milestone}人を突破しました！`,
-              "/staff/dashboard",
-              "highlight"
-            );
-          }
-
-          if (
-            previous.completed < milestone &&
-            totals.completed >= milestone
-          ) {
-            add(
-              `milestone-completed-${milestone}`,
-              `スタンプ完走者が${milestone}人を突破しました！`,
-              "/staff/dashboard",
-              "highlight"
-            );
-          }
-        }
-      }
-
-      // =====================================
-      // イベント案内
-      // =====================================
 
       add(
         "event",
         "特典交換会：10月27日 12:35〜16:00／雄飛ホール",
-        "/staff/reward",
-        "highlight"
+        "/staff/reward"
       );
 
       add(
         "api",
         analyticsOk && healthOk
-          ? "分析API・参加者機能監視APIともに応答あり"
-          : "一部APIの応答を確認できません",
+          ? "分析API・運営記録取得APIともに応答あり"
+          : "一部の集計APIで取得エラー",
         "/staff/operations",
         analyticsOk && healthOk
           ? "normal"
           : "warning"
       );
 
-      // 警告・速報を先頭に配置
-      const order = {
+      /* ====================================
+         PRIORITY
+      ==================================== */
+
+      const priorityOrder = {
         warning: 0,
         highlight: 1,
         normal: 2,
@@ -552,35 +610,31 @@ export default function PokipoStaffTicker() {
 
       items.sort(
         (a, b) =>
-          order[a.priority] -
-          order[b.priority]
+          priorityOrder[a.priority] -
+          priorityOrder[b.priority]
       );
 
       setNews(items);
+
       setStatus(
         analyticsOk && healthOk
           ? "online"
           : "partial"
       );
 
-      setUpdatedAt(
-        new Date().toLocaleTimeString("ja-JP", {
-          timeZone: "Asia/Tokyo",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })
-      );
+      setUpdatedAt(japanTime());
     } catch (error) {
-      console.error("POKIPO LIVE NEWS:", error);
+      console.error("POKIPO STAFF NEWS:", error);
 
       if (mountedRef.current) {
+        previousTotals.current = null;
         setStatus("error");
+
         setNews([
           {
-            id: "connection-error",
+            id: "unexpected-error",
             text:
-              "運営速報の更新に失敗しました。運営チェックを確認してください",
+              "運営ニュースの取得に失敗しました。運営チェックをご確認ください",
             href: "/staff/operations",
             priority: "warning",
           },
@@ -591,12 +645,16 @@ export default function PokipoStaffTicker() {
     }
   }, []);
 
+  /* ========================================
+     AUTO UPDATE
+  ======================================== */
+
   useEffect(() => {
     mountedRef.current = true;
 
     void refresh();
 
-    const timer = window.setInterval(() => {
+    const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") {
         void refresh();
       }
@@ -615,7 +673,8 @@ export default function PokipoStaffTicker() {
 
     return () => {
       mountedRef.current = false;
-      window.clearInterval(timer);
+      window.clearInterval(interval);
+
       document.removeEventListener(
         "visibilitychange",
         handleVisibility
@@ -623,108 +682,157 @@ export default function PokipoStaffTicker() {
     };
   }, [refresh]);
 
-  function openNews(item: NewsItem) {
-    router.push(item.href);
+  /* ========================================
+     NEWS CONTENT
+  ======================================== */
+
+  function renderGroup(copy: boolean) {
+    return (
+      <div
+        className="pokipoTickerGroup"
+        aria-hidden={copy}
+      >
+        {news.map((item) => (
+          <button
+            type="button"
+            key={`${copy ? "copy" : "main"}-${item.id}`}
+            className={`pokipoTickerItem ${item.priority}`}
+            tabIndex={copy ? -1 : 0}
+            onClick={() => router.push(item.href)}
+            style={{
+              fontSize: 10,
+              lineHeight: 1.3,
+              paddingTop: 0,
+              paddingBottom: 0,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span className="pokipoTickerSeparator">
+              ◆
+            </span>
+            {item.text}
+          </button>
+        ))}
+      </div>
+    );
   }
 
-  // 同じニュースを2組並べてシームレスにループ
-  const renderItems = (suffix: string) =>
-    news.map((item) => (
-      <button
-        type="button"
-        key={`${suffix}-${item.id}`}
-        className={`pokipoTickerItem ${item.priority}`}
-        onClick={() => openNews(item)}
-        tabIndex={suffix === "copy" ? -1 : 0}
-        aria-hidden={suffix === "copy"}
-      >
-        <span className="pokipoTickerSeparator">
-          ◆
-        </span>
-        {item.text}
-      </button>
-    ));
+  const duration = Math.max(
+    50,
+    news.reduce(
+      (sum, item) => sum + item.text.length,
+      0
+    ) * 0.2
+  );
+
+  /* ========================================
+     RENDER
+     SLIM / AUTO SCROLL
+     NO PAUSE BUTTON
+  ======================================== */
 
   return (
     <section
       className="pokipoStaffTicker"
       aria-label="POKIPO運営速報"
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        flexWrap: "nowrap",
+        alignItems: "center",
+        gap: 8,
+        width: "100%",
+        minWidth: 0,
+        height: 34,
+        minHeight: 34,
+        padding: "0 9px",
+        marginBottom: 12,
+        borderRadius: 8,
+        overflow: "hidden",
+        boxSizing: "border-box",
+      }}
     >
-      <div className="pokipoTickerHeader">
-        <div className="pokipoTickerBrand">
-          <span className="pokipoTickerLive">
-            LIVE
-          </span>
-          <strong>現在のPOKIPO運営状況</strong>
-        </div>
+      {/* LIVE LABEL */}
 
-        <div className="pokipoTickerInfo">
-          <span
-            className={`pokipoTickerConnection ${status}`}
-          >
-            {status === "online"
-              ? "API応答あり"
-              : status === "partial"
-              ? "一部要確認"
-              : status === "error"
-              ? "取得失敗"
-              : "取得中"}
-          </span>
+      <div
+        className="pokipoTickerBrand"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          flex: "0 0 auto",
+          gap: 5,
+          whiteSpace: "nowrap",
+        }}
+      >
+        <span
+          className="pokipoTickerLive"
+          style={{
+            fontSize: 8,
+            padding: "2px 5px",
+          }}
+        >
+          LIVE
+        </span>
 
-          {updatedAt && (
-            <span className="pokipoTickerTime">
-              {updatedAt}更新
-            </span>
-          )}
-
-          <button
-            type="button"
-            className="pokipoTickerPause"
-            onClick={() =>
-              setPaused((current) => !current)
-            }
-            aria-label={
-              paused
-                ? "ニュースのスクロールを再開"
-                : "ニュースのスクロールを停止"
-            }
-          >
-            {paused ? "▶ 再開" : "Ⅱ 停止"}
-          </button>
-        </div>
+        <strong
+          style={{
+            fontSize: 10,
+            lineHeight: 1,
+          }}
+        >
+          POKIPO
+        </strong>
       </div>
+
+      {/* AUTO-SCROLL NEWS */}
 
       <div
         className="pokipoTickerViewport"
-        aria-label="運営速報テロップ"
+        aria-label="運営ニュース"
+        style={{
+          flex: "1 1 0",
+          minWidth: 0,
+          width: 0,
+          padding: 0,
+          margin: 0,
+          border: "none",
+          overflow: "hidden",
+        }}
       >
         <div
-          className={`pokipoTickerTrack ${
-            paused ? "paused" : ""
-          }`}
+          className="pokipoTickerTrack"
           style={{
-            animationDuration: `${Math.max(
-              50,
-              news.reduce(
-                (total, item) =>
-                  total + item.text.length,
-                0
-              ) * 0.22
-            )}s`,
+            animationDuration: `${duration}s`,
+            animationPlayState: "running",
           }}
         >
-          <div className="pokipoTickerGroup">
-            {renderItems("original")}
-          </div>
-
-          <div
-            className="pokipoTickerGroup"
-            aria-hidden="true"
-          >
-            {renderItems("copy")}
-          </div>
+          {renderGroup(false)}
+          {renderGroup(true)}
         </div>
       </div>
+
+      {/* CONNECTION STATUS */}
+
+      <span
+        className={`pokipoTickerConnection ${status}`}
+        title={
+          updatedAt
+            ? `運営データ最終取得：${updatedAt}`
+            : "運営データ取得中"
+        }
+        style={{
+          flex: "0 0 auto",
+          fontSize: 12,
+          lineHeight: 1,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {status === "online"
+          ? "●"
+          : status === "loading"
+          ? "○"
+          : "!"}
+      </span>
     </section>
   );
 }
