@@ -709,7 +709,7 @@ export default function ParticipantsPage() {
                 fontSize: 12,
               }}
             >
-              lipost-furuya 限定・閲覧専用
+              管理開発者限定ページ・個人情報取扱要注意ページ
             </p>
           </div>
 
