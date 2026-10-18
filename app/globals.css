@@ -43195,3 +43195,496 @@ main.shell:has(input[aria-label="参加者検索"])
     font-size: 18px !important;
   }
 }
+
+
+/* ============================================
+   POKIPO STAFF DESIGN UNIFICATION
+   PARTICIPANT SUPPORT / STAFF TESTING
+   スタッフトップページの色合いに統一
+============================================ */
+
+/* --------------------------------------------
+   01. 共通カラーパレット
+-------------------------------------------- */
+
+.supportPage,
+.supportRewardPage,
+.testPage {
+  --support-red: #8a1822 !important;
+  --support-dark-red: #70131b !important;
+  --support-text: #332d29 !important;
+  --support-muted: #786c64 !important;
+  --support-border: #e8dfd8 !important;
+
+  --test-red: #8a1822 !important;
+  --test-dark-red: #70131b !important;
+  --test-text: #332d29 !important;
+  --test-muted: #786c64 !important;
+  --test-border: #e8dfd8 !important;
+
+  color: #332d29 !important;
+}
+
+/* --------------------------------------------
+   02. 参加者サポート共通ヘッダー
+-------------------------------------------- */
+
+.supportPage .supportHero,
+.supportRewardPage .supportHero {
+  background: linear-gradient(
+    135deg,
+    #fffaf6 0%,
+    #ffffff 75%
+  ) !important;
+
+  border: 1px solid #e8dfd8 !important;
+  border-radius: 19px !important;
+
+  box-shadow:
+    0 8px 22px rgba(55, 35, 25, 0.055)
+    !important;
+
+  color: #332d29 !important;
+}
+
+.supportPage .supportHero h1,
+.supportRewardPage .supportHero h1 {
+  color: #332d29 !important;
+  font-weight: 900 !important;
+}
+
+.supportPage .supportHero > p,
+.supportRewardPage .supportHero > p {
+  color: #786c64 !important;
+}
+
+.supportPage .supportEyebrow,
+.supportRewardPage .supportEyebrow {
+  color: #8a1822 !important;
+}
+
+.supportPage .supportStaffTag,
+.supportRewardPage .supportStaffTag {
+  background: #f6efea !important;
+  border: 1px solid #eaded6 !important;
+  color: #8a1822 !important;
+}
+
+.supportPage .supportHeroIcon,
+.supportRewardPage .supportHeroIcon {
+  background: #f6efea !important;
+  border: 1px solid #eaded6 !important;
+  color: #8a1822 !important;
+}
+
+/* 本番データ操作の注意事項 */
+
+.supportPage .supportHeroNotice,
+.supportRewardPage .supportHeroNotice {
+  background: #fff5e9 !important;
+  border: 1px solid #efd2b2 !important;
+  border-radius: 14px !important;
+}
+
+.supportPage .supportHeroNotice strong,
+.supportRewardPage .supportHeroNotice strong {
+  color: #754426 !important;
+}
+
+.supportPage .supportHeroNotice small,
+.supportRewardPage .supportHeroNotice small {
+  color: #875b3b !important;
+}
+
+.supportPage .supportHeroNoticeIcon,
+.supportRewardPage .supportHeroNoticeIcon {
+  background: #ffffff !important;
+  color: #8a1822 !important;
+}
+
+/* 戻るボタン */
+
+.supportPage .supportBackLink,
+.supportRewardPage .supportBackLink {
+  color: #8a1822 !important;
+  background: transparent !important;
+}
+
+/* --------------------------------------------
+   03. サポート画面のカード
+-------------------------------------------- */
+
+.supportPage .supportPanel,
+.supportRewardPage .supportPanel,
+.supportPage .supportParticipantCard,
+.supportRewardPage .supportParticipantCard,
+.supportRewardPage .supportRecordCard,
+.supportPage .supportCorrectionPanel {
+  background: #ffffff !important;
+  border: 1px solid #e8dfd8 !important;
+  border-radius: 19px !important;
+  box-shadow:
+    0 8px 22px rgba(55, 35, 25, 0.055)
+    !important;
+}
+
+.supportPage .supportPanelNumber,
+.supportRewardPage .supportPanelNumber {
+  background: #f6efea !important;
+  color: #8a1822 !important;
+  border-radius: 13px !important;
+}
+
+.supportPage .supportSectionEyebrow,
+.supportRewardPage .supportSectionEyebrow {
+  color: #8a1822 !important;
+}
+
+.supportPage .supportPanel h2,
+.supportRewardPage .supportPanel h2,
+.supportPage .supportSectionHeading,
+.supportRewardPage .supportSectionHeading,
+.supportPage .supportParticipantName,
+.supportRewardPage .supportParticipantName {
+  color: #332d29 !important;
+}
+
+.supportPage .supportDescription,
+.supportRewardPage .supportDescription {
+  color: #786c64 !important;
+}
+
+/* --------------------------------------------
+   04. 入力欄と検索ボタン
+-------------------------------------------- */
+
+.supportPage .supportInput,
+.supportRewardPage .supportInput {
+  background: #ffffff !important;
+  color: #332d29 !important;
+  border: 1px solid #ded3cc !important;
+  border-radius: 13px !important;
+}
+
+.supportPage .supportInput:focus,
+.supportRewardPage .supportInput:focus {
+  border-color: #8a1822 !important;
+  outline: 3px solid rgba(138, 24, 34, 0.12) !important;
+  outline-offset: 0;
+}
+
+.supportPage .supportFieldLabel,
+.supportRewardPage .supportFieldLabel {
+  color: #4b423d !important;
+}
+
+.supportPage .supportPrimaryButton,
+.supportRewardPage .supportPrimaryButton {
+  background: #8a1822 !important;
+  color: #ffffff !important;
+  border-color: #8a1822 !important;
+  border-radius: 13px !important;
+}
+
+.supportPage .supportPrimaryButton:hover:not(:disabled),
+.supportRewardPage .supportPrimaryButton:hover:not(:disabled) {
+  background: #70131b !important;
+}
+
+.supportPage .supportSecondaryButton,
+.supportRewardPage .supportSecondaryButton,
+.supportPage .supportCameraButton,
+.supportRewardPage .supportCameraButton {
+  background: #ffffff !important;
+  color: #8a1822 !important;
+  border: 1px solid #e8dfd8 !important;
+  border-radius: 13px !important;
+}
+
+/* --------------------------------------------
+   05. スタンプ・参加者情報・履歴
+-------------------------------------------- */
+
+.supportPage .supportParticipantAvatar,
+.supportRewardPage .supportParticipantAvatar,
+.supportPage .supportStampNumber {
+  background: #f6efea !important;
+  color: #8a1822 !important;
+}
+
+.supportPage .supportInfoItem,
+.supportRewardPage .supportInfoItem,
+.supportPage .supportHistoryItem,
+.supportRewardPage .supportHistoryItem {
+  border-color: #e8dfd8 !important;
+}
+
+.supportPage .supportProgressFill {
+  background: #8a1822 !important;
+}
+
+.supportPage .supportProgressTrack {
+  background: #f1e9e2 !important;
+}
+
+.supportPage .supportHistoryAction,
+.supportRewardPage .supportRecordEyebrow {
+  color: #8a1822 !important;
+}
+
+/* --------------------------------------------
+   06. 修正・取消操作の注意表示
+-------------------------------------------- */
+
+.supportPage .supportWarningBox,
+.supportRewardPage .supportWarningBox,
+.supportPage .supportModalWarning,
+.supportRewardPage .supportModalWarning {
+  background: #fff5e9 !important;
+  border: 1px solid #efd2b2 !important;
+  color: #875029 !important;
+}
+
+.supportPage .supportDangerButton,
+.supportRewardPage .supportDangerButton,
+.supportPage .supportConfirmButton.danger,
+.supportRewardPage .supportConfirmButton.danger {
+  background: #8a1822 !important;
+  color: #ffffff !important;
+  border-color: #8a1822 !important;
+}
+
+.supportPage .supportAlert.error,
+.supportRewardPage .supportAlert.error {
+  background: #fff0ee !important;
+  color: #91212f !important;
+  border-color: #edc5c2 !important;
+}
+
+.supportPage .supportAlert.success,
+.supportRewardPage .supportAlert.success {
+  background: #effaf3 !important;
+  color: #216d42 !important;
+  border-color: #cde5d3 !important;
+}
+
+/* --------------------------------------------
+   07. サポートの確認モーダル
+-------------------------------------------- */
+
+.supportPage .supportModal,
+.supportRewardPage .supportModal {
+  background: #ffffff !important;
+  border: 1px solid #e8dfd8 !important;
+  border-radius: 19px !important;
+}
+
+.supportPage .supportModal h2,
+.supportRewardPage .supportModal h2 {
+  color: #332d29 !important;
+}
+
+.supportPage .supportModalDetails,
+.supportRewardPage .supportModalDetails {
+  border-color: #e8dfd8 !important;
+}
+
+/* --------------------------------------------
+   08. 動作確認ページのヘッダー
+-------------------------------------------- */
+
+.testPage .testHeader {
+  background: linear-gradient(
+    135deg,
+    #fffaf6,
+    #ffffff 75%
+  ) !important;
+
+  color: #332d29 !important;
+  border: 1px solid #e8dfd8 !important;
+  border-radius: 19px !important;
+
+  box-shadow:
+    0 8px 22px rgba(55, 35, 25, 0.055)
+    !important;
+}
+
+.testPage .testHeader h1 {
+  color: #332d29 !important;
+}
+
+.testPage .testEyebrow {
+  color: #8a1822 !important;
+}
+
+.testPage .testHeaderDescription {
+  color: #786c64 !important;
+}
+
+.testPage .testModeTag {
+  background: #f6efea !important;
+  color: #8a1822 !important;
+  border: 1px solid #eaded6 !important;
+}
+
+/* 検証専用の安全表示は維持 */
+
+.testPage .testSafetyNote {
+  background: #effaf3 !important;
+  border: 1px solid #cde5d3 !important;
+}
+
+.testPage .testSafetyNote strong,
+.testPage .testSafetyNote p {
+  color: #216d42 !important;
+}
+
+/* --------------------------------------------
+   09. 動作確認ページの各カード
+-------------------------------------------- */
+
+.testPage .testPanel,
+.testPage .testAccount,
+.testPage .testActionPanel,
+.testPage .testResetPanel {
+  background: #ffffff !important;
+  border: 1px solid #e8dfd8 !important;
+  border-radius: 19px !important;
+
+  box-shadow:
+    0 8px 22px rgba(55, 35, 25, 0.055)
+    !important;
+}
+
+.testPage .testSectionLabel,
+.testPage .testStepCounter,
+.testPage .testAccountText > span {
+  color: #8a1822 !important;
+}
+
+.testPage h2,
+.testPage .testActionHeading h3,
+.testPage .testStepTitle {
+  color: #332d29 !important;
+}
+
+.testPage .testProgressNumber {
+  color: #8a1822 !important;
+}
+
+.testPage .testProgressTrack {
+  background: #f1e9e2 !important;
+}
+
+.testPage .testProgressFill {
+  background: #8a1822 !important;
+}
+
+/* スタンプの表示 */
+
+.testPage .testSpotCircle {
+  background: #f6efea !important;
+  border-color: #e8dfd8 !important;
+  color: #786c64 !important;
+}
+
+.testPage .testSpot.acquired .testSpotCircle {
+  background: #8a1822 !important;
+  border-color: #8a1822 !important;
+  color: #ffffff !important;
+}
+
+/* --------------------------------------------
+   10. 動作確認ページのボタン
+-------------------------------------------- */
+
+.testPage .testPrimaryButton {
+  background: #8a1822 !important;
+  color: #ffffff !important;
+  border-color: #8a1822 !important;
+  border-radius: 13px !important;
+}
+
+.testPage .testPrimaryButton:hover:not(:disabled) {
+  background: #70131b !important;
+}
+
+.testPage .testOutlineButton,
+.testPage .testRefreshButton,
+.testPage .testBackButton {
+  background: #ffffff !important;
+  color: #8a1822 !important;
+  border: 1px solid #e8dfd8 !important;
+  border-radius: 13px !important;
+}
+
+/* リセットは区別できる状態を維持 */
+
+.testPage .testResetButton {
+  border-radius: 13px !important;
+}
+
+.testPage .testResetPanel {
+  border-color: #edcfba !important;
+}
+
+.testPage .testActionIcon,
+.testPage .testAvatar {
+  background: #f6efea !important;
+  color: #8a1822 !important;
+}
+
+/* --------------------------------------------
+   11. エラー・成功表示
+-------------------------------------------- */
+
+.testPage .testAlert.error {
+  background: #fff0ee !important;
+  color: #91212f !important;
+  border-color: #edc5c2 !important;
+}
+
+.testPage .testAlert.success {
+  background: #effaf3 !important;
+  color: #216d42 !important;
+  border-color: #cde5d3 !important;
+}
+
+/* --------------------------------------------
+   12. キーボード操作
+-------------------------------------------- */
+
+:is(
+  .supportPage,
+  .supportRewardPage,
+  .testPage
+) button:focus-visible {
+  outline: 3px solid rgba(138, 24, 34, 0.45) !important;
+  outline-offset: 3px !important;
+}
+
+/* --------------------------------------------
+   13. スマートフォン対応
+-------------------------------------------- */
+
+@media (max-width: 560px) {
+  .supportPage .supportHero,
+  .supportRewardPage .supportHero,
+  .testPage .testHeader {
+    padding: 23px 19px !important;
+    border-radius: 17px !important;
+  }
+
+  .supportPage .supportPanel,
+  .supportRewardPage .supportPanel,
+  .testPage .testPanel,
+  .testPage .testActionPanel {
+    padding: 19px 16px !important;
+    border-radius: 16px !important;
+  }
+
+  .supportPage .supportButtonRow,
+  .supportRewardPage .supportButtonRow {
+    grid-template-columns: 1fr;
+  }
+}

@@ -494,7 +494,7 @@ export default function StaffOperationsPage() {
                 最終確認：
                 {checkedAt || "確認中"}
                 {" ／ "}
-                表示中は60秒ごとに再確認
+                表示中は60秒ごとに自動更新されます。
               </p>
 
               <div className="pokipoOpsChecks">
@@ -544,7 +544,6 @@ export default function StaffOperationsPage() {
               <p>
                 Excelで開けるUTF-8形式で
                 集計値のみ出力します。
-                学籍番号・ニックネームは含めません。
               </p>
 
               <div className="pokipoOpsButtons">
@@ -582,7 +581,6 @@ export default function StaffOperationsPage() {
 
               <p>
                 現在の集計データから計算した文章です。
-                ChatGPTや外部AIには送信しません。
               </p>
 
               {!snapshot ? (
