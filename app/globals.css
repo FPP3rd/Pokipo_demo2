@@ -43777,3 +43777,492 @@ main.shell:has(input[aria-label="参加者検索"])
     font-size: 28px !important;
   }
 }
+
+
+/* ============================================
+   POKIPO INTERACTIVE GRAPH ANIMATION
+   折れ線・棒・タップ詳細・円グラフ
+============================================ */
+
+/* --------------------------------------------
+   グラフの線が描かれるアニメーション
+-------------------------------------------- */
+
+.pokipoGraphDrawLine {
+  stroke: #8a1822 !important;
+  stroke-dasharray: 1600;
+  stroke-dashoffset: 1600;
+  animation: pokipoDrawLine 1.65s ease-out forwards;
+}
+
+@keyframes pokipoDrawLine {
+  from {
+    stroke-dashoffset: 1600;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* --------------------------------------------
+   点が順番に登場
+-------------------------------------------- */
+
+.pokipoGraphPoint {
+  cursor: pointer;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pokipoPointAppear 0.35s ease-out forwards;
+}
+
+@keyframes pokipoPointAppear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.pokipoGraphPoint:hover circle:last-of-type,
+.pokipoGraphPoint.selected circle:last-of-type {
+  stroke: #8a1822;
+  stroke-width: 2.5px;
+}
+
+.pokipoGraphPoint:focus-visible {
+  outline: none;
+  filter: drop-shadow(0 0 4px #8a1822);
+}
+
+/* --------------------------------------------
+   日別棒グラフのタップ対応
+-------------------------------------------- */
+
+.pokipoAnalyticsPage
+  .pokipoGraphBarButton {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+
+  flex: 1 0 9px !important;
+  min-width: 9px !important;
+  max-width: 52px !important;
+  height: 100% !important;
+
+  padding: 0 !important;
+  margin: 0 !important;
+
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+
+  cursor: pointer !important;
+  position: relative;
+  overflow: visible;
+}
+
+.pokipoAnalyticsPage
+  .pokipoGraphBarButton
+  .pokipoAnalyticsBarTrack {
+  display: flex;
+  align-items: flex-end;
+  width: 78%;
+  flex: 1;
+  min-height: 0;
+  background: transparent;
+}
+
+.pokipoGraphAnimatedBar {
+  display: block;
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+
+  background: linear-gradient(
+    180deg,
+    #b45863,
+    #8a1822
+  ) !important;
+
+  transform-origin: bottom;
+  transform: scaleY(0);
+
+  animation:
+    pokipoBarGrow 0.8s
+    cubic-bezier(0.2, 0.75, 0.25, 1)
+    forwards;
+}
+
+@keyframes pokipoBarGrow {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.pokipoGraphBarButton:hover
+  .pokipoGraphAnimatedBar {
+  filter: brightness(1.15);
+}
+
+.pokipoGraphBarButton.selected
+  .pokipoGraphAnimatedBar {
+  background: #65111b !important;
+  box-shadow: 0 0 0 2px rgba(138,24,34,0.18);
+}
+
+.pokipoGraphBarButton:focus-visible {
+  outline: 2px solid #8a1822 !important;
+  outline-offset: 2px;
+}
+
+.pokipoGraphBarButton small {
+  pointer-events: none;
+}
+
+/* --------------------------------------------
+   選択日付の詳細カード
+-------------------------------------------- */
+
+.pokipoGraphDetail {
+  margin-top: 20px;
+  padding: 18px;
+  border: 1px solid #e8dfd8;
+  border-radius: 17px;
+
+  background: linear-gradient(
+    135deg,
+    #fffaf6,
+    #ffffff
+  );
+
+  box-shadow:
+    0 5px 17px rgba(55,35,25,0.045);
+
+  animation:
+    pokipoDetailAppear 0.25s ease-out;
+}
+
+@keyframes pokipoDetailAppear {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pokipoGraphDetail.empty {
+  text-align: center;
+  border-style: dashed;
+}
+
+.pokipoGraphDetail.empty > span {
+  display: block;
+  color: #8a1822;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.pokipoGraphDetail.empty p {
+  color: #786c64;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.pokipoGraphDetailHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.pokipoGraphDetailHeader span {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: #8a1822;
+}
+
+.pokipoGraphDetailHeader strong {
+  font-size: 17px;
+  color: #332d29;
+}
+
+.pokipoGraphDetailGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.pokipoGraphDetailItem {
+  min-width: 0;
+  padding: 12px 10px;
+  border: 1px solid #e8dfd8;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.pokipoGraphDetailItem.selected {
+  background: #f6efea;
+  border-color: #c7a4a7;
+}
+
+.pokipoGraphDetailItem span {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: #786c64;
+}
+
+.pokipoGraphDetailItem strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 23px;
+  font-weight: 900;
+  color: #8a1822;
+}
+
+.pokipoGraphDetailItem small {
+  margin-left: 3px;
+  font-size: 10px;
+  color: #786c64;
+}
+
+.pokipoGraphCumulative {
+  margin: 15px 0 0 !important;
+  padding-top: 12px;
+  border-top: 1px solid #e8dfd8;
+
+  font-size: 13px;
+  color: #786c64;
+}
+
+.pokipoGraphCumulative strong {
+  margin-left: 7px;
+  font-size: 18px;
+  color: #8a1822;
+}
+
+/* --------------------------------------------
+   スポット別バーのアニメーション
+-------------------------------------------- */
+
+.pokipoAnalyticsPage
+  .pokipoGraphSpotButton {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+
+  margin: 0 !important;
+  padding: 8px !important;
+
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+
+  text-align: left;
+  cursor: pointer;
+}
+
+.pokipoAnalyticsPage
+  .pokipoGraphSpotButton:hover,
+.pokipoAnalyticsPage
+  .pokipoGraphSpotButton.selected {
+  background: #fffaf6 !important;
+  border-color: #e8dfd8 !important;
+}
+
+.pokipoGraphSpotButton
+  .pokipoAnalyticsSpotMeta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 9px;
+}
+
+.pokipoGraphSpotButton
+  .pokipoAnalyticsSpotTrack {
+  display: block;
+  overflow: hidden;
+  height: 15px;
+  border-radius: 999px;
+  background: #f1e9e2;
+}
+
+.pokipoGraphSpotFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+
+  background: linear-gradient(
+    90deg,
+    #ba6973,
+    #8a1822
+  ) !important;
+
+  transform-origin: left;
+  transform: scaleX(0);
+
+  animation:
+    pokipoSpotGrow 0.85s ease-out forwards;
+}
+
+@keyframes pokipoSpotGrow {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.pokipoGraphSpotDetail {
+  margin-top: 16px;
+  padding: 15px;
+  background: #fffaf6;
+  border: 1px solid #e8dfd8;
+  border-radius: 14px;
+}
+
+.pokipoGraphSpotDetail > span {
+  display: block;
+  font-size: 10px;
+  color: #786c64;
+  font-weight: 800;
+}
+
+.pokipoGraphSpotDetail > strong {
+  display: block;
+  margin: 6px 0;
+  color: #332d29;
+}
+
+.pokipoGraphSpotDetail p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.pokipoGraphSpotDetail b {
+  color: #8a1822;
+  font-size: 18px;
+}
+
+/* --------------------------------------------
+   円グラフの登場
+-------------------------------------------- */
+
+.pokipoGraphAnimatedDonut {
+  animation:
+    pokipoDonutAppear 0.9s ease-out both;
+}
+
+@keyframes pokipoDonutAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* --------------------------------------------
+   スマートフォン
+-------------------------------------------- */
+
+@media (max-width: 640px) {
+  .pokipoGraphDetail {
+    padding: 14px;
+  }
+
+  .pokipoGraphDetailGrid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .pokipoGraphDetailItem strong {
+    font-size: 22px;
+  }
+
+  .pokipoGraphDetailHeader strong {
+    font-size: 15px;
+  }
+}
+
+/* --------------------------------------------
+   動きを減らす設定
+-------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .pokipoGraphDrawLine,
+  .pokipoGraphPoint,
+  .pokipoGraphAnimatedBar,
+  .pokipoGraphSpotFill,
+  .pokipoGraphAnimatedDonut,
+  .pokipoGraphDetail {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+
+/* ============================================
+   POKIPO ANALYTICS
+   集計カードの単位表示
+============================================ */
+
+.pokipoAnalyticsStatValue {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.pokipoAnalyticsStatValue strong {
+  margin-top: 0 !important;
+  color: #8a1822 !important;
+  font-size: clamp(25px, 3vw, 34px);
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.pokipoAnalyticsStatValue small {
+  color: #786c64;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .pokipoAnalyticsStatValue strong {
+    font-size: 27px;
+  }
+
+  .pokipoAnalyticsStatValue small {
+    font-size: 11px;
+  }
+}
