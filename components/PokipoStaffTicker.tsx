@@ -655,7 +655,7 @@ export default function PokipoStaffTicker() {
           <span className="pokipoTickerLive">
             LIVE
           </span>
-          <strong>POKIPO NEWS</strong>
+          <strong>現在のPOKIPO運営状況</strong>
         </div>
 
         <div className="pokipoTickerInfo">

@@ -44982,3 +44982,69 @@ main.shell:has(input[aria-label="参加者検索"])
     overflow-x: auto;
   }
 }
+
+
+/* ============================================
+   POKIPO LIVE NEWS
+   コンパクト表示調整
+============================================ */
+
+.staffMenuPage .pokipoStaffTicker {
+  margin-bottom: 14px;
+  border-radius: 10px;
+}
+
+/* 上部のLIVE・更新時刻の帯を小さく */
+.staffMenuPage .pokipoTickerHeader {
+  padding: 5px 12px;
+  min-height: 0;
+  gap: 6px;
+}
+
+.staffMenuPage .pokipoTickerBrand {
+  gap: 6px;
+}
+
+.staffMenuPage .pokipoTickerBrand strong {
+  font-size: 11px;
+}
+
+.staffMenuPage .pokipoTickerLive {
+  padding: 2px 5px;
+  font-size: 9px;
+}
+
+/* ニュースが流れる部分の高さを縮小 */
+.staffMenuPage .pokipoTickerViewport {
+  padding: 6px 0;
+}
+
+.staffMenuPage .pokipoTickerItem {
+  font-size: 11px !important;
+  line-height: 1.4;
+}
+
+/* 停止・再開ボタンを小さく */
+.staffMenuPage .pokipoTickerPause {
+  padding: 3px 7px !important;
+  font-size: 9px !important;
+}
+
+.staffMenuPage .pokipoTickerConnection,
+.staffMenuPage .pokipoTickerTime {
+  font-size: 9px;
+}
+
+@media (max-width: 640px) {
+  .staffMenuPage .pokipoTickerHeader {
+    padding: 5px 9px;
+  }
+
+  .staffMenuPage .pokipoTickerViewport {
+    padding: 5px 0;
+  }
+
+  .staffMenuPage .pokipoTickerItem {
+    font-size: 10px !important;
+  }
+}
