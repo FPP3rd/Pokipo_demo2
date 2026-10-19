@@ -45521,3 +45521,33 @@ main.shell:has(input[aria-label="参加者検索"])
     animation: none !important;
   }
 }
+
+
+/* ============================================
+   POKIPO 広告・イベント案内
+   改行表示の修正
+============================================ */
+
+/* 管理画面：トップバナーのプレビュー */
+.staffPromotionBannerPreview p {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere;
+}
+
+/* 管理画面：全画面広告のプレビュー */
+.staffPromotionFullscreenPreviewCard p {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere;
+}
+
+/* 参加者画面：トップバナー */
+.homePromotionBannerContent p {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere;
+}
+
+/* 参加者画面：全画面広告 */
+.pokipoPromotionContent p {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere;
+}
