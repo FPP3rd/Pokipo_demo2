@@ -46292,3 +46292,18 @@ strong {
   height: 18px;
   text-align: center !important;
 }
+
+/* ==========================================================
+   POKIPO 管理ダッシュボード：左下「特典交換済み」のみ微調整
+   既存の4カード統一CSSのさらに下に追記する
+   カード自体の寸法・ほかの3カードには影響させない
+========================================================== */
+
+/* 3枚目（左下）の数字・単位・日本語を同じ量だけ下げる */
+.staffDashboardPage
+  .staffDashboardStats > .staffDashboardStatCard:nth-child(3) > div,
+.staffDashboardPage
+  .staffDashboardStats > .staffDashboardStatCard:nth-child(3) > p {
+  position: relative;
+  top: 3px;
+}
