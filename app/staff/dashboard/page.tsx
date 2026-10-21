@@ -8,6 +8,7 @@ import { supabase } from "../../../lib/supabase-client";
 import PokipoStampDistribution from "../../../components/PokipoStampDistribution";
 import PokipoAnimatedNumber from "../../../components/PokipoAnimatedNumber";
 import PokipoLiveClock from "../../../components/PokipoLiveClock";
+import PokipoDashboardRotatingStat from "../../../components/PokipoDashboardRotatingStat";
 
 type RewardHistoryItem = {
   id: string;
@@ -761,23 +762,13 @@ export default function StaffDashboardPage() {
           </article>
 
           <article className="staffDashboardStatCard today">
-            <span>TODAY</span>
-
-            <div>
-              <strong>
-                <PokipoAnimatedNumber
-                  value={
-                    loading
-                      ? null
-                      : todayExchangedCount
-                  }
-                />
-              </strong>
-
-              <small>人</small>
-            </div>
-
-            <p>本日の特典交換</p>
+            <PokipoDashboardRotatingStat
+              loading={loading}
+              participants={participantCount}
+              completions={completionCount}
+              exchanged={exchangedCount}
+              todayExchanged={todayExchangedCount}
+            />
           </article>
 
         </section>
