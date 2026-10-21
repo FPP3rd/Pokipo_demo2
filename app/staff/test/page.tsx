@@ -7,6 +7,7 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "../../../lib/supabase-client";
 import { ParticipantHomeNewsPreview } from "../../../components/PokipoParticipantNews";
 
@@ -851,6 +852,50 @@ export default function StaffTestPage() {
               </p>
             </section>
 
+            {/* POKIPO_COMBINED_PREVIEW_LINK */}
+            <section
+              aria-label="演出プレビュー"
+              style={{
+                width: "100%",
+                minWidth: 0,
+                boxSizing: "border-box",
+                padding: "18px 16px",
+                marginBottom: 16,
+                borderRadius: 18,
+                border: "1px solid #eee6df",
+                background: "#fffaf7",
+              }}
+            >
+              <p style={{ fontSize: 11, fontWeight: 900, color: "#8a1822", letterSpacing: ".08em", marginBottom: 6 }}>
+                COMPLETE FLOW PREVIEW
+              </p>
+              <h3 style={{ color: "#302a26", fontSize: 18, marginBottom: 8 }}>
+                演出プレビュー
+              </h3>
+              <p style={{ color: "#786c64", fontSize: 12, lineHeight: 1.7, marginBottom: 14 }}>
+                5個目のスタンプ獲得から、コンプリート演出・特典ボタンの強調・参加後アンケート・模擬QR発行まで一括で確認できます。本番データには影響しません。
+              </p>
+              <Link
+                href="/staff/test/completion-preview"
+                style={{
+                  display: "block",
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "16px 18px",
+                  borderRadius: 14,
+                  border: "1px solid #e9dcd6",
+                  background: "#ffffff",
+                  color: "#8a1822",
+                  textDecoration: "none",
+                  fontWeight: 800,
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  textAlign: "left",
+                }}
+              >
+                5個目獲得からQR発行まで確認する →
+              </Link>
+            </section>
             {/* RESET */}
             <section className="testResetPanel">
               <div className="testResetTop">
