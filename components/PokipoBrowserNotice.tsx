@@ -164,10 +164,6 @@ export default function PokipoBrowserNotice({
             <span>確認しました・次へ進む</span>
             <span className="browserNoticeButtonArrow">→</span>
           </button>
-
-          <small>
-            次の画面でPOKIPOのイントロが始まります
-          </small>
         </div>
       </section>
 

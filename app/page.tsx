@@ -15,6 +15,8 @@ const INTRO_STORAGE_KEY = "pokipo_intro_seen";
 const BROWSER_NOTICE_STORAGE_KEY =
   "pokipo_browser_notice_seen";
 const INTRO_VIDEO_PATH = "/videos/pokipo-intro.mp4";
+// 授業期間中はfalse。元の動画へ戻す場合はtrueに変更。
+const ENABLE_INTRO_VIDEO = false;
 
 const DEFAULT_MAINTENANCE_MESSAGE =
   "現在システムメンテナンスを行っています。しばらくしてから再度アクセスしてください。";
@@ -213,6 +215,10 @@ export default function StartPage() {
 
   // イントロ動画の開始
   async function startIntro() {
+    if (!ENABLE_INTRO_VIDEO) {
+      finishIntro();
+      return;
+    }
     const video = videoRef.current;
 
     if (!video) {
@@ -1005,7 +1011,7 @@ export default function StartPage() {
               ref={videoRef}
               className="pokipoIntroVideo"
               playsInline
-              preload="auto"
+              preload={ENABLE_INTRO_VIDEO ? "auto" : "none"}
               onEnded={finishIntro}
               onError={(event) => {
                 console.error(
@@ -1039,11 +1045,7 @@ export default function StartPage() {
                   ポッキーを知る旅に出よう。
                 </h2>
 
-                <p>
-                  音声が流れます。
-                  <br />
-                  音量をご確認ください。
-                </p>
+                <p>スタートして、POKIPOの世界へ進もう。</p>
 
                 <button
                   type="button"
@@ -1051,7 +1053,7 @@ export default function StartPage() {
                   onClick={() => void startIntro()}
                 >
                   <span>▶</span>
-                  音声ありでスタート
+                  スタート
                 </button>
 
                 {videoError && (
