@@ -94,7 +94,7 @@ export default function PokipoDashboardRotatingStat({
       { eyebrow: "TODAY", value: String(todayExchanged), unit: "人", label: "本日の特典交換" },
       { eyebrow: "NEW REGISTRATIONS", value: extra.registrationsToday === null ? "—" : String(extra.registrationsToday), unit: extra.registrationsToday === null ? "" : "人", label: "本日の新規登録者" },
       { eyebrow: "YESTERDAY", value: previous === null ? "—" : String(previous), unit: previous === null ? "" : "人", label: "昨日の新規登録者" },
-      { eyebrow: "DAY OVER DAY", value: delta === null ? "—" : `${delta > 0 ? "+" : ""}${delta}`, unit: delta === null ? "" : "人", label: "登録者数の前日差（今日－昨日）" },
+      { eyebrow: "DAY OVER DAY", value: delta === null ? "—" : `${delta > 0 ? "+" : ""}${delta}`, unit: delta === null ? "" : "人", label: "登録者数の前日差" },
       { eyebrow: "TOP DEPARTMENT", value: extra.topDepartmentCount === null ? "—" : String(extra.topDepartmentCount), unit: extra.topDepartmentCount === null ? "" : "人", label: extra.topDepartment ? `参加最多：${extra.topDepartment}` : "学科別参加者トップ" },
       { eyebrow: "DEPARTMENT MIX", value: extra.departmentKinds === null ? "—" : String(extra.departmentKinds), unit: extra.departmentKinds === null ? "" : "学科", label: "参加者の所属学科数" },
       { eyebrow: "COMPLETION RATE", value: pct(completions, participants), unit: "", label: "参加者のスタンプ完走率" },
@@ -115,7 +115,7 @@ export default function PokipoDashboardRotatingStat({
           display: "contents",
         }}
       >
-        <span style={{ display: "block", minWidth: 0, maxWidth: "100%", overflow: "hidden", whiteSpace: "nowrap", animation: "pokipoStatSwap 380ms ease-out both", textOverflow: "ellipsis" }}>
+        <span style={{ display: "block", minWidth: 0, width: "100%", maxWidth: "100%", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", color: "#8a1822", fontSize: 9, fontWeight: 900, letterSpacing: "0.08em", animation: "pokipoStatSwap 380ms ease-out both" }}>
           {item.eyebrow}
         </span>
         <div style={{ minWidth: 0, maxWidth: "100%", overflow: "hidden", whiteSpace: "nowrap", animation: "pokipoStatSwap 380ms ease-out both" }}>
@@ -130,11 +130,11 @@ export default function PokipoDashboardRotatingStat({
             maxWidth: "100%",
             marginInline: "auto",
             overflow: "hidden",
-            textOverflow: "clip",
-            whiteSpace: "normal",
-            overflowWrap: "anywhere",
-            lineHeight: 1.15,
-            fontSize: "clamp(9px, 2.5vw, 12px)",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            overflowWrap: "normal",
+            lineHeight: 1.2,
+            fontSize: 10,
             textAlign: "center",
             animation: "pokipoStatSwap 380ms ease-out both",
           }}
@@ -144,22 +144,46 @@ export default function PokipoDashboardRotatingStat({
         </p>
       </div>
       <div
-        aria-label="5秒ごとに表示が切り替わります"
-        title="5秒ごとに情報を切り替えています"
-        style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 5, marginTop: 3, height: 6 }}
+        aria-label={`${items.length}種類の情報を5秒ごとに切り替え中（${index % items.length + 1}番目）`}
+        title={`${items.length}種類の情報を順番に表示しています`}
+        style={{
+          width: 30,
+          height: 10,
+          margin: "5px auto 0",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 5,
+          overflow: "hidden",
+          flexShrink: 0,
+        }}
       >
-        {[0, 1, 2].map((dot) => (
-          <span key={dot} aria-hidden="true" style={{
-            width: dot === index % 3 ? 6 : 4,
-            height: dot === index % 3 ? 6 : 4,
-            borderRadius: "50%",
-            backgroundColor: "currentColor",
-            opacity: dot === index % 3 ? 0.75 : 0.22,
-            transition: "opacity 300ms ease, width 300ms ease, height 300ms ease",
-          }}/>
-        ))}
+        {[-1, 0, 1].map((offset) => {
+          const active = offset === 0;
+          return (
+            <span
+              key={`${index}-${offset}`}
+              aria-hidden="true"
+              style={{
+                display: "block",
+                flex: "0 0 auto",
+                width: active ? 6 : 3,
+                height: active ? 6 : 3,
+                borderRadius: "50%",
+                backgroundColor: "#8a1822",
+                opacity: active ? 0.9 : 0.22,
+                transform: active ? "scale(1)" : "scale(0.8)",
+                animation: active ? "pokipoDotAppear 380ms ease-out both" : undefined,
+              }}
+            />
+          );
+        })}
       </div>
       <style>{`
+        @keyframes pokipoDotAppear {
+          from { opacity: 0; transform: translateX(4px) scale(0.55); }
+          to { opacity: 1; transform: translateX(0) scale(1); }
+        }
         @keyframes pokipoStatSwap {
           from { opacity: 0.45; transform: translateY(5px); }
           to { opacity: 1; transform: translateY(0); }
