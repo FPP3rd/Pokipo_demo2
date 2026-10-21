@@ -46301,9 +46301,9 @@ strong {
 
 /* 3枚目（左下）の数字・単位・日本語を同じ量だけ下げる */
 .staffDashboardPage
-  .staffDashboardStats > .staffDashboardStatCard:nth-child(7) > div,
+  .staffDashboardStats > .staffDashboardStatCard:nth-child(3) > div,
 .staffDashboardPage
-  .staffDashboardStats > .staffDashboardStatCard:nth-child(7) > p {
+  .staffDashboardStats > .staffDashboardStatCard:nth-child(3) > p {
   position: relative;
-  top: 3px;
+  top: 7px;
 }
