@@ -1,83 +1,58 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 
 /**
- * 管理ダッシュボードに参加動向分析への導線を追加。
- * 既存の app/staff/dashboard/page.tsx の表示・集計処理は変更しません。
+ * 既存の管理ダッシュボードに、グラフ分析ボタンと同じ形式で
+ * 「参加動向分析」をその直前に配置する。
+ * dashboard/page.tsxは変更しない。
  */
-export default function StaffDashboardLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default function StaffDashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const insertion = document.createElement("section");
+    insertion.className = "staffDashboardActions pokipoTrendsDashboardLink";
+    let mounted = true;
+
+    function place() {
+      if (!mounted) return;
+      const root = document.querySelector(".staffDashboardPage");
+      const graphActions = root?.querySelector(".staffDashboardActions:not(.pokipoTrendsDashboardLink)");
+      if (!root || !graphActions?.parentNode) return;
+      if (insertion.parentNode !== graphActions.parentNode || insertion.nextSibling !== graphActions) {
+        graphActions.parentNode.insertBefore(insertion, graphActions);
+      }
+      setSlot(current => current === insertion ? current : insertion);
+    }
+
+    place();
+    const observer = new MutationObserver(place);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      mounted = false;
+      observer.disconnect();
+      insertion.remove();
+    };
+  }, []);
 
   return (
     <>
       {children}
-
-      <nav
-        aria-label="管理ダッシュボードの分析メニュー"
-        style={{
-          width: "min(100% - 32px, 860px)",
-          margin: "16px auto 32px",
-          padding: "18px",
-          background: "#fffaf8",
-          border: "1px solid #eed9db",
-          borderRadius: 16,
-          boxSizing: "border-box",
-        }}
-      >
-        <p
-          style={{
-            fontSize: 12,
-            fontWeight: 800,
-            letterSpacing: ".08em",
-            color: "#a52f42",
-            margin: "0 0 6px",
-          }}
-        >
-          DATA ANALYSIS
-        </p>
-        <h2
-          style={{
-            fontSize: 19,
-            color: "#403034",
-            margin: "0 0 6px",
-          }}
-        >
-          参加動向分析
-        </h2>
-        <p
-          style={{
-            fontSize: 13,
-            lineHeight: 1.7,
-            color: "#716367",
-            margin: "0 0 14px",
-          }}
-        >
-          前時間帯との比較や、参加登録・5か所達成・アンケート回答・
-          特典交換の推移を確認できます。
-        </p>
-        <button
-          type="button"
-          onClick={() => router.push("/staff/trends")}
-          style={{
-            border: 0,
-            borderRadius: 11,
-            background: "#a93243",
-            color: "#fff",
-            fontWeight: 800,
-            padding: "13px 20px",
-            cursor: "pointer",
-            width: "100%",
-          }}
-        >
-          参加動向分析を開く →
-        </button>
-      </nav>
+      {slot && createPortal(
+        <button type="button" onClick={() => router.push("/staff/trends")}>
+          <span>DATA</span>
+          <div>
+            <strong>参加動向分析</strong>
+            <small>前時間帯との比較・参加登録・完走・アンケート・特典交換の推移</small>
+          </div>
+          <b>→</b>
+        </button>,
+        slot
+      )}
     </>
   );
 }
