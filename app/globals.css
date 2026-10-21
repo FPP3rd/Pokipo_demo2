@@ -46017,3 +46017,99 @@ strong {
     gap: 16px;
   }
 }
+
+/* =================================================
+   POKIPO 参加動向分析: 実際の管理ダッシュボード配色
+   app/globals.css 最下部への追記専用
+   既存の赤色/茶色CSSを消さずに上書き
+   ================================================= */
+.pokipoTrendsPage .pokipoTrendsContainer {
+  max-width: 960px;
+  color: #302a26;
+}
+.pokipoTrendsPage .pokipoTrendsHeader {
+  background: #ffffff;
+  border: 1px solid #eee6df;
+  border-radius: 19px;
+  box-shadow: 0 8px 22px rgba(55,35,25,.055);
+  padding: 22px 24px;
+}
+.pokipoTrendsPage .pokipoTrendsHeader h1 {
+  color: #2e2925;
+  font-size: clamp(22px, 3vw, 27px);
+  letter-spacing: -.035em;
+}
+.pokipoTrendsPage .pokipoTrendsEyebrow {
+  color: #8a1822;
+  font-size: 10px;
+}
+.pokipoTrendsPage .pokipoTrendsLead { color: #897d74; }
+.pokipoTrendsPage .pokipoTrendsBack {
+  color: #8a1822;
+  background: #fff;
+  border: 1px solid #e8dfd8;
+  box-shadow: none;
+}
+.pokipoTrendsPage .pokipoTrendsToolbar {
+  background: #ffffff;
+  border: 1px solid #eee6df;
+  box-shadow: 0 4px 12px rgba(55,35,25,.035);
+}
+.pokipoTrendsPage .pokipoTrendsToggle {
+  background: #fff;
+  color: #8a1822;
+  border: 1px solid #e8dfd8;
+  box-shadow: none;
+}
+.pokipoTrendsPage .pokipoTrendsToggle:hover {
+  background: #fffaf6;
+  color: #8a1822;
+}
+.pokipoTrendsPage .pokipoTrendsToggle[aria-pressed="true"],
+.pokipoTrendsPage .pokipoTrendsToggle[aria-pressed="true"]:hover {
+  background: #8a1822;
+  border-color: #8a1822;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(138,24,34,.13);
+}
+.pokipoTrendsPage .pokipoTrendsSelect {
+  background: #fff;
+  color: #3a332f;
+  border-color: #e8dfd8;
+}
+.pokipoTrendsPage .pokipoTrendsDemoLabel {
+  background: #fff5e7;
+  color: #8a5b33;
+}
+.pokipoTrendsPage .pokipoTrendsStatCard,
+.pokipoTrendsPage .pokipoTrendsPanel {
+  background: #ffffff;
+  border: 1px solid #eee6df;
+  box-shadow: 0 8px 22px rgba(55,35,25,.055);
+}
+.pokipoTrendsPage .pokipoTrendsStatCard { border-top: 3px solid #8a1822; }
+.pokipoTrendsPage .pokipoTrendsStatLabel { color: #897d74; }
+.pokipoTrendsPage .pokipoTrendsStatNumber { color: #302a26; }
+.pokipoTrendsPage .pokipoTrendsPanelTitle { color: #302a26; }
+.pokipoTrendsPage .pokipoTrendsPanel p { color: #897d74; }
+.pokipoTrendsPage .pokipoTrendsTable thead {
+  background: #faf6f2;
+  color: #4b4038;
+}
+.pokipoTrendsPage .pokipoTrendsTable tbody tr:nth-child(even) {
+  background: #fcfaf8;
+}
+.pokipoTrendsPage .pokipoTrendsTableScroll {
+  border-color: #eee6df;
+}
+.pokipoTrendsPage .pokipoTrendsDailyRow {
+  border-bottom-color: #eee6df;
+}
+.pokipoTrendsPage .pokipoTrendsDayLabel,
+.pokipoTrendsPage .pokipoTrendsBarNumber,
+.pokipoTrendsPage .pokipoTrendsUpdated {
+  color: #786c64;
+}
+@media (max-width: 600px) {
+  .pokipoTrendsPage .pokipoTrendsHeader { padding: 18px 16px; }
+}
