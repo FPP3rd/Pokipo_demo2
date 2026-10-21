@@ -1,8 +1,8 @@
-
 "use client";
 
 import type { ReactNode } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import PokipoCalendarButtons from "./PokipoCalendarButtons";
 
 /* ========================================
    REWARD QR TYPES
@@ -176,6 +176,9 @@ export function PokipoRewardQrPanel({
           <strong>10月27日（火）</strong>
           です！
         </p>
+
+        {/* 本番・検証の両方にカレンダー登録導線を表示 */}
+        <PokipoCalendarButtons testMode={testMode} />
 
         <p className="rewardQrScreenshot">
           スクリーンショット推奨！！
