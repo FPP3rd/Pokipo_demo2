@@ -45823,3 +45823,197 @@ strong {
     animation: none !important;
   }
 }
+
+/* ==================================================
+   POKIPO 第4段階: 参加者一覧 スマホ最適化
+   app/globals.css の一番下に追記
+   対象は参加者検索欄を持つ管理画面のみ
+================================================== */
+@media (max-width: 700px) {
+  main.shell:has(input[aria-label="参加者検索"]) {
+    padding: 12px 8px !important;
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) > section {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* ヘッダーと集計の余白 */
+  main.shell:has(input[aria-label="参加者検索"]) h1 {
+    font-size: 21px !important;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+
+  /* 検索と絞り込み */
+  main.shell:has(input[aria-label="参加者検索"]) input[aria-label="参加者検索"] {
+    display: block;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-width: 0;
+    box-sizing: border-box;
+    font-size: 16px !important;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) select {
+    max-width: 100%;
+    min-height: 42px;
+    font-size: 16px !important;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) button {
+    min-height: 42px;
+    touch-action: manipulation;
+  }
+
+  /* テーブルをカード形式に。行の直接子構造は変更しない */
+  main.shell:has(input[aria-label="参加者検索"]) table {
+    min-width: 0 !important;
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    display: block;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) table thead {
+    display: none;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0;
+    width: 100%;
+    margin-top: 12px;
+    border: 1px solid #e5d9d2;
+    border-radius: 14px;
+    overflow: hidden;
+    box-sizing: border-box;
+    box-shadow: 0 3px 10px rgba(55, 35, 25, 0.04);
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 0;
+    padding: 11px 12px !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    border: 0 !important;
+    border-bottom: 1px solid #eee5df !important;
+    font-size: 13px;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td::before {
+    display: block;
+    font-size: 10px;
+    font-weight: 800;
+    color: #806e67;
+    letter-spacing: 0.03em;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td:nth-child(1) {
+    grid-column: 1 / -1;
+    background: #fbf6f3;
+  }
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td:nth-child(1)::before { content: "ニックネーム"; }
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td:nth-child(2)::before { content: "学年"; }
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td:nth-child(3)::before { content: "学科"; }
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td:nth-child(4)::before { content: "登録日時"; }
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td:nth-child(5)::before { content: "取得スタンプ"; }
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td:nth-child(6)::before { content: "所要時間"; }
+
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td:nth-child(7) {
+    grid-column: 1 / -1;
+    align-items: stretch;
+    border-bottom: 0 !important;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr:not([id^="participant-history-"]) > td:nth-child(7) button {
+    width: 100%;
+    min-width: 0 !important;
+    min-height: 44px;
+    font-weight: 800;
+  }
+
+  /* 展開行はカードの直下に横幅100%で表示 */
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr[id^="participant-history-"] {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr[id^="participant-history-"] > td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    white-space: normal !important;
+  }
+
+  main.shell:has(input[aria-label="参加者検索"]) table tbody > tr[id^="participant-history-"] > td > div {
+    padding: 14px 11px !important;
+    overflow-wrap: anywhere;
+    border-radius: 0 0 12px 12px;
+  }
+}
+
+
+/* ============================================
+   POKIPO 第5段階
+   特典交換モニターの表示整理
+
+   ・巡回順序を非表示
+   ・スタンプラリータイプを非表示
+   ・ゴール順位、参加者名は維持
+============================================ */
+
+/* 回った順番・巡回ルートを非表示 */
+.rewardMonitorPresented .rewardMonitorRoute {
+  display: none !important;
+}
+
+/* ○○型の診断結果を非表示 */
+.rewardMonitorPresented .rewardMonitorDiagnosis {
+  display: none !important;
+}
+
+/* 不要な表示がなくなった分、中央寄せ */
+.rewardMonitorPresented {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: clamp(16px, 3vh, 32px);
+}
+
+/* 名前とゴール順位の配置を整える */
+.rewardMonitorPresented .rewardMonitorParticipantName,
+.rewardMonitorPresented .rewardMonitorRank {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* スマートフォン・小型モニターへの対応 */
+@media (max-width: 640px) {
+  .rewardMonitorPresented {
+    gap: 16px;
+  }
+}

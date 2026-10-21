@@ -133,10 +133,9 @@ const MENU_SECTIONS: MenuSection[] = [
       {
         icon: "USER",
         label: "PARTICIPANTS",
-        title:
-          "参加者一覧・読み取り履歴（管理責任者専用）",
+        title: "参加者一覧・読み取り履歴",
         description:
-          "参加者別のスタンプ取得時刻や短時間取得を確認します。",
+          "閲覧時はlipost-furuyaによる再ログインが必要です。参加者別のスタンプ取得履歴を確認できます。",
         href: "/staff/participants",
         variant: "",
         ownerOnly: true,
@@ -460,7 +459,6 @@ export default function StaffPage() {
 
         {/* =================================
             POKIPO LIVE NEWS
-            自動更新型の運営速報
         ================================= */}
 
         <PokipoStaffTicker />
@@ -548,12 +546,39 @@ export default function StaffPage() {
 
               <div className="staffMenuGrid staffMenuCategoryGrid">
                 {section.items
-                  .filter(
-                    (item) =>
-                      !item.ownerOnly ||
-                      currentAdminId ===
-                        "lipost-furuya"
-                  )
+                  .filter((item) => {
+                    const normalizedAdminId =
+                      currentAdminId
+                        .trim()
+                        .toLowerCase();
+
+                    /*
+                     * 参加者一覧：
+                     * lipost-で始まる管理IDに
+                     * ボタンを表示する。
+                     *
+                     * 閲覧には別途
+                     * lipost-furuyaの再認証が必要。
+                     */
+                    if (
+                      item.href ===
+                      "/staff/participants"
+                    ) {
+                      return normalizedAdminId
+                        .startsWith("lipost-");
+                    }
+
+                    /*
+                     * そのほかのownerOnly項目：
+                     * 以前と同じ表示条件。
+                     */
+                    if (item.ownerOnly) {
+                      return normalizedAdminId ===
+                        "lipost-furuya";
+                    }
+
+                    return true;
+                  })
                   .map((item) => (
                     <button
                       key={item.href}

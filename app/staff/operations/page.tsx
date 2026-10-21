@@ -45,9 +45,7 @@ type Check = {
   detail: string;
 };
 
-/* ========================================
-   CONFIG
-======================================== */
+type ExportType = "daily" | "spots" | "summary";
 
 const spotNames: Record<string, string> = {
   spot1: "学生センター",
@@ -57,16 +55,12 @@ const spotNames: Record<string, string> = {
   spot5: "セブンイレブン付近",
 };
 
-/* ========================================
-   HELPERS
-======================================== */
-
 function n(value: unknown): number {
   const result = Number(value);
   return Number.isFinite(result) ? result : 0;
 }
 
-function percent(a: number, b: number) {
+function percent(a: number, b: number): number {
   return b > 0
     ? Math.round((a / b) * 1000) / 10
     : 0;
@@ -74,8 +68,8 @@ function percent(a: number, b: number) {
 
 function sum(
   days: Daily[],
-  key: "registered" | "stamps" | "completed" | "exchanged"
-) {
+  key: keyof Omit<Daily, "date">
+): number {
   return days.reduce(
     (total, row) => total + row[key],
     0
@@ -93,11 +87,11 @@ function normalize(value: unknown): Snapshot {
       ? (raw.totals as Record<string, unknown>)
       : {};
 
-  const rawDaily = Array.isArray(raw.daily)
+  const daily = Array.isArray(raw.daily)
     ? raw.daily
     : [];
 
-  const rawSpots = Array.isArray(raw.spots)
+  const spots = Array.isArray(raw.spots)
     ? raw.spots
     : [];
 
@@ -108,19 +102,23 @@ function normalize(value: unknown): Snapshot {
       exchanged: n(totals.exchanged),
       stamps: n(totals.stamps),
     },
-
-    daily: rawDaily.map((item) => ({
-      date: String(item.date ?? ""),
-      registered: n(item.registered),
-      stamps: n(item.stamps),
-      completed: n(item.completed),
-      exchanged: n(item.exchanged),
-    })),
-
-    spots: rawSpots.map((item) => ({
-      spot_id: String(item.spot_id ?? ""),
-      count: n(item.count),
-    })),
+    daily: daily.map((value: unknown) => {
+      const item = value as Record<string, unknown>;
+      return {
+        date: String(item.date ?? ""),
+        registered: n(item.registered),
+        stamps: n(item.stamps),
+        completed: n(item.completed),
+        exchanged: n(item.exchanged),
+      };
+    }),
+    spots: spots.map((value: unknown) => {
+      const item = value as Record<string, unknown>;
+      return {
+        spot_id: String(item.spot_id ?? ""),
+        count: n(item.count),
+      };
+    }),
   };
 }
 
@@ -129,26 +127,21 @@ function normalize(value: unknown): Snapshot {
 ======================================== */
 
 function downloadCsv(
-  name: string,
+  filename: string,
   rows: (string | number)[][]
-) {
-  const cell = (value: string | number) => {
-    let text = String(value ?? "");
+): void {
+  function cell(value: string | number): string {
+    let content = String(value ?? "");
 
-    // Excelの数式として解釈されることを防止
     if (
       typeof value === "string" &&
-      /^[\s\r\n]*[=+@\-\t]/.test(text)
+      /^[\s\r\n]*[=+@\-\t]/.test(content)
     ) {
-      text = "'" + text;
+      content = "'" + content;
     }
 
-    return (
-      '"' +
-      text.replace(/"/g, '""') +
-      '"'
-    );
-  };
+    return `"${content.replace(/"/g, '""')}"`;
+  }
 
   const csv =
     "\uFEFF" +
@@ -161,14 +154,14 @@ function downloadCsv(
   });
 
   const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
+  link.href = url;
+  link.download = filename;
 
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 
   window.setTimeout(() => {
     URL.revokeObjectURL(url);
@@ -182,36 +175,26 @@ function downloadCsv(
 export default function StaffOperationsPage() {
   const router = useRouter();
 
-  /* ----------------------------------------
-     AUTH STATE
-  ---------------------------------------- */
-
   const [auth, setAuth] = useState<
     "loading" | "denied" | "ok"
   >("loading");
 
-  /* ----------------------------------------
-     SYSTEM STATE
-  ---------------------------------------- */
+  const [csvAllowed, setCsvAllowed] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
 
   const [loading, setLoading] = useState(false);
-
   const [error, setError] = useState("");
 
   const [snapshot, setSnapshot] =
     useState<Snapshot | null>(null);
 
-  const [checks, setChecks] =
-    useState<Check[]>([]);
-
-  const [checkedAt, setCheckedAt] =
-    useState("");
-
-  const [dataCheckedAt, setDataCheckedAt] =
-    useState("");
+  const [checks, setChecks] = useState<Check[]>([]);
+  const [checkedAt, setCheckedAt] = useState("");
+  const [dataCheckedAt, setDataCheckedAt] = useState("");
 
   /* ========================================
-     STAFF AUTHENTICATION
+     STAFF AUTH
   ======================================== */
 
   useEffect(() => {
@@ -219,42 +202,43 @@ export default function StaffOperationsPage() {
 
     async function checkStaff() {
       try {
-        const {
-          data: userData,
-          error: userError,
-        } = await supabase.auth.getUser();
+        const { data, error: userError } =
+          await supabase.auth.getUser();
 
         if (!active) return;
 
-        if (userError || !userData.user) {
+        if (userError || !data.user) {
           setAuth("denied");
+          setCsvAllowed(false);
           return;
         }
 
-        const {
-          data: staff,
-          error: staffError,
-        } = await supabase
-          .from("staff_profiles")
-          .select("user_id")
-          .eq("user_id", userData.user.id)
-          .maybeSingle();
+        const { data: staff, error: staffError } =
+          await supabase
+            .from("staff_profiles")
+            .select("user_id, admin_id")
+            .eq("user_id", data.user.id)
+            .maybeSingle();
 
         if (!active) return;
 
         if (staffError || !staff) {
           setAuth("denied");
+          setCsvAllowed(false);
           return;
         }
 
+        const adminId = String(
+          staff.admin_id ?? ""
+        ).trim().toLowerCase();
+
+        setCsvAllowed(adminId.startsWith("lipost-"));
         setAuth("ok");
       } catch (caught) {
-        console.error(
-          "スタッフ認証エラー:",
-          caught
-        );
+        console.error("スタッフ認証エラー:", caught);
 
         if (active) {
+          setCsvAllowed(false);
           setAuth("denied");
         }
       }
@@ -268,7 +252,7 @@ export default function StaffOperationsPage() {
   }, []);
 
   /* ========================================
-     SYSTEM CONNECTION CHECK
+     REFRESH
   ======================================== */
 
   const refresh = useCallback(async () => {
@@ -279,14 +263,8 @@ export default function StaffOperationsPage() {
     const results: Check[] = [];
 
     try {
-      /* ------------------------------------
-         スタッフ認証
-      ------------------------------------ */
-
-      const {
-        data: userData,
-        error: userError,
-      } = await supabase.auth.getUser();
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
 
       const signedIn =
         !userError && !!userData.user;
@@ -299,10 +277,6 @@ export default function StaffOperationsPage() {
           : "認証状態を確認できません",
       });
 
-      /* ------------------------------------
-         参加者集計API
-      ------------------------------------ */
-
       const {
         data: participantData,
         error: participantError,
@@ -312,7 +286,7 @@ export default function StaffOperationsPage() {
 
       const participantApiOk =
         !participantError &&
-        participantData !== null;
+        participantData != null;
 
       results.push({
         label: "参加者集計API",
@@ -324,10 +298,6 @@ export default function StaffOperationsPage() {
           : "参加者集計APIの取得に失敗",
       });
 
-      /* ------------------------------------
-         分析データ取得
-      ------------------------------------ */
-
       const {
         data: analytics,
         error: analyticsError,
@@ -336,7 +306,7 @@ export default function StaffOperationsPage() {
       );
 
       const analyticsOk =
-        !analyticsError && !!analytics;
+        !analyticsError && analytics != null;
 
       results.push({
         label: "分析データ取得",
@@ -357,23 +327,21 @@ export default function StaffOperationsPage() {
 
         setError("");
       } else {
+        setSnapshot(null);
         setError(
           "集計データを取得できませんでした。通信状態・SQL関数・スタッフ権限を確認してください。"
         );
       }
     } catch (caught) {
-      console.error(
-        "システム確認エラー:",
-        caught
-      );
+      console.error("システム確認エラー:", caught);
 
       results.push({
         label: "通信状態",
         ok: false,
-        detail:
-          "通信中に予期しないエラーが発生しました",
+        detail: "通信中に予期しないエラーが発生しました",
       });
 
+      setSnapshot(null);
       setError(
         "システム確認中に通信エラーが発生しました。"
       );
@@ -391,7 +359,7 @@ export default function StaffOperationsPage() {
   }, [auth]);
 
   /* ========================================
-     AUTO REFRESH: 60 SECONDS
+     AUTO REFRESH
   ======================================== */
 
   useEffect(() => {
@@ -400,83 +368,60 @@ export default function StaffOperationsPage() {
     void refresh();
 
     const timer = window.setInterval(() => {
-      if (
-        document.visibilityState === "visible"
-      ) {
+      if (document.visibilityState === "visible") {
         void refresh();
       }
     }, 60000);
 
-    function onVisible() {
-      if (
-        document.visibilityState === "visible"
-      ) {
+    function handleVisibility() {
+      if (document.visibilityState === "visible") {
         void refresh();
       }
     }
 
     document.addEventListener(
       "visibilitychange",
-      onVisible
+      handleVisibility
     );
 
     return () => {
       window.clearInterval(timer);
-
       document.removeEventListener(
         "visibilitychange",
-        onVisible
+        handleVisibility
       );
     };
   }, [auth, refresh]);
 
   /* ========================================
-     AUTOMATIC STATISTICS REPORT
+     ANALYSIS REPORT
   ======================================== */
 
   const report = useMemo(() => {
     if (!snapshot) return [];
 
-    const { totals } = snapshot;
-    const days = snapshot.daily;
+    const { totals, daily, spots } = snapshot;
 
-    const last7 = days.slice(-7);
-    const previous7 = days.slice(-14, -7);
+    const last7 = daily.slice(-7);
+    const previous7 = daily.slice(-14, -7);
 
-    const thisWeek = sum(
-      last7,
-      "registered"
-    );
+    const thisWeek = sum(last7, "registered");
+    const previous = sum(previous7, "registered");
 
-    const previous = sum(
-      previous7,
-      "registered"
-    );
-
-    const spots = Object.entries(
-      spotNames
-    ).map(([id, name]) => ({
-      id,
-      name,
-      count:
-        snapshot.spots.find(
-          (spot) => spot.spot_id === id
-        )?.count ?? 0,
-    }));
-
-    const highest = [...spots].sort(
-      (a, b) => b.count - a.count
-    )[0];
+    const highest = Object.entries(spotNames)
+      .map(([id, name]) => ({
+        name,
+        count:
+          spots.find((spot) => spot.spot_id === id)
+            ?.count ?? 0,
+      }))
+      .sort((a, b) => b.count - a.count)[0];
 
     const growth =
       previous > 0
-        ? `${
-            (
-              ((thisWeek - previous) /
-                previous) *
-              100
-            ).toFixed(1)
-          }%`
+        ? `${(
+            ((thisWeek - previous) / previous) * 100
+          ).toFixed(1)}%`
         : "比較不可（前の7日間が0人）";
 
     return [
@@ -503,90 +448,143 @@ export default function StaffOperationsPage() {
   }, [snapshot]);
 
   /* ========================================
-     CSV: DAILY DATA
+     EXPORT AUTH CHECK
+     ダウンロード直前に再確認
   ======================================== */
 
-  function exportDaily() {
-    if (!snapshot || error) return;
+  async function checkCsvPermission(): Promise<boolean> {
+    const { data: userData, error: userError } =
+      await supabase.auth.getUser();
 
-    downloadCsv("POKIPO_日別推移.csv", [
-      [
-        "日付(JST)",
-        "新規登録",
-        "スタンプ取得件数",
-        "新規完走",
-        "特典交換件数",
-      ],
-      ...snapshot.daily.map((day) => [
-        day.date,
-        day.registered,
-        day.stamps,
-        day.completed,
-        day.exchanged,
-      ]),
-    ]);
+    if (userError || !userData.user) {
+      return false;
+    }
+
+    const { data: profile, error: profileError } =
+      await supabase
+        .from("staff_profiles")
+        .select("admin_id")
+        .eq("user_id", userData.user.id)
+        .maybeSingle();
+
+    if (profileError || !profile) {
+      return false;
+    }
+
+    return String(profile.admin_id ?? "")
+      .trim()
+      .toLowerCase()
+      .startsWith("lipost-");
   }
 
   /* ========================================
-     CSV: SPOTS
+     EXPORT CSV
   ======================================== */
 
-  function exportSpots() {
-    if (!snapshot || error) return;
+  async function exportCsv(type: ExportType) {
+    if (
+      exporting ||
+      loading ||
+      !snapshot ||
+      error ||
+      !csvAllowed
+    ) {
+      return;
+    }
 
-    downloadCsv("POKIPO_スポット別.csv", [
-      [
-        "スポット",
-        "読み取り人数(重複除外)",
-      ],
-      ...Object.entries(spotNames).map(
-        ([id, name]) => [
-          name,
-          snapshot.spots.find(
-            (spot) => spot.spot_id === id
-          )?.count ?? 0,
-        ]
-      ),
-    ]);
+    setExporting(true);
+    setExportError("");
+
+    try {
+      const allowed = await checkCsvPermission();
+
+      if (!allowed) {
+        setCsvAllowed(false);
+
+        setExportError(
+          "CSV出力はlipost-で始まる管理IDのみ利用できます。"
+        );
+
+        return;
+      }
+
+      const current = snapshot;
+
+      if (type === "daily") {
+        downloadCsv("POKIPO_日別推移.csv", [
+          [
+            "日付(JST)",
+            "新規登録",
+            "スタンプ取得件数",
+            "新規完走",
+            "特典交換件数",
+          ],
+          ...current.daily.map((day) => [
+            day.date,
+            day.registered,
+            day.stamps,
+            day.completed,
+            day.exchanged,
+          ]),
+        ]);
+      }
+
+      if (type === "spots") {
+        downloadCsv("POKIPO_スポット別.csv", [
+          [
+            "スポット",
+            "読み取り人数(重複除外)",
+          ],
+          ...Object.entries(spotNames).map(
+            ([id, name]) => [
+              name,
+              current.spots.find(
+                (spot) => spot.spot_id === id
+              )?.count ?? 0,
+            ]
+          ),
+        ]);
+      }
+
+      if (type === "summary") {
+        const t = current.totals;
+
+        downloadCsv("POKIPO_全体集計.csv", [
+          ["指標", "値"],
+          ["登録者", t.registered],
+          ["完走者", t.completed],
+          ["交換済み", t.exchanged],
+          ["スタンプ取得件数", t.stamps],
+          [
+            "完走率(%)",
+            percent(t.completed, t.registered),
+          ],
+          [
+            "交換率(%)",
+            percent(t.exchanged, t.completed),
+          ],
+        ]);
+      }
+    } catch (caught) {
+      console.error("CSV出力エラー:", caught);
+
+      setExportError(
+        "CSV出力中にエラーが発生しました。"
+      );
+    } finally {
+      setExporting(false);
+    }
   }
 
   /* ========================================
-     CSV: SUMMARY
-  ======================================== */
-
-  function exportSummary() {
-    if (!snapshot || error) return;
-
-    const t = snapshot.totals;
-
-    downloadCsv("POKIPO_全体集計.csv", [
-      ["指標", "値"],
-      ["登録者", t.registered],
-      ["完走者", t.completed],
-      ["交換済み", t.exchanged],
-      ["スタンプ取得件数", t.stamps],
-      [
-        "完走率(%)",
-        percent(t.completed, t.registered),
-      ],
-      [
-        "交換率(%)",
-        percent(t.exchanged, t.completed),
-      ],
-    ]);
-  }
-
-  /* ========================================
-     PAGE
+     RENDER
   ======================================== */
 
   return (
     <main className="shell">
       <section className="pokipoOpsPage">
 
-        {/* =================================
-            HEADER
-        ================================= */}
+        {/* HEADER */}
 
         <header className="pokipoOpsHeader">
           <div>
@@ -606,17 +604,13 @@ export default function StaffOperationsPage() {
 
           <button
             type="button"
-            onClick={() =>
-              router.push("/staff")
-            }
+            onClick={() => router.push("/staff")}
           >
             ← スタッフメニューへ戻る
           </button>
         </header>
 
-        {/* =================================
-            AUTH LOADING
-        ================================= */}
+        {/* AUTH LOADING */}
 
         {auth === "loading" && (
           <div className="pokipoOpsCard">
@@ -624,9 +618,7 @@ export default function StaffOperationsPage() {
           </div>
         )}
 
-        {/* =================================
-            ACCESS DENIED
-        ================================= */}
+        {/* ACCESS DENIED */}
 
         {auth === "denied" && (
           <div
@@ -638,28 +630,20 @@ export default function StaffOperationsPage() {
           </div>
         )}
 
-        {/* =================================
-            STAFF CONTENT
-        ================================= */}
+        {/* STAFF CONTENT */}
 
         {auth === "ok" && (
           <>
 
-            {/* =============================
-                BASIC SYSTEM HEALTH
-            ============================= */}
+            {/* SYSTEM CHECK */}
 
             <section className="pokipoOpsCard">
               <div className="pokipoOpsTitle">
-                <h2>
-                  システム接続状況
-                </h2>
+                <h2>システム接続状況</h2>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    void refresh()
-                  }
+                  onClick={() => void refresh()}
                   disabled={loading}
                 >
                   {loading
@@ -680,9 +664,7 @@ export default function StaffOperationsPage() {
                   <article
                     key={check.label}
                     className={
-                      check.ok
-                        ? "ok"
-                        : "ng"
+                      check.ok ? "ok" : "ng"
                     }
                   >
                     <strong>
@@ -717,16 +699,11 @@ export default function StaffOperationsPage() {
               )}
             </section>
 
-            {/* =============================
-                PARTICIPANT FLOW HEALTH
-                NEW MONITOR
-            ============================= */}
+            {/* PARTICIPANT FLOW HEALTH */}
 
             <HealthPanel />
 
-            {/* =============================
-                CSV EXPORT
-            ============================= */}
+            {/* CSV EXPORT */}
 
             <section className="pokipoOpsCard">
               <h2>CSVデータ出力</h2>
@@ -747,53 +724,80 @@ export default function StaffOperationsPage() {
                 {dataCheckedAt || "未取得"}
               </p>
 
-              <div className="pokipoOpsButtons">
-                <button
-                  type="button"
-                  disabled={
-                    !snapshot ||
-                    loading ||
-                    Boolean(error)
-                  }
-                  onClick={exportDaily}
-                >
-                  日別推移CSV
-                </button>
+              {csvAllowed ? (
+                <div className="pokipoOpsButtons">
+                  <button
+                    type="button"
+                    disabled={
+                      !snapshot ||
+                      loading ||
+                      Boolean(error) ||
+                      exporting
+                    }
+                    onClick={() =>
+                      void exportCsv("daily")
+                    }
+                  >
+                    日別推移CSV
+                  </button>
 
-                <button
-                  type="button"
-                  disabled={
-                    !snapshot ||
-                    loading ||
-                    Boolean(error)
-                  }
-                  onClick={exportSpots}
-                >
-                  スポット別CSV
-                </button>
+                  <button
+                    type="button"
+                    disabled={
+                      !snapshot ||
+                      loading ||
+                      Boolean(error) ||
+                      exporting
+                    }
+                    onClick={() =>
+                      void exportCsv("spots")
+                    }
+                  >
+                    スポット別CSV
+                  </button>
 
-                <button
-                  type="button"
-                  disabled={
-                    !snapshot ||
-                    loading ||
-                    Boolean(error)
-                  }
-                  onClick={exportSummary}
+                  <button
+                    type="button"
+                    disabled={
+                      !snapshot ||
+                      loading ||
+                      Boolean(error) ||
+                      exporting
+                    }
+                    onClick={() =>
+                      void exportCsv("summary")
+                    }
+                  >
+                    全体集計CSV
+                  </button>
+                </div>
+              ) : (
+                <p className="pokipoOpsSmall">
+                  CSV出力はLiPost管理IDの
+                  ユーザーのみ利用できます。
+                </p>
+              )}
+
+              {exporting && (
+                <p className="pokipoOpsSmall">
+                  出力権限を確認中...
+                </p>
+              )}
+
+              {exportError && (
+                <p
+                  className="pokipoOpsError"
+                  role="alert"
                 >
-                  全体集計CSV
-                </button>
-              </div>
+                  {exportError}
+                </p>
+              )}
             </section>
 
-            {/* =============================
-                AUTOMATIC REPORT
-            ============================= */}
+            {/* AUTOMATIC REPORT */}
 
             <section className="pokipoOpsCard">
-              <h2>
-                自動分析レポート
-              </h2>
+              <h2>自動分析レポート</h2>
 
               <p>
                 現在の集計値から自動計算した
@@ -813,9 +817,7 @@ export default function StaffOperationsPage() {
               ) : (
                 <div className="pokipoOpsReport">
                   {report.map((line, index) => (
-                    <p key={index}>
-                      {line}
-                    </p>
+                    <p key={index}>{line}</p>
                   ))}
                 </div>
               )}
@@ -826,6 +828,7 @@ export default function StaffOperationsPage() {
                 集計日付は日本時間です。
               </p>
             </section>
+
           </>
         )}
       </section>

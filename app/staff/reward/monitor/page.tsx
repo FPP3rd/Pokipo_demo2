@@ -34,6 +34,8 @@ type MonitorState = {
 
   route_type: string | null;
 
+  guide_direction: "left" | "right" | null;
+
   updated_at: string;
 };
 
@@ -54,9 +56,6 @@ type RouteStop = {
 
 const STATION_ID =
   "main";
-
-const THANK_YOU_SECONDS =
-  10;
 
 const DEVICE_MODE_KEY =
   "pokipo_staff_reward_device_mode";
@@ -127,13 +126,6 @@ export default function RewardMonitorPage() {
     setRealtimeConnected,
   ] = useState(false);
 
-  const [
-    remainingSeconds,
-    setRemainingSeconds,
-  ] = useState(
-    THANK_YOU_SECONDS
-  );
-
   /* ========================================
      ROUTE
   ======================================== */
@@ -162,15 +154,6 @@ export default function RewardMonitorPage() {
 
   const lastMonitorTapRef =
     useRef(0);
-
-  /* ========================================
-     TIMER
-  ======================================== */
-
-  const completedTimerRef =
-    useRef<number | null>(
-      null
-    );
 
   /* ========================================
      AUTH CHECK
@@ -278,6 +261,7 @@ export default function RewardMonitorPage() {
                 nickname,
                 achievement_rank,
                 route_type,
+                guide_direction,
                 updated_at
               `
             )
@@ -383,6 +367,30 @@ export default function RewardMonitorPage() {
   }, [
     authenticated,
   ]);
+
+  /* ========================================
+     案内方向の自動更新（Realtime接続がない場合も対応）
+  ======================================== */
+
+  useEffect(() => {
+    if (!authenticated) return;
+    let active = true;
+    async function syncGuideDirection() {
+      const { data, error } = await supabase
+        .from("reward_monitor_state")
+        .select("guide_direction")
+        .eq("station_id", STATION_ID)
+        .maybeSingle();
+      if (!active || error || !data) return;
+      const next = data.guide_direction === "left" ? "left" : "right";
+      setMonitorState((previous) => previous && previous.guide_direction !== next
+        ? { ...previous, guide_direction: next }
+        : previous);
+    }
+    void syncGuideDirection();
+    const timer = window.setInterval(() => void syncGuideDirection(), 4000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [authenticated]);
 
   /* ========================================
      LOAD PARTICIPANT ROUTE
@@ -533,148 +541,11 @@ export default function RewardMonitorPage() {
   ]);
 
   /* ========================================
-     COMPLETED COUNTDOWN
+     THANK YOU DISPLAY
+
+     交換完了後は自動で待機画面に戻さない。
+     スタッフ端末側で次の交換へ進むまで表示する。
   ======================================== */
-
-  useEffect(() => {
-    if (
-      completedTimerRef.current !==
-      null
-    ) {
-      window.clearInterval(
-        completedTimerRef.current
-      );
-
-      completedTimerRef.current =
-        null;
-    }
-
-    if (
-      monitorState?.state !==
-      "completed"
-    ) {
-      setRemainingSeconds(
-        THANK_YOU_SECONDS
-      );
-
-      return;
-    }
-
-    let seconds =
-      THANK_YOU_SECONDS;
-
-    setRemainingSeconds(
-      seconds
-    );
-
-    completedTimerRef.current =
-      window.setInterval(
-        () => {
-          seconds -= 1;
-
-          setRemainingSeconds(
-            Math.max(
-              seconds,
-              0
-            )
-          );
-        },
-        1000
-      );
-
-    const idleTimer =
-      window.setTimeout(
-        async () => {
-          if (
-            completedTimerRef.current !==
-            null
-          ) {
-            window.clearInterval(
-              completedTimerRef.current
-            );
-
-            completedTimerRef.current =
-              null;
-          }
-
-          try {
-            const {
-              error,
-            } =
-              await supabase
-                .from(
-                  "reward_monitor_state"
-                )
-                .update({
-                  state:
-                    "idle",
-
-                  participant_id:
-                    null,
-
-                  nickname:
-                    null,
-
-                  achievement_rank:
-                    null,
-
-                  route_type:
-                    null,
-
-                  updated_at:
-                    new Date().toISOString(),
-                })
-                .eq(
-                  "station_id",
-                  STATION_ID
-                )
-                .eq(
-                  "state",
-                  "completed"
-                );
-
-            if (
-              error
-            ) {
-              console.error(
-                "モニター待機状態復帰エラー:",
-                error
-              );
-            }
-          } catch (
-            error
-          ) {
-            console.error(
-              "モニター待機状態復帰通信エラー:",
-              error
-            );
-          }
-        },
-        THANK_YOU_SECONDS *
-          1000
-      );
-
-    return () => {
-      window.clearTimeout(
-        idleTimer
-      );
-
-      if (
-        completedTimerRef.current !==
-        null
-      ) {
-        window.clearInterval(
-          completedTimerRef.current
-        );
-
-        completedTimerRef.current =
-          null;
-      }
-    };
-  }, [
-    monitorState?.state,
-    monitorState?.updated_at,
-  ]);
 
   /* ========================================
      FULLSCREEN WATCH
@@ -899,6 +770,9 @@ export default function RewardMonitorPage() {
   const achievementRank =
     monitorState?.achievement_rank ??
     null;
+
+  const guideDirection =
+    monitorState?.guide_direction === "left" ? "left" : "right";
 
   const routeType =
     monitorState?.route_type ??
@@ -1233,9 +1107,35 @@ export default function RewardMonitorPage() {
             SHARE HAPPINESS!
           </p>
 
-          <div className="rewardMonitorCountdown">
-            {remainingSeconds}
+          <div
+            className="rewardMonitorExhibitionGuide"
+            style={{
+              margin: "clamp(14px, 3vh, 32px) auto 0",
+              padding: "clamp(16px, 3vw, 26px)",
+              maxWidth: 820,
+              width: "min(92%, 820px)",
+              boxSizing: "border-box",
+              borderRadius: 22,
+              background: "rgba(255,255,255,0.93)",
+              color: "#9b2537",
+              textAlign: "center",
+              boxShadow: "0 8px 24px rgba(60,15,25,0.12)",
+            }}
+          >
+            <div style={{ fontSize: "clamp(14px, 2.4vw, 22px)", fontWeight: 800 }}>
+              取り組み展示・募金エリアにお進みください
+            </div>
+            <div
+              aria-label={guideDirection === "left" ? "左へお進みください" : "右へお進みください"}
+              style={{ fontSize: "clamp(54px, 10vw, 110px)", fontWeight: 900, lineHeight: 1.1 }}
+            >
+              {guideDirection === "left" ? "←" : "→"}
+            </div>
           </div>
+
+          <p className="rewardMonitorWaitNote">
+            次のご案内まで、この画面をご覧ください。
+          </p>
 
         </section>
       )}
