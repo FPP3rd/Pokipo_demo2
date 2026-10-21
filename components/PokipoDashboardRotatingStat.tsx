@@ -112,13 +112,20 @@ export default function PokipoDashboardRotatingStat({
       <div
         key={index}
         style={{
-          display: "contents",
+          width: "100%",
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+          flexWrap: "nowrap",
+          alignItems: "stretch",
+          justifyContent: "flex-start",
+          gap: 0,
         }}
       >
-        <span style={{ display: "block", minWidth: 0, width: "100%", maxWidth: "100%", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", color: "#8a1822", fontSize: 9, fontWeight: 900, letterSpacing: "0.08em", animation: "pokipoStatSwap 380ms ease-out both" }}>
+        <span style={{ display: "block", flex: "0 0 14px", height: 14, lineHeight: "14px", minWidth: 0, width: "100%", maxWidth: "100%", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis", color: "#8a1822", fontSize: 9, fontWeight: 900, letterSpacing: "0.08em", animation: "pokipoStatSwap 380ms ease-out both" }}>
           {item.eyebrow}
         </span>
-        <div style={{ minWidth: 0, maxWidth: "100%", overflow: "hidden", whiteSpace: "nowrap", animation: "pokipoStatSwap 380ms ease-out both" }}>
+        <div style={{ display: "flex", alignItems: "baseline", flex: "0 0 44px", height: 44, minHeight: 44, marginTop: 0, minWidth: 0, maxWidth: "100%", overflow: "hidden", whiteSpace: "nowrap", animation: "pokipoStatSwap 380ms ease-out both" }}>
           <strong style={{ fontSize: item.value.length >= 7 ? "clamp(20px, 2vw, 32px)" : undefined, whiteSpace: "nowrap" }}>
             {loading ? "—" : item.value}
           </strong>
@@ -128,6 +135,11 @@ export default function PokipoDashboardRotatingStat({
           style={{
             minWidth: 0,
             maxWidth: "100%",
+            width: "100%",
+            flex: "0 0 18px",
+            height: 18,
+            minHeight: 18,
+            margin: 0,
             marginInline: "auto",
             overflow: "hidden",
             textOverflow: "ellipsis",
