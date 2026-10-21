@@ -9,7 +9,7 @@ import PokipoRewardPreparation from "../../../../components/PokipoRewardPreparat
 import { PokipoRewardQrPanel } from "../../../../components/PokipoRewardShared";
 
 const lastSpot = pokipoSpots[4];
-type DemoStage = "intro" | "stamp" | "survey" | "qr";
+type DemoStage = "intro" | "stamp" | "home" | "survey" | "qr";
 
 function normalizeAnswer(value: string): string {
   return value
@@ -106,13 +106,13 @@ export default function StaffCompletionPreviewPage() {
           5個達成から特典QR発行までの流れ
         </h1>
         <p style={{ color: "#786c64", fontSize: 13, lineHeight: 1.8 }}>
-          5個目のスタンプ取得演出から、参加後アンケートの案内、QR発行後までの表示を順番に確認します。
+          5個目のスタンプ取得演出から、ホームの特典ボタン強調、参加後アンケート、QR発行後までの表示を順番に確認します。
           アンケート回答とQR発行は模擬操作です。本番データにも検証用データにも保存しません。
         </p>
 
         <div style={{ background: "#fff", border: "1px solid #eee6df", borderRadius: 17, padding: 18, marginTop: 18 }}>
           <p style={{ color: "#8a1822", fontWeight: 900, fontSize: 12, margin: "0 0 7px" }}>
-            {stage === "intro" ? "START" : stage === "stamp" ? "STEP 1 / 3" : stage === "survey" ? "STEP 2 / 3" : "STEP 3 / 3"}
+            {stage === "intro" ? "START" : stage === "stamp" ? "STEP 1 / 4" : stage === "home" ? "STEP 2 / 4" : stage === "survey" ? "STEP 3 / 4" : "STEP 4 / 4"}
           </p>
           {stage === "intro" && (
             <>
@@ -146,16 +146,32 @@ export default function StaffCompletionPreviewPage() {
           )}
         </div>
 
-        {(stage === "survey" || stage === "qr") && (
+        {(stage === "home" || stage === "survey" || stage === "qr") && (
           <>
-            <PokipoRewardPreparation
-              stampCount={5}
-              postSurveyCompleted={surveyDone}
-              qrIssued={qrIssued}
-              exchanged={false}
-              preview
-            />
-            {stage === "survey" && (
+            {(stage === "survey" || stage === "qr") && (
+              <PokipoRewardPreparation
+                stampCount={5}
+                postSurveyCompleted={surveyDone}
+                qrIssued={qrIssued}
+                exchanged={false}
+                preview
+              />
+            )}
+            {stage === "home" && (
+             <>
+               <h2 style={{ fontSize: 19 }}>ホーム画面：特典ボタンを押そう！</h2>
+               <p style={{ fontSize: 13, color: "#74666a" }}>5か所達成後、周囲が暗くなり、特典ボタンが強調される案内です。</p>
+               <div style={{ padding: "22px 12px", borderRadius: 16, background: "#302a30" }}>
+                 <p style={{ textAlign: "right", color: "#fff", fontSize: 13, marginBottom: 12 }}>↓ 特典交換の準備をしよう！</p>
+                 <div className="visualMenuGrid" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", width: "100%", gap: 8 }}>
+                   <div className="visualMenuCard" style={{ opacity: .22, minWidth: 0, pointerEvents: "none" }}><div className="visualMenuIcon bookIcon">?</div><strong>豆知識</strong></div>
+                   <div className="visualMenuCard" style={{ opacity: .22, minWidth: 0, pointerEvents: "none" }}><div className="visualMenuIcon routeIcon">✓</div><strong>進捗</strong></div>
+                   <button type="button" className="visualMenuCard rewardMenu unlocked" style={{ minWidth:0, zIndex:2, position:"relative", boxShadow:"0 0 0 5px #ffe9e1, 0 0 30px #fff" }} onClick={() => setStage("survey")}><div className="visualMenuIcon rewardMenuIcon">★</div><strong>特典</strong><span>交換OK</span></button>
+                 </div>
+               </div>
+             </>
+           )}
+           {stage === "survey" && (
               <div style={{ maxWidth: 760, margin: "0 auto 18px", padding: "0 4px" }}>
                 <button type="button" style={actionStyle} onClick={() => setStage("qr")}>
                   参加後アンケート回答完了 → QR発行の表示を見る（模擬）
@@ -199,7 +215,7 @@ export default function StaffCompletionPreviewPage() {
           knowledgeText={lastSpot.knowledgeText}
           onQuizInputChange={(value) => { setQuizInput(value); setQuizError(false); }}
           onQuizSubmit={checkQuiz}
-          onClose={() => setStage("survey")}
+          onClose={() => setStage("home")}
         />
       )}
     </main>

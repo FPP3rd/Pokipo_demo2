@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase-client";
 import PokipoRewardPreparation, {
   type PreparationStatus
 } from "../../components/PokipoRewardPreparation";
+import PokipoRewardWalkthrough from "../../components/PokipoRewardWalkthrough";
 
 function getParticipantId(): string | null {
   if (typeof window === "undefined") return null;
@@ -75,6 +76,7 @@ export default function RewardLayout({ children }: { children: ReactNode }) {
     <>
       {foundParticipant && <PokipoRewardPreparation {...status} />}
       {children}
+      <PokipoRewardWalkthrough mode="reward" />
     </>
   );
 }

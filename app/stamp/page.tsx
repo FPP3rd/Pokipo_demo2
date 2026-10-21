@@ -599,6 +599,8 @@ export default function StampPage() {
       triviaTimerRef.current = null;
     }
 
+    const justCompleted = new Set(scans).size >= 5;
+
     setShowGetEffect(false);
     setActiveSpot(null);
     setTriviaReady(false);
@@ -606,6 +608,10 @@ export default function StampPage() {
     setQuizCorrect(false);
     setQuizError(false);
     setMessage("");
+
+    // 5か所達成後の「コンプリート！」でホームへ戻る。
+    // スタンプ保存・クイズ・QRの処理には触れない。
+    if (justCompleted) router.push("/home");
   }
 
   /* ========================================
