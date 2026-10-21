@@ -131,11 +131,11 @@ export function PokipoRewardQrPanel({
           : "スタッフにQRを見せてください"}
       </h3>
 
-      <p>
-        {testMode
-          ? "動作確認専用・本番の景品交換には使用できません"
-          : "交換日は10月27日（火）です"}
-      </p>
+      {testMode && (
+        <p>
+          動作確認専用・本番の景品交換には使用できません
+        </p>
+      )}
 
       <div className="rewardQrBox">
         <QRCodeSVG
@@ -146,6 +146,7 @@ export function PokipoRewardQrPanel({
         />
       </div>
 
+      {/* 確認番号 */}
       <div className="rewardConfirmationCode">
         <span>CONFIRMATION NUMBER</span>
 
@@ -160,6 +161,37 @@ export function PokipoRewardQrPanel({
             ? "検証用スタッフの読み取り画面で確認してください。"
             : "QRコードとあわせてスタッフに提示してください。"}
         </p>
+      </div>
+
+      {/* 交換日・スクリーンショットの案内 */}
+      <div className="rewardQrImportantNotice">
+        <span className="rewardQrImportantEyebrow">
+          {testMode
+            ? "TEST MODE"
+            : "REWARD EXCHANGE DAY"}
+        </span>
+
+        <p className="rewardQrExchangeDate">
+          交換日は
+          <strong>10月27日（火）</strong>
+          です！
+        </p>
+
+        <p className="rewardQrScreenshot">
+          スクリーンショット推奨！！
+        </p>
+
+        <p className="rewardQrScreenshotDescription">
+          QRコードと確認番号が両方写るように
+          保存しておくと、交換当日の提示がスムーズです。
+        </p>
+
+        {testMode && (
+          <p className="rewardQrTestNotice">
+            ※ このQRは検証専用です。
+            本番の特典交換には使用できません。
+          </p>
+        )}
       </div>
     </div>
   );

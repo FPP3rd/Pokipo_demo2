@@ -45551,3 +45551,275 @@ main.shell:has(input[aria-label="参加者検索"])
   white-space: pre-wrap !important;
   overflow-wrap: anywhere;
 }
+
+
+/* ============================================
+   POKIPO 最終調整
+   5スタンプ達成時の特典誘導
+   特典交換日とスクリーンショット案内
+============================================ */
+
+/* ============================================
+   01. 5か所達成時の特典ボタン
+============================================ */
+
+/* 5か所達成時に表示される特典案内 */
+.visualHomePage .visualNextSpot.complete {
+  position: relative;
+  overflow: visible;
+  border: 2px solid #b72838 !important;
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    #ba293b 0%,
+    #8f1f30 100%
+  ) !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 7px 20px rgba(159, 31, 48, 0.23);
+  animation:
+    pokipoRewardAttention 2.5s ease-in-out infinite;
+}
+
+.visualHomePage .visualNextSpot.complete
+.visualNextText span,
+.visualHomePage .visualNextSpot.complete
+.visualNextText strong,
+.visualHomePage .visualNextSpot.complete
+.visualNextIcon,
+.visualHomePage .visualNextSpot.complete
+.visualNextArrow {
+  color: #ffffff !important;
+}
+
+.visualHomePage .visualNextSpot.complete
+.visualNextText strong {
+  font-weight: 900 !important;
+  font-size: 17px;
+}
+
+.visualHomePage .visualNextSpot.complete
+.visualNextText span {
+  font-weight: 800;
+}
+
+/* ボタンを押す操作を明確にする */
+.visualHomePage .visualNextSpot.complete::after {
+  content: "ここをタップして特典画面へ！";
+  position: absolute;
+  right: 10px;
+  bottom: -12px;
+  z-index: 2;
+  max-width: calc(100% - 20px);
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fff2c9;
+  color: #8a1822;
+  border: 1px solid #ead4a2;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.3;
+  text-align: center;
+  white-space: normal;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, 0.09);
+}
+
+/* メニュー内の特典カードも強調 */
+.visualHomePage .visualMenuCard.rewardMenu.unlocked {
+  position: relative;
+  border: 2px solid #b72838 !important;
+  background: linear-gradient(
+    135deg,
+    #fff5f1 0%,
+    #ffebe4 100%
+  ) !important;
+  box-shadow:
+    0 5px 16px rgba(183, 40, 56, 0.17);
+}
+
+.visualHomePage .visualMenuCard.rewardMenu.unlocked
+strong {
+  color: #8a1822 !important;
+  font-weight: 900;
+}
+
+.visualHomePage .visualMenuCard.rewardMenu.unlocked
+> span {
+  color: #a42130 !important;
+  font-weight: 900;
+}
+
+/* 過度に点滅させず穏やかに強調 */
+@keyframes pokipoRewardAttention {
+  0%, 100% {
+    box-shadow:
+      0 7px 20px rgba(159, 31, 48, 0.19);
+  }
+
+  50% {
+    box-shadow:
+      0 7px 25px rgba(159, 31, 48, 0.34);
+  }
+}
+
+/* ============================================
+   02. 既存の特典交換日案内
+============================================ */
+
+.rewardExchangeDateNotice {
+  border: 2px solid #dfb4ac !important;
+  background: linear-gradient(
+    180deg,
+    #fff8f4 0%,
+    #ffefe7 100%
+  ) !important;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow:
+    0 5px 15px rgba(155, 40, 48, 0.08);
+}
+
+.rewardExchangeDateNotice h2 {
+  color: #9b1f2f !important;
+  font-size: clamp(20px, 5vw, 26px) !important;
+  line-height: 1.5;
+  font-weight: 900 !important;
+}
+
+.rewardExchangeDateNotice > span {
+  color: #ad3744 !important;
+  font-weight: 900;
+}
+
+.rewardExchangeDateNotice p {
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+/* ============================================
+   03. 特典交換QR下の重要案内
+============================================ */
+
+.rewardQrImportantNotice {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 18px;
+  padding: 17px 13px;
+  border: 2px solid #edc6b5;
+  border-radius: 15px;
+  background: linear-gradient(
+    180deg,
+    #fffaf6 0%,
+    #fff0e9 100%
+  );
+  text-align: center;
+}
+
+.rewardQrImportantEyebrow {
+  display: block;
+  margin-bottom: 9px;
+  color: #9c4a49;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.rewardQrImportantNotice
+.rewardQrExchangeDate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  margin: 0 0 12px;
+  color: #8a1822;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.6;
+}
+
+.rewardQrImportantNotice
+.rewardQrExchangeDate strong {
+  color: #ae2432;
+  font-size: clamp(22px, 6vw, 27px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.rewardQrImportantNotice
+.rewardQrScreenshot {
+  margin: 0;
+  padding: 12px 8px;
+  color: #ffffff;
+  background: #a82737;
+  border-radius: 10px;
+  font-size: clamp(17px, 5vw, 21px);
+  font-weight: 900;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.rewardQrImportantNotice
+.rewardQrScreenshotDescription {
+  margin: 12px 0 0;
+  color: #66534c;
+  font-size: 12px;
+  line-height: 1.8;
+  font-weight: 700;
+}
+
+.rewardQrImportantNotice
+.rewardQrTestNotice {
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #e5cdc2;
+  color: #a82737;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+/* ============================================
+   04. スマートフォン最適化
+============================================ */
+
+@media (max-width: 640px) {
+  .visualHomePage .visualNextSpot.complete {
+    margin-bottom: 18px;
+  }
+
+  .visualHomePage .visualNextSpot.complete
+  .visualNextText strong {
+    font-size: 15px;
+  }
+
+  .visualHomePage .visualNextSpot.complete::after {
+    font-size: 9px;
+    padding: 5px 8px;
+  }
+
+  .rewardQrImportantNotice {
+    padding: 15px 11px;
+    margin-top: 15px;
+  }
+
+  .rewardQrImportantNotice
+  .rewardQrExchangeDate {
+    font-size: 15px;
+  }
+
+  .rewardQrImportantNotice
+  .rewardQrScreenshotDescription {
+    font-size: 11px;
+  }
+}
+
+/* ============================================
+   05. 動きを減らす設定への対応
+============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .visualHomePage .visualNextSpot.complete {
+    animation: none !important;
+  }
+}
