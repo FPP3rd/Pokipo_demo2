@@ -46235,3 +46235,60 @@ strong {
     flex: 1 1 120px;
   }
 }
+
+/* ==========================================================
+   POKIPO 管理ダッシュボード：4つの統計カードの文字位置を統一
+   ※ app/globals.css の最末尾に追記（既存CSSは削除しない）
+   ※ 数値・日本語の行位置を右下の動的パネルに合わせる
+========================================================== */
+
+/* 通常カード3枚：英語見出しの高さを右下と同じ14pxに固定 */
+.staffDashboardPage .staffDashboardStats > .staffDashboardStatCard:not(.today) > span {
+  display: block;
+  box-sizing: border-box;
+  height: 14px;
+  line-height: 14px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 通常カード3枚：数値段は見出しの直後から44px（動的パネルと統一） */
+.staffDashboardPage .staffDashboardStats > .staffDashboardStatCard:not(.today) > div {
+  box-sizing: border-box;
+  margin-top: 0 !important;
+  height: 44px;
+  min-height: 44px;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: baseline !important;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* 日本語説明：3枚とも右下と同じ3段目、中央寄せ・1行固定 */
+.staffDashboardPage .staffDashboardStats > .staffDashboardStatCard:not(.today) > p {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 18px;
+  min-height: 18px;
+  line-height: 18px !important;
+  margin: 0 !important;
+  text-align: center !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 右下も日本語の色・サイズ・行位置を同じ基準に固定 */
+.staffDashboardPage .staffDashboardStats > .staffDashboardStatCard.today > div:first-child > p {
+  color: #786c64 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  line-height: 18px !important;
+  margin: 0 !important;
+  height: 18px;
+  text-align: center !important;
+}
