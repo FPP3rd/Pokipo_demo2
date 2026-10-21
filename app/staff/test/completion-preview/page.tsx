@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { supabase } from "../../../../lib/supabase-client";
 import { pokipoSpots } from "../../../data/pokipo-data";
 import PokipoStampGetModal from "../../../../components/PokipoStampGetModal";
+import PokipoRewardPreparation from "../../../../components/PokipoRewardPreparation";
+import { PokipoRewardQrPanel } from "../../../../components/PokipoRewardShared";
 
 const lastSpot = pokipoSpots[4];
+type DemoStage = "intro" | "stamp" | "survey" | "qr";
 
 function normalizeAnswer(value: string): string {
   return value
@@ -17,41 +19,59 @@ function normalizeAnswer(value: string): string {
     .toLowerCase();
 }
 
-/** スタンプ5/5の表示だけを再現する。参加者DBや検証用DBへの書き込みなし。 */
+const actionStyle: React.CSSProperties = {
+  width: "100%",
+  minHeight: 48,
+  padding: "12px 16px",
+  border: 0,
+  borderRadius: 13,
+  background: "#8a1822",
+  color: "#fff",
+  fontSize: 14,
+  fontWeight: 800,
+  cursor: "pointer",
+};
+
+/**
+ * スタッフ専用：5個目獲得 → 特典交換準備の案内 → 参加後アンケート（模擬） →
+ * QR発行済みの案内、という流れを確認する。
+ * 本番/検証テーブルへの INSERT/UPDATE/DELETE/RPC は行わない。
+ */
 export default function StaffCompletionPreviewPage() {
-  const router = useRouter();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const [playing, setPlaying] = useState(false);
+  const [stage, setStage] = useState<DemoStage>("intro");
   const [quizInput, setQuizInput] = useState("");
   const [quizCorrect, setQuizCorrect] = useState(false);
   const [quizError, setQuizError] = useState(false);
-  const [finished, setFinished] = useState(false);
 
   useEffect(() => {
     let active = true;
     async function verify() {
-      const { data: auth, error } = await supabase.auth.getUser();
-      if (error || !auth.user) {
+      try {
+        const { data: auth, error } = await supabase.auth.getUser();
+        if (error || !auth.user) {
+          if (active) setAuthorized(false);
+          return;
+        }
+        const { data: staff, error: staffError } = await supabase
+          .from("staff_profiles")
+          .select("user_id")
+          .eq("user_id", auth.user.id)
+          .maybeSingle();
+        if (active) setAuthorized(!staffError && Boolean(staff));
+      } catch {
         if (active) setAuthorized(false);
-        return;
       }
-      const { data: staff, error: staffError } = await supabase
-        .from("staff_profiles")
-        .select("user_id")
-        .eq("user_id", auth.user.id)
-        .maybeSingle();
-      if (active) setAuthorized(!staffError && Boolean(staff));
     }
     void verify();
     return () => { active = false; };
   }, []);
 
-  function replay() {
+  function restart() {
     setQuizInput("");
     setQuizCorrect(false);
     setQuizError(false);
-    setFinished(false);
-    setPlaying(true);
+    setStage("intro");
   }
 
   function checkQuiz() {
@@ -75,36 +95,101 @@ export default function StaffCompletionPreviewPage() {
     );
   }
 
+  const surveyDone = stage === "qr";
+  const qrIssued = stage === "qr";
+
   return (
-    <main className="shell" style={{ padding: "30px 18px 64px" }}>
-      <div style={{ maxWidth: 650, margin: "0 auto" }}>
-        <p style={{ color: "#8a1822", fontSize: 12, fontWeight: 800 }}>POKIPO STAFF TEST</p>
-        <h1 style={{ color: "#302a26", fontSize: 24 }}>5個達成後の演出プレビュー</h1>
-        <p style={{ color: "#786c64", lineHeight: 1.8 }}>
-          本番で使われているスタンプ取得演出をそのまま表示します。
-          5個目の獲得演出、トリビアの回答、コンプリートまでの流れを確認できます。
+    <main className="shell" style={{ padding: "28px 16px 70px" }}>
+      <div style={{ maxWidth: 740, margin: "0 auto" }}>
+        <p style={{ color: "#8a1822", fontSize: 12, fontWeight: 900 }}>POKIPO STAFF TEST</p>
+        <h1 style={{ color: "#302a26", fontSize: 23, margin: "6px 0" }}>
+          5個達成から特典QR発行までの流れ
+        </h1>
+        <p style={{ color: "#786c64", fontSize: 13, lineHeight: 1.8 }}>
+          5個目のスタンプ取得演出から、参加後アンケートの案内、QR発行後までの表示を順番に確認します。
+          アンケート回答とQR発行は模擬操作です。本番データにも検証用データにも保存しません。
         </p>
-        <section style={{ background: "#fff", border: "1px solid #eee6df", borderRadius: 18, padding: 22, margin: "22px 0" }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: "#8a1822" }}>DEMO ONLY · 5 / 5</div>
-          <h2 style={{ fontSize: 19, color: "#302a26" }}>
-            {finished ? "5個達成の演出が完了しました" : "5個目のスタンプ取得を再現"}
-          </h2>
-          <p style={{ color: "#786c64", fontSize: 13 }}>
-            この操作では本番・検証用いずれのスタンプ記録も変更しません。
+
+        <div style={{ background: "#fff", border: "1px solid #eee6df", borderRadius: 17, padding: 18, marginTop: 18 }}>
+          <p style={{ color: "#8a1822", fontWeight: 900, fontSize: 12, margin: "0 0 7px" }}>
+            {stage === "intro" ? "START" : stage === "stamp" ? "STEP 1 / 3" : stage === "survey" ? "STEP 2 / 3" : "STEP 3 / 3"}
           </p>
-          <button type="button" onClick={replay} style={{ width: "100%", minHeight: 46, border: 0, borderRadius: 12, background: "#8a1822", color: "white", fontWeight: 800, cursor: "pointer" }}>
-            {finished ? "最初からもう一度見る" : "5個達成の演出を再生する"}
+          {stage === "intro" && (
+            <>
+              <h2 style={{ fontSize: 19 }}>5個目を取得した瞬間から確認する</h2>
+              <button type="button" style={actionStyle} onClick={() => setStage("stamp")}>
+                5個達成から一連の案内を再生する
+              </button>
+            </>
+          )}
+          {stage === "stamp" && (
+            <p style={{ fontSize: 13, color: "#74666a" }}>
+              スタンプ取得の実際の演出を再生中です。クイズに正解して「コンプリート！」を押すと、次の案内へ進みます。
+            </p>
+          )}
+          {stage === "survey" && (
+            <>
+              <h2 style={{ fontSize: 19 }}>5個達成！次は参加後アンケートです</h2>
+              <p style={{ color: "#74666a", fontSize: 13, lineHeight: 1.8 }}>
+                下は本番の特典交換準備チェックリストと共通の表示です。
+                この確認ページでは本物のアンケートには移動せず、回答完了した状態を再現できます。
+              </p>
+            </>
+          )}
+          {stage === "qr" && (
+            <>
+              <h2 style={{ fontSize: 19 }}>参加後アンケート完了 → QR発行済み</h2>
+              <p style={{ color: "#74666a", fontSize: 13, lineHeight: 1.8 }}>
+                特典QRが発行された状態の表示です。下のQRはプレビュー専用で、交換には使用できません。
+              </p>
+            </>
+          )}
+        </div>
+
+        {(stage === "survey" || stage === "qr") && (
+          <>
+            <PokipoRewardPreparation
+              stampCount={5}
+              postSurveyCompleted={surveyDone}
+              qrIssued={qrIssued}
+              exchanged={false}
+              preview
+            />
+            {stage === "survey" && (
+              <div style={{ maxWidth: 760, margin: "0 auto 18px", padding: "0 4px" }}>
+                <button type="button" style={actionStyle} onClick={() => setStage("qr")}>
+                  参加後アンケート回答完了 → QR発行の表示を見る（模擬）
+                </button>
+              </div>
+            )}
+            {stage === "qr" && (
+              <div style={{ maxWidth: 760, margin: "0 auto 18px" }}>
+                <PokipoRewardQrPanel
+                  mode="test"
+                  status="issued"
+                  token="preview-only-not-valid-for-exchange"
+                  confirmationCode="DEMO-ONLY"
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 20 }}>
+          <button type="button" onClick={restart} style={{ padding: "12px 16px", borderRadius: 12, background: "#fff", border: "1px solid #ded2cb", color: "#47352f", fontWeight: 800, cursor: "pointer" }}>
+            最初からやり直す
           </button>
-        </section>
-        <button type="button" onClick={() => router.push("/staff/test")} style={{ padding: "12px 16px", border: "1px solid #ded2cb", borderRadius: 12, background: "white", color: "#47352f", cursor: "pointer" }}>
-          動作確認に戻る
-        </button>
+          <Link href="/staff/test" style={{ padding: "12px 16px", borderRadius: 12, background: "#fff", border: "1px solid #ded2cb", color: "#47352f", fontWeight: 800, textDecoration: "none" }}>
+            動作確認メニューに戻る
+          </Link>
+        </div>
       </div>
-      {playing && (
+
+      {stage === "stamp" && (
         <PokipoStampGetModal
           spotName={lastSpot.spotName}
           stampCount={5}
-          triviaReady={true}
+          triviaReady
           quizQuestion={lastSpot.quizQuestion}
           quizHint={lastSpot.quizHint}
           quizInput={quizInput}
@@ -114,7 +199,7 @@ export default function StaffCompletionPreviewPage() {
           knowledgeText={lastSpot.knowledgeText}
           onQuizInputChange={(value) => { setQuizInput(value); setQuizError(false); }}
           onQuizSubmit={checkQuiz}
-          onClose={() => { setPlaying(false); setFinished(true); }}
+          onClose={() => setStage("survey")}
         />
       )}
     </main>
