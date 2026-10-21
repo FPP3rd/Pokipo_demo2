@@ -22,31 +22,6 @@ const SERIES: { key: Key; label: string; color: string }[] = [
   { key: "surveys", label: "参加後アンケート", color: "#6c8896" },
   { key: "exchanges", label: "特典交換", color: "#4d8662" },
 ];
-const dummyValues = [
-  [18, 6, 2, 0], [27, 13, 8, 0], [37, 25, 17, 0],
-  [31, 28, 24, 0], [45, 33, 28, 0], [35, 26, 24, 0], [52, 43, 40, 29],
-];
-const DEMO: Result = {
-  days: 7,
-  records: dummyValues.map((n, index) => {
-    const date = new Date(Date.now() - (6 - index) * 86400000);
-    return {
-      day: new Intl.DateTimeFormat("en-CA", {
-        timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit",
-      }).format(date),
-      participants: n[0], completions: n[1], surveys: n[2], exchanges: n[3],
-    };
-  }),
-  comparison: {
-    participants: { current: 9, previous: 13, yesterday: 6 },
-    completions: { current: 5, previous: 8, yesterday: 4 },
-    surveys: { current: 4, previous: 7, yesterday: 2 },
-    exchanges: { current: 3, previous: 6, yesterday: 0 },
-  },
-  generatedAt: new Date().toISOString(),
-  note: "模擬用データです。",
-};
-
 function formatDate(date: string) {
   return new Date(date).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
 }
@@ -55,12 +30,12 @@ export default function StaffTrendsPage() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
-  const [mode, setMode] = useState<"demo" | "live">("demo");
   const [days, setDays] = useState(14);
   const [live, setLive] = useState<Result | null>(null);
   const [error, setError] = useState("");
   const [loadingLive, setLoadingLive] = useState(false);
   const [activeSeries, setActiveSeries] = useState<Key>("participants");
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -80,11 +55,11 @@ export default function StaffTrendsPage() {
   }, []);
 
   useEffect(() => {
-    if (!authorized || mode !== "live") return;
+    if (!authorized) return;
     let cancelled = false;
     async function load() {
-      setLoadingLive(true);
-      setError("");
+      if (!cancelled) setLoadingLive(true);
+      if (!cancelled) setError("");
       try {
         const { data } = await supabase.auth.getSession();
         const token = data.session?.access_token;
@@ -96,7 +71,7 @@ export default function StaffTrendsPage() {
         if (!response.ok) throw new Error(json.error || "データ取得に失敗しました。");
         if (!cancelled) setLive(json);
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "通信エラー");
+        if (!cancelled) { setLive(null); setError(e instanceof Error ? e.message : "通信エラー"); }
       } finally {
         if (!cancelled) setLoadingLive(false);
       }
@@ -104,9 +79,9 @@ export default function StaffTrendsPage() {
     void load();
     const timer = window.setInterval(() => void load(), 60000);
     return () => { cancelled = true; window.clearInterval(timer); };
-  }, [authorized, mode, days]);
+  }, [authorized, days, reload]);
 
-  const data = mode === "demo" ? DEMO : live;
+  const data = live;
   const totals = useMemo(() => {
     const sums = { participants: 0, completions: 0, surveys: 0, exchanges: 0 };
     data?.records.forEach(row => SERIES.forEach(s => { sums[s.key] += row[s.key]; }));
@@ -133,19 +108,16 @@ export default function StaffTrendsPage() {
         <button type="button" className="pokipoTrendsBack" onClick={() => router.push("/staff/dashboard")}>← 管理ダッシュボードに戻る</button>
 
         <div className="pokipoTrendsToolbar">
-          <div className="pokipoTrendsModeGroup" role="group" aria-label="集計モード">
-            <button type="button" aria-pressed={mode === "demo"} onClick={() => setMode("demo")}>模擬データ</button>
-            <button type="button" aria-pressed={mode === "live"} onClick={() => setMode("live")}>本番集計</button>
-          </div>
-          {mode === "live" && (
-            <select value={days} aria-label="集計期間" onChange={e => { setLive(null); setDays(Number(e.target.value)); }}>
-              <option value={7}>直近7日</option><option value={14}>直近14日</option><option value={31}>直近31日</option>
-            </select>
-          )}
+          <span className="pokipoTrendsLiveLabel">● 本番データ</span>
+          <select value={days} aria-label="集計期間" onChange={e => { setLive(null); setDays(Number(e.target.value)); }}>
+            <option value={7}>直近7日</option><option value={14}>直近14日</option><option value={31}>直近31日</option>
+          </select>
+          <button type="button" className="pokipoTrendsRefresh" onClick={() => setReload(v => v + 1)} disabled={loadingLive}>
+            {loadingLive ? "更新中…" : "再読み込み ↻"}
+          </button>
         </div>
-        {mode === "demo" && <p className="pokipoTrendsDemoNote">DEMO / 数値はすべてダミーです</p>}
-        {error && <p role="alert" className="pokipoTrendsError">{error}</p>}
-        {!data ? <div className="pokipoTrendsPanel" role="status">{loadingLive ? "本番データを読み込み中..." : "本番データを準備中..."}</div> : <>
+        {error && <div role="alert" className="pokipoTrendsError"><strong>本番データを取得できませんでした。</strong><p>{error}</p><p>Vercelに SUPABASE_SERVICE_ROLE_KEY が設定されているか、/api/staff/trends/route.ts がデプロイされているかを確認してください。</p></div>}
+        {!data ? <div className="pokipoTrendsPanel" role="status">{loadingLive ? "本番データを読み込み中..." : "データを取得できていません。上のエラーをご確認ください。"}</div> : <>
           <section className="pokipoTrendsStats" aria-label="期間中の集計件数">
             {SERIES.map(item => <article className="pokipoTrendsStat" key={item.key}>
               <span className="pokipoTrendsStatMarker" style={{ background: item.color }} />

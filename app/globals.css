@@ -46177,3 +46177,61 @@ strong {
   .pokipoTrendsPage .pokipoTrendsStats { grid-template-columns:repeat(4,minmax(0,1fr)); }
   .pokipoTrendsPage .pokipoTrendsSeriesTabs { grid-template-columns:repeat(4,minmax(0,1fr)); }
 }
+
+/* POKIPO 参加動向分析：本番データ専用の操作欄（末尾追記） */
+.pokipoTrendsPage .pokipoTrendsLiveLabel {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #eef8f1;
+  color: #347b4e;
+  font-size: 12px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.pokipoTrendsPage .pokipoTrendsRefresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-height: 40px;
+  margin: 0;
+  padding: 8px 15px;
+  background: #fff;
+  color: #8a1822;
+  border: 1px solid #e8dfd8;
+  border-radius: 12px;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 900;
+}
+.pokipoTrendsPage .pokipoTrendsRefresh:hover { background: #fffaf6; }
+.pokipoTrendsPage .pokipoTrendsError {
+  border: 1px solid #ebbec3;
+  background: #fff9f7;
+  border-radius: 14px;
+  padding: 15px;
+  color: #8a1822;
+}
+.pokipoTrendsPage .pokipoTrendsError p {
+  margin: 8px 0 0;
+  color: #665253;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .pokipoTrendsPage .pokipoTrendsToolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+  }
+  .pokipoTrendsPage .pokipoTrendsToolbar select {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+  .pokipoTrendsPage .pokipoTrendsRefresh {
+    flex: 1 1 120px;
+  }
+}
