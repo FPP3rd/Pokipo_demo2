@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase-client";
-import PromotionGate from "../components/PromotionGate";
+
 import PokipoBrowserNotice from "../components/PokipoBrowserNotice";
 
 const INTRO_STORAGE_KEY = "pokipo_intro_seen";
@@ -520,7 +520,7 @@ export default function StartPage() {
   }
 
   return (
-    <PromotionGate>
+    
       <>
         <main className="shell">
           <section className="card startPage">
@@ -1107,6 +1107,6 @@ export default function StartPage() {
           </div>
         )}
       </>
-    </PromotionGate>
+    
   );
 }
