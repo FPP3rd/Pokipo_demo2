@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase-client";
+import PokipoSurveyWordCloud from "../../../components/PokipoSurveyWordCloud";
 
 type PreSurvey = {
   participant_id: string;
@@ -414,9 +415,9 @@ export default function StaffSurveyPage() {
 
     let active = true;
 
-    async function loadSurveyData() {
-      setLoading(true);
-      setMessage("");
+    async function loadSurveyData(silent = false) {
+      if (!silent) setLoading(true);
+      if (!silent) setMessage("");
 
       try {
         const [preResult, postResult] =
@@ -478,9 +479,15 @@ export default function StaffSurveyPage() {
     }
 
     void loadSurveyData();
+    const poll = window.setInterval(() => {
+      if (document.visibilityState === "visible") {
+        void loadSurveyData(true);
+      }
+    }, 15000);
 
     return () => {
       active = false;
+      window.clearInterval(poll);
     };
   }, [authenticated]);
 
@@ -1263,6 +1270,10 @@ export default function StaffSurveyPage() {
                     description="参加前アンケートの自由記述回答です。"
                   />
 
+                  <PokipoSurveyWordCloud
+                    label="ポッキーをシェアする場面"
+                    answers={filteredPreSurveys.map((survey) => survey.share_situation ?? "").filter(Boolean)}
+                  />
                   <div className="staffSurveyComments">
                     {filteredPreSurveys.filter(
                       (survey) =>
@@ -1404,6 +1415,10 @@ export default function StaffSurveyPage() {
                     description="参加後アンケートの自由記述回答です。"
                   />
 
+                  <PokipoSurveyWordCloud
+                    label="POKIPOで印象に残ったこと"
+                    answers={filteredPostSurveys.map((survey) => survey.memorable_point ?? "").filter(Boolean)}
+                  />
                   <div className="staffSurveyComments">
                     {filteredPostSurveys.filter(
                       (survey) =>
