@@ -46307,3 +46307,15 @@ strong {
   position: relative;
   top: 13px;
 }
+
+/* POKIPO 景品交換端末選択：モニター端末カードの文字色を白に固定 */
+.staffDeviceModePage .staffDeviceModeCard.monitor,
+.staffDeviceModePage .staffDeviceModeCard.monitor .staffDeviceModeBody,
+.staffDeviceModePage .staffDeviceModeCard.monitor .staffDeviceModeBody > span,
+.staffDeviceModePage .staffDeviceModeCard.monitor .staffDeviceModeBody h2,
+.staffDeviceModePage .staffDeviceModeCard.monitor .staffDeviceModeBody p,
+.staffDeviceModePage .staffDeviceModeCard.monitor .staffDeviceModeFeature span,
+.staffDeviceModePage .staffDeviceModeCard.monitor .staffDeviceModeIcon,
+.staffDeviceModePage .staffDeviceModeCard.monitor .staffDeviceModeArrow {
+  color: #ffffff !important;
+}
