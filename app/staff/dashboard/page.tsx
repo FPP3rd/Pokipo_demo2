@@ -882,13 +882,25 @@ export default function StaffDashboardPage() {
                           )}
                     </strong>
 
-                    <time>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginTop: 4 }}><time>
                       {loading
                         ? "----"
                         : formatSpotDate(
                             summary.last_scanned_at
                           )}
-                      </time>
+                      </time>                    {/* POKIPO_SPOT_HISTORY_LINK */}
+                    <a
+                      href={`/staff/spot-history?spot=${encodeURIComponent(spotId)}`}
+                      style={{
+                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                        whiteSpace: "nowrap", padding: "6px 12px",
+                        borderRadius: 999, border: "1px solid #b98f91", color: "#8a1822",
+                        background: "#fff9f7", textDecoration: "none", fontWeight: 800, fontSize: 11,
+                        alignSelf: "flex-end", maxWidth: "100%", boxSizing: "border-box",
+                      }}
+                    >
+                      読み取り履歴 →
+                    </a></div>
                   </div>
                 </article>
               );
