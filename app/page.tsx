@@ -301,11 +301,11 @@ export default function StartPage() {
     }
 
     if (!grade) {
-      setMessage("学年を選択してください。");
+      setMessage("学年・所属を選択してください。");
       return;
     }
 
-    if (!department) {
+    if (grade !== "教職員" && !department) {
       setMessage("学科を選択してください。");
       return;
     }
@@ -329,7 +329,7 @@ export default function StartPage() {
           id: participantId,
           nickname: name,
           grade,
-          department,
+          department: grade === "教職員" ? null : department,
         });
 
       if (error) {
@@ -362,7 +362,7 @@ export default function StartPage() {
       localStorage.setItem("pokipo_grade", grade);
       localStorage.setItem(
         "pokipo_department",
-        department
+        grade === "教職員" ? "" : department
       );
       localStorage.setItem(
         "pokipo_terms_accepted",
@@ -600,14 +600,15 @@ export default function StartPage() {
 
               <div className="field">
                 <label htmlFor="grade">
-                  学年
+                  学年・所属
                 </label>
 
                 <select
                   id="grade"
                   value={grade}
                   onChange={(e) =>
-                    setGrade(e.target.value)
+                    (setGrade(e.target.value),
+                     e.target.value === "教職員" && setDepartment(""))
                   }
                   disabled={submitting}
                 >
@@ -618,12 +619,14 @@ export default function StartPage() {
                   <option value="2年">2年</option>
                   <option value="3年">3年</option>
                   <option value="4年">4年</option>
+                  <option value="教職員">教職員</option>
                   <option value="その他">
                     その他
                   </option>
                 </select>
               </div>
 
+              {grade !== "教職員" && (
               <div className="field">
                 <label htmlFor="department">
                   学科
@@ -687,6 +690,7 @@ export default function StartPage() {
                   </optgroup>
                 </select>
               </div>
+              )}
 
               {/* 参加前アンケートの案内 */}
               <div className="startSurveyNotice">
@@ -841,7 +845,7 @@ export default function StartPage() {
                   </p>
                   <ul>
                     <li>ニックネーム</li>
-                    <li>学年</li>
+                    <li>学年・所属</li>
                     <li>学科</li>
                     <li>スタンプの取得状況</li>
                     <li>豆知識の取得状況</li>
