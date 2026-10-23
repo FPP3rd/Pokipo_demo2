@@ -8,6 +8,8 @@ import { supabase } from "../../lib/supabase-client";
 import MaintenanceGate from "../../components/MaintenanceGate";
 import PromotionGate from "../../components/PromotionGate";
 import PokipoParticipantNews from "../../components/PokipoParticipantNews";
+import PokipoPostSurveyReminder from "../../components/PokipoPostSurveyReminder";
+import PokipoNextSpotGuide from "../../components/PokipoNextSpotGuide";
 
 
 /* ========================================
@@ -76,6 +78,7 @@ export default function HomePage() {
   /* BASIC */
   const [nickname, setNickname] = useState("");
   const [progress, setProgress] = useState(0);
+  const [acquiredSpotIds, setAcquiredSpotIds] = useState<string[]>([]);
   const [rewardExchanged, setRewardExchanged] = useState(false);
 
   /* PARTICIPANT COUNTS */
@@ -366,6 +369,7 @@ export default function HomePage() {
       );
 
       setProgress(stampCount);
+      setAcquiredSpotIds(stamps.map((stamp) => stamp.spot_id));
 
       localStorage.setItem("pokipo_progress", String(stampCount));
       localStorage.setItem(
@@ -667,6 +671,11 @@ export default function HomePage() {
               announcements={announcements}
             />
 
+            <PokipoNextSpotGuide acquiredSpotIds={acquiredSpotIds} />
+
+
+            {/* 5か所完走・参加後アンケート未回答の場合だけ催促 */}
+            <PokipoPostSurveyReminder progress={progress} rewardExchanged={rewardExchanged} />
 
             {/* PROMOTION BANNER */}
             {bannerPromotion && (

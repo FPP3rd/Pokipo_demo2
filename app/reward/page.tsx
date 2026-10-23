@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toPng } from "html-to-image";
 
 import { supabase } from "../../lib/supabase-client";
+import PokipoRewardEventStatus from "../../components/PokipoRewardEventStatus";
 import MaintenanceGate from "../../components/MaintenanceGate";
 import { PokipoRewardQrPanel } from "../../components/PokipoRewardShared";
 
@@ -964,6 +965,9 @@ export default function RewardPage() {
             </div>
           </header>
 
+          {/* 特典交換会の日時・場所・個人の交換状態 */}
+          <PokipoRewardEventStatus exchanged={rewardExchanged} checking={loadingRewardStatus} />
+
           {/* HERO */}
           <section
             className={
@@ -1077,12 +1081,12 @@ export default function RewardPage() {
               ) : (
                 <>
                   <h2>
-                    特典交換まであと1ステップ！
+                    特典交換にはアンケート回答が必要です
                   </h2>
 
                   <p>
-                    POKIPO参加前後の変化を確認するため、
-                    参加後アンケートへの回答をお願いします。
+                    特典交換には参加後アンケートへの回答が必須です。
+                    下のボタンから回答を完了してください。
                   </p>
 
                   <button
@@ -1148,12 +1152,12 @@ export default function RewardPage() {
                 <span>SURVEY REQUIRED</span>
 
                 <h3>
-                  アンケート回答後にQRを表示します
+                  参加後アンケートの回答が必要です
                 </h3>
 
                 <p>
-                  上の「参加後アンケートに回答する」から
-                  回答してください。
+                  特典交換用QRの発行には、参加後アンケートへの回答が必須です。
+                  上の「参加後アンケートに回答する」から回答してください。
                 </p>
               </div>
             ) : issuingRewardQr ? (

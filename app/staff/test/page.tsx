@@ -852,6 +852,14 @@ export default function StaffTestPage() {
               </p>
             </section>
 
+            {/* POKIPO_NEXT_SPOT_PREVIEW_LINK */}
+            <section style={{ padding: "16px", marginBottom: 16, border: "1px solid #eee6df", borderRadius: 18, background: "#fffaf7" }}>
+              <h3 style={{ color: "#302a26", fontSize: 18, margin: "0 0 8px" }}>次のスポット案内プレビュー</h3>
+              <p style={{ color: "#786c64", fontSize: 12, lineHeight: 1.7 }}>5か所の取得状況を自由に切り替えて、参加者への案内を確認できます。実データは変更されません。</p>
+              <Link href="/staff/test/next-spot-preview" style={{ display: "block", padding: "14px 16px", borderRadius: 12, background: "#fff", color: "#8a1822", textDecoration: "none", fontWeight: 800, border: "1px solid #e9dcd6" }}>
+                案内表示を確認する →
+              </Link>
+            </section>
             {/* POKIPO_COMBINED_PREVIEW_LINK */}
             <section
               aria-label="演出プレビュー"

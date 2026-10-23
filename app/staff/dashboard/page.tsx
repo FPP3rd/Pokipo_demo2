@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase-client";
+import PokipoExchangeTrend from "../../../components/PokipoExchangeTrend";
 
 import PokipoStampDistribution from "../../../components/PokipoStampDistribution";
 import PokipoAnimatedNumber from "../../../components/PokipoAnimatedNumber";
@@ -776,6 +777,8 @@ export default function StaffDashboardPage() {
         {/* =================================
             スタンプ取得数分布
         ================================= */}
+
+        <PokipoExchangeTrend />
 
         <PokipoStampDistribution />
 
