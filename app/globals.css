@@ -46319,3 +46319,11 @@ strong {
 .staffDeviceModePage .staffDeviceModeCard.monitor .staffDeviceModeArrow {
   color: #ffffff !important;
 }
+
+/* POKIPO: 修正入口の2カードはタイトル共通、説明文の色で区別 */
+.staffMenuCard.staffSupportEntryAdmin .staffMenuCardDescription,
+.staffMenuCard.staffSupportEntryAdmin p { color: #b52d3b !important; font-weight: 850 !important; }
+.staffMenuCard.staffSupportEntryInquiry .staffMenuCardDescription,
+.staffMenuCard.staffSupportEntryInquiry p { color: #2874ad !important; font-weight: 850 !important; }
+.staffMenuCard.staffSupportEntryAdmin { border: 1.5px solid #d59b9d !important; }
+.staffMenuCard.staffSupportEntryInquiry { border: 1.5px solid #8eb8d9 !important; }

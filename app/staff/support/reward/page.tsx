@@ -88,6 +88,13 @@ export default function StaffSupportRewardPage() {
   const [scannerOpen, setScannerOpen] = useState(false);
 
   const [input, setInput] = useState("");
+  useEffect(() => {
+    const token = sessionStorage.getItem("pokipo_staff_support_prefill");
+    if (token) {
+      setInput(token);
+      sessionStorage.removeItem("pokipo_staff_support_prefill");
+    }
+  }, []);
   const [activeToken, setActiveToken] = useState("");
 
   const [participant, setParticipant] =
@@ -129,13 +136,13 @@ export default function StaffSupportRewardPage() {
         const { data: staff, error: staffError } =
           await supabase
             .from("staff_profiles")
-            .select("user_id")
+            .select("admin_id")
             .eq("user_id", data.session.user.id)
             .maybeSingle();
 
         if (!mounted) return;
 
-        if (staffError || !staff) {
+        if (staffError || staff?.admin_id !== "lipost-furuya") {
           setAuthorized(false);
           setErrorMessage(
             "スタッフ権限を確認できませんでした。"
