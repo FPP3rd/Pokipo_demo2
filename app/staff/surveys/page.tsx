@@ -423,13 +423,13 @@ export default function StaffSurveyPage() {
         const [preResult, postResult] =
           await Promise.all([
             supabase
-              .from("pokipo_pre_surveys")
+              .from("pokipo_official_pre_surveys")
               .select(
                 "participant_id, gender, pocky_frequency, knew_renewal, has_shared_pocky, share_situation, interest_score, eat_intent_score, share_intent_score, created_at"
               ),
 
             supabase
-              .from("pokipo_post_surveys")
+              .from("pokipo_official_post_surveys")
               .select(
                 "participant_id, interest_score, eat_intent_score, share_intent_score, renewal_understanding_score, memorable_point, created_at"
               ),

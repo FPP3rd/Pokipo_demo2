@@ -311,7 +311,7 @@ export default function StaffDashboardPage() {
           count: exchangedCountData,
           error: exchangedCountError,
         } = await supabase
-          .from("reward_exchanges")
+          .from("pokipo_official_reward_exchanges")
           .select("*", {
             count: "exact",
             head: true,
@@ -341,7 +341,7 @@ export default function StaffDashboardPage() {
           count: todayCountData,
           error: todayCountError,
         } = await supabase
-          .from("reward_exchanges")
+          .from("pokipo_official_reward_exchanges")
           .select("*", {
             count: "exact",
             head: true,
@@ -377,7 +377,7 @@ export default function StaffDashboardPage() {
           data: rewardData,
           error: rewardError,
         } = await supabase
-          .from("reward_exchanges")
+          .from("pokipo_official_reward_exchanges")
           .select(
             "id, participant_id, student_number, exchanged_at"
           )

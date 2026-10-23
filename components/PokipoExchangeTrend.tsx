@@ -15,7 +15,7 @@ export default function PokipoExchangeTrend() {
     let active = true;
     const refresh = async () => {
       const { data, error: fetchError } = await supabase
-        .from("reward_exchanges")
+        .from("pokipo_official_reward_exchanges")
         .select("exchanged_at")
         .eq("status", "exchanged")
         .gte("exchanged_at", "2026-10-27T12:35:00+09:00")
