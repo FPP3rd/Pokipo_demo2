@@ -694,6 +694,39 @@ export default function StaffTestRewardScanPage() {
           </>
         )}
 
+        {/* POKIPO_TEST_REWARD_MONITOR_PREVIEW: production state is never changed */}
+        {ready && reward && (
+          <section
+            aria-label="特典交換モニターのプレビュー"
+            style={{
+              marginTop: 20,
+              padding: 18,
+              border: "1px solid #e9d3d0",
+              borderRadius: 18,
+              background: "#fffaf8",
+            }}
+          >
+            <span style={{ fontSize: 11, fontWeight: 900, color: "#8a1822", letterSpacing: ".08em" }}>
+              MONITOR PREVIEW
+            </span>
+            <h3 style={{ margin: "8px 0", fontSize: 18, fontWeight: 900, color: "#342b29" }}>
+              特典交換モニターの表示確認
+            </h3>
+            <p style={{ color: "#756963", fontSize: 12, lineHeight: 1.8, margin: "0 0 14px" }}>
+              待機・ゴール演出（YOUR ROUTE）・ありがとう画面を模擬表示します。
+              本番のモニターや交換記録は変更しません。
+            </p>
+            <button
+              type="button"
+              style={{ ...buttonStyle, width: "100%" }}
+              onClick={() => router.push("/staff/test/reward/monitor-preview")}
+            >
+              {reward.status === "exchanged"
+                ? "交換完了後のモニターを確認する →"
+                : "モニター演出をプレビューする →"}
+            </button>
+          </section>
+        )}
         {/* BACK */}
         <button
           type="button"
