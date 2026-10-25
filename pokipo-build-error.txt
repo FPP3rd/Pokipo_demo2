@@ -1,0 +1,16 @@
+
+> pokipo-rebuild@1.0.0 build
+> next build
+
+▲ Next.js 16.4.2 (Turbopack)
+- Environments: .env.local
+✓ Running next.config took 51ms
+
+> Build error occurred
+Error: EPERM: operation not permitted, unlink 'C:\Users\shose\OneDrive - dokkyo.ac.jp\♦ゼミ\LiPost\7.アプリ開発\★POKIPO_完成\.next\static\Rxk-0Y-Q43VypfE446P6n'
+    at ignore-listed frames {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'unlink',
+  path: 'C:\\Users\\shose\\OneDrive - dokkyo.ac.jp\\♦ゼミ\\LiPost\\7.アプリ開発\\★POKIPO_完成\\.next\\static\\Rxk-0Y-Q43VypfE446P6n'
+}

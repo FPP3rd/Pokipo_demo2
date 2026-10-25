@@ -1,0 +1,94 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../../../lib/supabase-client";
+
+type Monitor = { state: string; updated_at: string | null; guide_direction: string | null };
+type Metrics = { participants: number; completed: number; issued: number; exchanged: number; today: number; monitor: Monitor | null; checkedAt: string };
+const CAPACITY = 360;
+const primary = "#8a1822";
+const card: React.CSSProperties = { background: "#fff", border: "1px solid #eadfd9", borderRadius: 16, padding: 18, boxShadow: "0 4px 18px #4625190a" };
+function displayTime(value: string | null) {
+  if (!value) return "記録なし";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "記録なし" : date.toLocaleString("ja-JP", {timeZone: "Asia/Tokyo", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit"});
+}
+function startOfJstDay() {
+  const parts = new Intl.DateTimeFormat("en-CA", {timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit"}).formatToParts(new Date());
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "00";
+  return new Date(`${get("year")}-${get("month")}-${get("day")}T00:00:00+09:00`).toISOString();
+}
+export default function RewardEventManagementPage() {
+  const router = useRouter();
+  const [auth, setAuth] = useState<"loading" | "ok" | "denied">("loading");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  useEffect(() => {
+    let active = true;
+    async function check() {
+      const {data, error: authError} = await supabase.auth.getUser();
+      if (!active) return;
+      if (authError || !data.user) { setAuth("denied"); return; }
+      const {data: profile, error: profileError} = await supabase.from("staff_profiles").select("user_id").eq("user_id", data.user.id).maybeSingle();
+      if (active) setAuth(profileError || !profile ? "denied" : "ok");
+    }
+    void check();
+    return () => { active = false; };
+  }, []);
+  const refresh = useCallback(async () => {
+    setBusy(true); setError("");
+    try {
+      const [participant, completed, issued, exchanged, today, monitor] = await Promise.all([
+        supabase.rpc("get_participant_count"),
+        supabase.rpc("get_completed_participant_count"),
+        supabase.from("pokipo_official_reward_exchanges").select("id", {count:"exact", head:true}).eq("status", "issued"),
+        supabase.from("pokipo_official_reward_exchanges").select("id", {count:"exact", head:true}).eq("status", "exchanged"),
+        supabase.from("pokipo_official_reward_exchanges").select("id", {count:"exact", head:true}).eq("status", "exchanged").gte("exchanged_at", startOfJstDay()),
+        supabase.from("reward_monitor_state").select("state,updated_at,guide_direction").eq("station_id", "main").maybeSingle(),
+      ]);
+      if (participant.error || completed.error || issued.error || exchanged.error || today.error || monitor.error) {
+        const details = [participant.error,completed.error,issued.error,exchanged.error,today.error,monitor.error].filter(Boolean).map(e=>e?.message).join(" / ");
+        throw new Error(details || "データ取得に失敗しました");
+      }
+      setMetrics({participants:Number(participant.data ?? 0),completed:Number(completed.data ?? 0),issued:issued.count ?? 0,exchanged:exchanged.count ?? 0,today:today.count ?? 0,monitor:monitor.data as Monitor | null,checkedAt:new Date().toISOString()});
+    } catch (e) { setError(e instanceof Error ? e.message : "通信エラーが発生しました"); setMetrics(null); }
+    finally {setBusy(false);}
+  }, []);
+  useEffect(() => {
+    if (auth !== "ok") return;
+    void refresh();
+    const interval = window.setInterval(() => { if (document.visibilityState === "visible") void refresh(); }, 30000);
+    return () => window.clearInterval(interval);
+  }, [auth,refresh]);
+  const remain = metrics ? Math.max(0,CAPACITY-metrics.exchanged) : 0;
+  const tile = (label: string, value: string, note: string) => <div style={card}><div style={{fontSize:12,color:"#786c64"}}>{label}</div><strong style={{display:"block",margin:"7px 0",fontSize:29,color:primary}}>{value}</strong><div style={{fontSize:11,color:"#786c64"}}>{note}</div></div>;
+  return <main className="shell" style={{minHeight:"100vh",padding:"24px 12px",color:"#332d29"}}><section style={{maxWidth:1020,margin:"0 auto"}}>
+    <header style={{...card,background:"linear-gradient(130deg,#fff5f2,#fff)",marginBottom:16}}>
+      <div style={{fontSize:11,fontWeight:800,letterSpacing:".1em",color:primary}}>POKIPO / SYSTEM CONTROL</div>
+      <h1 style={{fontSize:25,margin:"9px 0"}}>特典交換会管理</h1>
+      <p style={{fontSize:13,color:"#786c64",lineHeight:1.8}}>交換状況・景品残数の目安・モニター状態をまとめて確認します。ここでは交換確定や取消を操作できません。</p>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button type="button" onClick={()=>router.push("/staff")} style={{padding:"10px 15px",borderRadius:10,border:"1px solid #eadfd9",background:"white",color:primary,fontWeight:800}}>← スタッフメニュー</button><button type="button" disabled={busy || auth!=="ok"} onClick={()=>void refresh()} style={{padding:"10px 15px",borderRadius:10,border:0,background:primary,color:"white",fontWeight:800}}>{busy?"更新中...":"↻ 最新情報を取得"}</button></div>
+    </header>
+    {auth==="loading" && <p>管理者権限を確認中...</p>}
+    {auth==="denied" && <div style={card}>管理者ログインが必要です。スタッフ画面からログインしてください。</div>}
+    {auth==="ok" && <>
+      {error && <div role="alert" style={{...card,color:"#9a262d",marginBottom:12}}>取得に失敗しました：{error}<div>通信や権限を確認し、再取得してください。失敗した値を0として表示しません。</div></div>}
+      {metrics && <>
+        <div style={{fontSize:12,color:"#786c64",marginBottom:12}}>最終取得：{displayTime(metrics.checkedAt)}（30秒ごとに自動更新）</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",gap:12,marginBottom:16}}>
+          {tile("参加登録",`${metrics.participants}人`,"登録済み参加者")}
+          {tile("5か所達成",`${metrics.completed}人`,"スタンプ完走")}
+          {tile("交換QR準備済み",`${metrics.issued}件`,"未交換・発行済み")}
+          {tile("交換済み",`${metrics.exchanged}件`,"全期間の交換件数")}
+          {tile("本日の交換",`${metrics.today}件`,"日本時間の当日分")}
+          {tile("残り交換可能数の目安",`${remain}件`,`上限${CAPACITY}件 − 交換済み件数`)}
+        </div>
+        <div style={{...card,marginBottom:16}}><h2 style={{fontSize:17,marginTop:0}}>景品交換進捗</h2><div style={{height:13,background:"#f4e9e6",borderRadius:99,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.min(100,metrics.exchanged/CAPACITY*100)}%`,background:primary}} /></div><p style={{fontSize:12,color:"#786c64"}}>{metrics.exchanged} / {CAPACITY}件（{(metrics.exchanged/CAPACITY*100).toFixed(1)}%）</p><p style={{fontSize:11,color:"#786c64",lineHeight:1.8}}>※残数はシステム上の交換枠の目安です。実際の景品在庫・取り置き・破損は反映しません。交換QR準備済み件数も人数と一致する保証はありません。</p></div>
+        <div style={{...card,marginBottom:16}}><h2 style={{fontSize:17,marginTop:0}}>交換会モニターの最新記録</h2>{metrics.monitor ? <><div style={{fontSize:15,fontWeight:800,color:primary}}>画面状態：{metrics.monitor.state === "idle"?"待機":metrics.monitor.state === "presented"?"参加者表示中":metrics.monitor.state === "completed"?"交換完了画面":metrics.monitor.state}</div><p style={{fontSize:12}}>最終状態更新：{displayTime(metrics.monitor.updated_at)}</p><p style={{fontSize:12}}>案内方向：{metrics.monitor.guide_direction === "left"?"左":metrics.monitor.guide_direction === "right"?"右":"未設定"}</p></>:<p>モニター状態の登録がありません。</p>}<p style={{fontSize:11,color:"#786c64"}}>※これはデータベース内の最新表示状態です。モニター端末が現在接続中かどうかは判定できません。</p></div>
+      </>}
+      <div style={{...card}}><h2 style={{fontSize:17,marginTop:0}}>運営ショートカット</h2><div style={{display:"flex",flexWrap:"wrap",gap:9}}>{[["景品交換受付","/staff/reward"],["交換履歴","/staff/reward/history"],["管理ダッシュボード","/staff/dashboard"],["運営チェック","/staff/operations"],["メンテナンス設定","/staff/maintenance"]].map(([label,path])=><button key={path} type="button" onClick={()=>router.push(path)} style={{padding:"12px",borderRadius:10,border:"1px solid #eadfd9",background:"#fffaf6",color:primary,fontWeight:700}}>{label} →</button>)}</div></div>
+    </>}
+  </section></main>;
+}
