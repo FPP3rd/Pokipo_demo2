@@ -950,7 +950,61 @@ export default function ParticipantsPage() {
                 行の直下に詳細が展開されます。
               </p>
 
-              <div style={{ overflowX: "auto" }}>
+              {/* スマートフォン専用：横スクロール不要の参加者カード */}
+              <div className="pokipo-mobile-participant-list">
+                {visible.map((participant) => {
+                  const info = getStampInfo(participant.stamps);
+                  const flagged = info.seconds !== null && info.seconds <= threshold;
+                  const expanded = selectedId === participant.id;
+                  return (
+                    <article className="pokipo-mobile-participant-card" key={participant.id}>
+                      <div className="pokipo-mobile-participant-heading">
+                        <div style={{ minWidth: 0 }}>
+                          <strong className="pokipo-mobile-participant-name">{participant.nickname || "未設定"}</strong>
+                          <div className="pokipo-mobile-participant-meta">
+                            {participant.grade || "学年未設定"}・{participant.department || "学科未設定"}
+                          </div>
+                        </div>
+                        <span className="pokipo-mobile-stamp-count">{info.count}/5</span>
+                      </div>
+                      <div className="pokipo-mobile-survey-grid">
+                        <div className="pokipo-mobile-survey-box">
+                          <span>参加前アンケート</span>
+                          <strong className={participant.pre_survey_answered ? "pokipo-mobile-survey-yes" : "pokipo-mobile-survey-no"}>
+                            {participant.pre_survey_answered ? "✓ 回答済み" : "未回答"}
+                          </strong>
+                        </div>
+                        <div className="pokipo-mobile-survey-box">
+                          <span>参加後アンケート</span>
+                          <strong className={participant.post_survey_answered ? "pokipo-mobile-survey-yes" : "pokipo-mobile-survey-no"}>
+                            {participant.post_survey_answered ? "✓ 回答済み" : "未回答"}
+                          </strong>
+                        </div>
+                      </div>
+                      <div className="pokipo-mobile-participant-subinfo">
+                        <span>登録：{formatDate(participant.created_at)}</span>
+                        <span>5か所所要時間：{info.seconds === null ? "—" : `${info.seconds}秒`}</span>
+                        {flagged && <strong className="pokipo-mobile-flagged">短時間取得・要確認</strong>}
+                      </div>
+                      <button
+                        className="pokipo-mobile-participant-button"
+                        type="button"
+                        aria-expanded={expanded}
+                        aria-controls={`mobile-participant-history-${participant.id}`}
+                        onClick={() => setSelectedId(expanded ? null : participant.id)}
+                      >
+                        {expanded ? "▲ 詳細を閉じる" : "▼ スタンプ取得履歴を見る"}
+                      </button>
+                      {expanded && (
+                        <div id={`mobile-participant-history-${participant.id}`} className="pokipo-mobile-participant-history">
+                          <ParticipantHistory participant={participant} onClose={() => setSelectedId(null)} />
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+              <div className="pokipo-desktop-participant-table" style={{ overflowX: "auto" }}>
                 <table
                   style={{
                     width: "100%",
@@ -1187,7 +1241,27 @@ export default function ParticipantsPage() {
 
       {/* 開閉アニメーション */}
       <style jsx global>{`
-        @keyframes pokipoParticipantOpen {
+        .pokipo-mobile-participant-list { display: none; }
+        @media (max-width: 767px) {
+          .pokipo-desktop-participant-table { display: none !important; }
+          .pokipo-mobile-participant-list { display: grid; gap: 12px; }
+          .pokipo-mobile-participant-card { border: 1px solid #e8dfd8; background: #fffaf6; border-radius: 14px; padding: 14px; min-width: 0; }
+          .pokipo-mobile-participant-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+          .pokipo-mobile-participant-name { display: block; color: #332d29; font-size: 16px; overflow-wrap: anywhere; }
+          .pokipo-mobile-participant-meta { margin-top: 5px; font-size: 11px; color: #786c64; overflow-wrap: anywhere; }
+          .pokipo-mobile-stamp-count { flex-shrink: 0; padding: 7px 10px; border-radius: 12px; color: #8a1822; background: #f6e8e8; font-size: 17px; font-weight: 900; }
+          .pokipo-mobile-survey-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 13px; }
+          .pokipo-mobile-survey-box { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid #e8dfd8; background: #fff; border-radius: 10px; min-width: 0; }
+          .pokipo-mobile-survey-box > span { font-size: 10px; color: #786c64; }
+          .pokipo-mobile-survey-box > strong { font-size: 12px; }
+          .pokipo-mobile-survey-yes { color: #287643; }
+          .pokipo-mobile-survey-no { color: #7b6b66; }
+          .pokipo-mobile-participant-subinfo { display: flex; flex-direction: column; gap: 4px; padding: 11px 0; color: #786c64; font-size: 11px; overflow-wrap: anywhere; }
+          .pokipo-mobile-flagged { color: #996325; }
+          .pokipo-mobile-participant-button { width: 100%; padding: 11px; border-radius: 10px; font-size: 12px; font-weight: 800; color: #8a1822; border: 1px solid #d9c2c2; background: #fff; cursor: pointer; }
+          .pokipo-mobile-participant-history { margin-top: 12px; min-width: 0; overflow-wrap: anywhere; }
+          .pokipo-mobile-participant-history > div { padding: 12px !important; }
+        }        @keyframes pokipoParticipantOpen {
           from {
             opacity: 0;
             transform: translateY(-6px);
