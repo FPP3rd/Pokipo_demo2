@@ -26,6 +26,8 @@ type Participant = {
   grade: string | null;
   department: string | null;
   created_at: string;
+  pre_survey_answered: boolean;
+  post_survey_answered: boolean;
   stamps: Stamp[];
 };
 
@@ -560,6 +562,8 @@ export default function ParticipantsPage() {
           grade: row.grade,
           department: row.department,
           created_at: row.created_at,
+          pre_survey_answered: row.pre_survey_answered === true,
+          post_survey_answered: row.post_survey_answered === true,
           stamps: Array.isArray(row.stamps)
             ? row.stamps
             : [],
@@ -950,7 +954,7 @@ export default function ParticipantsPage() {
                 <table
                   style={{
                     width: "100%",
-                    minWidth: 800,
+                    minWidth: 1040,
                     borderCollapse: "collapse",
                     fontSize: 13,
                   }}
@@ -966,6 +970,8 @@ export default function ParticipantsPage() {
                       <th style={cellStyle}>学科</th>
                       <th style={cellStyle}>登録日時</th>
                       <th style={cellStyle}>取得</th>
+                      <th style={cellStyle}>参加前アンケート</th>
+                      <th style={cellStyle}>参加後アンケート</th>
                       <th style={cellStyle}>所要時間</th>
                       <th style={cellStyle}>詳細</th>
                     </tr>
@@ -1034,6 +1040,34 @@ export default function ParticipantsPage() {
                             </td>
 
                             <td style={cellStyle}>
+                              <span style={{
+                                display: "inline-block",
+                                padding: "5px 9px",
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                background: participant.pre_survey_answered ? "#eaf6ed" : "#f2efed",
+                                color: participant.pre_survey_answered ? "#287643" : COLORS.muted,
+                              }}>
+                                {participant.pre_survey_answered ? "回答済み" : "未回答"}
+                              </span>
+                            </td>
+
+                            <td style={cellStyle}>
+                              <span style={{
+                                display: "inline-block",
+                                padding: "5px 9px",
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                background: participant.post_survey_answered ? "#eaf6ed" : "#f2efed",
+                                color: participant.post_survey_answered ? "#287643" : COLORS.muted,
+                              }}>
+                                {participant.post_survey_answered ? "回答済み" : "未回答"}
+                              </span>
+                            </td>
+
+                            <td style={cellStyle}>
                               {info.seconds === null
                                 ? "—"
                                 : `${info.seconds}秒`}
@@ -1096,7 +1130,7 @@ export default function ParticipantsPage() {
                               }
                             >
                               <td
-                                colSpan={7}
+                                colSpan={9}
                                 style={{
                                   padding: 0,
                                   borderBottom:
