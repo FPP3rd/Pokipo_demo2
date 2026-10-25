@@ -87,6 +87,56 @@ export default function StaffRewardPage() {
   const [confirming, setConfirming] = useState(false);
   const [message, setMessage] = useState("");
 
+  /* POKIPO_NETWORK_HEALTH_V1: スタッフの通信状態を定期確認 */
+  const [networkHealth, setNetworkHealth] = useState<"checking" | "online" | "offline">("checking");
+  const networkHealthRef = useRef<"checking" | "online" | "offline">("checking");
+  const exchangeLockRef = useRef(false);
+
+  useEffect(() => {
+    let active = true;
+    let inFlight = false;
+    const update = (status: "checking" | "online" | "offline") => {
+      if (!active) return;
+      networkHealthRef.current = status;
+      setNetworkHealth(status);
+    };
+    const check = async () => {
+      if (inFlight) return;
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        update("offline");
+        return;
+      }
+      inFlight = true;
+      try {
+        // 既存の公開集計RPCを利用。DBに書き込まない軽量な接続確認。
+        const query = supabase.rpc("get_participant_count");
+        const result = await Promise.race([
+          query.then(({ error }) => !error),
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000)),
+        ]);
+        update(result ? "online" : "offline");
+      } catch {
+        update("offline");
+      } finally {
+        inFlight = false;
+      }
+    };
+    void check();
+    const timer = window.setInterval(() => { void check(); }, 15000);
+    const onOffline = () => update("offline");
+    const onOnline = () => { update("checking"); void check(); };
+    const onFocus = () => { void check(); };
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
   /* ========================================
      AUTH CHECK
   ======================================== */
@@ -892,6 +942,11 @@ export default function StaffRewardPage() {
   ======================================== */
 
   function confirmExchange() {
+    if (networkHealthRef.current !== "online") {
+      setMessage("通信確認中または接続異常のため、交換確定を停止しています。復旧後、交換履歴を確認してから再操作してください。");
+      return;
+    }
+    if (exchangeLockRef.current) return;
     if (!reward || !participant) {
       return;
     }
@@ -914,6 +969,7 @@ export default function StaffRewardPage() {
   ======================================== */
 
   async function performExchange() {
+    if (networkHealthRef.current !== "online" || exchangeLockRef.current) return;
     if (!reward || !participant || confirming) {
       return;
     }
@@ -925,6 +981,7 @@ export default function StaffRewardPage() {
       return;
     }
 
+    exchangeLockRef.current = true;
     setConfirming(true);
     setMessage("");
 
@@ -995,6 +1052,7 @@ export default function StaffRewardPage() {
         "通信中にエラーが発生しました。"
       );
     } finally {
+      exchangeLockRef.current = false;
       setConfirming(false);
     }
   }
@@ -1386,6 +1444,21 @@ export default function StaffRewardPage() {
           </div>
         </header>
 
+        {/* POKIPO NETWORK STATUS: 読み取り担当者向け */}
+        <div role="status" aria-live="polite" style={{
+          margin: "0 0 16px", padding: "14px 16px", borderRadius: 14,
+          border: `2px solid ${networkHealth === "online" ? "#b9dbc6" : networkHealth === "checking" ? "#e5d7a6" : "#c53042"}`,
+          background: networkHealth === "online" ? "#effaf3" : networkHealth === "checking" ? "#fff9e6" : "#fff0f1",
+          color: networkHealth === "online" ? "#236542" : networkHealth === "checking" ? "#745516" : "#8a1822",
+          fontWeight: 800, lineHeight: 1.65
+        }}>
+          {networkHealth === "online" ? "● Supabase接続：正常（交換操作可能）" :
+           networkHealth === "checking" ? "● サーバー接続を確認中：交換確定を一時停止" :
+           "⚠ 通信障害の可能性：交換確定を停止中"}
+          {networkHealth === "offline" && <div style={{ fontSize: 12, fontWeight: 600, marginTop: 5 }}>
+            回線とSupabaseの状況を確認してください。通信失敗直後は処理が完了している可能性があるため、復旧後に交換履歴を確認してから操作してください。
+          </div>}
+        </div>
         {/* QUICK NAV */}
         <section className="staffRewardQuickNav">
           <button
