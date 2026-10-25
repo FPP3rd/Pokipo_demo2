@@ -187,6 +187,15 @@ const MENU_SECTIONS: MenuSection[] = [
         href: "/staff/maintenance",
         variant: "",
       },
+      {
+        icon: "EVENT",
+        label: "REWARD EVENT",
+        title: "特典交換会管理",
+        description:
+          "交換状況・交換枠の残数目安・モニターの最新状態を確認します。",
+        href: "/staff/reward-event",
+        variant: "",
+      },
     ],
   },
 
@@ -651,3 +660,4 @@ export default function StaffPage() {
     </main>
   );
 }
+
