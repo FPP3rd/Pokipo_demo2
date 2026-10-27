@@ -369,30 +369,6 @@ export default function RewardMonitorPage() {
   ]);
 
   /* ========================================
-     案内方向の自動更新（Realtime接続がない場合も対応）
-  ======================================== */
-
-  useEffect(() => {
-    if (!authenticated) return;
-    let active = true;
-    async function syncGuideDirection() {
-      const { data, error } = await supabase
-        .from("reward_monitor_state")
-        .select("guide_direction")
-        .eq("station_id", STATION_ID)
-        .maybeSingle();
-      if (!active || error || !data) return;
-      const next = data.guide_direction === "left" ? "left" : "right";
-      setMonitorState((previous) => previous && previous.guide_direction !== next
-        ? { ...previous, guide_direction: next }
-        : previous);
-    }
-    void syncGuideDirection();
-    const timer = window.setInterval(() => void syncGuideDirection(), 4000);
-    return () => { active = false; window.clearInterval(timer); };
-  }, [authenticated]);
-
-  /* ========================================
      LOAD PARTICIPANT ROUTE
   ======================================== */
 
@@ -771,9 +747,6 @@ export default function RewardMonitorPage() {
     monitorState?.achievement_rank ??
     null;
 
-  const guideDirection =
-    monitorState?.guide_direction === "left" ? "left" : "right";
-
   const routeType =
     monitorState?.route_type ??
     "自由気まま型";
@@ -1106,32 +1079,6 @@ export default function RewardMonitorPage() {
             <br />
             SHARE HAPPINESS!
           </p>
-
-          <div
-            className="rewardMonitorExhibitionGuide"
-            style={{
-              margin: "clamp(14px, 3vh, 32px) auto 0",
-              padding: "clamp(16px, 3vw, 26px)",
-              maxWidth: 820,
-              width: "min(92%, 820px)",
-              boxSizing: "border-box",
-              borderRadius: 22,
-              background: "rgba(255,255,255,0.93)",
-              color: "#9b2537",
-              textAlign: "center",
-              boxShadow: "0 8px 24px rgba(60,15,25,0.12)",
-            }}
-          >
-            <div style={{ fontSize: "clamp(14px, 2.4vw, 22px)", fontWeight: 800 }}>
-              取り組み展示・募金エリアにお進みください
-            </div>
-            <div
-              aria-label={guideDirection === "left" ? "左へお進みください" : "右へお進みください"}
-              style={{ fontSize: "clamp(54px, 10vw, 110px)", fontWeight: 900, lineHeight: 1.1 }}
-            >
-              {guideDirection === "left" ? "←" : "→"}
-            </div>
-          </div>
 
           <p className="rewardMonitorWaitNote">
             次のご案内まで、この画面をご覧ください。

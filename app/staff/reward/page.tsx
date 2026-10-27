@@ -71,10 +71,6 @@ export default function StaffRewardPage() {
 
   /* MONITOR */
   const monitorPresentationActiveRef = useRef(false);
-  const [guideDirection, setGuideDirection] = useState<"left" | "right">("right");
-  const [guideSaving, setGuideSaving] = useState(false);
-  const [guideMessage, setGuideMessage] = useState("");
-
   /* REWARD */
   const [reward, setReward] = useState<RewardExchange | null>(null);
   const [participant, setParticipant] = useState<Participant | null>(
@@ -236,63 +232,6 @@ export default function StaffRewardPage() {
       }
     };
   }, []);
-
-  /* ========================================
-     展示・募金エリアの案内方向
-     設定は会場のモニターと共有する
-  ======================================== */
-
-  useEffect(() => {
-    if (!authenticated) return;
-    let active = true;
-
-    async function loadDirection() {
-      const { data, error } = await supabase
-        .from("reward_monitor_state")
-        .select("guide_direction")
-        .eq("station_id", MONITOR_STATION_ID)
-        .maybeSingle();
-
-      if (!active) return;
-      if (error) {
-        console.error("誘導方向取得エラー:", error);
-        setGuideMessage("案内方向を取得できません。第7段階のSQLを実行してください。");
-      } else {
-        setGuideDirection(data?.guide_direction === "left" ? "left" : "right");
-      }
-    }
-    void loadDirection();
-    return () => { active = false; };
-  }, [authenticated]);
-
-  async function changeGuideDirection(nextDirection: "left" | "right") {
-    if (guideSaving) return;
-    setGuideSaving(true);
-    setGuideMessage("");
-    try {
-      const { data, error } = await supabase
-        .from("reward_monitor_state")
-        .update({
-          guide_direction: nextDirection,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("station_id", MONITOR_STATION_ID)
-        .select("guide_direction");
-
-      if (error || !data?.length) {
-        console.error("案内方向更新エラー:", error);
-        setGuideMessage("方向を変更できませんでした。SQLと管理者権限を確認してください。");
-        return;
-      }
-      setGuideDirection(nextDirection);
-      setGuideMessage(`案内方向を「${nextDirection === "left" ? "左" : "右"}」に変更しました。`);
-    } catch (error) {
-      console.error("案内方向更新通信エラー:", error);
-      setGuideMessage("方向の変更中に通信エラーが発生しました。");
-    } finally {
-      setGuideSaving(false);
-    }
-  }
 
   /* ========================================
      LOGIN
@@ -1492,43 +1431,6 @@ export default function StaffRewardPage() {
               交換履歴
             </strong>
           </button>
-        </section>
-
-        {/* 展示・募金エリア案内方向（スタッフ端末から選択） */}
-        <section className="staffScannerCard" style={{ marginBottom: 18, padding: 18 }}>
-          <strong style={{ display: "block", marginBottom: 8 }}>
-            展示・募金エリアへの案内方向
-          </strong>
-          <p style={{ margin: "0 0 12px", fontSize: 13 }}>
-            「ありがとう！！」画面に表示する矢印の向きを選択してください。
-            選択内容はモニター端末と共有されます。
-          </p>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {(["left", "right"] as const).map((direction) => (
-              <button
-                key={direction}
-                type="button"
-                disabled={guideSaving}
-                aria-pressed={guideDirection === direction}
-                onClick={() => void changeGuideDirection(direction)}
-                style={{
-                  minWidth: 120,
-                  padding: "12px 18px",
-                  borderRadius: 12,
-                  cursor: guideSaving ? "wait" : "pointer",
-                  fontWeight: 800,
-                  background: guideDirection === direction ? "#b32638" : "#ffffff",
-                  color: guideDirection === direction ? "#ffffff" : "#74313a",
-                  border: "2px solid #b32638",
-                }}
-              >
-                {direction === "left" ? "← 左へ誘導" : "右へ誘導 →"}
-              </button>
-            ))}
-          </div>
-          {guideMessage && <p role="status" style={{ marginTop: 10, fontSize: 12 }}>
-            {guideMessage}
-          </p>}
         </section>
 
         {/* QR SCANNER */}
