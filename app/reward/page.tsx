@@ -1038,7 +1038,7 @@ export default function RewardPage() {
               <span>REWARD EXCHANGE DAY</span>
 
               <h2>
-                特典交換日は10月27日（火）です
+                10月27日（火）の特典交換会は終了しました。11月4日（水）12:35〜16:00に雄飛ホールで追加開催します。
               </h2>
 
               <p>

@@ -1,4 +1,5 @@
 import "./globals.css";
+import PokipoExtraRewardNotice from "../components/PokipoExtraRewardNotice";
 
 export const metadata = {
   title: "POKIPO",
@@ -8,7 +9,10 @@ export const metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ja">
-      <body>{children}</body>
+      <body>
+        <PokipoExtraRewardNotice />
+        {children}
+      </body>
     </html>
   );
 }
