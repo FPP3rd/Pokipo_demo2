@@ -10,6 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase-client";
 import HealthPanel from "./HealthPanel";
+import PokipoParticipantExportPanel from "../../../components/PokipoParticipantExportPanel";
 
 /* ========================================
    TYPES
@@ -793,6 +794,8 @@ export default function StaffOperationsPage() {
                 </p>
               )}
             </section>
+
+            <PokipoParticipantExportPanel />
 
             {/* AUTOMATIC REPORT */}
 
