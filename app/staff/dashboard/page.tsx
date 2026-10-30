@@ -1042,7 +1042,7 @@ export default function StaffDashboardPage() {
 
                     <span>
                       確認コード：
-                      {item.student_number}
+                      {item.confirmation_code}
                     </span>
                   </div>
 
