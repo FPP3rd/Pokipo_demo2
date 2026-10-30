@@ -483,6 +483,10 @@ export default function ParticipantsPage() {
   const [errorMessage, setErrorMessage] = useState("");
 
   const [keyword, setKeyword] = useState("");
+  const [stampFilter, setStampFilter] = useState("all");
+  const [preSurveyFilter, setPreSurveyFilter] = useState("all");
+  const [postSurveyFilter, setPostSurveyFilter] = useState("all");
+  const [rewardFilter, setRewardFilter] = useState("all");
   const [onlyFlagged, setOnlyFlagged] = useState(false);
   const [threshold, setThreshold] = useState(60);
 
@@ -624,11 +628,36 @@ export default function ParticipantsPage() {
         info.seconds !== null &&
         info.seconds <= threshold;
 
-      return matches && (!onlyFlagged || flagged);
+      const stampCount = info.count;
+      const stampMatches =
+        stampFilter === "all" ||
+        (stampFilter === "completed" && stampCount === 5) ||
+        (stampFilter === "incomplete" && stampCount < 5) ||
+        (stampFilter === "zero" && stampCount === 0) ||
+        (stampFilter === "progress" && stampCount >= 1 && stampCount <= 4);
+      const preMatches =
+        preSurveyFilter === "all" ||
+        (preSurveyFilter === "answered" && participant.pre_survey_answered) ||
+        (preSurveyFilter === "unanswered" && !participant.pre_survey_answered);
+      const postMatches =
+        postSurveyFilter === "all" ||
+        (postSurveyFilter === "answered" && participant.post_survey_answered) ||
+        (postSurveyFilter === "unanswered" && !participant.post_survey_answered);
+      const rewardMatches =
+        rewardFilter === "all" ||
+        (rewardFilter === "exchanged" && participant.reward_exchanged) ||
+        (rewardFilter === "not-exchanged" && !participant.reward_exchanged);
+
+      return matches && (!onlyFlagged || flagged) &&
+        stampMatches && preMatches && postMatches && rewardMatches;
     });
   }, [
     participants,
     keyword,
+    stampFilter,
+    preSurveyFilter,
+    postSurveyFilter,
+    rewardFilter,
     onlyFlagged,
     threshold,
   ]);
@@ -843,6 +872,52 @@ export default function ParticipantsPage() {
                   setKeyword(event.target.value)
                 }
               />
+
+              <div style={{display:"flex",flexWrap:"wrap",gap:10,width:"100%"}}>
+                <label style={{display:"grid",gap:5,fontSize:12,color:COLORS.text}}>
+                  スタンプ
+                  <select aria-label="スタンプで絞り込み" style={inputStyle} value={stampFilter} onChange={e=>setStampFilter(e.target.value)}>
+                    <option value="all">すべて</option>
+                    <option value="completed">5か所達成</option>
+                    <option value="incomplete">未達成（0〜4）</option>
+                    <option value="progress">取得途中（1〜4）</option>
+                    <option value="zero">未取得（0）</option>
+                  </select>
+                </label>
+                <label style={{display:"grid",gap:5,fontSize:12,color:COLORS.text}}>
+                  参加前アンケート
+                  <select aria-label="参加前アンケートで絞り込み" style={inputStyle} value={preSurveyFilter} onChange={e=>setPreSurveyFilter(e.target.value)}>
+                    <option value="all">すべて</option>
+                    <option value="answered">回答済み</option>
+                    <option value="unanswered">未回答</option>
+                  </select>
+                </label>
+                <label style={{display:"grid",gap:5,fontSize:12,color:COLORS.text}}>
+                  参加後アンケート
+                  <select aria-label="参加後アンケートで絞り込み" style={inputStyle} value={postSurveyFilter} onChange={e=>setPostSurveyFilter(e.target.value)}>
+                    <option value="all">すべて</option>
+                    <option value="answered">回答済み</option>
+                    <option value="unanswered">未回答</option>
+                  </select>
+                </label>
+                <label style={{display:"grid",gap:5,fontSize:12,color:COLORS.text}}>
+                  特典交換
+                  <select aria-label="特典交換で絞り込み" style={inputStyle} value={rewardFilter} onChange={e=>setRewardFilter(e.target.value)}>
+                    <option value="all">すべて</option>
+                    <option value="exchanged">交換済み</option>
+                    <option value="not-exchanged">未交換</option>
+                  </select>
+                </label>
+                <button type="button" style={{...buttonStyle,alignSelf:"end"}} onClick={()=>{
+                  setKeyword("");
+                  setStampFilter("all");
+                  setPreSurveyFilter("all");
+                  setPostSurveyFilter("all");
+                  setRewardFilter("all");
+                  setOnlyFlagged(false);
+                  setThreshold(60);
+                }}>絞り込みを解除</button>
+              </div>
 
               <label
                 style={{
