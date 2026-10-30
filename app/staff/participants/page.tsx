@@ -28,6 +28,7 @@ type Participant = {
   created_at: string;
   pre_survey_answered: boolean;
   post_survey_answered: boolean;
+  reward_exchanged: boolean;
   stamps: Stamp[];
 };
 
@@ -564,6 +565,7 @@ export default function ParticipantsPage() {
           created_at: row.created_at,
           pre_survey_answered: row.pre_survey_answered === true,
           post_survey_answered: row.post_survey_answered === true,
+          reward_exchanged: row.reward_exchanged === true,
           stamps: Array.isArray(row.stamps)
             ? row.stamps
             : [],
@@ -981,6 +983,9 @@ export default function ParticipantsPage() {
                           </strong>
                         </div>
                       </div>
+                      <div style={{ margin:"10px 0", padding:"10px 12px", borderRadius:10, background:participant.reward_exchanged ? "#eaf6ed" : "#f2efed", color:participant.reward_exchanged ? "#287643" : COLORS.muted, fontWeight:800, fontSize:12 }}>
+                        特典交換：{participant.reward_exchanged ? "✓ 交換済み" : "未交換"}
+                      </div>
                       <div className="pokipo-mobile-participant-subinfo">
                         <span>登録：{formatDate(participant.created_at)}</span>
                         <span>5か所所要時間：{info.seconds === null ? "—" : `${info.seconds}秒`}</span>
@@ -1008,7 +1013,7 @@ export default function ParticipantsPage() {
                 <table
                   style={{
                     width: "100%",
-                    minWidth: 1040,
+                    minWidth: 1150,
                     borderCollapse: "collapse",
                     fontSize: 13,
                   }}
@@ -1026,6 +1031,7 @@ export default function ParticipantsPage() {
                       <th style={cellStyle}>取得</th>
                       <th style={cellStyle}>参加前アンケート</th>
                       <th style={cellStyle}>参加後アンケート</th>
+                      <th style={cellStyle}>特典交換</th>
                       <th style={cellStyle}>所要時間</th>
                       <th style={cellStyle}>詳細</th>
                     </tr>
@@ -1122,6 +1128,20 @@ export default function ParticipantsPage() {
                             </td>
 
                             <td style={cellStyle}>
+                              <span style={{
+                                display: "inline-block",
+                                padding: "5px 9px",
+                                borderRadius: 999,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                background: participant.reward_exchanged ? "#eaf6ed" : "#f2efed",
+                                color: participant.reward_exchanged ? "#287643" : COLORS.muted,
+                              }}>
+                                {participant.reward_exchanged ? "✓ 交換済み" : "未交換"}
+                              </span>
+                            </td>
+
+                            <td style={cellStyle}>
                               {info.seconds === null
                                 ? "—"
                                 : `${info.seconds}秒`}
@@ -1184,7 +1204,7 @@ export default function ParticipantsPage() {
                               }
                             >
                               <td
-                                colSpan={9}
+                                colSpan={10}
                                 style={{
                                   padding: 0,
                                   borderBottom:
