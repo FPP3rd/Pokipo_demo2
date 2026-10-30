@@ -14,7 +14,7 @@ import PokipoDashboardRotatingStat from "../../../components/PokipoDashboardRota
 type RewardHistoryItem = {
   id: string;
   participant_id: string;
-  student_number: string;
+  confirmation_code: string;
   exchanged_at: string | null;
   nickname: string;
 };
@@ -379,7 +379,7 @@ export default function StaffDashboardPage() {
         } = await supabase
           .from("pokipo_official_reward_exchanges")
           .select(
-            "id, participant_id, student_number, exchanged_at"
+            "id, participant_id, confirmation_code, exchanged_at"
           )
           .eq("status", "exchanged")
           .order("exchanged_at", {
@@ -438,8 +438,8 @@ export default function StaffDashboardPage() {
                   id: reward.id,
                   participant_id:
                     reward.participant_id,
-                  student_number:
-                    reward.student_number,
+                  confirmation_code:
+                    reward.confirmation_code,
                   exchanged_at:
                     reward.exchanged_at,
                   nickname:
@@ -1041,7 +1041,7 @@ export default function StaffDashboardPage() {
                     </strong>
 
                     <span>
-                      学籍番号：
+                      確認コード：
                       {item.student_number}
                     </span>
                   </div>
