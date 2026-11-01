@@ -168,6 +168,15 @@ const MENU_SECTIONS: MenuSection[] = [
         variant: "staffSupportEntryInquiry",
         ownerOnly: true,
       },
+      {
+        icon: "LOG",
+        label: "CHANGE HISTORY",
+        title: "参加者サポート・変更履歴",
+        description: "スタンプ修正と景品交換取消の操作履歴を一覧で確認します。",
+        href: "/staff/support/history",
+        variant: "",
+        ownerOnly: true,
+      },
     ],
   },
 
