@@ -120,7 +120,12 @@ export default function SupportHistoryPage() {
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px 20px", fontSize: 12, color: "#746863" }}>
                   <span>担当：{item.staff_name}</span>
                   {item.spot_id && <span>場所：{spots[item.spot_id] || item.spot_id}</span>}
-                  {item.before_count !== null && item.after_count !== null && <span>取得数：{item.before_count} → {item.after_count}</span>}
+                  {item.before_count !== null &&
+                    item.after_count !== null ? (
+                    <span>
+                    取得数：{item.before_count} → {item.after_count}
+                    </span>
+                    ) : null}
                 </div>
                 <p style={{ fontSize: 13, marginBottom: 0, overflowWrap: "anywhere" }}>理由：{item.reason || "記載なし"}</p>
               </article>)}
