@@ -131,6 +131,25 @@ function Bars({ rows, compareLabels }: { rows: PokipoPresentationRow[]; compareL
     </div>) : <p className="fpEmpty">対象データはありません。</p>}
   </div>;
 }
+/** 05 / 65 日別登録者数だけを、完成した折れ線のクリップ領域で描画する。 */
+function RegistrationLine05({ path, pts }: { path: string; pts: { x: number; y: number }[] }) {
+  const progress = useChartDrawProgress(1400);
+  return (
+    <>
+      <defs>
+        <clipPath id="pokipo-registration-05-reveal">
+          <rect x="0" y="0" width={900 * progress} height="310" />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#pokipo-registration-05-reveal)">
+        <path d={path} fill="none" stroke="#921c32" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+        {pts.map((p, i) => (
+          <circle key={i} cx={p.x} cy={p.y} r="5" fill="#921c32" stroke="white" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+        ))}
+      </g>
+    </>
+  );
+}
 function Line({ rows, fix05 = false }: { rows: PokipoPresentationRow[]; fix05?: boolean }) {
   const max = Math.max(1, ...rows.map(r => within(r.value)));
   const w = 900, h = 310, padX = 36, padY = 30;
@@ -140,8 +159,14 @@ function Line({ rows, fix05 = false }: { rows: PokipoPresentationRow[]; fix05?: 
     {pts.length ? <>
       <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" role="img" aria-label={rows.map(r => `${r.label} ${r.value}件`).join("、")}>
         {[0,.25,.5,.75,1].map(v => <line key={v} x1={padX} y1={padY+v*(h-2*padY)} x2={w-padX} y2={padY+v*(h-2*padY)} stroke="#e9dedb" strokeDasharray="5 6" />)}
-        <path d={path} fill="none" stroke="#921c32" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" pathLength={fix05 ? 1 : undefined} className={fix05 ? "fpLinePath fpLinePath05" : "fpLinePath"} style={fix05 ? { strokeDasharray: 1, strokeDashoffset: 1, animation: "fpDraw05 1.4s ease forwards" } : undefined} />
-        {pts.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r="5" fill="#921c32" stroke="white" strokeWidth="2" vectorEffect="non-scaling-stroke" className="fpPoint" style={{animationDelay: `${i*45}ms`}} />)}
+        {fix05 ? (
+          <RegistrationLine05 path={path} pts={pts} />
+        ) : (
+          <>
+            <path d={path} fill="none" stroke="#921c32" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" className="fpLinePath" />
+            {pts.map((p,i) => <circle key={i} cx={p.x} cy={p.y} r="5" fill="#921c32" stroke="white" strokeWidth="2" vectorEffect="non-scaling-stroke" className="fpPoint" style={{animationDelay: `${i*45}ms`}} />)}
+          </>
+        )}
       </svg>
       <div className="fpLineLabels">{rows.filter((_,i)=>i===0||i===rows.length-1||i%Math.max(1,Math.ceil(rows.length/6))===0).map((r,i)=><span key={`${r.label}-${i}`}>{r.label.slice(5)}</span>)}</div>
       <div className="fpLineSummary">最多：{textNumber(max)}件 ／ 対象：{rows.length}区間</div>
