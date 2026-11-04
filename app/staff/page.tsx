@@ -48,15 +48,6 @@ const MENU_SECTIONS: MenuSection[] = [
       "景品交換の受付と交換履歴を管理します。",
     items: [
       {
-        icon: "FINAL",
-        label: "FINAL ANALYSIS",
-        title: "サービス終了時点・最終分析",
-        description: "参加・回遊・アンケート・特典交換を総合的に分析します。",
-        href: "/staff/final-analysis",
-        variant: "staffFinalReportCard",
-        ownerOnly: true,
-      },
-      {
         icon: "QR",
         label: "REWARD",
         title: "景品交換",
@@ -537,6 +528,34 @@ export default function StaffPage() {
         ================================= */}
 
         <div className="staffGroupedMenu">
+          {/* Final analysis: independent section above reward management */}
+          {currentAdminId.trim().toLowerCase() === "lipost-furuya" && (
+            <section className="staffMenuCategory staffFinalStandalone" aria-labelledby="staff-category-final-report">
+              <div className="staffMenuCategoryHeader">
+                <span className="staffMenuCategoryAccent" />
+                <div>
+                  <span className="staffMenuCategoryEyebrow">FINAL REPORT / 2026</span>
+                  <h2 id="staff-category-final-report">サービス終了時点・最終分析</h2>
+                  <p>POKIPOの最終的な集計・分析結果を確認します。</p>
+                </div>
+              </div>
+              <div className="staffMenuGrid staffMenuCategoryGrid">
+                <button
+                  type="button"
+                  className="staffMenuCard staffFinalReportCard"
+                  onClick={() => router.push("/staff/final-analysis")}
+                >
+                  <div className="staffMenuCardIcon">FINAL</div>
+                  <div className="staffMenuCardBody">
+                    <span>FINAL ANALYSIS</span>
+                    <h3>サービス終了時点・最終分析</h3>
+                    <p>参加・回遊・アンケート・特典交換を総合的に分析します。</p>
+                  </div>
+                  <div className="staffMenuCardArrow">→</div>
+                </button>
+              </div>
+            </section>
+          )}
           {MENU_SECTIONS.map((section) => (
             <section
               key={section.id}
