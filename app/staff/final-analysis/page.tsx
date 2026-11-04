@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase-client";
+import PokipoFinalPresentation, { type PokipoPresentationSlide } from "../../../components/PokipoFinalPresentation";
 
 /** サービス終了日の翌日0時（JST）。この時刻以降の新規記録を分析対象から除外する。 */
 const END = Date.parse("2026-11-05T00:00:00+09:00");
@@ -423,6 +424,51 @@ export default function FinalAnalysisPage() {
     ...analysis.scores.flatMap(s=>[[s.title+"・対応ペア数",s.matched.length],[s.title+"・対応前平均",fmtAvg(s.beforePair)],[s.title+"・対応後平均",fmtAvg(s.afterPair)],[s.title+"・平均差",fmtAvg(s.delta)]]),
   ] : [];
 
+  // PRESENTATION MODE: 既存の終了時点集計をスライド表示に変換するだけ（書き込みなし）。
+  const presentationSlides: PokipoPresentationSlide[] = analysis ? [
+    { id: "cover", kind: "opening", eyebrow: "EXECUTIVE SUMMARY", title: "POKIPO 最終結果", description: "経済学部高安ゼミ LiPost × 江崎グリコ株式会社 ／ 2026年10月13日〜11月4日",
+      kpis: [
+        {label:"参加登録者",value:`${num(analysis.total)}人`},
+        {label:"5か所達成",value:`${num(analysis.done.length)}人`,detail:`完走率 ${rate(analysis.done.length,analysis.total)}`},
+        {label:"特典交換済み",value:`${num(analysis.exchangedIds.size)}人`},
+        {label:"前後アンケート回答",value:`${num(analysis.pairs.length)}人`},
+      ], note:"現在の保存データを終了日時で区切って再集計した結果です。完全固定スナップショットではありません。" },
+    { id: "reach", kind:"donut", eyebrow:"PARTICIPATION", title:"参加者のスタンプ到達状況", description:"登録者を、未取得・途中取得・5か所完走に分類", rows:[
+      {label:"5か所完走",value:analysis.done.length},
+      {label:"1〜4か所",value:analysis.people.filter(p=>analysis.distinct(p)>0&&analysis.distinct(p)<5).length},
+      {label:"未取得",value:analysis.people.filter(p=>analysis.distinct(p)===0).length},
+    ], note:"各参加者の現存する5種類のスタンプを終了日時以前で集計。" },
+    { id:"progress",kind:"bars",eyebrow:"PROGRESS",title:"取得スポット数の分布",description:"0〜5か所の到達人数を比較",rows:analysis.levels },
+    { id:"spots",kind:"bars",eyebrow:"SPOT REACH",title:"スポット別到達人数",description:"5地点それぞれに何人が到達したか",rows:analysis.spotRows,
+      note:"同一参加者の同一スポットへの重複取得は人数に含みません。" },
+    { id:"registration",kind:"line",eyebrow:"REGISTRATION TREND",title:"日別の参加登録",description:"開催期間における登録人数の変化",rows:analysis.dayRegistration },
+    { id:"stampsdaily",kind:"line",eyebrow:"STAMP ACTIVITY",title:"日別スタンプ取得実績",description:"日ごとのQR取得件数の推移",rows:analysis.dayStamps,
+      note:"同一スポットの重複取得がある場合も実記録件数として含めます。" },
+    { id:"first",kind:"bars",eyebrow:"FIRST TOUCH",title:"最初に訪れたスポット",description:"参加者の最初のスタンプ取得地点",rows:analysis.firstSpots },
+    { id:"routes",kind:"bars",eyebrow:"MOST POPULAR ROUTES",title:"人気の回遊ルート TOP 8",description:"完走者が訪問した順序を比較",rows:analysis.routes.slice(0,8),
+      note:"場所番号は1学生センター・2東棟2階・3ゆうちょATM・4ラーニングスクエア・5セブン付近。" },
+    { id:"completedaily",kind:"line",eyebrow:"COMPLETION TREND",title:"日別の完走者数",description:"5種類目のスタンプを取得した日ごとの人数",rows:analysis.completionByDay,
+      note:"現存する5種類のスタンプが揃った参加者の最終取得日時を使用。" },
+    { id:"survey",kind:"compare",eyebrow:"SURVEY CHANGE",title:"参加前後の意向スコア",description:"同じ参加者の前後回答のみ比較（4段階評価）",compareLabels:["参加前","参加後"],
+      rows:analysis.scores.map(s=>({label:s.title,value:s.beforePair??0,secondary:s.afterPair??0})),
+      note:`回答ペア数は設問により異なります。平均値は0起点で棒表示。前後差は因果効果を証明しません。` },
+    { id:"surveyanswers",kind:"donut",eyebrow:"SURVEY COVERAGE",title:"アンケート回答状況",description:"参加後アンケートの回答有無",rows:[
+      {label:"参加後回答あり",value:analysis.firstPost.size},
+      {label:"参加後回答なし",value:Math.max(0,analysis.total-analysis.firstPost.size)},
+    ] },
+    { id:"exchange",kind:"donut",eyebrow:"REWARD EXCHANGE",title:"特典交換の到達状況",description:"5か所達成者のうち特典交換した参加者",rows:[
+      {label:"完走かつ交換済み",value:analysis.done.filter(p=>analysis.exchangedIds.has(p.id)).length},
+      {label:"完走・未交換",value:analysis.done.filter(p=>!analysis.exchangedIds.has(p.id)).length},
+    ], note:"交換履歴と現在の完走状態を突合。後日の修正によって変動する場合があります。" },
+    { id:"eventdays",kind:"bars",eyebrow:"EXCHANGE EVENT",title:"交換会2日間の実績",description:"2026年10月27日と11月4日の交換件数",rows:analysis.changesByDay },
+    { id:"exchangehour",kind:"bars",eyebrow:"EXCHANGE BY HOUR",title:"特典交換の時間帯",description:"交換が多かった時間帯を比較",rows:analysis.exchangeByHour },
+    { id:"grades",kind:"bars",eyebrow:"DEMOGRAPHICS",title:"参加者の学年分布",description:"登録時に回答した学年別人数",rows:analysis.grade },
+    { id:"cohorts",kind:"compare",eyebrow:"REGISTRATION COHORT",title:"開催延長前後の参加状況",description:"10/27以前と10/28以降の登録者・完走者を比較",compareLabels:["登録者","完走者"],rows:[
+      {label:"10/13〜10/27",value:analysis.registrationHalf[0]?.value??0,secondary:analysis.completionByCohort[0]?.value??0},
+      {label:"10/28〜11/4",value:analysis.registrationHalf[1]?.value??0,secondary:analysis.completionByCohort[1]?.value??0},
+    ],note:"参加者の登録日を基準とし、完走・交換は終了日時までの全記録を集計。" },
+  ] : [];
+
   return <main className="shell faPage"><div className="faContainer">
     <header className="faHero">
       <div><span className="faEyebrow">POKIPO STAFF / FINAL REPORT</span><h1>サービス終了時点・最終分析</h1>
@@ -431,6 +477,11 @@ export default function FinalAnalysisPage() {
       </div><div className="faHeroActions"><button onClick={()=>router.push("/staff")}>← 管理メニュー</button><button onClick={()=>void refresh()} disabled={loading}>{loading?"取得中...":"↻ データを再取得"}</button>
         <button onClick={()=>exportCsv([["項目","値"],...reportRows])} disabled={!analysis}>集計CSVを保存</button></div>
     </header>
+    {analysis && data && <PokipoFinalPresentation
+      slides={presentationSlides}
+      scopeLabel={scope === "all" ? "全登録者" : scope === "first" ? "10/13〜10/27登録者" : "10/28〜11/4登録者"}
+      fetched={data.fetched}
+    />}
     <p className="faCaution">この画面は集計結果を表示する参照専用機能です。2026/11/5 0:00以降の新規記録は除外しますが、過去の記録が後日修正・削除された場合、再取得結果も変化します。終了当時の完全固定スナップショットではありません。運営用テスト名「lipost-furuya-test」は除外しています。</p>
     {data && <p className="faFetched">取得日時：{data.fetched} ／ データ更新は「再取得」ボタンで実行</p>}
     {error && <div className="faError" role="alert">取得エラー：{error}</div>}
