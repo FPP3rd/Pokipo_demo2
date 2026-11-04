@@ -678,7 +678,7 @@ export default function HomePage() {
             <PokipoPostSurveyReminder progress={progress} rewardExchanged={rewardExchanged} />
 
             {/* PROMOTION BANNER */}
-            {bannerPromotion && (
+            {bannerPromotion && !(/特典交換会/.test(`${bannerPromotion.title} ${bannerPromotion.body ?? ""}`) && /追加/.test(`${bannerPromotion.title} ${bannerPromotion.body ?? ""}`) && /決定/.test(`${bannerPromotion.title} ${bannerPromotion.body ?? ""}`)) && (
               <section className="homePromotionBanner">
                 {bannerPromotion.image_url && (
                   <div className="homePromotionBannerImage">
