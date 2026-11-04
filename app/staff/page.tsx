@@ -538,13 +538,13 @@ export default function StaffPage() {
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: 18,
+              gap: 10,
               flexWrap: "wrap",
-              width: "100%",
+              width: "min(100%, 510px)",
               textAlign: "left",
-              margin: "18px 0 22px",
-              padding: "23px 25px",
-              borderRadius: 20,
+              margin: "12px 0 15px",
+              padding: "14px 16px",
+              borderRadius: 16,
               border: "2px solid #ac3343",
               borderLeft: "7px solid #8a1822",
               background: "linear-gradient(115deg, #fff8f3 0%, #fff 56%, #fce7e5 100%)",
@@ -558,14 +558,14 @@ export default function StaffPage() {
             <span style={{ display: "flex", gap: 15, alignItems: "center", minWidth: 0 }}>
               <span aria-hidden="true" style={{
                 flexShrink: 0, display: "grid", placeItems: "center",
-                width: 55, height: 55, borderRadius: 15,
+                width: 42, height: 42, borderRadius: 12,
                 background: "#8a1822", color: "#fff", fontWeight: 900, fontSize: 15
               }}>FINAL</span>
               <span style={{ display: "grid", gap: 5, minWidth: 0 }}>
                 <span style={{ color: "#8a1822", fontSize: 11, fontWeight: 900, letterSpacing: ".12em" }}>
                   POKIPO FINAL ANALYSIS / 2026
                 </span>
-                <strong style={{ fontSize: "clamp(18px, 2.7vw, 24px)", lineHeight: 1.4 }}>
+                <strong style={{ fontSize: "clamp(15px, 2vw, 18px)", lineHeight: 1.4 }}>
                   サービス終了時点・最終分析
                 </strong>
                 <span style={{ color: "#79696a", fontSize: 13, lineHeight: 1.65 }}>
@@ -575,7 +575,7 @@ export default function StaffPage() {
             </span>
             <span aria-hidden="true" style={{
               borderRadius: 50, background: "#8a1822", color: "white",
-              padding: "10px 15px", fontSize: 13, fontWeight: 800, whiteSpace: "nowrap"
+              padding: "8px 10px", fontSize: 12, fontWeight: 800, whiteSpace: "nowrap"
             }}>レポートを開く →</span>
           </button>
         )}

@@ -214,10 +214,59 @@ export default function FinalAnalysisPage() {
     });
     const changesByDay = ["2026-10-27", "2026-11-04"].map(d=>({label:d,value:exchange.filter(e=>e.exchanged_at && day(e.exchanged_at)===d).length}));
     const total = people.length;
+    // 追加分析：終了時点の取得履歴に限定し、個人を特定する内容は表示しない。
+    const firstStampDelay = stamped.map(p => (dateValue(stampsOf(p)[0]?.acquired_at) - dateValue(p.created_at)) / 60000).filter(v => Number.isFinite(v) && v >= 0);
+    const completionDetails = done.map(p => {
+      const unique = new Set<string>();
+      const s = stampsOf(p).filter(x => !unique.has(x.spot_id) && !!unique.add(x.spot_id));
+      return { id: p.id, first: s[0]?.acquired_at || "", completed: s[4]?.acquired_at || "", duration: (dateValue(s[4]?.acquired_at) - dateValue(s[0]?.acquired_at)) / 60000 };
+    }).filter(x => !!x.completed && Number.isFinite(x.duration) && x.duration >= 0);
+    const completionByDay = byDate(completionDetails.map(x => x.completed));
+    const completionByHour = group(completionDetails.map(x => hour(x.completed) + "時")).sort((a,b)=>a.label.localeCompare(b.label));
+    const stampByWeekday = group(stampRows.map(x => new Date(x.acquired_at).toLocaleDateString("ja-JP", { timeZone:"Asia/Tokyo", weekday:"long" })));
+    const registrationByWeekday = group(people.map(x => new Date(x.created_at).toLocaleDateString("ja-JP", { timeZone:"Asia/Tokyo", weekday:"long" })));
+    const completionSameDay = completionDetails.filter(x => day(x.first) === day(x.completed)).length;
+    const completionBuckets = [
+      { label:"30分以内", value: completionDetails.filter(x=>x.duration<=30).length },
+      { label:"30分超〜60分", value: completionDetails.filter(x=>x.duration>30&&x.duration<=60).length },
+      { label:"1時間超〜3時間", value: completionDetails.filter(x=>x.duration>60&&x.duration<=180).length },
+      { label:"3時間超〜当日内", value: completionDetails.filter(x=>x.duration>180&&day(x.first)===day(x.completed)).length },
+      { label:"日付をまたぐ", value: completionDetails.filter(x=>day(x.first)!==day(x.completed)).length },
+    ];
+    const firstStampBuckets = [
+      { label:"登録後15分以内", value:firstStampDelay.filter(x=>x<=15).length },
+      { label:"15分超〜60分", value:firstStampDelay.filter(x=>x>15&&x<=60).length },
+      { label:"1時間超〜24時間", value:firstStampDelay.filter(x=>x>60&&x<=1440).length },
+      { label:"24時間超", value:firstStampDelay.filter(x=>x>1440).length },
+    ];
+    const repeatStampPeople = people.filter(p=>stampsOf(p).length>distinct(p)).length;
+    const exchangeByHour = group(exchange.filter(e=>e.exchanged_at).map(e=>hour(e.exchanged_at!)+"時")).sort((a,b)=>a.label.localeCompare(b.label));
+    const exchangeDelay = completionDetails.flatMap(c => {
+      const exchanged = exchange.filter(e=>e.participant_id===c.id&&e.exchanged_at&&dateValue(e.exchanged_at)>=dateValue(c.completed)).sort((a,b)=>dateValue(a.exchanged_at)-dateValue(b.exchanged_at))[0];
+      return exchanged ? [(dateValue(exchanged.exchanged_at)-dateValue(c.completed))/60000] : [];
+    }).filter(v=>Number.isFinite(v)&&v>=0);
+    const exchangeDelayBuckets = [
+      {label:"完走後30分以内",value:exchangeDelay.filter(v=>v<=30).length},
+      {label:"30分超〜3時間",value:exchangeDelay.filter(v=>v>30&&v<=180).length},
+      {label:"3時間超〜1日",value:exchangeDelay.filter(v=>v>180&&v<=1440).length},
+      {label:"1日超",value:exchangeDelay.filter(v=>v>1440).length},
+    ];
+    const exchangedAfterIssue = data.exchanges.filter(e=>ids.has(e.participant_id)&&e.status==="exchanged"&&isBeforeEnd(e.exchanged_at)&&isBeforeEnd(e.created_at)&&dateValue(e.exchanged_at)>=dateValue(e.created_at)).map(e=>(dateValue(e.exchanged_at)-dateValue(e.created_at))/60000);
+    const registrationHalf = [
+      {label:"前半（10/13〜10/27）",value:people.filter(p=>dateValue(p.created_at)<SECOND).length},
+      {label:"延長（10/28〜11/4）",value:people.filter(p=>dateValue(p.created_at)>=SECOND).length},
+    ];
+    const completionByCohort = registrationHalf.map(x=>({label:x.label,value:done.filter(p=>x.label.startsWith("前半")?dateValue(p.created_at)<SECOND:dateValue(p.created_at)>=SECOND).length}));
+    const exchangedByCohort = registrationHalf.map(x=>({label:x.label,value:people.filter(p=>exchangedIds.has(p.id)&&(x.label.startsWith("前半")?dateValue(p.created_at)<SECOND:dateValue(p.created_at)>=SECOND)).length}));
+    const spotReachRates = spotRows.map(x=>({label:x.label,value:total?Number((x.value/total*100).toFixed(1)):0}));
     return { officialCount: official.length, total, people, pre, post, firstPre, firstPost, pairs, done, stamped,
       distinct, stampsOf, stampRows, duplicateStamps, exchange, exchangedIds, issuedIds, spotRows, levels, elapsed,
       firstSpots,lastSpots,routes,dayRegistration,dayStamps,dayExchanges,hourRegistrations,hourStamps,
-      grade,department,gender,frequency,sharing,renewal,memorable,grades,departments,scores,changesByDay };
+      grade,department,gender,frequency,sharing,renewal,memorable,grades,departments,scores,changesByDay,
+      firstStampDelay,completionDetails,completionByDay,completionByHour,stampByWeekday,registrationByWeekday,
+      completionSameDay,completionBuckets,firstStampBuckets,repeatStampPeople,exchangeByHour,exchangeDelay,
+      exchangeDelayBuckets,exchangedAfterIssue,registrationHalf,completionByCohort,exchangedByCohort,spotReachRates,
+    };
   }, [data, scope]);
 
   if (auth === "loading") return <main className="shell"><div style={{padding:30}}>管理権限を確認しています...</div></main>;
@@ -330,6 +379,66 @@ export default function FinalAnalysisPage() {
             {label:"10/28〜11/4登録",value:analysis.people.filter(p=>dateValue(p.created_at)>=SECOND).length},
           ]}/></Panel></div>
         <Panel title="属性別比較の注意" eyebrow="INTERPRETATION"><p className="faNote">学年・学科は参加登録時の自己申告値です。性別・購入頻度は参加前アンケートに回答した人だけを対象としています。回答していない人を含めた全参加者の属性割合として解釈しないでください。</p></Panel>
+      </>}
+      {/* ADDITIONAL FINAL ANALYSIS — existing panels retained */}
+      {tab === "summary" && <>
+        <div className="faSectionLabel">ADDITIONAL REPORT / 登録・進捗の詳細分析</div>
+        <div className="faStatGrid">
+          <Stat label="登録から初回取得まで・平均" value={analysis.firstStampDelay.length ? `${fmtAvg(avg(analysis.firstStampDelay),1)}分` : "—"} sub={`対象 ${analysis.firstStampDelay.length}人`} />
+          <Stat label="一度も取得していない参加者" value={`${analysis.total-analysis.stamped.length}人`} sub={`登録者比 ${rate(analysis.total-analysis.stamped.length,analysis.total)}`} />
+          <Stat label="1〜4か所の途中参加者" value={`${analysis.stamped.length-analysis.done.length}人`} sub="取得したが5種類未達" />
+          <Stat label="完走者のうち当日内に5か所" value={`${analysis.completionSameDay}人`} sub={`完走者比 ${rate(analysis.completionSameDay,analysis.done.length)}`} />
+        </div>
+        <div className="faTwo">
+          <Panel title="登録曜日別の人数" eyebrow="SIGNUP WEEKDAYS"><Bars rows={analysis.registrationByWeekday}/></Panel>
+          <Panel title="登録後、初回スタンプまでの時間" eyebrow="FIRST STAMP DELAY"><Bars rows={analysis.firstStampBuckets}/></Panel>
+        </div>
+      </>}
+      {tab === "journey" && <>
+        <div className="faSectionLabel">ADDITIONAL REPORT / 回遊の詳細分析</div>
+        <div className="faStatGrid">
+          <Stat label="複数回取得記録のある参加者" value={`${analysis.repeatStampPeople}人`} sub="同一スポットの複数記録" />
+          <Stat label="完走者のうち当日内に達成" value={`${analysis.completionSameDay}人`} sub={`完走者比 ${rate(analysis.completionSameDay,analysis.done.length)}`} />
+          <Stat label="スポット到達の延べ人数" value={`${analysis.spotRows.reduce((v,r)=>v+r.value,0)}人回`} sub="同一スポットは1人1回" />
+          <Stat label="1か所以上取得した人の平均取得スポット" value={analysis.stamped.length ? fmtAvg(analysis.spotRows.reduce((v,r)=>v+r.value,0)/analysis.stamped.length) : "—"} sub="重複を除いた平均" />
+        </div>
+        <div className="faTwo">
+          <Panel title="完走した日別の人数" eyebrow="COMPLETION DAYS"><Bars rows={analysis.completionByDay}/></Panel>
+          <Panel title="完走が多かった時間帯" eyebrow="COMPLETION HOURS"><Bars rows={analysis.completionByHour}/></Panel>
+          <Panel title="完走までの時間帯別分布" eyebrow="JOURNEY DURATION"><Bars rows={analysis.completionBuckets}/></Panel>
+          <Panel title="曜日別のスタンプ取得記録" eyebrow="STAMP WEEKDAYS"><Bars rows={analysis.stampByWeekday} unit="件"/></Panel>
+          <Panel title="スポット別到達率（登録者比）" eyebrow="REACH RATE"><Bars rows={analysis.spotReachRates} unit="%"/></Panel>
+        </div>
+      </>}
+      {tab === "exchange" && <>
+        <div className="faSectionLabel">ADDITIONAL REPORT / 特典交換の詳細分析</div>
+        <div className="faStatGrid">
+          <Stat label="発行記録あり・未交換" value={`${Math.max(0,analysis.issuedIds.size-analysis.exchangedIds.size)}人`} sub="発行済み集合と交換集合の差（目安）" />
+          <Stat label="完走から交換までの平均" value={analysis.exchangeDelay.length ? `${fmtAvg(avg(analysis.exchangeDelay),1)}分` : "—"} sub={`整合する日時の ${analysis.exchangeDelay.length}人`} />
+          <Stat label="QR発行から交換までの平均" value={analysis.exchangedAfterIssue.length ? `${fmtAvg(avg(analysis.exchangedAfterIssue),1)}分` : "—"} sub={`日時が確認できる ${analysis.exchangedAfterIssue.length}件`} />
+          <Stat label="完走者のうち未交換" value={`${analysis.done.filter(p=>!analysis.exchangedIds.has(p.id)).length}人`} sub="現存スタンプに基づく集計" />
+        </div>
+        <div className="faTwo">
+          <Panel title="交換が多かった時間帯" eyebrow="EXCHANGE HOURS"><Bars rows={analysis.exchangeByHour} unit="件"/></Panel>
+          <Panel title="完走後の交換までの時間" eyebrow="EXCHANGE DELAY"><Bars rows={analysis.exchangeDelayBuckets}/></Panel>
+        </div>
+      </>}
+      {tab === "segments" && <>
+        <div className="faSectionLabel">ADDITIONAL REPORT / 登録時期別の比較分析</div>
+        <div className="faTwo">
+          <Panel title="登録時期別・新規登録者数" eyebrow="COHORT REGISTRATION"><Bars rows={analysis.registrationHalf}/></Panel>
+          <Panel title="登録時期別・5か所達成人数" eyebrow="COHORT COMPLETION"><Bars rows={analysis.completionByCohort}/></Panel>
+          <Panel title="登録時期別・交換済み人数" eyebrow="COHORT EXCHANGE"><Bars rows={analysis.exchangedByCohort}/></Panel>
+        </div>
+        <Panel title="登録時期別・完走率と交換率" eyebrow="COHORT RATE" note="登録期間によって観測期間が異なります。数値は単純比較であり、延長の効果を示す因果分析ではありません。">
+          <Table headers={["登録時期","登録者","5か所達成","完走率","交換者","交換率"]} rows={analysis.registrationHalf.map((r,i)=>[r.label,r.value,analysis.completionByCohort[i].value,rate(analysis.completionByCohort[i].value,r.value),analysis.exchangedByCohort[i].value,rate(analysis.exchangedByCohort[i].value,r.value)])}/>
+        </Panel>
+      </>}
+      {tab === "survey" && <>
+        <div className="faSectionLabel">ADDITIONAL REPORT / 前後アンケートの詳細指標</div>
+        <Panel title="質問別・同一回答者のスコア変化" eyebrow="MATCHED CHANGE" note="同一参加者の回答が揃う場合のみ比較します。平均との差は因果効果を意味しません。">
+          <Table headers={["設問","対応人数","改善","変化なし","低下","改善率","平均差"]} rows={analysis.scores.map(s=>[s.title,s.matched.length,s.improvement,s.unchanged,s.decreased,rate(s.improvement,s.matched.length),s.delta===null?"—":`${s.delta>0?"+":""}${fmtAvg(s.delta)}`])}/>
+        </Panel>
       </>}
       <footer className="faFooter">POKIPO FINAL ANALYSIS　／　参照専用　／　個別参加者の氏名・ニックネームは表示・CSV出力しません。</footer>
     </>}
