@@ -71,7 +71,7 @@ export default function PokipoPresentationResponses({ answers, label }: Props) {
     setPhase("flow");
     let count = 0;
     let finished = false;
-    let endTimer: ReturnType<typeof setTimeout> | undefined;
+    let endTimer: number | undefined;
     const id = window.setInterval(() => {
       if (interrupted.current) { finished = true; window.clearInterval(id); return; }
       if (finished) return;
