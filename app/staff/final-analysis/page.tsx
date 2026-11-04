@@ -555,6 +555,8 @@ export default function FinalAnalysisPage() {
       {id:"surveyimprovement",category:"アンケート",kind:"bars" as const,eyebrow:"IMPROVEMENT",title:"設問別の得点上昇割合",description:"前後対応ペアのうち得点が上昇した人の割合",rows:expanded.pairPositive,note:"単位％。設問により母数は異なります。"},
       {id:"weekdayexchange",category:"特典交換",kind:"bars" as const,eyebrow:"REDEEM BY WEEKDAY",title:"曜日別の特典交換",description:"交換日時から集計",rows:expanded.exchangeWeekday},
     ] : []),
+    {id:"pretextvoices", category:"記述回答", kind:"responses", eyebrow:"PRE SURVEY / REAL VOICES", title:"参加前アンケート・記述回答", description:"ポッキーをシェアする場面／参加者の実際の回答を全件表示", freeResponses:[...analysis.firstPre.values()].map(p=>p.share_situation??"").filter(v=>v.trim().length>0), note:"参加前アンケートの「share_situation」欄を表示。記述内容を原文のまま示し、氏名・参加者IDは表示しません。"},
+    {id:"posttextvoices", category:"記述回答", kind:"responses", eyebrow:"POST SURVEY / REAL VOICES", title:"参加後アンケート・記述回答", description:"印象に残ったこと／参加者の実際の回答を全件表示", freeResponses:[...analysis.firstPost.values()].map(p=>p.memorable_point??"").filter(v=>v.trim().length>0), note:"参加後アンケートの「memorable_point」欄を表示。記述内容を原文のまま示し、氏名・参加者IDは表示しません。"},
   ] : [];
 
   return <main className="shell faPage"><div className="faContainer">

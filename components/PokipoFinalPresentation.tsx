@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import PokipoPresentationResponses from "./PokipoPresentationResponses";
 
 export type PokipoPresentationRow = { label: string; value: number; secondary?: number };
 export type PokipoPresentationKpi = { label: string; value: string; detail?: string };
@@ -10,11 +11,12 @@ export type PokipoPresentationSlide = {
   title: string;
   eyebrow: string;
   description: string;
-  kind: "opening" | "donut" | "bars" | "line" | "compare" | "map";
+  kind: "opening" | "donut" | "bars" | "line" | "compare" | "map" | "responses";
   rows?: PokipoPresentationRow[];
   kpis?: PokipoPresentationKpi[];
   note?: string;
   compareLabels?: [string, string];
+  freeResponses?: string[];
 };
 
 type Props = { slides: PokipoPresentationSlide[]; scopeLabel: string; fetched: string };
@@ -201,6 +203,7 @@ function automaticInsight(slide: PokipoPresentationSlide): string {
     const vals = slide.kpis ?? [];
     return vals.length ? `今回の最終集計では、${vals.slice(0,2).map(v=>`${v.label}は${v.value}`).join("、")}でした。ほかの主要指標も同じ集計範囲で表示しています。` : "最終集計の主要指標をまとめています。";
   }
+  if (slide.kind === "responses") { const n = (slide.freeResponses ?? []).length; return n ? `${n.toLocaleString("ja-JP")}件の記述回答を収録しています。実際の回答とキーワードの出現傾向を順に確認できます。` : "この条件では記述回答がありません。"; }
   if (!rs.length) return "この条件では比較できる記録がありません。対象期間や絞り込み条件をご確認ください。";
   const fmt = (n:number) => n.toLocaleString("ja-JP", {maximumFractionDigits:2});
   const unit = slide.id.includes("rate") || slide.id.includes("ratio") || slide.description.includes("割合") || slide.title.includes("率") ? "%" : "";
@@ -292,6 +295,7 @@ export default function PokipoFinalPresentation({ slides, scopeLabel, fetched }:
           {current.kind === "compare" && <Bars rows={current.rows ?? []} compareLabels={current.compareLabels}/>}
           {current.kind === "line" && <Line rows={current.rows ?? []} fix05={current.id === "registration"}/>}
           {current.kind === "map" && <MapAnalysis rows={current.rows ?? []} percent={current.title.includes("率")}/>}
+          {current.kind === "responses" && <PokipoPresentationResponses answers={current.freeResponses ?? []} label={current.title}/> }
         </div>
         <div className="fpInsight" key={`insight-${current.id}`}><strong>POKIPO 自動分析</strong><p>{automaticInsight(current)}</p></div>
         {current.note && <p className="fpFootnote">注：{current.note}</p>}
