@@ -467,6 +467,87 @@ export default function FinalAnalysisPage() {
       {label:"10/13〜10/27",value:analysis.registrationHalf[0]?.value??0,secondary:analysis.completionByCohort[0]?.value??0},
       {label:"10/28〜11/4",value:analysis.registrationHalf[1]?.value??0,secondary:analysis.completionByCohort[1]?.value??0},
     ],note:"参加者の登録日を基準とし、完走・交換は終了日時までの全記録を集計。" },
+    // PRESENTATION EXTENSION: 現在の分析データから再集計し、登録時期フィルタも反映
+    {id:"snapshot",category:"総合",kind:"bars",eyebrow:"FINAL FUNNEL",title:"主な参加ステップ別人数",description:"登録・取得・完走・参加後回答・特典交換の人数比較",rows:[
+      {label:"登録",value:analysis.total},{label:"1地点以上",value:analysis.stamped.length},
+      {label:"5地点完走",value:analysis.done.length},{label:"参加後回答",value:analysis.firstPost.size},
+      {label:"特典交換",value:analysis.exchangedIds.size}],note:"イベント途中の順序を示す厳密なファネルではなく、各状態の人数比較です。"},
+    {id:"completionratio",category:"参加",kind:"donut",eyebrow:"COMPLETION RATE",title:"登録者の完走率",description:"登録者全体に占める5地点達成者",rows:[
+      {label:"5地点完走",value:analysis.done.length},{label:"未完走",value:Math.max(0,analysis.total-analysis.done.length)}]},
+    {id:"startedratio",category:"参加",kind:"donut",eyebrow:"FIRST STAMP",title:"スタンプ取得開始率",description:"登録後に1地点以上のスタンプを取得したか",rows:[
+      {label:"取得開始",value:analysis.stamped.length},{label:"未取得",value:Math.max(0,analysis.total-analysis.stamped.length)}]},
+    {id:"progressdetail",category:"参加",kind:"donut",eyebrow:"STAMP PROGRESS",title:"0〜5地点の参加者構成",description:"各参加者のスタンプ取得地点数別の構成比",rows:analysis.levels},
+    {id:"surveyfunnel",category:"参加",kind:"bars",eyebrow:"SURVEY REACH",title:"アンケートの回答人数",description:"参加前・参加後・両方回答の人数",rows:[
+      {label:"参加前回答",value:analysis.firstPre.size},{label:"参加後回答",value:analysis.firstPost.size},{label:"両方回答",value:analysis.pairs.length}]},
+    {id:"weekdayreg",category:"時系列",kind:"bars",eyebrow:"REGISTRATION BY WEEKDAY",title:"曜日別の参加登録",description:"登録が集中した曜日を比較",rows:analysis.registrationByWeekday},
+    {id:"hourreg",category:"時系列",kind:"bars",eyebrow:"REGISTRATION BY HOUR",title:"時間帯別の登録者数",description:"日本時間の時間帯で集計",rows:analysis.hourRegistrations},
+    {id:"weekdaystamp",category:"時系列",kind:"bars",eyebrow:"STAMP BY WEEKDAY",title:"曜日別スタンプ取得",description:"取得記録が多かった曜日",rows:analysis.stampByWeekday},
+    {id:"hourstamp",category:"時系列",kind:"bars",eyebrow:"STAMP BY HOUR",title:"時間帯別のスタンプ取得",description:"時間帯によるQR取得の偏り",rows:analysis.hourStamps},
+    {id:"completionhour",category:"時系列",kind:"bars",eyebrow:"COMPLETION HOUR",title:"完走が多かった時間帯",description:"5地点目の取得日時から算出",rows:analysis.completionByHour},
+    {id:"exchangedaily",category:"時系列",kind:"line",eyebrow:"DAILY EXCHANGE",title:"日別特典交換の推移",description:"終了日時までの交換完了記録",rows:analysis.dayExchanges},
+    {id:"spotreachrate",category:"スポット",kind:"bars",eyebrow:"SPOT REACH RATE",title:"スポット別到達率",description:"登録者を母数に各地点の到達率を比較",rows:analysis.spotReachRates,note:"単位は％。同一地点の重複取得は除外します。"},
+    {id:"lastspot",category:"スポット",kind:"bars",eyebrow:"FINAL LOCATION",title:"完走者の最後のスポット",description:"5地点目として取得された場所",rows:analysis.lastSpots},
+    {id:"startend",category:"スポット",kind:"compare",eyebrow:"ENTRY AND EXIT",title:"各スポットの初回・最終訪問",description:"初回訪問人数と、完走者の5地点目人数を比較",compareLabels:["初回訪問","完走の最後"],rows:analysis.spotRows.map(r=>({label:r.label,value:analysis.firstSpots.find(x=>x.label===r.label)?.value??0,secondary:analysis.lastSpots.find(x=>x.label===r.label)?.value??0}))},
+    {id:"toproute16",category:"回遊",kind:"bars",eyebrow:"ROUTE DIVERSITY",title:"回遊ルート 9〜16位",description:"上位8件以外にも、回遊パターンを確認",rows:analysis.routes.slice(8,16),note:"完走者の各地点への初回取得順で集計。"},
+    {id:"uniqueroutes",category:"回遊",kind:"opening",eyebrow:"ROUTE VARIETY",title:"回遊ルートの多様性",description:"完走者の訪問順序パターンの種類",kpis:[
+      {label:"確認されたルート",value:`${analysis.routes.length}種類`},
+      {label:"5地点完走者",value:`${analysis.done.length}人`},
+      {label:"最多ルートの利用者",value:`${analysis.routes[0]?.value??0}人`}]},
+    {id:"routeduration",category:"回遊",kind:"opening",eyebrow:"ROUTE TIME",title:"完走までにかかった時間",description:"初回スタンプから5種類目までの時間を集計",kpis:[
+      {label:"平均",value:analysis.elapsed.length?`${(analysis.elapsed.reduce((a,b)=>a+b,0)/analysis.elapsed.length).toFixed(1)}分`:"—"},
+      {label:"対象人数",value:`${analysis.elapsed.length}人`},
+      {label:"最短",value:analysis.elapsed.length?`${Math.min(...analysis.elapsed).toFixed(1)}分`:"—"},
+      {label:"最長",value:analysis.elapsed.length?`${Math.max(...analysis.elapsed).toFixed(1)}分`:"—"}],note:"日をまたぐ完走も含みます。"},
+    {id:"renewalknow",category:"アンケート",kind:"donut",eyebrow:"BRAND AWARENESS",title:"参加前のリニューアル認知",description:"リニューアルを知っていたか",rows:analysis.renewal},
+    {id:"sharingknow",category:"アンケート",kind:"donut",eyebrow:"SHARING EXPERIENCE",title:"ポッキーをシェアした経験",description:"参加前アンケート回答者における経験の有無",rows:analysis.sharing},
+    {id:"frequency",category:"アンケート",kind:"bars",eyebrow:"CONSUMPTION",title:"参加前の購入・飲食頻度",description:"事前アンケート回答者の頻度別人数",rows:analysis.frequency},
+    ...analysis.scores.flatMap((score,i)=>[
+      {id:`score-move-${i}`,category:"アンケート",kind:"donut" as const,eyebrow:"MATCHED CHANGE",title:`${score.title}：前後の変化`,description:"同一参加者の回答が上昇・不変・低下した人数",rows:[
+        {label:"上昇",value:score.improvement},{label:"変化なし",value:score.unchanged},{label:"低下",value:score.decreased}],note:`対応ペア ${score.matched.length}人。前後比較で因果関係は断定できません。`},
+      {id:`score-pre-${i}`,category:"アンケート",kind:"bars" as const,eyebrow:"BEFORE SCORES",title:`${score.title}：参加前得点`,description:"参加前の4段階回答分布",rows:score.beforeDistribution},
+      {id:`score-post-${i}`,category:"アンケート",kind:"bars" as const,eyebrow:"AFTER SCORES",title:`${score.title}：参加後得点`,description:"参加後の4段階回答分布",rows:score.afterDistribution},
+    ]),
+    {id:"postunderstanding",category:"アンケート",kind:"bars",eyebrow:"RENEWAL LEARNING",title:"リニューアルへの理解度",description:"参加後アンケートの4段階回答",rows:group([...analysis.firstPost.values()].map(p=>numeric(p.renewal_understanding_score)?`${p.renewal_understanding_score}点`:"無回答"))},
+    {id:"exchangeratio",category:"特典交換",kind:"donut",eyebrow:"REDEEMED",title:"完走者の特典交換率",description:"5地点完走者のうち交換済みの人数",rows:[
+      {label:"完走・交換済み",value:analysis.done.filter(p=>analysis.exchangedIds.has(p.id)).length},
+      {label:"完走・未交換",value:analysis.done.filter(p=>!analysis.exchangedIds.has(p.id)).length}]},
+    {id:"qrissuance",category:"特典交換",kind:"donut",eyebrow:"QR ISSUED",title:"交換QR発行状況",description:"登録者のうち交換QRが発行された人数",rows:[
+      {label:"QR発行記録あり",value:analysis.issuedIds.size},
+      {label:"発行記録なし",value:Math.max(0,analysis.total-analysis.issuedIds.size)}],note:"QR発行日時が終了日時以前の記録に基づきます。"},
+    {id:"exchangeleaders",category:"特典交換",kind:"bars",eyebrow:"EXCHANGE TIMING",title:"交換会の時間帯別比較",description:"10月27日・11月4日を含む交換日時の時間帯分布",rows:analysis.exchangeByHour},
+    {id:"exchangebydate",category:"特典交換",kind:"line",eyebrow:"REWARD TREND",title:"特典交換日別の推移",description:"期間内に交換された人数の変化",rows:analysis.dayExchanges},
+    {id:"departments",category:"属性",kind:"bars",eyebrow:"DEPARTMENT",title:"学科別の参加者数",description:"登録時の回答による分布",rows:analysis.department},
+    {id:"gender",category:"属性",kind:"donut",eyebrow:"SURVEY DEMOGRAPHICS",title:"参加前回答者の性別分布",description:"参加前アンケートに回答した人のみ",rows:analysis.gender,note:"登録者全体の性別構成ではありません。"},
+    {id:"cohortexchange",category:"比較",kind:"compare",eyebrow:"EXTENSION COHORT",title:"延長前後の登録者と交換者",description:"登録時期別の到達状況を比較",compareLabels:["登録者","交換済み"],rows:[
+      {label:"10/13〜10/27登録",value:analysis.registrationHalf[0]?.value??0,secondary:analysis.exchangedByCohort[0]?.value??0},
+      {label:"10/28〜11/4登録",value:analysis.registrationHalf[1]?.value??0,secondary:analysis.exchangedByCohort[1]?.value??0}],note:"登録時期で分類。交換日で分類していません。"},
+    {id:"cohortcomplete",category:"比較",kind:"compare",eyebrow:"EXTENSION COHORT",title:"延長前後の登録者と完走者",description:"登録時期別の5地点完走の比較",compareLabels:["登録者","完走者"],rows:[
+      {label:"10/13〜10/27登録",value:analysis.registrationHalf[0]?.value??0,secondary:analysis.completionByCohort[0]?.value??0},
+      {label:"10/28〜11/4登録",value:analysis.registrationHalf[1]?.value??0,secondary:analysis.completionByCohort[1]?.value??0}]},
+    ...(expanded ? [
+      {id:"stampdelay",category:"回遊",kind:"opening" as const,eyebrow:"TIME TO FIRST STAMP",title:"初回スタンプまでの時間",description:"参加登録から最初のQR取得までの時間",kpis:[
+        {label:"中央値",value:expanded.medianFirstStamp===null?"—":`${expanded.medianFirstStamp.toFixed(1)}分`},
+        {label:"計測対象",value:`${expanded.firstStampMinutes.length}人`}]},
+      {id:"completionpercentiles",category:"回遊",kind:"opening" as const,eyebrow:"COMPLETION DISTRIBUTION",title:"回遊時間の四分位数",description:"完走者の所要時間の25％点・中央値・75％点",kpis:[
+        {label:"25%点",value:expanded.completionP25===null?"—":`${expanded.completionP25.toFixed(1)}分`},
+        {label:"中央値",value:expanded.medianCompletion===null?"—":`${expanded.medianCompletion.toFixed(1)}分`},
+        {label:"75%点",value:expanded.completionP75===null?"—":`${expanded.completionP75.toFixed(1)}分`}]},
+      {id:"completionbands",category:"回遊",kind:"donut" as const,eyebrow:"DURATION BANDS",title:"回遊時間帯別の構成",description:"初回から5地点完走までの時間区分",rows:expanded.completionDurationBands},
+      {id:"firstpairs",category:"回遊",kind:"bars" as const,eyebrow:"ROUTE PAIRS",title:"最初の2地点の組み合わせ",description:"完走者の最初の2スポットの訪問順",rows:expanded.routePairs.slice(0,10)},
+      {id:"lastpairs",category:"回遊",kind:"bars" as const,eyebrow:"FINISH PAIRS",title:"最後の2地点の組み合わせ",description:"完走者の4〜5地点目の訪問順",rows:expanded.finishPairs.slice(0,10)},
+      {id:"startcomplete",category:"スポット",kind:"bars" as const,eyebrow:"START AND COMPLETE",title:"開始スポット別の完走率",description:"最初に選んだ地点ごとの5地点完走率",rows:expanded.spotStartComparison.map(r=>({label:String(r[0]),value:Number(r[1])?Number((Number(r[2])*100/Number(r[1])).toFixed(1)):0})),note:"単位％。各地点を最初に取得した人を母数とします。"},
+      {id:"exchangedelay",category:"特典交換",kind:"opening" as const,eyebrow:"TIME TO REDEEM",title:"完走から交換までの時間",description:"日時の前後関係が整合した交換記録",kpis:[
+        {label:"計測できた記録",value:`${expanded.completionToExchange.length}件`},
+        {label:"平均",value:expanded.completionToExchange.length?`${(expanded.completionToExchange.reduce((a,b)=>a+b,0)/expanded.completionToExchange.length).toFixed(1)}分`:"—"}]},
+      {id:"issuedelay",category:"特典交換",kind:"opening" as const,eyebrow:"QR TO REDEEM",title:"QR発行から交換まで",description:"QR発行日時と交換日時の差",kpis:[
+        {label:"計測できた記録",value:`${expanded.issueToExchange.length}件`},
+        {label:"平均",value:expanded.issueToExchange.length?`${(expanded.issueToExchange.reduce((a,b)=>a+b,0)/expanded.issueToExchange.length).toFixed(1)}分`:"—"}]},
+      {id:"surveypartial",category:"アンケート",kind:"donut" as const,eyebrow:"RESPONSE PATTERNS",title:"事前・事後回答の組み合わせ",description:"参加登録者を4つの回答パターンに分類",rows:[
+        {label:"両方回答",value:analysis.pairs.length},{label:"参加前のみ",value:expanded.preOnly},
+        {label:"参加後のみ",value:expanded.postOnly},{label:"両方未回答",value:expanded.noSurvey}]},
+      {id:"surveyimprovement",category:"アンケート",kind:"bars" as const,eyebrow:"IMPROVEMENT",title:"設問別の得点上昇割合",description:"前後対応ペアのうち得点が上昇した人の割合",rows:expanded.pairPositive,note:"単位％。設問により母数は異なります。"},
+      {id:"weekdayexchange",category:"特典交換",kind:"bars" as const,eyebrow:"REDEEM BY WEEKDAY",title:"曜日別の特典交換",description:"交換日時から集計",rows:expanded.exchangeWeekday},
+    ] : []),
   ] : [];
 
   return <main className="shell faPage"><div className="faContainer">
