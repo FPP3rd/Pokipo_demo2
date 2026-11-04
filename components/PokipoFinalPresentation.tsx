@@ -38,52 +38,70 @@ function Kpis({ values }: { values: PokipoPresentationKpi[] }) {
     </div>
   ))}</div>;
 }
-function Donut({ rows }: { rows: PokipoPresentationRow[] }) {
+/** プレゼンのスライド切替で再マウントされるため、進行度は初回のみアニメーション。 */
+function useChartDrawProgress(duration: number) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden) {
       setProgress(1);
       return;
     }
     let frame = 0;
-    let started: number | null = null;
-    setProgress(0);
-    const tick = (now: number) => {
-      if (started === null) started = now;
-      const t = Math.min(1, (now - started) / 1400);
-      setProgress(t === 1 ? 1 : 1 - Math.pow(1 - t, 2.6));
-      if (t < 1) frame = requestAnimationFrame(tick);
+    let began: number | null = null;
+    let finished = false;
+    const finish = () => {
+      finished = true;
+      cancelAnimationFrame(frame);
+      setProgress(1);
+    };
+    const tick = (timestamp: number) => {
+      if (finished) return;
+      if (began === null) began = timestamp;
+      const ratio = Math.min(1, (timestamp - began) / duration);
+      setProgress(ratio >= 1 ? 1 : 1 - Math.pow(1 - ratio, 2.5));
+      if (ratio >= 1) finish();
+      else frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [rows]);
+    // RAFが休止された場合も完成形を保証する。
+    const backup = window.setTimeout(finish, duration + 600);
+    const onVisible = () => { if (document.visibilityState === "visible") finish(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      finished = true;
+      cancelAnimationFrame(frame);
+      window.clearTimeout(backup);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [duration]);
+  return progress;
+}
 
-  const safe = rows.filter(x => Number.isFinite(x.value) && x.value > 0);
+function Donut({ rows }: { rows: PokipoPresentationRow[] }) {
+  const progress = useChartDrawProgress(1500);
+  const safe = rows.filter((x) => Number.isFinite(x.value) && x.value > 0);
   const total = safe.reduce((sum, x) => sum + x.value, 0);
-  const circumference = 2 * Math.PI * 89;
   let cursor = 0;
-  const segments = safe.map((item, index) => {
+  const segments = safe.map((item, i) => {
     const start = cursor;
-    const fraction = total > 0 ? item.value / total : 0;
-    cursor += fraction;
-    const visible = Math.max(0, Math.min(fraction, progress - start));
-    return { ...item, start, visible, color: COLORS[index % COLORS.length] };
+    cursor += total > 0 ? item.value / total : 0;
+    return { ...item, start, end: cursor, color: COLORS[i % COLORS.length] };
   });
+  const drawnSegments = segments.flatMap((s) => {
+    const visibleEnd = Math.min(s.end, progress);
+    if (visibleEnd <= s.start) return [];
+    return [`${s.color} ${(s.start * 360).toFixed(4)}deg ${(visibleEnd * 360).toFixed(4)}deg`];
+  });
+  const remainder = Math.max(0, Math.min(360, progress * 360));
+  const gradient = total > 0 && drawnSegments.length > 0
+    ? `conic-gradient(from -90deg, ${drawnSegments.join(", ")}, #f1e9e6 ${remainder.toFixed(4)}deg 360deg)`
+    : "conic-gradient(#f1e9e6 0deg 360deg)";
 
   return <div className="fpDonutLayout">
     <div className="fpDonut" aria-label={rows.map(r => `${r.label} ${r.value}`).join("、")} role="img">
-      <svg viewBox="0 0 240 240" aria-hidden="true">
-        <circle cx="120" cy="120" r="89" fill="none" stroke="#f1e9e6" strokeWidth="28" />
-        {segments.map((s, i) => <circle
-          key={`${s.label}-${i}`}
-          cx="120" cy="120" r="89" fill="none"
-          stroke={s.color} strokeWidth="28"
-          strokeDasharray={`${s.visible * circumference} ${circumference}`}
-          strokeDashoffset={-s.start * circumference}
-          transform="rotate(-90 120 120)"
-          className="fpArc"
-        />)}
-      </svg>
+      {/* 扇形自体の塗り幅を描画する。SVG stroke/古いCSSアニメに依存しない。 */}
+      <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: gradient }} />
+      <div style={{ position: "absolute", inset: "18%", borderRadius: "50%", background: "#fffaf7" }} />
       <div className="fpDonutCenter"><strong>{textNumber(total)}</strong><span>対象人数 / 件数</span></div>
     </div>
     <div className="fpLegend">{rows.map((r, i) => <div key={`${r.label}-${i}`}>
@@ -93,34 +111,21 @@ function Donut({ rows }: { rows: PokipoPresentationRow[] }) {
   </div>;
 }
 function Bars({ rows, compareLabels }: { rows: PokipoPresentationRow[]; compareLabels?: [string, string] }) {
-  const [progress, setProgress] = useState(0);
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setProgress(1);
-      return;
-    }
-    let frame = 0;
-    let started: number | null = null;
-    setProgress(0);
-    const tick = (now: number) => {
-      if (started === null) started = now;
-      const t = Math.min(1, (now - started) / 1150);
-      setProgress(t === 1 ? 1 : 1 - Math.pow(1 - t, 3));
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [rows]);
-
+  const progress = useChartDrawProgress(1250);
   const hasSecondary = rows.some(x => x.secondary !== undefined);
   const max = Math.max(1, ...rows.flatMap(x => [within(x.value), ...(x.secondary === undefined ? [] : [within(x.secondary)])]));
+  const trackBackground = (value: number, color: string) => {
+    const percent = Math.max(0, Math.min(100, 100 * within(value) / max * progress));
+    // CSS transform / keyframes は使わず、背景の塗り幅だけを更新。
+    return `linear-gradient(to right, ${color} 0% ${percent.toFixed(4)}%, #f1e9e6 ${percent.toFixed(4)}% 100%)`;
+  };
   return <div className="fpBarChart">
     {compareLabels && <div className="fpSeriesLegend"><span><i style={{ background: COLORS[0] }} />{compareLabels[0]}</span><span><i style={{ background: COLORS[2] }} />{compareLabels[1]}</span></div>}
     {rows.length ? rows.map((r, i) => <div className="fpBarRow" key={`${r.label}-${i}`}>
       <span title={r.label}>{r.label}</span>
       <div className="fpTracks">
-        <div className="fpTrack"><div className="fpBarFill" style={{ width: `${100 * within(r.value) / max * progress}%`, background: COLORS[0] }} /></div>
-        {hasSecondary && <div className="fpTrack"><div className="fpBarFill" style={{ width: `${100 * within(r.secondary ?? 0) / max * progress}%`, background: COLORS[2] }} /></div>}
+        <div className="fpTrack" style={{ background: trackBackground(r.value, COLORS[0]) }} />
+        {hasSecondary && <div className="fpTrack" style={{ background: trackBackground(r.secondary ?? 0, COLORS[2]) }} />}
       </div>
       <strong>{textNumber(r.value)}{r.secondary === undefined ? "" : ` / ${textNumber(r.secondary)}`}</strong>
     </div>) : <p className="fpEmpty">対象データはありません。</p>}
