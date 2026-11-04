@@ -39,40 +39,88 @@ function Kpis({ values }: { values: PokipoPresentationKpi[] }) {
   ))}</div>;
 }
 function Donut({ rows }: { rows: PokipoPresentationRow[] }) {
-  const safe = rows.filter(x => x.value > 0);
-  const total = safe.reduce((s, x) => s + x.value, 0);
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setProgress(1);
+      return;
+    }
+    let frame = 0;
+    let started: number | null = null;
+    setProgress(0);
+    const tick = (now: number) => {
+      if (started === null) started = now;
+      const t = Math.min(1, (now - started) / 1400);
+      setProgress(t === 1 ? 1 : 1 - Math.pow(1 - t, 2.6));
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [rows]);
+
+  const safe = rows.filter(x => Number.isFinite(x.value) && x.value > 0);
+  const total = safe.reduce((sum, x) => sum + x.value, 0);
+  const circumference = 2 * Math.PI * 89;
   let cursor = 0;
   const segments = safe.map((item, index) => {
     const start = cursor;
-    const fraction = total ? item.value / total : 0;
+    const fraction = total > 0 ? item.value / total : 0;
     cursor += fraction;
-    return { ...item, start, fraction, color: COLORS[index % COLORS.length] };
+    const visible = Math.max(0, Math.min(fraction, progress - start));
+    return { ...item, start, visible, color: COLORS[index % COLORS.length] };
   });
+
   return <div className="fpDonutLayout">
     <div className="fpDonut" aria-label={rows.map(r => `${r.label} ${r.value}`).join("、")} role="img">
       <svg viewBox="0 0 240 240" aria-hidden="true">
         <circle cx="120" cy="120" r="89" fill="none" stroke="#f1e9e6" strokeWidth="28" />
-        {segments.map((s, i) => <circle key={i} cx="120" cy="120" r="89" fill="none" stroke={s.color} strokeWidth="28"
-          strokeDasharray={`${s.fraction * 2 * Math.PI * 89} ${2 * Math.PI * 89}`}
-          strokeDashoffset={-s.start * 2 * Math.PI * 89} transform="rotate(-90 120 120)" className="fpArc" style={{ animationDelay: `${i * 65}ms` }} />)}
+        {segments.map((s, i) => <circle
+          key={`${s.label}-${i}`}
+          cx="120" cy="120" r="89" fill="none"
+          stroke={s.color} strokeWidth="28"
+          strokeDasharray={`${s.visible * circumference} ${circumference}`}
+          strokeDashoffset={-s.start * circumference}
+          transform="rotate(-90 120 120)"
+          className="fpArc"
+        />)}
       </svg>
       <div className="fpDonutCenter"><strong>{textNumber(total)}</strong><span>対象人数 / 件数</span></div>
     </div>
-    <div className="fpLegend">{rows.map((r, i) => <div key={r.label}>
+    <div className="fpLegend">{rows.map((r, i) => <div key={`${r.label}-${i}`}>
       <i style={{ background: COLORS[i % COLORS.length] }} /><span>{r.label}</span>
-      <strong>{textNumber(r.value)}</strong><small>{total ? `${(100*r.value/total).toFixed(1)}%` : "—"}</small>
+      <strong>{textNumber(r.value)}</strong><small>{total ? `${(100 * r.value / total).toFixed(1)}%` : "—"}</small>
     </div>)}</div>
   </div>;
 }
 function Bars({ rows, compareLabels }: { rows: PokipoPresentationRow[]; compareLabels?: [string, string] }) {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setProgress(1);
+      return;
+    }
+    let frame = 0;
+    let started: number | null = null;
+    setProgress(0);
+    const tick = (now: number) => {
+      if (started === null) started = now;
+      const t = Math.min(1, (now - started) / 1150);
+      setProgress(t === 1 ? 1 : 1 - Math.pow(1 - t, 3));
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [rows]);
+
   const hasSecondary = rows.some(x => x.secondary !== undefined);
   const max = Math.max(1, ...rows.flatMap(x => [within(x.value), ...(x.secondary === undefined ? [] : [within(x.secondary)])]));
   return <div className="fpBarChart">
     {compareLabels && <div className="fpSeriesLegend"><span><i style={{ background: COLORS[0] }} />{compareLabels[0]}</span><span><i style={{ background: COLORS[2] }} />{compareLabels[1]}</span></div>}
     {rows.length ? rows.map((r, i) => <div className="fpBarRow" key={`${r.label}-${i}`}>
       <span title={r.label}>{r.label}</span>
-      <div className="fpTracks"><div className="fpTrack"><div className="fpBarFill" style={{ width: `${100*within(r.value)/max}%`, background: COLORS[0], animationDelay: `${i*55}ms` }} /></div>
-        {hasSecondary && <div className="fpTrack"><div className="fpBarFill" style={{ width: `${100*within(r.secondary ?? 0)/max}%`, background: COLORS[2], animationDelay: `${i*55+100}ms` }} /></div>}
+      <div className="fpTracks">
+        <div className="fpTrack"><div className="fpBarFill" style={{ width: `${100 * within(r.value) / max * progress}%`, background: COLORS[0] }} /></div>
+        {hasSecondary && <div className="fpTrack"><div className="fpBarFill" style={{ width: `${100 * within(r.secondary ?? 0) / max * progress}%`, background: COLORS[2] }} /></div>}
       </div>
       <strong>{textNumber(r.value)}{r.secondary === undefined ? "" : ` / ${textNumber(r.secondary)}`}</strong>
     </div>) : <p className="fpEmpty">対象データはありません。</p>}
@@ -249,6 +297,11 @@ export default function PokipoFinalPresentation({ slides, scopeLabel, fetched }:
         }
         @media(max-height:560px) and (min-width:701px){.fpTopbar{padding-top:5px;padding-bottom:5px}.fpSlide{padding-top:6px;padding-bottom:6px}.fpSlideHead h2{font-size:22px}.fpBottomMeta{display:none}.fpDonut{width:min(100%,min(40vh,300px))}}
         @media(prefers-reduced-motion:reduce){.fpArc{animation:none!important}}
+
+/* POKIPO presentation drawing animation fix.
+   TSXのrequestAnimationFrameで0～100%を描画するため、旧CSSアニメーションを無効化。 */
+.fpScreen .fpArc { animation: none !important; opacity: 1 !important; }
+.fpScreen .fpBarFill { animation: none !important; transform: none !important; transition: none !important; }
       `}</style>
     </div>}
   </>;
