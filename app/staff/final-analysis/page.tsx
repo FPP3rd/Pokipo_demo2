@@ -467,6 +467,13 @@ export default function FinalAnalysisPage() {
       {label:"10/13〜10/27",value:analysis.registrationHalf[0]?.value??0,secondary:analysis.completionByCohort[0]?.value??0},
       {label:"10/28〜11/4",value:analysis.registrationHalf[1]?.value??0,secondary:analysis.completionByCohort[1]?.value??0},
     ],note:"参加者の登録日を基準とし、完走・交換は終了日時までの全記録を集計。" },
+    // POKIPO MAP ANALYSIS: participant-facing campus map reused as geographic reference.
+    {id:"map-reach",category:"地図分析",kind:"map",eyebrow:"CAMPUS / REACH",title:"地図で見る5スポットの到達人数",description:"参加者が実際にスタンプを取得したスポット別人数",rows:analysis.spotRows,note:"地図上の位置は参考表示。重複取得を除いた参加者数を集計。"},
+    {id:"map-first",category:"地図分析",kind:"map",eyebrow:"CAMPUS / FIRST TOUCH",title:"地図で見る最初の訪問先",description:"最初のスタンプを取得した地点の人数比較",rows:analysis.firstSpots},
+    {id:"map-last",category:"地図分析",kind:"map",eyebrow:"CAMPUS / LAST TOUCH",title:"地図で見る最後の訪問先",description:"5スポット完走者が最後に取得した地点",rows:analysis.lastSpots},
+    {id:"map-reach-rate",category:"地図分析",kind:"map",eyebrow:"CAMPUS / REACH RATE",title:"スポット別の登録者到達率",description:"各スポットに到達した参加者の割合（登録者数が母数）",rows:analysis.spotReachRates,note:"数値は%。各地点の到達率を示し、合計して100%になる割合ではありません。"},
+    {id:"map-start-completion",category:"地図分析",kind:"map",eyebrow:"CAMPUS / COMPLETION",title:"開始スポット別の完走率",description:"各スポットを最初に選んだ参加者の5か所達成率",rows:(expanded?.spotStartComparison ?? []).map(r=>({label:String(r[0]),value:Number.parseFloat(String(r[3]))||0})),note:"数値は%。各地点を最初に訪れた参加者を母数としています。"},
+    {id:"map-start-exchange",category:"地図分析",kind:"map",eyebrow:"CAMPUS / REWARD",title:"開始スポット別の特典交換率",description:"最初の訪問地点ごとの特典交換率を比較",rows:(expanded?.spotStartComparison ?? []).map(r=>({label:String(r[0]),value:Number.parseFloat(String(r[5]))||0})),note:"数値は%。各地点を最初に訪れた参加者を母数としています。"},
     // PRESENTATION EXTENSION: 現在の分析データから再集計し、登録時期フィルタも反映
     {id:"snapshot",category:"総合",kind:"bars",eyebrow:"FINAL FUNNEL",title:"主な参加ステップ別人数",description:"登録・取得・完走・参加後回答・特典交換の人数比較",rows:[
       {label:"登録",value:analysis.total},{label:"1地点以上",value:analysis.stamped.length},

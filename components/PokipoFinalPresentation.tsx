@@ -10,7 +10,7 @@ export type PokipoPresentationSlide = {
   title: string;
   eyebrow: string;
   description: string;
-  kind: "opening" | "donut" | "bars" | "line" | "compare";
+  kind: "opening" | "donut" | "bars" | "line" | "compare" | "map";
   rows?: PokipoPresentationRow[];
   kpis?: PokipoPresentationKpi[];
   note?: string;
@@ -174,6 +174,61 @@ function Line({ rows, fix05 = false }: { rows: PokipoPresentationRow[]; fix05?: 
   </div>;
 }
 
+// POKIPO MAP INSIGHTS 2026: 既存の参加者向けキャンパス地図を分析画面に再利用。
+function MapAnalysis({ rows, percent = false }: { rows: PokipoPresentationRow[]; percent?: boolean }) {
+  const ordered = [...rows].filter(r => Number.isFinite(r.value)).sort((a,b) => b.value-a.value);
+  const max = Math.max(1, ...ordered.map(r => Math.max(0,r.value)));
+  return <div className="fpMapAnalysis">
+    <div className="fpMapImageWrap">
+      <img src="/images/pokipo-campus-map.png" alt="POKIPO参加者向けに使用していた獨協大学キャンパス地図。集計値は右側のスポット別リストに表示" className="fpMapImage" />
+      <span className="fpMapCaption">獨協大学キャンパス / POKIPO スポット分析</span>
+    </div>
+    <div className="fpMapRanking" aria-label="スポット別の分析結果">
+      <div className="fpMapRankingHead"><span>スポット別集計</span><small>順位・値を比較</small></div>
+      {ordered.length ? ordered.map((r,i) => <div className="fpMapRank" key={`${r.label}-${i}`} style={{animationDelay:`${i*80}ms`}}>
+        <div className="fpMapRankTop"><b className="fpMapRankNumber">{String(i+1).padStart(2,"0")}</b><span>{r.label}</span><strong>{textNumber(r.value)}{""}</strong></div>
+        <div className="fpMapRankTrack"><div style={{width:`${Math.max(0,100*r.value/max)}%`,background:COLORS[i%COLORS.length]}} /></div>
+      </div>) : <p className="fpEmpty">対象データはありません。</p>}
+      <p className="fpMapCaveat">地図は位置の参考表示です。色や順位は右側の実績を示し、地図上に実測位置・移動軌跡を描くものではありません。</p>
+    </div>
+  </div>;
+}
+
+/** サーバーから取得した集計値だけに基づく、全スライド共通の短い解説。 */
+function automaticInsight(slide: PokipoPresentationSlide): string {
+  const rs = (slide.rows ?? []).filter(r=>Number.isFinite(r.value) && r.value>=0);
+  if (slide.kind === "opening") {
+    const vals = slide.kpis ?? [];
+    return vals.length ? `今回の最終集計では、${vals.slice(0,2).map(v=>`${v.label}は${v.value}`).join("、")}でした。ほかの主要指標も同じ集計範囲で表示しています。` : "最終集計の主要指標をまとめています。";
+  }
+  if (!rs.length) return "この条件では比較できる記録がありません。対象期間や絞り込み条件をご確認ください。";
+  const fmt = (n:number) => n.toLocaleString("ja-JP", {maximumFractionDigits:2});
+  const unit = slide.id.includes("rate") || slide.id.includes("ratio") || slide.description.includes("割合") || slide.title.includes("率") ? "%" : "";
+  if (slide.kind === "compare" && rs.some(r=>r.secondary!==undefined)) {
+    const diffs=rs.filter(r=>r.secondary!==undefined).map(r=>({...r,delta:(r.secondary ?? 0)-r.value}));
+    const change=[...diffs].sort((a,b)=>Math.abs(b.delta)-Math.abs(a.delta))[0];
+    if (!change) return "比較できるデータがありません。";
+    const trend=change.delta>0 ? `後者が${fmt(change.delta)}${unit}高く` : change.delta<0 ? `後者が${fmt(Math.abs(change.delta))}${unit}低く` : "両者が同じ値で";
+    return `${change.label}では、${trend}なりました（${fmt(change.value)} → ${fmt(change.secondary ?? 0)}）。これは記述的な比較であり、原因を特定するものではありません。`;
+  }
+  if (slide.kind === "line") {
+    const peak=[...rs].sort((a,b)=>b.value-a.value)[0];
+    const first=rs[0], last=rs[rs.length-1];
+    const diff=last.value-first.value;
+    const trend=diff>0 ? `初日より${fmt(diff)}増加` : diff<0 ? `初日より${fmt(Math.abs(diff))}減少` : "初日と同じ値";
+    return `${peak.label}が${fmt(peak.value)}で最多となりました。最初と最後の区間を比べると、最後は${trend}しています。`;
+  }
+  const sorted=[...rs].sort((a,b)=>b.value-a.value), top=sorted[0];
+  if (slide.kind === "donut") {
+    const total=rs.reduce((a,b)=>a+b.value,0);
+    return total>0 ? `${top.label}が${fmt(top.value)}で最多となり、全体の${(top.value/total*100).toFixed(1)}%を占めました。各項目の構成比から傾向を比較できます。` : "対象の集計値はすべて0でした。該当する記録がない可能性があります。";
+  }
+  if (rs.length===1) return `${top.label}は${fmt(top.value)}${unit}でした。この項目の集計結果を示しています。`;
+  const low=[...rs].sort((a,b)=>a.value-b.value)[0];
+  if (top.value===low.value) return `表示対象の${rs.length}項目はすべて${fmt(top.value)}${unit}でした。項目間の差はありません。`;
+  return `${top.label}が${fmt(top.value)}${unit}で最多となりました。${low.label}（${fmt(low.value)}${unit}）との差は${fmt(top.value-low.value)}${unit}です。`;
+}
+
 export default function PokipoFinalPresentation({ slides, scopeLabel, fetched }: Props) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
@@ -236,7 +291,9 @@ export default function PokipoFinalPresentation({ slides, scopeLabel, fetched }:
           {current.kind === "bars" && <Bars rows={current.rows ?? []}/>}
           {current.kind === "compare" && <Bars rows={current.rows ?? []} compareLabels={current.compareLabels}/>}
           {current.kind === "line" && <Line rows={current.rows ?? []} fix05={current.id === "registration"}/>}
+          {current.kind === "map" && <MapAnalysis rows={current.rows ?? []} percent={current.title.includes("率")}/>}
         </div>
+        <div className="fpInsight" key={`insight-${current.id}`}><strong>POKIPO 自動分析</strong><p>{automaticInsight(current)}</p></div>
         {current.note && <p className="fpFootnote">注：{current.note}</p>}
       </div>
       <footer className="fpBottom">
@@ -254,6 +311,32 @@ export default function PokipoFinalPresentation({ slides, scopeLabel, fetched }:
           </div><button type="button" className="fpMove" disabled={index===slides.length-1} onClick={()=>setIndex(v=>v+1)} aria-label="次のスライド">›</button>
         </div><div className="fpBottomMeta"><span>← → キーでも切替 ／ Escで閉じる</span><strong>{index+1} / {slides.length}</strong></div></footer>
       <style jsx global>{`
+
+/* POKIPO MAP INSIGHTS + AUTO SUMMARY: presentation only */
+.fpInsight{flex:0 0 auto;max-width:1150px;width:100%;margin:0 auto;padding:10px 15px;border-left:4px solid #8a1822;border-radius:10px;background:#f9eeea;color:#49383d;font-size:clamp(12px,1.2vw,15px);line-height:1.5;box-shadow:0 3px 12px #8a18220b}
+.fpInsight strong{display:block;font-size:10px;letter-spacing:.1em;color:#8a1822;margin-bottom:3px}
+.fpInsight p{margin:0}
+.fpMapAnalysis{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(8px,2vw,26px);width:100%;height:100%;min-height:0;align-items:center}
+.fpMapImageWrap{position:relative;height:100%;min-height:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #ebded9;border-radius:15px;overflow:hidden}
+.fpMapImage{display:block;width:100%;height:100%;object-fit:contain;min-height:0}
+.fpMapCaption{position:absolute;bottom:6px;left:8px;padding:4px 7px;border-radius:6px;background:#fffdf5ed;color:#6e4852;font-size:10px;font-weight:700}
+.fpMapRanking{height:100%;min-height:0;overflow-y:auto;align-content:safe center;padding:4px 7px 4px 0}
+.fpMapRankingHead,.fpMapRankTop{display:flex;align-items:center;gap:8px}
+.fpMapRankingHead{justify-content:space-between;color:#8a1822;font-weight:900;font-size:13px;margin-bottom:8px}
+.fpMapRankingHead small{color:#948185;font-size:11px}
+.fpMapRank{margin-bottom:clamp(5px,.9vh,11px);animation:fpSlideIn .5s both}
+.fpMapRankTop{font-size:clamp(10px,1.15vw,14px);font-weight:750;margin-bottom:5px}
+.fpMapRankTop span{flex:1;min-width:0;overflow-wrap:anywhere}
+.fpMapRankTop strong{color:#8a1822;white-space:nowrap}
+.fpMapRankNumber{color:#9e6870;font-variant-numeric:tabular-nums}
+.fpMapRankTrack{height:9px;border-radius:10px;background:#eee5e1;overflow:hidden}
+.fpMapRankTrack>div{height:100%;border-radius:inherit;animation:fpMapGrow .85s ease-out both;transform-origin:left}
+@keyframes fpMapGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.fpMapCaveat{font-size:10px;color:#847779;line-height:1.45;margin:10px 0 0}
+@media(max-width:700px){.fpInsight{padding:7px 10px;font-size:11px;line-height:1.3}.fpInsight strong{font-size:9px;margin-bottom:1px}.fpMapAnalysis{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:5px}.fpMapImageWrap{min-height:0}.fpMapCaption{font-size:8px}.fpMapRank{margin-bottom:5px}.fpMapRankTop{font-size:10px;margin-bottom:2px}.fpMapRankTrack{height:6px}.fpMapRankingHead{font-size:11px;margin-bottom:3px}.fpMapCaveat{font-size:9px;margin-top:5px}}
+@media(max-height:580px){.fpInsight{padding:5px 10px;font-size:11px;line-height:1.25}.fpInsight strong{margin:0}.fpMapRank{margin-bottom:4px}}
+@media(prefers-reduced-motion:reduce){.fpMapRank,.fpMapRankTrack>div{animation:none!important}}
+
         .fpLaunch{display:flex;align-items:center;gap:12px;width:auto;max-width:100%;min-height:58px;margin:12px 0 0;padding:10px 16px;text-align:left;background:linear-gradient(120deg,#8a1822,#b54152);border:1px solid #7e1525;border-radius:14px;color:#fff;box-shadow:0 7px 20px #8a182229;cursor:pointer}
         .fpLaunchIcon{display:grid;place-items:center;min-width:36px;height:36px;border:1px solid #ffffff88;border-radius:11px;font-size:16px}.fpLaunch>span:nth-child(2){display:grid;gap:2px}.fpLaunch strong,.fpLaunch b{color:#fff}.fpLaunch small{color:#ffe7ea;font-size:11px}.fpLaunch b{margin-left:auto;font-size:20px}
         .fpScreen,.fpScreen *{box-sizing:border-box}.fpScreen{position:fixed;inset:0;z-index:2147483000;display:grid;grid-template-rows:auto minmax(0,1fr) auto;width:100%;height:100dvh;overflow:hidden;background:#fffaf7;color:#302a2a;font-family:inherit}
