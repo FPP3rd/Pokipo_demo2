@@ -48,6 +48,15 @@ const MENU_SECTIONS: MenuSection[] = [
       "景品交換の受付と交換履歴を管理します。",
     items: [
       {
+        icon: "FINAL",
+        label: "FINAL ANALYSIS",
+        title: "サービス終了時点・最終分析",
+        description: "参加・回遊・アンケート・特典交換を総合的に分析します。",
+        href: "/staff/final-analysis",
+        variant: "staffFinalReportCard",
+        ownerOnly: true,
+      },
+      {
         icon: "QR",
         label: "REWARD",
         title: "景品交換",
@@ -527,58 +536,6 @@ export default function StaffPage() {
             MENU SECTIONS
         ================================= */}
 
-        {/* =================================
-            FINAL REPORT ENTRY (OWNER ONLY)
-        ================================= */}
-        {currentAdminId.trim().toLowerCase() === "lipost-furuya" && (
-          <button
-            type="button"
-            onClick={() => router.push("/staff/final-analysis")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 10,
-              flexWrap: "wrap",
-              width: "min(100%, 510px)",
-              textAlign: "left",
-              margin: "12px 0 15px",
-              padding: "14px 16px",
-              borderRadius: 16,
-              border: "2px solid #ac3343",
-              borderLeft: "7px solid #8a1822",
-              background: "linear-gradient(115deg, #fff8f3 0%, #fff 56%, #fce7e5 100%)",
-              boxShadow: "0 10px 28px rgba(109, 36, 47, .12)",
-              color: "#34292b",
-              cursor: "pointer",
-              fontFamily: "inherit"
-            }}
-            aria-label="POKIPOサービス終了時点の最終分析を開く"
-          >
-            <span style={{ display: "flex", gap: 15, alignItems: "center", minWidth: 0 }}>
-              <span aria-hidden="true" style={{
-                flexShrink: 0, display: "grid", placeItems: "center",
-                width: 42, height: 42, borderRadius: 12,
-                background: "#8a1822", color: "#fff", fontWeight: 900, fontSize: 15
-              }}>FINAL</span>
-              <span style={{ display: "grid", gap: 5, minWidth: 0 }}>
-                <span style={{ color: "#8a1822", fontSize: 11, fontWeight: 900, letterSpacing: ".12em" }}>
-                  POKIPO FINAL ANALYSIS / 2026
-                </span>
-                <strong style={{ fontSize: "clamp(15px, 2vw, 18px)", lineHeight: 1.4 }}>
-                  サービス終了時点・最終分析
-                </strong>
-                <span style={{ color: "#79696a", fontSize: 13, lineHeight: 1.65 }}>
-                  参加・完走・スポット回遊・アンケート前後比較・特典交換を総合分析
-                </span>
-              </span>
-            </span>
-            <span aria-hidden="true" style={{
-              borderRadius: 50, background: "#8a1822", color: "white",
-              padding: "8px 10px", fontSize: 12, fontWeight: 800, whiteSpace: "nowrap"
-            }}>レポートを開く →</span>
-          </button>
-        )}
         <div className="staffGroupedMenu">
           {MENU_SECTIONS.map((section) => (
             <section

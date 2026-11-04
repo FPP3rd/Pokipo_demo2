@@ -46427,3 +46427,91 @@ strong {
   .pokipoRewardEventV2 .reInfoRows>div{align-items:flex-start;gap:9px}
   .pokipoRewardEventV2 .reInfoRows strong{overflow-wrap:anywhere;text-align:right}
 }
+
+/* POKIPO 2026 FINAL UI: staff menu matching / responsive; append-only */
+/* 既存のテーマを維持し、この2画面と最終分析メニューカードだけに適用 */
+.staffMenuCard.staffFinalReportCard {
+  background:linear-gradient(115deg,#fff8f3,#fff 56%,#fce7e5)!important;
+  border:2px solid #ac3343!important;
+  border-left:5px solid #8a1822!important;
+  box-shadow:0 6px 20px rgba(109,36,47,.09)!important;
+}
+.staffMenuCard.staffFinalReportCard .staffMenuCardIcon {
+  background:#8a1822!important;
+  color:white!important;
+}
+.staffMenuCard.staffFinalReportCard .staffMenuCardBody h3,
+.staffMenuCard.staffFinalReportCard .staffMenuCardBody h2 {color:#8a1822!important;}
+.faPage.shell,.pokipoRewardEventV2.shell {box-sizing:border-box;width:100%;max-width:100%;min-width:0;overflow-x:clip;}
+.faPage .faContainer,.pokipoRewardEventV2 .rePage {box-sizing:border-box;width:100%;min-width:0;max-width:1180px;}
+.faPage .faContainer>*,.faPage .faPanel,.faPage .faTwo>*,
+.pokipoRewardEventV2 .rePage>*,.pokipoRewardEventV2 .reSection {min-width:0;max-width:100%;}
+.faPage .faHero,.pokipoRewardEventV2 .reHeader{
+  background:linear-gradient(115deg,#fff9f4,#fff 65%,#fceeea);
+  border:1px solid #e8d9d4;border-left:5px solid #8a1822;border-radius:19px;
+  box-shadow:0 8px 24px rgba(86,44,32,.06);color:#3d2a20;
+}
+.faPage .faHero h1,.pokipoRewardEventV2 .reHeader h1 {color:#3d2a20;}
+.faPage .faPanel,.faPage .faScope,.pokipoRewardEventV2 .reSection,
+.pokipoRewardEventV2 .reControls {border:1px solid #eadfda;border-radius:17px;background:white;box-shadow:0 5px 18px rgba(86,44,32,.05);}
+.faPage .faStat,.pokipoRewardEventV2 .reStatCard {border-radius:15px;background:#fffaf7;border-color:#efdfdb;}
+.faPage .faStat strong,.pokipoRewardEventV2 .reStatCard>strong {font-variant-numeric:tabular-nums;}
+.faPage .faSectionLabel {margin-top:6px;margin-bottom:6px;border-left:4px solid #8a1822;padding:10px 13px;border-radius:0 10px 10px 0;background:#fff1ed;color:#8a1822;font-weight:900;font-size:13px;}
+.faPage .faTableScroll {width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.faPage .faBar>span {overflow-wrap:anywhere;}
+.faPage .faScope button,.faPage .faTabs button,
+.pokipoRewardEventV2 .rePeriods button,.pokipoRewardEventV2 .reTabs button {
+  box-shadow:none;line-height:1.35;touch-action:manipulation;
+}
+.pokipoRewardEventV2 .reInsightGrid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px;}
+.pokipoRewardEventV2 .reInsightBox {min-width:0;border:1px solid #eee0db;border-radius:14px;background:#fffaf8;padding:16px;}
+.pokipoRewardEventV2 .reInsightBox h3 {font-size:15px;color:#6e2634;margin:0 0 12px;}
+.pokipoRewardEventV2 .reInsightLine {min-width:0;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid #f0e3de;font-size:12px;}
+.pokipoRewardEventV2 .reInsightLine span {min-width:0;color:#675d59;overflow-wrap:anywhere;}
+.pokipoRewardEventV2 .reInsightLine strong {flex-shrink:0;color:#8a1822;font-variant-numeric:tabular-nums;}
+@media(max-width:760px){
+  .faPage .faHero {flex-direction:column;gap:13px;}
+  .faPage .faHeroActions {width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .faPage .faHeroActions button {min-width:0;width:100%;margin:0;min-height:44px;white-space:normal;padding:9px 5px;font-size:12px;}
+  .faPage .faHeroActions button:last-child {grid-column:1/-1;}
+  .faPage .faTwo {grid-template-columns:minmax(0,1fr);gap:12px;}
+  .faPage .faTabs {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .faPage .faTabs button {width:100%;margin:0;min-height:48px;padding:8px 5px;white-space:normal;font-size:12px;}
+  .faPage .faTabs button:last-child:nth-child(odd) {grid-column:1/-1;}
+  .faPage .faStatGrid {grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+  .pokipoRewardEventV2 .reHeader {display:grid;grid-template-columns:minmax(0,1fr);gap:12px;}
+  .pokipoRewardEventV2 .reHeaderActions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;}
+  .pokipoRewardEventV2 .reHeaderActions button {margin:0;min-width:0;width:100%;min-height:44px;padding:8px 5px;white-space:normal;font-size:12px;}
+  .pokipoRewardEventV2 .reHeaderActions small {grid-column:1/-1;overflow-wrap:anywhere;}
+  .pokipoRewardEventV2 .reTabs {grid-template-columns:repeat(2,minmax(0,1fr));}
+  .pokipoRewardEventV2 .reTabs button:last-child:nth-child(odd) {grid-column:1/-1;}
+  .pokipoRewardEventV2 .reInsightGrid,.pokipoRewardEventV2 .reOperations,.pokipoRewardEventV2 .reSecondaryGrid {grid-template-columns:minmax(0,1fr);}
+}
+@media(max-width:520px){
+  .faPage.shell,.pokipoRewardEventV2.shell {display:block;padding:12px 9px max(35px,env(safe-area-inset-bottom));}
+  .faPage .faContainer,.pokipoRewardEventV2 .rePage {width:100%;gap:12px;}
+  .faPage .faHero,.faPage .faPanel,.faPage .faScope,
+  .pokipoRewardEventV2 .reSection,.pokipoRewardEventV2 .reControls {padding:15px 12px;}
+  .faPage .faHero h1,.pokipoRewardEventV2 .reHeader h1 {font-size:clamp(21px,6vw,25px);overflow-wrap:anywhere;}
+  .faPage .faScope>div {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;}
+  .faPage .faScope button {min-width:0;width:100%;min-height:44px;margin:0;padding:8px 4px;white-space:normal;font-size:11px;}
+  .faPage .faScope button:first-child {grid-column:1/-1;}
+  .faPage .faStat {min-width:0;padding:12px 9px;}
+  .faPage .faStat strong {font-size:clamp(19px,5vw,24px);overflow-wrap:anywhere;line-height:1.35;}
+  .faPage .faBar {grid-template-columns:minmax(67px,30%) minmax(0,1fr) 52px;gap:6px;font-size:11px;}
+  .faPage .faBar strong {font-size:11px;}
+  .faPage .faTable {min-width:470px;font-size:12px;}
+  .faPage .faTable th,.faPage .faTable td {padding:9px 8px;white-space:nowrap;}
+  .pokipoRewardEventV2 .rePeriods {grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;}
+  .pokipoRewardEventV2 .rePeriods button {width:100%;min-width:0;min-height:48px;margin:0;padding:7px 2px;white-space:normal;font-size:11px;}
+  .pokipoRewardEventV2 .reTabs {margin:0;gap:6px;}
+  .pokipoRewardEventV2 .reTabs button {width:100%;min-width:0;min-height:48px;margin:0;padding:8px 4px;white-space:normal;font-size:11px;}
+  .pokipoRewardEventV2 .reStatGrid {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .pokipoRewardEventV2 .reStatCard {min-width:0;min-height:108px;padding:11px 9px;}
+  .pokipoRewardEventV2 .reStatCard>strong {font-size:clamp(19px,5vw,24px);overflow-wrap:anywhere;}
+  .pokipoRewardEventV2 .reTrendDay {min-width:0;padding:12px 8px;}
+  .pokipoRewardEventV2 .reTrendRow {grid-template-columns:45px minmax(0,1fr) 40px;gap:6px;}
+  .pokipoRewardEventV2 .reQuickLinks button,.pokipoRewardEventV2 .reExport,.pokipoRewardEventV2 .reActionLink {width:100%;min-height:48px;margin:0;}
+  .pokipoRewardEventV2 .reInfoRows>div {align-items:flex-start;}
+  .pokipoRewardEventV2 .reInfoRows strong {overflow-wrap:anywhere;text-align:right;}
+}

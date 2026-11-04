@@ -269,6 +269,101 @@ export default function FinalAnalysisPage() {
     };
   }, [data, scope]);
 
+  // FINAL INSIGHT EXPANSION 2026-11-04: 集計のみ。既存データを更新しない。
+  const expanded = useMemo(() => {
+    if (!analysis || !data) return null;
+    const { people, done, stampsOf, distinct, firstPre, firstPost, exchangedIds, exchange, scores } = analysis;
+    const n = people.length;
+    const uniqueStamps = (p: Person) => {
+      const seen = new Set<string>();
+      return stampsOf(p).filter(s => !seen.has(s.spot_id) && !!seen.add(s.spot_id));
+    };
+    const duration = (a: string, b: string) => (dateValue(b) - dateValue(a)) / 60000;
+    const validDuration = (v: number) => Number.isFinite(v) && v >= 0;
+    const median = (xs: number[]): number | null => {
+      if (!xs.length) return null;
+      const sorted = [...xs].sort((a,b) => a-b), mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+    };
+    const quantile = (xs: number[], q: number): number | null => {
+      if (!xs.length) return null;
+      const sorted = [...xs].sort((a,b)=>a-b);
+      const at = (sorted.length-1)*q, low = Math.floor(at), high=Math.ceil(at);
+      return sorted[low] + (sorted[high]-sorted[low])*(at-low);
+    };
+    const completed = done.map(p=>{
+      const s=uniqueStamps(p);
+      return { id:p.id, first:s[0]?.acquired_at||"", last:s[4]?.acquired_at||"", mins:duration(s[0]?.acquired_at||"",s[4]?.acquired_at||"") };
+    }).filter(x=>x.first&&x.last&&validDuration(x.mins));
+    const completionMinutes = completed.map(x=>x.mins);
+    const completionAt = new Map(completed.map(x=>[x.id,x.last]));
+    const firstStampMinutes = people.flatMap(p=>{
+      const first=uniqueStamps(p)[0];
+      const minutes=first?duration(p.created_at,first.acquired_at):NaN;
+      return validDuration(minutes)?[minutes]:[];
+    });
+    const preOnly = [...firstPre.keys()].filter(id=>!firstPost.has(id)).length;
+    const postOnly = [...firstPost.keys()].filter(id=>!firstPre.has(id)).length;
+    const noSurvey = people.filter(p=>!firstPre.has(p.id)&&!firstPost.has(p.id)).length;
+    const cohorts = [
+      {label:"10/13〜10/27登録", match:(p: Person)=>dateValue(p.created_at)<SECOND},
+      {label:"10/28〜11/4登録", match:(p: Person)=>dateValue(p.created_at)>=SECOND}
+    ];
+    const cohortDetails = cohorts.map(c=>{
+      const ps=people.filter(c.match), ids=new Set(ps.map(p=>p.id));
+      const finished=ps.filter(p=>distinct(p)===5).length;
+      const exchanged=ps.filter(p=>exchangedIds.has(p.id)).length;
+      return [c.label,ps.length,ps.filter(p=>distinct(p)>0).length,finished,rate(finished,ps.length),
+        ps.filter(p=>firstPre.has(p.id)).length,ps.filter(p=>firstPost.has(p.id)).length,
+        exchanged,rate(exchanged,ps.length),exchange.filter(e=>ids.has(e.participant_id)).length] as (string|number)[];
+    });
+    const spotStartComparison = SPOT_IDS.map(spot=>{
+      const starters=people.filter(p=>uniqueStamps(p)[0]?.spot_id===spot);
+      const completers=starters.filter(p=>distinct(p)===5).length;
+      const exchanged=starters.filter(p=>exchangedIds.has(p.id)).length;
+      return [SPOTS[spot],starters.length,completers,rate(completers,starters.length),exchanged,rate(exchanged,starters.length)] as (string|number)[];
+    });
+    const routePairs = group(done.map(p=>uniqueStamps(p).slice(0,2).map(s=>SPOTS[s.spot_id]||s.spot_id).join(" → ")));
+    const finishPairs = group(done.map(p=>uniqueStamps(p).slice(-2).map(s=>SPOTS[s.spot_id]||s.spot_id).join(" → ")));
+    const completionDays = group(completed.map(x=>day(x.last))).sort((a,b)=>a.label.localeCompare(b.label));
+    const completionHours = group(completed.map(x=>hour(x.last)+"時")).sort((a,b)=>a.label.localeCompare(b.label));
+    const completionDurationBands = [
+      {label:"30分以内",value:completionMinutes.filter(v=>v<=30).length},
+      {label:"30分超〜1時間",value:completionMinutes.filter(v=>v>30&&v<=60).length},
+      {label:"1時間超〜3時間",value:completionMinutes.filter(v=>v>60&&v<=180).length},
+      {label:"3時間超〜1日",value:completionMinutes.filter(v=>v>180&&v<=1440).length},
+      {label:"1日超",value:completionMinutes.filter(v=>v>1440).length},
+    ];
+    const registeredNoStamp=n-analysis.stamped.length;
+    const partiallyStamped=people.filter(p=>distinct(p)>=1&&distinct(p)<=4).length;
+    const stampCountByWeekday=group(analysis.stampRows.map(s=>new Date(s.acquired_at).toLocaleDateString("ja-JP",{timeZone:"Asia/Tokyo",weekday:"long"})));
+    const registeredByWeekday=group(people.map(p=>new Date(p.created_at).toLocaleDateString("ja-JP",{timeZone:"Asia/Tokyo",weekday:"long"})));
+    const exchangedButNoCompletion=people.filter(p=>exchangedIds.has(p.id)&&distinct(p)<5).length;
+    const completionToExchange = exchange.flatMap(e=>{
+      const completedAt=completionAt.get(e.participant_id);
+      const mins=e.exchanged_at&&completedAt?duration(completedAt,e.exchanged_at):NaN;
+      return validDuration(mins)?[mins]:[];
+    });
+    const issueToExchange=data.exchanges.filter(e=>exchangedIds.has(e.participant_id)&&e.status==="exchanged"&&e.exchanged_at&&isBeforeEnd(e.created_at)).map(e=>duration(e.created_at,e.exchanged_at!)).filter(validDuration);
+    const exchangeHours=group(exchange.filter(e=>e.exchanged_at).map(e=>hour(e.exchanged_at!)+"時")).sort((a,b)=>a.label.localeCompare(b.label));
+    const exchangeWeekday=group(exchange.filter(e=>e.exchanged_at).map(e=>new Date(e.exchanged_at!).toLocaleDateString("ja-JP",{timeZone:"Asia/Tokyo",weekday:"long"})));
+    const eligibleNotExchanged=done.filter(p=>!exchangedIds.has(p.id)).length;
+    const issuedNotExchanged=people.filter(p=>analysis.issuedIds.has(p.id)&&!exchangedIds.has(p.id)).length;
+    const pairPositive = scores.map(s=>({label:s.title,value:s.matched.length?Number((s.improvement/s.matched.length*100).toFixed(1)):0}));
+    const scoreComparison= scores.map(s=>[s.title,s.matched.length,s.improvement,s.unchanged,s.decreased,rate(s.improvement,s.matched.length),fmtAvg(s.delta)] as (string|number)[]);
+    const byCompletion= [
+      {label:"完走者", ps:people.filter(p=>distinct(p)===5)},
+      {label:"未完走者", ps:people.filter(p=>distinct(p)<5)}
+    ].map(g=>[g.label,g.ps.length,g.ps.filter(p=>firstPre.has(p.id)).length,g.ps.filter(p=>firstPost.has(p.id)).length,
+      g.ps.filter(p=>firstPre.has(p.id)&&firstPost.has(p.id)).length,rate(g.ps.filter(p=>firstPost.has(p.id)).length,g.ps.length)] as (string|number)[]);
+    return { registeredNoStamp,partiallyStamped,preOnly,postOnly,noSurvey,firstStampMinutes,completionMinutes,
+      completionDays,completionHours,completionDurationBands,medianCompletion:median(completionMinutes),
+      completionP25:quantile(completionMinutes,.25),completionP75:quantile(completionMinutes,.75),
+      medianFirstStamp:median(firstStampMinutes),stampCountByWeekday,registeredByWeekday,
+      routePairs,finishPairs,spotStartComparison,cohortDetails,completionToExchange,
+      issueToExchange,exchangeHours,exchangeWeekday,eligibleNotExchanged,issuedNotExchanged,
+      exchangedButNoCompletion,pairPositive,scoreComparison,byCompletion };
+  }, [analysis,data]);
   if (auth === "loading") return <main className="shell"><div style={{padding:30}}>管理権限を確認しています...</div></main>;
   if (auth === "denied") return <main className="shell"><div style={{padding:30}}><h1>閲覧権限がありません</h1><p>最終分析は lipost-furuya 専用です。</p><button onClick={()=>router.push("/staff")}>管理メニューへ</button></div></main>;
 
@@ -283,6 +378,7 @@ export default function FinalAnalysisPage() {
     ["前後両回答者",analysis.pairs.length],["特典交換者",analysis.exchangedIds.size],
     ["スタンプ取得重複件数",analysis.duplicateStamps],
     ...analysis.spotRows.map(r=>["スポット到達："+r.label,r.value]),
+    ...(expanded ? [["スタンプ未取得者",expanded.registeredNoStamp],["1〜4か所の参加者",expanded.partiallyStamped],["前後とも未回答",expanded.noSurvey],["完走時間中央値（分）",expanded.medianCompletion ?? "—"],["完走から交換までの日時整合件数",expanded.completionToExchange.length],["発行済み・未交換者",expanded.issuedNotExchanged]] : []),
     ...analysis.scores.flatMap(s=>[[s.title+"・対応ペア数",s.matched.length],[s.title+"・対応前平均",fmtAvg(s.beforePair)],[s.title+"・対応後平均",fmtAvg(s.afterPair)],[s.title+"・平均差",fmtAvg(s.delta)]]),
   ] : [];
 
@@ -438,6 +534,73 @@ export default function FinalAnalysisPage() {
         <div className="faSectionLabel">ADDITIONAL REPORT / 前後アンケートの詳細指標</div>
         <Panel title="質問別・同一回答者のスコア変化" eyebrow="MATCHED CHANGE" note="同一参加者の回答が揃う場合のみ比較します。平均との差は因果効果を意味しません。">
           <Table headers={["設問","対応人数","改善","変化なし","低下","改善率","平均差"]} rows={analysis.scores.map(s=>[s.title,s.matched.length,s.improvement,s.unchanged,s.decreased,rate(s.improvement,s.matched.length),s.delta===null?"—":`${s.delta>0?"+":""}${fmtAvg(s.delta)}`])}/>
+        </Panel>
+      </>}
+      {/* FINAL INSIGHT EXPANSION 2026-11-04: 既存分析は維持 */}
+      {expanded && tab === "summary" && <>
+        <div className="faSectionLabel">ADDITIONAL INSIGHTS / 参加・回答状況の精査</div>
+        <div className="faStatGrid">
+          <Stat label="スタンプ未取得" value={`${expanded.registeredNoStamp}人`} sub={`登録者比 ${rate(expanded.registeredNoStamp,analysis.total)}`}/>
+          <Stat label="途中参加（1〜4か所）" value={`${expanded.partiallyStamped}人`} sub="現在残るスタンプ記録基準"/>
+          <Stat label="参加前のみ回答" value={`${expanded.preOnly}人`} sub="同一参加者の最初の回答で判定"/>
+          <Stat label="参加後のみ回答" value={`${expanded.postOnly}人`} sub="同一参加者の最初の回答で判定"/>
+          <Stat label="前後とも未回答" value={`${expanded.noSurvey}人`} sub="参加登録者を母数"/>
+          <Stat label="初回スタンプまでの中央値" value={expanded.medianFirstStamp===null?"—":`${fmtAvg(expanded.medianFirstStamp,1)}分`} sub={`${expanded.firstStampMinutes.length}人の日時整合レコード`}/>
+        </div>
+        <div className="faTwo">
+          <Panel title="登録曜日別の参加者数" eyebrow="REGISTRATION WEEKDAY"><Bars rows={expanded.registeredByWeekday}/></Panel>
+          <Panel title="曜日別のQR取得実績" eyebrow="STAMP WEEKDAY"><Bars rows={expanded.stampCountByWeekday} unit="件"/></Panel>
+        </div>
+      </>}
+      {expanded && tab === "journey" && <>
+        <div className="faSectionLabel">ADDITIONAL INSIGHTS / 回遊パターンと完走所要時間</div>
+        <div className="faStatGrid">
+          <Stat label="完走時間の中央値" value={expanded.medianCompletion===null?"—":`${fmtAvg(expanded.medianCompletion,1)}分`} sub="初回〜5種類目の差"/>
+          <Stat label="完走時間の第1四分位" value={expanded.completionP25===null?"—":`${fmtAvg(expanded.completionP25,1)}分`}/>
+          <Stat label="完走時間の第3四分位" value={expanded.completionP75===null?"—":`${fmtAvg(expanded.completionP75,1)}分`}/>
+          <Stat label="完走時間の測定対象" value={`${expanded.completionMinutes.length}人`} sub="現在残る取得日時を基準"/>
+        </div>
+        <div className="faTwo">
+          <Panel title="最初の2スポットの組み合わせ" eyebrow="FIRST TWO SPOTS"><Bars rows={expanded.routePairs} maxRows={12}/></Panel>
+          <Panel title="最後の2スポットの組み合わせ" eyebrow="FINAL TWO SPOTS"><Bars rows={expanded.finishPairs} maxRows={12}/></Panel>
+          <Panel title="日別の5か所達成人数" eyebrow="COMPLETED BY DAY"><Bars rows={expanded.completionDays}/></Panel>
+          <Panel title="完走した時間帯" eyebrow="COMPLETED BY HOUR"><Bars rows={expanded.completionHours}/></Panel>
+          <Panel title="完走時間の分布" eyebrow="JOURNEY TIME BANDS"><Bars rows={expanded.completionDurationBands}/></Panel>
+        </div>
+        <Panel title="最初に訪問した場所と達成・交換率" eyebrow="FIRST SPOT PERFORMANCE" note="開始地点による違いは参加者属性・開催日時などの影響を含み、スポットの因果効果を意味しません。">
+          <Table headers={["初回スポット","取得者","完走者","完走率","交換者","交換率"]} rows={expanded.spotStartComparison}/>
+        </Panel>
+      </>}
+      {expanded && tab === "survey" && <>
+        <div className="faSectionLabel">ADDITIONAL INSIGHTS / 前後アンケートのクロス集計</div>
+        <Panel title="同一参加者のスコア改善・維持・低下" eyebrow="MATCHED RESPONSE CHANGES" note="同じ参加者の前後回答が両方存在する人だけを比較しています。実施の因果効果を示すものではありません。">
+          <Table headers={["評価指標","前後対応者","改善","維持","低下","改善率","平均差"]} rows={expanded.scoreComparison}/>
+        </Panel>
+        <Panel title="設問別の改善者比率" eyebrow="IMPROVEMENT SHARE" note="縦軸の単位は％です。対応回答者が0人の指標は0%ではなく参考値（対象なし）として扱ってください。">
+          <Bars rows={expanded.pairPositive.filter((_,i)=>analysis.scores[i].matched.length>0)} unit="%"/>
+        </Panel>
+        <Panel title="完走・未完走別のアンケート回答状況" eyebrow="RESPONSE BIAS CHECK" note="完走者と未完走者では回答率が異なり得ます。回答結果を参加者全体に一般化する際は注意が必要です。">
+          <Table headers={["完走状況","人数","参加前回答","参加後回答","前後両回答","参加後回答率"]} rows={expanded.byCompletion}/>
+        </Panel>
+      </>}
+      {expanded && tab === "exchange" && <>
+        <div className="faSectionLabel">ADDITIONAL INSIGHTS / 交換完了までの時間と未交換者</div>
+        <div className="faStatGrid">
+          <Stat label="完走済み・未交換" value={`${expanded.eligibleNotExchanged}人`} sub="現存5種スタンプ基準"/>
+          <Stat label="QR発行あり・未交換" value={`${expanded.issuedNotExchanged}人`} sub="発行・交換参加者IDの集合差"/>
+          <Stat label="完走から交換までの中央値" value={expanded.completionToExchange.length?`${fmtAvg([...expanded.completionToExchange].sort((a,b)=>a-b)[Math.floor(expanded.completionToExchange.length/2)],1)}分`:"—"} sub={`${expanded.completionToExchange.length}件の日時整合記録`}/>
+          <Stat label="QR発行から交換までの平均" value={expanded.issueToExchange.length?`${fmtAvg(avg(expanded.issueToExchange),1)}分`:"—"} sub={`${expanded.issueToExchange.length}件の日時整合記録`}/>
+          <Stat label="完走記録なし・交換済み" value={`${expanded.exchangedButNoCompletion}人`} sub="後日修正などでも発生しうる数値"/>
+        </div>
+        <div className="faTwo">
+          <Panel title="交換が多かった時間帯" eyebrow="EXCHANGE BY HOUR"><Bars rows={expanded.exchangeHours} unit="件"/></Panel>
+          <Panel title="曜日別の交換数" eyebrow="EXCHANGE WEEKDAY"><Bars rows={expanded.exchangeWeekday} unit="件"/></Panel>
+        </div>
+      </>}
+      {expanded && tab === "segments" && <>
+        <div className="faSectionLabel">ADDITIONAL INSIGHTS / 登録時期別の到達・回答・交換比較</div>
+        <Panel title="延長前後の登録者グループ比較" eyebrow="COHORT COMPARISON" note="参加時点が異なるため観測期間の長さも異なります。延長施策の因果的な効果を示す比較ではありません。">
+          <Table headers={["登録期間","登録","1か所以上","5か所達成","完走率","参加前回答","参加後回答","交換","交換率","延べ交換件数"]} rows={expanded.cohortDetails}/>
         </Panel>
       </>}
       <footer className="faFooter">POKIPO FINAL ANALYSIS　／　参照専用　／　個別参加者の氏名・ニックネームは表示・CSV出力しません。</footer>

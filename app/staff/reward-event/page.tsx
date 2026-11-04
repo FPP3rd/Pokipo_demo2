@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase-client";
 
 type Period = "all" | "first" | "second";
-type Tab = "overview" | "eligible" | "operations" | "report";
+type Tab = "overview" | "eligible" | "operations" | "report" | "details";
 type Counts = {registered:number;completed:number;post_answered:number;qr_issued:number;exchanged:number};
 type Exchange = {id:string;participant_id:string;status:string;created_at:string;exchanged_at:string|null};
 type Monitor = {state:string;updated_at:string;guide_direction:string|null};
@@ -71,6 +71,39 @@ export default function RewardEventManagementPage(){
   ["交換済み（交換日時基準）",counts?`${counts.exchanged}人`:"取得不可"],["現時点のQR発行済み・未交換",exchanges?`${waiting}人（全期間共通）`:"取得不可"],
   ["360枠の残り目安",exchanges?`${Math.max(0,360-allExchanged)}枠（全期間共通）`:"取得不可"]
  ];
+  // REWARD EVENT INSIGHTS 2026-11-04: 既存の期間別集計を変更しない、読み取り専用指標。
+  const rewardInsights = useMemo(() => {
+    if (!exchanges) return null;
+    const withinEvent = (v:string|null) => v!==null && Date.parse(v)>=Date.parse(PERIODS[period].start) && Date.parse(v)<Date.parse(PERIODS[period].end);
+    const exchanged = exchanges.filter(e=>e.status==="exchanged"&&withinEvent(e.exchanged_at));
+    const issued = exchanges.filter(e=>withinEvent(e.created_at));
+    const complete = exchanged.filter(e=>e.exchanged_at);
+    const minute = (v:string) => new Date(v).toLocaleTimeString("ja-JP",{timeZone:"Asia/Tokyo",hour:"2-digit",minute:"2-digit",hour12:false});
+    const sumBy = (f:(e:Exchange)=>string) => {
+      const m=new Map<string,number>(); for(const e of complete){const k=f(e);m.set(k,(m.get(k)||0)+1)}
+      return [...m].sort((a,b)=>a[0].localeCompare(b[0])).map(([label,value])=>({label,value}));
+    };
+    const fifteen = sumBy(e=>{const d=new Date(e.exchanged_at!);const local=new Date(d.getTime()+9*3600000);const h=String(local.getUTCHours()).padStart(2,"0");const m=String(Math.floor(local.getUTCMinutes()/15)*15).padStart(2,"0");return `${h}:${m}〜`;});
+    const byHour = sumBy(e=>minute(e.exchanged_at!).slice(0,2)+"時台");
+    const byDay = sumBy(e=>new Date(e.exchanged_at!).toLocaleDateString("sv-SE",{timeZone:"Asia/Tokyo"}));
+    const firstExchange = complete.length ? [...complete].sort((a,b)=>Date.parse(a.exchanged_at!)-Date.parse(b.exchanged_at!))[0] : null;
+    const lastExchange = complete.length ? [...complete].sort((a,b)=>Date.parse(b.exchanged_at!)-Date.parse(a.exchanged_at!))[0] : null;
+    const knownDelays = complete.flatMap(e=>{
+      const delay=(Date.parse(e.exchanged_at!)-Date.parse(e.created_at))/60000;
+      return Number.isFinite(delay)&&delay>=0?[delay]:[];
+    });
+    const meanDelay=knownDelays.length?knownDelays.reduce((a,b)=>a+b,0)/knownDelays.length:null;
+    const shortDelay=knownDelays.filter(v=>v<=30).length;
+    const uniqueExchanged=new Set(complete.map(e=>e.participant_id)).size;
+    const eventDayCount = EVENT_WINDOWS.filter((w,i)=>period==="all"||(period==="first"&&i===0)||(period==="second"&&i===1)).map(w=>({
+      label:w.title,value:complete.filter(e=>Date.parse(e.exchanged_at!)>=w.start&&Date.parse(e.exchanged_at!)<w.end).length
+    }));
+    const eventDayTotal=eventDayCount.reduce((n,x)=>n+x.value,0);
+    return {fifteen,byHour,byDay,firstExchange,lastExchange,knownDelays,meanDelay,shortDelay,
+      issuedCount:issued.length,exchangeCount:complete.length,uniqueExchanged,eventDayCount,eventDayTotal,
+      outsideEvent:complete.length-eventDayTotal,peak15:[...fifteen].sort((a,b)=>b.value-a.value)[0]};
+  },[exchanges,period]);
+
  const graph=EVENT_WINDOWS.filter((_,i)=>period==="all"||period==="first"&&i===0||period==="second"&&i===1).map(e=>({title:e.title,buckets:Array.from({length:7},(_,i)=>{const a=e.start+i*30*60000;const z=Math.min(e.end,a+30*60000);return {label:new Date(a).toLocaleTimeString("ja-JP",{timeZone:"Asia/Tokyo",hour:"2-digit",minute:"2-digit"}),value:scoped.filter(x=>x.exchanged_at&&Date.parse(x.exchanged_at)>=a&&Date.parse(x.exchanged_at)<z).length}})}));
  if(auth==="loading")return <main style={{padding:24}}>管理者認証を確認中...</main>;
  if(auth==="denied")return <main style={{padding:24}}>スタッフのログインが必要です。<button style={btn} onClick={()=>router.push("/staff/reward")}>ログインへ</button></main>;
@@ -113,6 +146,7 @@ export default function RewardEventManagementPage(){
           { id: "eligible", name: "交換対象者" },
           { id: "operations", name: "運営・モニター" },
           { id: "report", name: "集計・CSV" },
+          { id: "details", name: "分析詳細" },
         ] as const).map((item) => (
           <button type="button" key={item.id} aria-current={tab === item.id ? "page" : undefined} className={tab === item.id ? "active" : ""} onClick={() => setTab(item.id)}>
             {item.name}
@@ -191,6 +225,36 @@ export default function RewardEventManagementPage(){
         </div>
       )}
 
+
+
+      {tab === "details" && (
+        <section className="reSection reInsights">
+          <div className="reSectionHeading"><span>DEEP ANALYTICS</span><h2>特典交換の詳細分析</h2></div>
+          <p className="reHint">選択期間：{PERIODS[period].caption}。各時刻は日本時間。履歴テーブルの取得上限は最大5,000件です。</p>
+          {rewardInsights ? <>
+            <div className="reStatGrid">
+              {[
+                ["交換履歴の件数",`${rewardInsights.exchangeCount}件`],
+                ["交換した参加者数",`${rewardInsights.uniqueExchanged}人`],
+                ["期間中のQR発行記録",`${rewardInsights.issuedCount}件`],
+                ["交換会開催時間内",`${rewardInsights.eventDayTotal}件`],
+                ["開催時間外の交換",`${rewardInsights.outsideEvent}件`],
+                ["QR発行から交換までの平均",rewardInsights.meanDelay===null?"—":`${rewardInsights.meanDelay.toFixed(1)}分`],
+                ["発行から30分以内の交換",`${rewardInsights.shortDelay}件`],
+                ["15分間の最多交換",rewardInsights.peak15?`${rewardInsights.peak15.value}件`:"—"],
+              ].map(([label,value])=><article className="reStatCard" key={label}><span>EVENT DATA</span><strong>{value}</strong><p>{label}</p></article>)}
+            </div>
+            <div className="reInsightGrid">
+              <article className="reInsightBox"><h3>開催日別の交換件数</h3>{rewardInsights.eventDayCount.map(x=><div className="reInsightLine" key={x.label}><span>{x.label}</span><strong>{x.value}件</strong></div>)}</article>
+              <article className="reInsightBox"><h3>交換履歴の開始・終了時刻</h3><div className="reInsightLine"><span>期間内の初回交換</span><strong>{rewardInsights.firstExchange?fmt(rewardInsights.firstExchange.exchanged_at):"—"}</strong></div><div className="reInsightLine"><span>期間内の最終交換</span><strong>{rewardInsights.lastExchange?fmt(rewardInsights.lastExchange.exchanged_at):"—"}</strong></div></article>
+              <article className="reInsightBox"><h3>時間帯別の交換件数</h3>{rewardInsights.byHour.map(x=><div className="reInsightLine" key={x.label}><span>{x.label}</span><strong>{x.value}件</strong></div>)}</article>
+              <article className="reInsightBox"><h3>15分区切りの交換件数</h3>{rewardInsights.fifteen.map(x=><div className="reInsightLine" key={x.label}><span>{x.label}</span><strong>{x.value}件</strong></div>)}</article>
+              <article className="reInsightBox"><h3>日別の交換記録</h3>{rewardInsights.byDay.map(x=><div className="reInsightLine" key={x.label}><span>{x.label}</span><strong>{x.value}件</strong></div>)}</article>
+            </div>
+            <p className="reHint">「発行記録」は発行日時が選択期間内の履歴を指し、「交換」は交換日時が期間内の履歴です。両者は同じ母集団とは限りません。期間中に交換済みから取消された記録は含まれず、データが後日修正されると集計も変化します。</p>
+          </> : <p>交換履歴を取得できませんでした。</p>}
+        </section>
+      )}
       {tab === "report" && (
         <section className="reSection">
           <div className="reSectionHeading"><span>REPORT & EXPORT</span><h2>集計・CSV出力</h2></div>
