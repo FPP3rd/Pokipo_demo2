@@ -46515,3 +46515,40 @@ strong {
   .pokipoRewardEventV2 .reInfoRows>div {align-items:flex-start;}
   .pokipoRewardEventV2 .reInfoRows strong {overflow-wrap:anywhere;text-align:right;}
 }
+
+/* POKIPO FINAL ANALYSIS : MOTION 2026-11-04
+   最終分析ページ内だけ。スタッフメニューや参加者画面には影響させない。 */
+.faPage .faHero { animation: pokipoFinalHeroIn .6s cubic-bezier(.2,.75,.25,1) both; }
+.faPage .faHeroChip { animation: pokipoFinalChipIn .7s .17s ease-out both; }
+.faPage .faScope, .faPage .faTabs, .faPage .faCaution {
+  animation: pokipoFinalRise .55s ease-out both;
+}
+.faPage .faPanel, .faPage .faStat, .faPage .faTwo > * {
+  animation: pokipoFinalRise .58s cubic-bezier(.2,.75,.25,1) both;
+}
+.faPage .faStatGrid > :nth-child(2), .faPage .faTwo > :nth-child(2) { animation-delay: .055s; }
+.faPage .faStatGrid > :nth-child(3) { animation-delay: .11s; }
+.faPage .faStatGrid > :nth-child(4) { animation-delay: .165s; }
+.faPage .faStatGrid > :nth-child(5) { animation-delay: .22s; }
+.faPage .faStatGrid > :nth-child(6) { animation-delay: .27s; }
+.faPage .faStatGrid > :nth-child(7) { animation-delay: .32s; }
+.faPage .faStatGrid > :nth-child(8) { animation-delay: .37s; }
+.faPage .faTrack > div { transform-origin: left center; animation: pokipoFinalBarGrow .92s cubic-bezier(.2,.8,.2,1) both; }
+.faPage .faBar:nth-child(2n) .faTrack > div { animation-delay: .07s; }
+.faPage .faBar:nth-child(3n) .faTrack > div { animation-delay: .13s; }
+.faPage .faStat { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+@media(hover:hover) and (pointer:fine) {
+  .faPage .faStat:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(109,36,47,.09); border-color: #d9b4bb; }
+}
+.faPage .faTabs button, .faPage .faScope button { transition: background-color .2s ease, color .2s ease, border-color .2s ease; }
+@keyframes pokipoFinalHeroIn { from {opacity:0;transform:translateY(14px)} to {opacity:1;transform:translateY(0)} }
+@keyframes pokipoFinalChipIn { from {opacity:0;transform:translateY(7px)} to {opacity:1;transform:translateY(0)} }
+@keyframes pokipoFinalRise { from {opacity:0;transform:translateY(13px)} to {opacity:1;transform:translateY(0)} }
+@keyframes pokipoFinalBarGrow { from {transform:scaleX(0)} to {transform:scaleX(1)} }
+@media (prefers-reduced-motion: reduce) {
+  .faPage .faHero, .faPage .faHeroChip, .faPage .faScope,
+  .faPage .faTabs, .faPage .faCaution, .faPage .faPanel,
+  .faPage .faStat, .faPage .faTwo > *, .faPage .faTrack > div {
+    animation:none !important; transition:none !important; transform:none !important;
+  }
+}

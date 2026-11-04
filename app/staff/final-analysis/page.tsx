@@ -96,8 +96,49 @@ function Panel({ title, eyebrow, note, children }: { title: string; eyebrow?: st
     <h2>{title}</h2>{note && <p className="faNote">{note}</p>}{children}
   </section>;
 }
+/**
+ * POKIPO FINAL ANALYSIS: 数値アニメーション
+ * 実際の数値は既存の集計値を使用し、見た目だけ補間します。
+ * prefers-reduced-motion が有効な端末では数値を即時表示します。
+ */
+function FinalAnimatedValue({ value }: { value: string }) {
+  const match = /^(\d[\d,]*(?:\.\d+)?)(人|件|%|分|枠)?$/.exec(value.trim());
+  const target = match ? Number(match[1].replace(/,/g, "")) : null;
+  const suffix = match?.[2] ?? "";
+  const decimals = match?.[1].includes(".") ? match[1].split(".")[1].length : 0;
+  const [visible, setVisible] = useState(value);
+
+  useEffect(() => {
+    if (target === null || !Number.isFinite(target) || target < 0 || target > 1000000000) {
+      setVisible(value);
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisible(value);
+      return;
+    }
+    let frame = 0;
+    const start = performance.now();
+    const duration = 850;
+    const format = (n: number) => n.toLocaleString("ja-JP", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }) + suffix;
+    setVisible(format(0));
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setVisible(format(progress === 1 ? target : target * eased));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value, target, suffix, decimals]);
+
+  return <>{visible}</>;
+}
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return <div className="faStat"><span>{label}</span><strong>{value}</strong>{sub && <small>{sub}</small>}</div>;
+  return <div className="faStat"><span>{label}</span><strong><FinalAnimatedValue value={value} /></strong>{sub && <small>{sub}</small>}</div>;
 }
 function Bars({ rows, unit = "人", maxRows = 30 }: { rows: GroupRow[]; unit?: string; maxRows?: number }) {
   const list = rows.slice(0, maxRows), max = Math.max(1, ...list.map(r => r.value));
