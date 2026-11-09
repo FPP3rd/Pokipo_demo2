@@ -33,7 +33,6 @@ export async function downloadPokipoPresentationPptx({ root, slides, select, pro
   deck.author = "POKIPO / LiPost";
   deck.subject = "POKIPO FINAL REPORT 2026 — プレゼンモードの静止画出力";
   deck.title = "POKIPO FINAL REPORT 2026";
-  deck.lang = "ja-JP";
 
   await document.fonts.ready;
   const nextPaint = () => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
