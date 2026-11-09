@@ -290,7 +290,8 @@ export default function PokipoFinalPresentation({ slides, scopeLabel, fetched }:
     try {
       await downloadPokipoPresentationPptx({
         root,
-        slides,
+        slides: slides.map((slide) => ({ ...slide, insight: automaticInsight(slide) })),
+        scopeLabel,
         select: (slideIndex) => setIndex(slideIndex),
         progress: (done) => setPptxDone(done),
       });
