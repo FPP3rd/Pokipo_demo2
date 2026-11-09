@@ -263,7 +263,7 @@ export async function downloadPokipoPresentationPptx({ slides, progress, scopeLa
   deck.subject = "POKIPO FINAL REPORT 2026（PowerPoint最適化版）";
   deck.title = "POKIPO FINAL REPORT 2026";
   // PPTXの本文・グラフは編集可能。日本語対応フォントを指定。
-  deck.theme = { headFontFace: FONT, bodyFontFace: FONT, lang: "ja-JP" };
+  deck.theme = { headFontFace: FONT, bodyFontFace: FONT};
 
   let campusMap: { data: string; ratio: number } | null = null;
   if (slides.some(s => s.kind === "map")) {
