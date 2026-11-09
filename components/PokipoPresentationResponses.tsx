@@ -44,9 +44,9 @@ const TERMS: { term: string; pattern: RegExp }[] = [
 const COLORS = ["#8a1822", "#ad3845", "#a86f23", "#2f6b7f", "#537b64", "#6555a0", "#b05b36"];
 const PAGE_SIZE = 36;
 type Phase = "flow" | "cloud" | "cards";
-type Props = { answers: string[]; label: string };
+type Props = { answers: string[]; label: string; exportMode?: boolean };
 
-export default function PokipoPresentationResponses({ answers, label }: Props) {
+export default function PokipoPresentationResponses({ answers, label, exportMode = false }: Props) {
   const cleaned = useMemo(() => answers.map(v => v.trim()).filter(Boolean), [answers]);
   const [phase, setPhase] = useState<Phase>("flow");
   const [shown, setShown] = useState(0);
@@ -87,31 +87,32 @@ export default function PokipoPresentationResponses({ answers, label }: Props) {
   }, [cleaned, run, intervalMs]);
 
   const visibleStart = Math.max(0, shown - Math.ceil(1800 / intervalMs) - 2);
+  const displayPhase: Phase = exportMode ? "cloud" : phase;
   return <section className="prRoot" aria-label={`${label}の自由記述プレゼン`}>
     <div className="prHeader">
       <div><b>{label}</b><span>記述回答 {cleaned.length.toLocaleString("ja-JP")}件</span></div>
       <div className="prActions">
-        {phase === "flow" && <button type="button" onClick={() => { interrupted.current = true; setPhase("cloud"); }}>アニメーションをスキップ</button>}
-        {phase !== "flow" && <button type="button" onClick={() => setRun(v => v+1)}>最初から再生</button>}
-        {phase !== "cards" && <button type="button" className="prPrimary" onClick={() => { interrupted.current = true; setPage(0); setPhase("cards"); }}>すべての回答を見る</button>}
-        {phase === "cards" && <button type="button" onClick={() => setPhase("cloud")}>ワードクラウドに戻る</button>}
+        {displayPhase === "flow" && <button type="button" onClick={() => { interrupted.current = true; setPhase("cloud"); }}>アニメーションをスキップ</button>}
+        {displayPhase !== "flow" && <button type="button" onClick={() => setRun(v => v+1)}>最初から再生</button>}
+        {displayPhase !== "cards" && <button type="button" className="prPrimary" onClick={() => { interrupted.current = true; setPage(0); setPhase("cards"); }}>すべての回答を見る</button>}
+        {displayPhase === "cards" && <button type="button" onClick={() => setPhase("cloud")}>ワードクラウドに戻る</button>}
       </div>
     </div>
 
-    {phase === "flow" && <div className="prFlow" aria-label={`回答を表示中、${Math.min(shown,cleaned.length)}件目まで`}>
+    {displayPhase === "flow" && <div className="prFlow" aria-label={`回答を表示中、${Math.min(shown,cleaned.length)}件目まで`}>
       <div className="prFlowHint">PARTICIPANT VOICES　回答が上へ流れた後、ワードクラウドを表示</div>
       {cleaned.slice(visibleStart, shown).map((answer, i) => <div key={`${run}-${visibleStart+i}`} className="prFlying" style={{left: `${8 + ((visibleStart + i) * 23) % 43}%`, animationDuration: "1.8s"}}>{answer}</div>)}
       <div className="prProgress">{Math.min(shown,cleaned.length)} / {cleaned.length}</div>
     </div>}
 
-    {phase === "cloud" && <div className="prCloudStage">
+    {displayPhase === "cloud" && <div className="prCloudStage">
       {words.length ? <div className="prCloud" aria-label="記述回答のキーワード頻度">
         {words.map((w,i) => <span key={w.term} title={`${w.term}：${w.count}件の回答に出現`} style={{color: COLORS[i % COLORS.length],fontSize:`clamp(13px, ${Math.min(3.3, 1.1 + w.count / Math.max(1, words[0].count) * 2.1)}vw, ${Math.round(16 + w.count / Math.max(1, words[0].count) * 32)}px)`,animationDelay:`${i*45}ms`}}>{w.term}<small>{w.count}</small></span>)}
       </div> : <p className="prNoWords">該当するキーワードがありません。回答全文は「すべての回答を見る」から確認できます。</p>}
       <p className="prMethod">各キーワードを含む回答の件数（同じ回答内の繰り返しは1件）。表記ゆれを統合した辞書式集計で、自由記述の全語を自動抽出した結果ではありません。</p>
     </div>}
 
-    {phase === "cards" && <div className="prCardsStage">
+    {displayPhase === "cards" && <div className="prCardsStage">
       <div className="prCardsSummary"><span>すべての記述を原文のまま表示・匿名表示</span><strong>{page+1} / {totalPages}ページ</strong></div>
       <div className="prCardGrid">{cleaned.slice(page*PAGE_SIZE, (page+1)*PAGE_SIZE).map((answer,i)=><article className="prCard" key={`${page}-${i}`}><small>回答 {String(page*PAGE_SIZE+i+1).padStart(3,"0")}</small><p>{answer}</p></article>)}</div>
       <div className="prPager"><button type="button" disabled={page===0} onClick={() => setPage(p=>Math.max(0,p-1))}>← 前の36件</button><span>{page+1} / {totalPages}</span><button type="button" disabled={page>=totalPages-1} onClick={() => setPage(p=>Math.min(totalPages-1,p+1))}>次の36件 →</button></div>

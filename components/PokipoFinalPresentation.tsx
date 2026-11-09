@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import PokipoPresentationResponses from "./PokipoPresentationResponses";
+import { downloadPokipoPresentationPptx } from "./PokipoPresentationPptxExport";
 
 export type PokipoPresentationRow = { label: string; value: number; secondary?: number };
 export type PokipoPresentationKpi = { label: string; value: string; detail?: string };
@@ -41,10 +42,10 @@ function Kpis({ values }: { values: PokipoPresentationKpi[] }) {
   ))}</div>;
 }
 /** プレゼンのスライド切替で再マウントされるため、進行度は初回のみアニメーション。 */
-function useChartDrawProgress(duration: number) {
+function useChartDrawProgress(duration: number, forceComplete = false) {
   const [progress, setProgress] = useState(0);
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden) {
+    if (forceComplete || window.matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden) {
       setProgress(1);
       return;
     }
@@ -75,12 +76,12 @@ function useChartDrawProgress(duration: number) {
       window.clearTimeout(backup);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [duration]);
-  return progress;
+  }, [duration, forceComplete]);
+  return forceComplete ? 1 : progress;
 }
 
-function Donut({ rows }: { rows: PokipoPresentationRow[] }) {
-  const progress = useChartDrawProgress(1500);
+function Donut({ rows, exportMode = false }: { rows: PokipoPresentationRow[]; exportMode?: boolean }) {
+  const progress = useChartDrawProgress(1500, exportMode);
   const safe = rows.filter((x) => Number.isFinite(x.value) && x.value > 0);
   const total = safe.reduce((sum, x) => sum + x.value, 0);
   let cursor = 0;
@@ -112,8 +113,8 @@ function Donut({ rows }: { rows: PokipoPresentationRow[] }) {
     </div>)}</div>
   </div>;
 }
-function Bars({ rows, compareLabels }: { rows: PokipoPresentationRow[]; compareLabels?: [string, string] }) {
-  const progress = useChartDrawProgress(1250);
+function Bars({ rows, compareLabels, exportMode = false }: { rows: PokipoPresentationRow[]; compareLabels?: [string, string]; exportMode?: boolean }) {
+  const progress = useChartDrawProgress(1250, exportMode);
   const hasSecondary = rows.some(x => x.secondary !== undefined);
   const max = Math.max(1, ...rows.flatMap(x => [within(x.value), ...(x.secondary === undefined ? [] : [within(x.secondary)])]));
   const trackBackground = (value: number, color: string) => {
@@ -134,8 +135,8 @@ function Bars({ rows, compareLabels }: { rows: PokipoPresentationRow[]; compareL
   </div>;
 }
 /** 05 / 65 日別登録者数だけを、完成した折れ線のクリップ領域で描画する。 */
-function RegistrationLine05({ path, pts }: { path: string; pts: { x: number; y: number }[] }) {
-  const progress = useChartDrawProgress(1400);
+function RegistrationLine05({ path, pts, exportMode = false }: { path: string; pts: { x: number; y: number }[]; exportMode?: boolean }) {
+  const progress = useChartDrawProgress(1400, exportMode);
   return (
     <>
       <defs>
@@ -152,7 +153,7 @@ function RegistrationLine05({ path, pts }: { path: string; pts: { x: number; y: 
     </>
   );
 }
-function Line({ rows, fix05 = false }: { rows: PokipoPresentationRow[]; fix05?: boolean }) {
+function Line({ rows, fix05 = false, exportMode = false }: { rows: PokipoPresentationRow[]; fix05?: boolean; exportMode?: boolean }) {
   const max = Math.max(1, ...rows.map(r => within(r.value)));
   const w = 900, h = 310, padX = 36, padY = 30;
   const pts = rows.map((r,i) => ({ x: padX + (rows.length <= 1 ? (w-2*padX)/2 : i*(w-2*padX)/(rows.length-1)), y: h-padY - (within(r.value)/max)*(h-2*padY), ...r }));
@@ -162,7 +163,7 @@ function Line({ rows, fix05 = false }: { rows: PokipoPresentationRow[]; fix05?: 
       <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" role="img" aria-label={rows.map(r => `${r.label} ${r.value}件`).join("、")}>
         {[0,.25,.5,.75,1].map(v => <line key={v} x1={padX} y1={padY+v*(h-2*padY)} x2={w-padX} y2={padY+v*(h-2*padY)} stroke="#e9dedb" strokeDasharray="5 6" />)}
         {fix05 ? (
-          <RegistrationLine05 path={path} pts={pts} />
+          <RegistrationLine05 path={path} pts={pts} exportMode={exportMode} />
         ) : (
           <>
             <path d={path} fill="none" stroke="#921c32" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" className="fpLinePath" />
@@ -236,6 +237,8 @@ export default function PokipoFinalPresentation({ slides, scopeLabel, fetched }:
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [browserFullscreen, setBrowserFullscreen] = useState(false);
+  const [pptxExporting, setPptxExporting] = useState(false);
+  const [pptxDone, setPptxDone] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
   const current = slides[Math.min(index, Math.max(0,slides.length-1))];
   const currentCategory = current ? slideCategory(current) : "総合";
@@ -278,24 +281,45 @@ export default function PokipoFinalPresentation({ slides, scopeLabel, fetched }:
   const requestScreen = async () => {
     try { await rootRef.current?.requestFullscreen(); } catch { /* fullscreen overlay still works */ }
   };
+  const exportPowerPoint = async () => {
+    if (pptxExporting || !rootRef.current || !slides.length) return;
+    const originalIndex = index;
+    const root = rootRef.current;
+    setPptxExporting(true);
+    setPptxDone(0);
+    try {
+      await downloadPokipoPresentationPptx({
+        root,
+        slides,
+        select: (slideIndex) => setIndex(slideIndex),
+        progress: (done) => setPptxDone(done),
+      });
+    } catch (error) {
+      console.error("POKIPO PowerPoint 出力エラー", error);
+      window.alert(`PowerPointの出力に失敗しました。${error instanceof Error ? error.message : "ブラウザの空き容量・画像の読み込み状態をご確認ください。"}`);
+    } finally {
+      setIndex(originalIndex);
+      setPptxExporting(false);
+    }
+  };
   return <>
     <button type="button" className="fpLaunch" onClick={() => { setIndex(0); setActiveCategory(slides[0] ? slideCategory(slides[0]) : "総合"); setOpen(true); }} aria-label="最終分析のプレゼンモードを開く">
       <span className="fpLaunchIcon">▶</span><span><strong>プレゼンモード</strong><small>グラフで全画面表示</small></span><b>→</b>
     </button>
-    {open && <div ref={rootRef} className="fpScreen" role="dialog" aria-modal="true" aria-label="POKIPO 最終分析プレゼンモード">
+    {open && <div ref={rootRef} className={`fpScreen${pptxExporting ? " fpExportCapture" : ""}`} role="dialog" aria-modal="true" aria-label="POKIPO 最終分析プレゼンモード">
       <header className="fpTopbar"><div className="fpBrand"><span>POKIPO</span><strong>FINAL REPORT 2026</strong><small>{scopeLabel} ／ 集計取得 {fetched}</small></div>
-        <div className="fpTopActions"><button type="button" onClick={() => void requestScreen()} disabled={browserFullscreen} title="ブラウザも全画面表示">⛶ 全画面</button><button type="button" className="fpClose" onClick={() => void close()}>× 閉じる</button></div></header>
+        <div className="fpTopActions"><button type="button" onClick={() => void exportPowerPoint()} aria-label="PowerPointとして全スライドをダウンロード">↓ PowerPoint</button><button type="button" onClick={() => void requestScreen()} disabled={browserFullscreen} title="ブラウザも全画面表示">⛶ 全画面</button><button type="button" className="fpClose" onClick={() => void close()}>× 閉じる</button></div></header>
       <div key={current?.id ?? "empty"} className="fpSlide" aria-live="polite">
         <div className="fpSlideHead"><span className="fpSlideEyebrow">{String(index+1).padStart(2,"0")} / {String(slides.length).padStart(2,"0")}　{current.eyebrow}</span>
           <h2>{current.title}</h2><p>{current.description}</p></div>
         <div className="fpChartArea">
           {current.kind === "opening" && <div className="fpOpening"><div className="fpOpeningMark">POKIPO<small>2026 FINAL ANALYSIS</small></div><Kpis values={current.kpis ?? []}/></div>}
-          {current.kind === "donut" && <Donut rows={current.rows ?? []}/>}
-          {current.kind === "bars" && <Bars rows={current.rows ?? []}/>}
-          {current.kind === "compare" && <Bars rows={current.rows ?? []} compareLabels={current.compareLabels}/>}
-          {current.kind === "line" && <Line rows={current.rows ?? []} fix05={current.id === "registration"}/>}
+          {current.kind === "donut" && <Donut rows={current.rows ?? []} exportMode={pptxExporting}/>}
+          {current.kind === "bars" && <Bars rows={current.rows ?? []} exportMode={pptxExporting}/>}
+          {current.kind === "compare" && <Bars rows={current.rows ?? []} compareLabels={current.compareLabels} exportMode={pptxExporting}/>}
+          {current.kind === "line" && <Line rows={current.rows ?? []} fix05={current.id === "registration"} exportMode={pptxExporting}/>}
           {current.kind === "map" && <MapAnalysis rows={current.rows ?? []} percent={current.title.includes("率")}/>}
-          {current.kind === "responses" && <PokipoPresentationResponses answers={current.freeResponses ?? []} label={current.title}/> }
+          {current.kind === "responses" && <PokipoPresentationResponses answers={current.freeResponses ?? []} label={current.title} exportMode={pptxExporting}/> }
         </div>
         <div className="fpInsight" key={`insight-${current.id}`}><strong>POKIPO 自動分析</strong><p>{automaticInsight(current)}</p></div>
         {current.note && <p className="fpFootnote">注：{current.note}</p>}
@@ -315,6 +339,11 @@ export default function PokipoFinalPresentation({ slides, scopeLabel, fetched }:
           </div><button type="button" className="fpMove" disabled={index===slides.length-1} onClick={()=>setIndex(v=>v+1)} aria-label="次のスライド">›</button>
         </div><div className="fpBottomMeta"><span>← → キーでも切替 ／ Escで閉じる</span><strong>{index+1} / {slides.length}</strong></div></footer>
       <style jsx global>{`
+        /* PPTX出力時だけ、既存のグラフを最終描画状態で画像化する */
+        .fpExportCapture *, .fpExportCapture *::before, .fpExportCapture *::after { animation: none !important; transition: none !important; }
+        .fpExportCapture .fpLinePath { stroke-dasharray: none !important; stroke-dashoffset: 0 !important; }
+        .fpExportCapture .fpPoint { opacity: 1 !important; }
+
 
 /* POKIPO MAP INSIGHTS + AUTO SUMMARY: presentation only */
 .fpInsight{flex:0 0 auto;max-width:1150px;width:100%;margin:0 auto;padding:10px 15px;border-left:4px solid #8a1822;border-radius:10px;background:#f9eeea;color:#49383d;font-size:clamp(12px,1.2vw,15px);line-height:1.5;box-shadow:0 3px 12px #8a18220b}
@@ -423,5 +452,6 @@ export default function PokipoFinalPresentation({ slides, scopeLabel, fetched }:
 .fpScreen .fpBarFill { animation: none !important; transform: none !important; transition: none !important; }
       `}</style>
     </div>}
+    {pptxExporting && <div role="status" aria-live="polite" style={{position:"fixed",right:18,bottom:18,zIndex:2147483647,background:"#8a1822",color:"white",padding:"11px 18px",borderRadius:12,boxShadow:"0 6px 24px #0003",fontWeight:800,fontSize:13,pointerEvents:"none"}}>PowerPoint生成中：{pptxDone} / {slides.length}枚</div>}
   </>;
 }
